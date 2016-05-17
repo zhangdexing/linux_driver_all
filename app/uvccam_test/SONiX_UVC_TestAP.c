@@ -122,6 +122,10 @@ unsigned int Rec_File_Size = 300;//MB
 unsigned int Rec_Bitrate = 8000000;//b/s
 int isDualCam = 0;
 int isColdBootRec = 0;
+int isBlackBoxTopRec = 0;
+int isBlackBoxBottomRec = 0;
+int isBlackBoxTopWaitDequeue = 0;
+int isDequeue = 0;
 
 // chris -
 
@@ -137,6 +141,7 @@ char Rec_File_Size_String[PROPERTY_VALUE_MAX];
 char Rec_Bitrate_String[PROPERTY_VALUE_MAX];
 char isDualCam_String[PROPERTY_VALUE_MAX];
 char isColdBootRec_String[PROPERTY_VALUE_MAX];
+char isBlackBoxRec[PROPERTY_VALUE_MAX];
 
 char startNight[PROPERTY_VALUE_MAX];
 //char startCapture[PROPERTY_VALUE_MAX];
@@ -148,6 +153,8 @@ unsigned int oldRecsec = 1;
 int isIframe = 0;
 
 int cam_id = -1;
+
+FILE *rec_fp1 = NULL;
 
 //lidbg("CAMID[%d] :",cam_id);
 #define camdbg(msg...) do{\
@@ -162,6 +169,144 @@ struct thread_parameter
 	unsigned int *nframes ;
 	unsigned char multi_stream_mjpg_enable;
 };
+
+#define member_of(ptr, type, member) ({ \
+  const typeof(((type *)0)->member) *__mptr = (ptr); \
+  (type *)((char *)__mptr - offsetof(type,member));})
+
+struct cam_list {
+  struct cam_list *next, *prev;
+};
+
+static inline void cam_list_init(struct cam_list *ptr)
+{
+  ptr->next = ptr;
+  ptr->prev = ptr;
+}
+
+static inline void cam_list_add_tail_node(struct cam_list *item,
+  struct cam_list *head)
+{
+  struct cam_list *prev = head->prev;
+
+  head->prev = item;
+  item->next = head;
+  item->prev = prev;
+  prev->next = item;
+}
+
+static inline void cam_list_insert_before_node(struct cam_list *item,
+  struct cam_list *node)
+{
+  item->next = node;
+  item->prev = node->prev;
+  item->prev->next = item;
+  node->prev = item;
+}
+
+static inline void cam_list_del_node(struct cam_list *ptr)
+{
+  struct cam_list *prev = ptr->prev;
+  struct cam_list *next = ptr->next;
+
+  next->prev = ptr->prev;
+  prev->next = ptr->next;
+  ptr->next = ptr;
+  ptr->prev = ptr;
+}
+
+typedef struct {
+    struct cam_list list;
+    void* data;
+	int length;
+} camera_q_node;
+
+camera_q_node mhead; /* dummy head */
+unsigned int msize;
+pthread_mutex_t alock;
+
+bool pri_enqueue(void *data,int count)
+{
+	void *tmpData;
+	tmpData = malloc(count);  
+	memcpy(tmpData, data, count);
+    camera_q_node *node =
+        (camera_q_node *)malloc(sizeof(camera_q_node));
+    if (NULL == node) {
+        ALOGE("%s: No memory for camera_q_node", __func__);
+        return false;
+    }
+
+    memset(node, 0, sizeof(camera_q_node));
+    node->data = tmpData;
+	node->length = count;
+
+    //pthread_mutex_lock(&mlock);
+    struct cam_list *p_next = mhead.list.next;
+
+    mhead.list.next = &node->list;
+    p_next->prev = &node->list;
+    node->list.next = p_next;
+    node->list.prev = &mhead.list;
+
+    msize++;
+    //pthread_mutex_unlock(&mlock);
+    return true;
+}
+
+bool enqueue(void *data,int count)
+{
+	void *tmpData;
+	tmpData = malloc(count);  
+	memcpy(tmpData, data, count);
+    camera_q_node *node =
+        (camera_q_node *)malloc(sizeof(camera_q_node));
+    if (NULL == node) {
+        lidbg("%s: No memory for camera_q_node", __func__);
+        return false;
+    }
+
+    memset(node, 0, sizeof(camera_q_node));
+    node->data = tmpData;
+	node->length = count;
+
+    pthread_mutex_lock(&alock);
+    cam_list_add_tail_node(&node->list, &mhead.list);
+    msize++;
+	if( msize % 100 == 0 ) lidbg("[%d]:=====enqueue => %d======\n",cam_id,msize);
+	//free(tmpData);
+    pthread_mutex_unlock(&alock);
+    return true;
+}
+
+int dequeue(void* data)
+{
+	int ret;
+    camera_q_node* node = NULL;
+    //void* data = NULL;
+    struct cam_list *head = NULL;
+    struct cam_list *pos = NULL;
+
+    pthread_mutex_lock(&alock);
+    head = &mhead.list;
+    pos = head->next;
+    if (pos != head) {
+        node = member_of(pos, camera_q_node, list);
+        cam_list_del_node(&node->list);
+        msize--;
+    }
+    pthread_mutex_unlock(&alock);
+
+    if (NULL != node) {
+        //data = node->data;
+        memcpy(data, node->data, node->length);
+		ret =  node->length;
+        free(node->data);
+		free(node);
+    }
+
+    return ret;
+}
 
 #if 0
 static void pantilt(int dev, char *dir, char *length)
@@ -1226,6 +1371,102 @@ static struct option opts[] = {
 	{0, 0, 0, 0}
 };
 
+char dvr_blackbox_filename[100] = {0};
+char rear_blackbox_filename[100] = {0};
+char deq_time_buf[100] = {0};
+
+void dequeue_buf(int count , char* rec_fp)
+{
+	FILE *fp1 = NULL;
+	FILE *fp2 = NULL;
+	lidbg("=====dequeue_buf===count => %d==\n",count);
+	if(isBlackBoxTopRec)
+	{
+		if(cam_id == DVR_ID)
+		{
+			sprintf(dvr_blackbox_filename, "%s/BlackBox/F%s.h264", Rec_Save_Dir, deq_time_buf);
+			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,dvr_blackbox_filename);
+			fp1 = fopen(dvr_blackbox_filename, "ab+");
+		}
+		else if(cam_id == REARVIEW_ID)
+		{
+			sprintf(rear_blackbox_filename, "%s/BlackBox/R%s.h264", Rec_Save_Dir, deq_time_buf);
+			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,rear_blackbox_filename);
+			fp1 = fopen(rear_blackbox_filename, "ab+");
+		}
+		//if(rec_fp != NULL) fclose(rec_fp);
+	}
+	else if(isBlackBoxBottomRec)
+	{
+#if 0
+		lidbg_get_current_time(0 , time_buf, NULL);
+		if(cam_id == DVR_ID)
+			sprintf(flyh264_filename, "%s/BlackBox/F%s.h264", Rec_Save_Dir, time_buf);
+		else if(cam_id == REARVIEW_ID)
+			sprintf(flyh264_filename, "%s/BlackBox/R%s.h264", Rec_Save_Dir, time_buf);
+#endif
+		if(cam_id == DVR_ID)
+		{
+			lidbg("=========[%d]:BlackBoxBottomRec : %s===========\n", cam_id,dvr_blackbox_filename);
+			fp2 = fopen(dvr_blackbox_filename, "ab+");
+		}
+		else if(cam_id == REARVIEW_ID)
+		{
+			lidbg("=========[%d]:BlackBoxBottomRec : %s===========\n", cam_id,rear_blackbox_filename);
+			fp2 = fopen(rear_blackbox_filename, "ab+");
+		}
+		//if(rec_fp != NULL) fclose(rec_fp);
+	}
+	else lidbg_get_current_time(0 , deq_time_buf, NULL);
+	while((count --) > 0)
+	{
+		void* tempa;
+		int lengtha;
+		tempa = malloc(200000);  
+		lengtha = dequeue(tempa);
+		//lidbg("=====dequeue2===%d===\n",lengtha);
+		//fwrite(tempa, lengtha, 1, rec_fp);//write data to the output file
+		if(isBlackBoxTopRec) fwrite(tempa, lengtha, 1, fp1);
+		else if(isBlackBoxBottomRec) fwrite(tempa, lengtha, 1, fp2);
+		free(tempa);
+	}
+	if(fp1 != NULL) fclose(fp1);
+	if(fp2 != NULL) fclose(fp2);
+	if(isBlackBoxTopRec == 0) isBlackBoxBottomRec = 0;
+	isBlackBoxTopRec = 0;
+}
+
+void *thread_dequeue(void *par)
+{
+	unsigned int count = *(unsigned int*)par;
+	lidbg("%s: count = %d \n", __func__,count);
+	if(!isDequeue)
+	{
+		isDequeue = 1;
+		XU_H264_Set_IFRAME(dev);
+		dequeue_buf(count,rec_fp1);
+		isDequeue = 0;
+	}
+	return 0;
+}
+
+void *thread_top_dequeue(void *par)
+{
+	//unsigned int count = *(unsigned int*)par;
+	lidbg("%s: E \n", __func__);
+	if(!isDequeue)
+	{
+		isDequeue = 1;
+		XU_H264_Set_IFRAME(dev);
+		dequeue_buf(msize - 300,rec_fp1);
+		isBlackBoxTopRec = 1;
+		isBlackBoxBottomRec = 1;
+		dequeue_buf(300,rec_fp1);
+		isDequeue = 0;
+	}
+	return 0;
+}
+
 void *thread_capture(void *par)
 {
 
@@ -1691,9 +1932,16 @@ failproc:
 static void switch_scan(void)
 {
 	if(cam_id == DVR_ID)
+	{
 		property_get("lidbg.uvccam.dvr.recording", startRecording, "0");
+		property_get("lidbg.uvccam.dvr.blackbox", isBlackBoxRec, "0");
+	}
 	else if(cam_id == REARVIEW_ID)
+	{
 		property_get("lidbg.uvccam.rearview.recording", startRecording, "0");
+		property_get("lidbg.uvccam.rear.blackbox", isBlackBoxRec, "0");
+	}
+	
 	return;
 }
 
@@ -1891,7 +2139,7 @@ int main(int argc, char *argv[])
 	struct timeval start, end, ts;
 	unsigned int delay = 0, nframes = (unsigned int)-1;
 	FILE *file = NULL;
-	FILE *rec_fp1 = NULL;
+	//FILE *rec_fp1 = NULL;
 	FILE *rec_fp2 = NULL;
 	FILE *rec_fp3 = NULL;
 	FILE *rec_fp4 = NULL;
@@ -2119,6 +2367,7 @@ int main(int argc, char *argv[])
 	unsigned char stream2_frame_drop_ctrl = 0;
 	char osd_string[12] = {"0"};
 	pthread_t thread_capture_id;
+	pthread_t thread_dequeue_id;
 	//pthread_t thread_switch_id;
 	//pthread_t thread_nightMode_id;
 	int flytmpcnt = 0,rc;
@@ -2128,6 +2377,7 @@ int main(int argc, char *argv[])
 	unsigned char isExceed = 0;
 	unsigned long totalSize = 0;
 	unsigned char tryopencnt = 20;
+	unsigned int tmp_count = 0;
 	
  //cjc -
 #if(CARCAM_PROJECT == 1)
@@ -3027,6 +3277,8 @@ int main(int argc, char *argv[])
 		osd_set(REARVIEW_ID);//loop
 		return 0;
 	}
+	
+	cam_list_init(&mhead.list);
 
 	/* Open the video device. */
 	//dev = video_open(argv[optind]);
@@ -4269,6 +4521,54 @@ openfd:
 
 		/*read prop:whether stop recoding*/
     	switch_scan();
+
+		if(!strncmp(isBlackBoxRec, "1", 1))
+		{
+			if((isBlackBoxTopRec == 0) && (isBlackBoxBottomRec == 0))
+			{
+				if(msize <= 300)
+				{
+					lidbg("***isBlackBoxTopWaitDequeue______SET***\n");
+#if 0
+					isBlackBoxTopRec = 1;
+					isBlackBoxBottomRec = 1;
+					tmp_count = msize;
+					pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize);
+#endif
+					isBlackBoxTopWaitDequeue = 1;
+				}
+				else
+				{
+#if 0
+					//tmp_count = msize - 300;
+					//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize - 300);
+					//usleep(20 * 1000);
+					dequeue_buf(msize - 300,rec_fp1);
+					isBlackBoxTopRec = 1;
+					isBlackBoxBottomRec = 1;
+					tmp_count = 300;
+					pthread_create(&thread_dequeue_id,NULL,thread_dequeue,300);
+#endif
+					pthread_create(&thread_dequeue_id,NULL,thread_top_dequeue,NULL);
+				}
+			}
+			else isBlackBoxTopWaitDequeue = 1;
+			
+			if(cam_id == DVR_ID)
+				property_set("lidbg.uvccam.dvr.blackbox", "0");
+			else if(cam_id == REARVIEW_ID)
+				property_set("lidbg.uvccam.rear.blackbox", "0");
+		}
+
+		if(msize > 300 && isBlackBoxTopWaitDequeue && (isBlackBoxTopRec == 0) && (isBlackBoxBottomRec == 0))
+		{
+			lidbg("***isBlackBoxTopWaitDequeue***\n");
+			pthread_create(&thread_dequeue_id,NULL,thread_top_dequeue,NULL);
+			isBlackBoxTopWaitDequeue = 0;
+		}
+
+		if(msize == 300) XU_H264_Set_IFRAME(dev);
+		
 		if((!strncmp(startRecording, "0", 1)) && (!do_save) )
 		{
 			lidbg("-------eho---------uvccam stop recording -----------\n");
@@ -4279,6 +4579,7 @@ openfd:
 				system(tmpCMD);
 			}
 #endif
+			dequeue_buf(msize,rec_fp1);
 			//system("echo 'udisk_unrequest' > /dev/flydev0");
 			property_set("fly.uvccam.curprevnum", "-1");
 			send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_STOP);
@@ -4711,6 +5012,13 @@ openfd:
 					}
 					else
 					{
+						//tmp_count = msize;
+						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize);
+						//pthread_join(thread_capture_id,NULL);
+#if 0
+						while(isDequeue) usleep(100*1000);
+						dequeue_buf(msize,rec_fp1);
+#endif
 #if 1
 						isIframe = 1;
 						XU_H264_Set_IFRAME(dev);
@@ -4724,7 +5032,7 @@ openfd:
 						
 						lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);
 						if(rec_fp1 != NULL) fclose(rec_fp1);
-						rec_fp1 = fopen(flyh264_filename, "wb");
+						//rec_fp1 = fopen(flyh264_filename, "wb");
 					}
 					#if 0
 					/*only if within Rec_File_Size,otherwise del oldest file again.*/
@@ -4739,13 +5047,45 @@ openfd:
 					#endif
 					
 				}
-				if(rec_fp1 != NULL)
-				{
+				//if(rec_fp1 != NULL)
+				//{
 					if (isIframe == 1)
 						isIframe = 0;
 					else
-						fwrite(mem0[buf0.index], buf0.bytesused, 1, rec_fp1);//write data to the output file
-				}
+					{
+						//if(i > 30)
+							enqueue(mem0[buf0.index], buf0.bytesused);
+						//else
+						//	fwrite(mem0[buf0.index], buf0.bytesused, 1, rec_fp1);
+					}
+						
+						//fwrite(mem0[buf0.index], buf0.bytesused, 1, rec_fp1);//write data to the output file
+					if(isBlackBoxBottomRec && (msize > 300) && (isBlackBoxTopRec == 0))
+					{
+						tmp_count = 300;
+						pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
+					}
+					else if((msize % 100 == 0) && (msize >= 600))
+					{
+						/*
+						int tmpi = 200;
+						while((tmpi --) > 0)
+						{
+							void* tempa;
+							int lengtha;
+							tempa = malloc(100000);  
+							lidbg("=====dequeue1===%d===\n",tmpi);
+							lengtha = dequeue(tempa);
+							lidbg("=====dequeue2===%d===\n",lengtha);
+							fwrite(tempa, lengtha, 1, rec_fp1);//write data to the output file
+							free(tempa);
+						}
+						*/
+						tmp_count = 300;
+						pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
+					}
+					
+				//}
 				isExceed = 0;
 			}
 		}
