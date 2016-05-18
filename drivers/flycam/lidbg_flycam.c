@@ -17,6 +17,8 @@ static int thread_accon_start_rec(void *data);
 static void dvr_fail_proc(void);
 static void rear_fail_proc(void);
 
+#define NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE	(130)
+#define NOTIFIER_MINOR_EXCEED_THRESHOLD 		(10)
 
 /*camStatus mask*/
 #define FLY_CAM_ISVALID	0x01
@@ -245,6 +247,7 @@ static int lidbg_flycam_event(struct notifier_block *this,
 			mod_timer(&suspend_stoprec_timer,SUSPEND_STOPREC_ACCOFF_TIME);		
 			break;
 		case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_DOWN):
+			lidbg("flycam event:device_down %ld\n", event);
 			isDVRFirstResume = 0;
 			isRearFirstResume = 0;
 			isDVRACCResume = 0;
@@ -255,6 +258,11 @@ static int lidbg_flycam_event(struct notifier_block *this,
 			isRearACCRec = isRearRec;
 			if(isDVRRec) dvr_stop_recording();
 			if(isRearRec) rear_stop_recording();
+			break;
+		case NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD):
+			lidbg("flycam event:emergency recording %ld\n", event);
+			if(isDVRRec) lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
+			if(isRearRec) lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
 			break;
 	    default:
 	        break;
@@ -374,7 +382,7 @@ static int thread_set_par_func(void *data)
 /*can not block in ISR function*/
 static int thread_ui_startrec_func(void *data)
 {
-	char rc = -1;
+	int rc = -1;
 	while(1)
 	{
 		wait_for_completion(&ui_start_rec_wait);
@@ -3017,7 +3025,8 @@ int thread_flycam_init(void *data)
 	    ui_start_rec_timer.data = 0;
 	    ui_start_rec_timer.expires = 0;
 	    ui_start_rec_timer.function = ui_start_rec_timer_isr;
-
+			
+		lidbg_shell_cmd("echo 1 > /sys/class/sensors/mc3xxx-accel/enable");
 		lidbg("%s:====start osd set====\n",__func__);
 		lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 0");
 		lidbg_shell_cmd("./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 6&");

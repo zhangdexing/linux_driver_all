@@ -4272,7 +4272,6 @@ openfd:
 
 	XU_H264_Set_GOP(dev, 10);
 		
-		
 	if(GetFreeRam(&freeram) && freeram<1843200*nbufs+4194304)
 	{
 		lidbg( "free memory isn't enough(%d),But still continue\n",freeram);		
@@ -4552,7 +4551,7 @@ openfd:
 					pthread_create(&thread_dequeue_id,NULL,thread_top_dequeue,NULL);
 				}
 			}
-			else isBlackBoxTopWaitDequeue = 1;
+			//else isBlackBoxTopWaitDequeue = 1;
 			
 			if(cam_id == DVR_ID)
 				property_set("lidbg.uvccam.dvr.blackbox", "0");

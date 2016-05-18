@@ -58,15 +58,15 @@
 
 //=============================================================================
 #ifdef _MC3XXX_DEBUG_ON_
-    #define mcprintkreg(x...)     printk(x)
-    #define mcprintkfunc(x...)    printk(x)
-    #define GSE_ERR(x...) 	      printk(x)
-    #define GSE_LOG(x...) 	      printk(x)
+    #define mclidbgreg(x...)     lidbg(x)
+    #define mclidbgfunc(x...)    lidbg(x)
+    #define lidbg(x...) 	      lidbg(x)
+    #define lidbg(x...) 	      lidbg(x)
 #else
-    #define mcprintkreg(x...)
-    #define mcprintkfunc(x...)
-    #define GSE_ERR(x...)
-    #define GSE_LOG(x...)
+    #define mclidbgreg(x...)
+    #define mclidbgfunc(x...)
+    #define lidbg(x...)
+    #define lidbg(x...)
 #endif
 
 //=============================================================================
@@ -286,13 +286,13 @@ static int load_cali_flg = 0;
                 _nTemp = nDataX;                                                      \
                 nDataX = nDataY;                                                      \
                 nDataY = -_nTemp;                                                     \
-                GSE_LOG("[%s] 3250 read remap\n", __FUNCTION__);                      \
+                lidbg("[%s] 3250 read remap\n", __FUNCTION__);                      \
             }                                                                         \
             else                                                                      \
             {                                                                         \
                 if (s_bMPOL & 0x01)    nDataX = -nDataX;                              \
                 if (s_bMPOL & 0x02)    nDataY = -nDataY;                              \
-                GSE_LOG("[%s] 35X0 remap [s_bMPOL: %d]\n", __FUNCTION__, s_bMPOL);    \
+                lidbg("[%s] 35X0 remap [s_bMPOL: %d]\n", __FUNCTION__, s_bMPOL);    \
             }
 
 #define MCUBE_WREMAP(nDataX, nDataY)                                                  \
@@ -303,13 +303,13 @@ static int load_cali_flg = 0;
                 _nTemp = nDataX;                                                      \
                 nDataX = -nDataY;                                                     \
                 nDataY = _nTemp;                                                      \
-                GSE_LOG("[%s] 3250 write remap\n", __FUNCTION__);                     \
+                lidbg("[%s] 3250 write remap\n", __FUNCTION__);                     \
             }                                                                         \
             else                                                                      \
             {                                                                         \
                 if (s_bMPOL & 0x01)    nDataX = -nDataX;                              \
                 if (s_bMPOL & 0x02)    nDataY = -nDataY;                              \
-                GSE_LOG("[%s] 35X0 remap [s_bMPOL: %d]\n", __FUNCTION__, s_bMPOL);    \
+                lidbg("[%s] 35X0 remap [s_bMPOL: %d]\n", __FUNCTION__, s_bMPOL);    \
             }
 
 #define IS_MCFM12()    ((0xC0 <= s_bHWID) && (s_bHWID <= 0xCF))
@@ -566,7 +566,7 @@ static ssize_t mc3xxx_map_store(struct device *dev, struct device_attribute *att
  *****************************************/
 static int mc3xxx_validate_sensor_IC(unsigned char *pbPCode, unsigned char *pbHwID)
 {
-    GSE_LOG("[%s] *pbPCode: 0x%02X, *pbHwID: 0x%02X\n", __FUNCTION__, *pbPCode, *pbHwID);
+    lidbg("[%s] *pbPCode: 0x%02X, *pbHwID: 0x%02X\n", __FUNCTION__, *pbPCode, *pbHwID);
 
     if (   (0x01 == *pbHwID)
         || (0x03 == *pbHwID)
@@ -615,7 +615,7 @@ static int mc3xxx_validate_sensor_IC(unsigned char *pbPCode, unsigned char *pbHw
  *****************************************/
 static void mc3xxx_set_resolution(void)
 {
-    GSE_LOG("[%s]\n", __FUNCTION__);
+    lidbg("[%s]\n", __FUNCTION__);
 
     switch (s_bPCODE)
     {
@@ -639,7 +639,7 @@ static void mc3xxx_set_resolution(void)
     // === RESERVED ==================================BGN===
     // === (move to normal section once it is confirmed) ===
     case MC3XXX_PCODE_RESERVE_10:
-         GSE_ERR("RESERVED ONLINE!\n");
+         lidbg("RESERVED ONLINE!\n");
          // TODO: should have a default configuration...
          break;
 
@@ -650,23 +650,23 @@ static void mc3xxx_set_resolution(void)
     case MC3XXX_PCODE_RESERVE_6:
     case MC3XXX_PCODE_RESERVE_8:
     case MC3XXX_PCODE_RESERVE_9:
-         GSE_ERR("RESERVED ONLINE!\n");
+         lidbg("RESERVED ONLINE!\n");
          s_bResolution = MC3XXX_RESOLUTION_LOW;
          break;
 
     case MC3XXX_PCODE_RESERVE_2:
     case MC3XXX_PCODE_RESERVE_7:
-         GSE_ERR("RESERVED ONLINE!\n");
+         lidbg("RESERVED ONLINE!\n");
          s_bResolution = MC3XXX_RESOLUTION_HIGH;
          break;
     // === RESERVED ==================================END===
 
     default:
-         GSE_ERR("ERR: no resolution assigned!\n");
+         lidbg("ERR: no resolution assigned!\n");
          break;
     }
 
-    GSE_LOG("[%s] s_bResolution: %d\n", __FUNCTION__, s_bResolution);
+    lidbg("[%s] s_bResolution: %d\n", __FUNCTION__, s_bResolution);
 }
 
 /*****************************************
@@ -676,7 +676,7 @@ static void mc3xxx_set_sample_rate(struct i2c_client *pt_i2c_client)
 {
     unsigned char    _baDataBuf[2] = { 0 };
 
-    GSE_LOG("[%s]\n", __FUNCTION__);
+    lidbg("[%s]\n", __FUNCTION__);
 
     _baDataBuf[0] = MC3XXX_SAMPLE_RATE_REG;
     _baDataBuf[1] = 0x00;
@@ -689,7 +689,7 @@ static void mc3xxx_set_sample_rate(struct i2c_client *pt_i2c_client)
         my_i2c_master_send(pt_i2c_client, &(_baData2Buf[0]), 1);
         my_i2c_master_recv(pt_i2c_client, &(_baData2Buf[0]), 1);
 
-        GSE_LOG("[%s] REG(0x2A) = 0x%02X\n", __FUNCTION__, _baData2Buf[0]);
+        lidbg("[%s] REG(0x2A) = 0x%02X\n", __FUNCTION__, _baData2Buf[0]);
 
         _baData2Buf[0] = (_baData2Buf[0] & 0xC0);
 
@@ -700,7 +700,7 @@ static void mc3xxx_set_sample_rate(struct i2c_client *pt_i2c_client)
         case 0x80:    _baDataBuf[1] = 0x09;                                                    break;
         case 0xC0:    _baDataBuf[1] = 0x0A;                                                    break;
 
-        default:      GSE_ERR("[%s] no chance to get here... check code!\n", __FUNCTION__);    break;
+        default:      lidbg("[%s] no chance to get here... check code!\n", __FUNCTION__);    break;
         }
     }
 
@@ -730,7 +730,7 @@ static void mc3xxx_config_range(struct i2c_client *pt_i2c_client)
 
     my_i2c_master_send(pt_i2c_client, _baDataBuf, 0x2);
 
-    GSE_LOG("[%s] set 0x%X\n", __FUNCTION__, _baDataBuf[1]);
+    lidbg("[%s] set 0x%X\n", __FUNCTION__, _baDataBuf[1]);
 }
 
 /*****************************************
@@ -750,7 +750,7 @@ static void mc3xxx_set_gain(void)
         }
     }
     
-    GSE_LOG("[%s] gain: %d / %d / %d\n", __FUNCTION__, gsensor_gain.x, gsensor_gain.y, gsensor_gain.z);
+    lidbg("[%s] gain: %d / %d / %d\n", __FUNCTION__, gsensor_gain.x, gsensor_gain.y, gsensor_gain.z);
 }
 
 //=============================================================================
@@ -841,7 +841,7 @@ static ssize_t mc3xxx_chip_id_show(struct device *dev, struct device_attribute *
 //=============================================================================
 static ssize_t mc3xxx_position_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-    printk("%s called\n", __func__);
+    lidbg("%s called\n", __func__);
     return sprintf(buf, "%d\n", mc3xx0_current_placement);
 }
 
@@ -850,7 +850,7 @@ static ssize_t mc3xxx_position_store(struct device *dev, struct device_attribute
 {
     unsigned long position = 0;
 
-    printk("%s called\n", __func__);
+    lidbg("%s called\n", __func__);
 
     position = simple_strtoul(buf, NULL,10);
 
@@ -905,7 +905,7 @@ static ssize_t mc3xxx_regmap_show(struct device *dev, struct device_attribute *a
 static ssize_t mc3xxx_regmap_store(struct device *dev, struct device_attribute *attr,const char *buf, size_t count)
 {
     // reserved
-    GSE_LOG("[%s] buf[0]: 0x%02X\n", __FUNCTION__, buf[0]);
+    lidbg("[%s] buf[0]: 0x%02X\n", __FUNCTION__, buf[0]);
 
     return count;
 }
@@ -913,7 +913,7 @@ static ssize_t mc3xxx_regmap_store(struct device *dev, struct device_attribute *
 //=============================================================================
 static ssize_t mc3xxx_orien_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-    GSE_LOG("[%s] mc3xx0_current_placement: %d\n", __FUNCTION__, mc3xx0_current_placement);
+    lidbg("[%s] mc3xx0_current_placement: %d\n", __FUNCTION__, mc3xx0_current_placement);
 
 	return sprintf(buf, "%d\n", mc3xx0_current_placement);
 }
@@ -924,7 +924,7 @@ static ssize_t mc3xxx_orien_store(struct device *dev, struct device_attribute *a
 	unsigned long data;
 	int error;
 
-    GSE_LOG("[%s] mc3xx0_current_placement: %d\n", __FUNCTION__, mc3xx0_current_placement);
+    lidbg("[%s] mc3xx0_current_placement: %d\n", __FUNCTION__, mc3xx0_current_placement);
 
 	error = kstrtoul(buf, 10, &data);
 	if (error)
@@ -933,7 +933,7 @@ static ssize_t mc3xxx_orien_store(struct device *dev, struct device_attribute *a
 	if (8 > data)
 		mc3xx0_current_placement = data;
 
-    GSE_LOG("[%s] data: %ld, mc3xx0_current_placement: %d\n", __FUNCTION__, data, mc3xx0_current_placement);
+    lidbg("[%s] data: %ld, mc3xx0_current_placement: %d\n", __FUNCTION__, data, mc3xx0_current_placement);
 
 	return count;
 }
@@ -977,7 +977,7 @@ static int mc3xxx_chip_init(struct i2c_client *client)
     ret = my_i2c_smbus_write_byte_data(client, _baDataBuf[0], _baDataBuf[1]);
     if (ret < 0)
     {
-        printk(KERN_ERR"%s: write i2c error, ret=%d\n", __func__, ret);
+        lidbg(KERN_ERR"%s: write i2c error, ret=%d\n", __func__, ret);
         return ret;
     }
     
@@ -999,7 +999,7 @@ static int mc3xxx_chip_init(struct i2c_client *client)
     my_i2c_master_recv(client, &(_baDataBuf[0]), 1);
     s_bMPOL = (_baDataBuf[0] & 0x03);
 
-    printk("[%s] init ok.\n", __FUNCTION__);
+    lidbg("[%s] init ok.\n", __FUNCTION__);
 
     return (MC3XXX_RETCODE_SUCCESS);
 }
@@ -1029,7 +1029,7 @@ struct file *openFile(char *path, int flag, int mode)
 
 	if (IS_ERR(fp) || !fp->f_op) 
 	{
-		GSE_LOG("Calibration File filp_open return NULL\n");
+		lidbg("Calibration File filp_open return NULL\n");
 		return NULL; 
 	}
 
@@ -1067,7 +1067,7 @@ void initKernelEnv(void)
 { 
 	oldfs = get_fs(); 
 	set_fs(KERNEL_DS);
-	printk(KERN_INFO "initKernelEnv\n");
+	lidbg(KERN_INFO "initKernelEnv\n");
 } 
 
 //=============================================================================
@@ -1102,7 +1102,7 @@ int MC3XXX_WriteCalibration(struct i2c_client *client, int dat[MC3XXX_AXES_NUM])
     dat[MC3XXX_AXIS_Y] = temp_cali_dat[MC3XXX_AXIS_Y];
     dat[MC3XXX_AXIS_Z] = temp_cali_dat[MC3XXX_AXIS_Z];
  
-	GSE_LOG("UPDATE dat: (%+3d %+3d %+3d)\n", dat[MC3XXX_AXIS_X], dat[MC3XXX_AXIS_Y], dat[MC3XXX_AXIS_Z]);
+	lidbg("UPDATE dat: (%+3d %+3d %+3d)\n", dat[MC3XXX_AXIS_X], dat[MC3XXX_AXIS_Y], dat[MC3XXX_AXIS_Z]);
 
     // read register 0x21~0x29
 	err  = my_i2c_smbus_read_i2c_block_data(client, 0x21, 3, &buf[0]);
@@ -1169,7 +1169,7 @@ int MC3XXX_WriteCalibration(struct i2c_client *client, int dat[MC3XXX_AXES_NUM])
 	gain_data[0] = 256*8*128/3/(40+x_gain);
 	gain_data[1] = 256*8*128/3/(40+y_gain);
 	gain_data[2] = 256*8*128/3/(40+z_gain);
-	GSE_LOG("%d %d ======================\n\n ", gain_data[0], x_gain);
+	lidbg("%d %d ======================\n\n ", gain_data[0], x_gain);
 
 	buf[0] = 0x43;
 	my_i2c_smbus_write_byte_data(client, 0x07, buf[0]);
@@ -1200,7 +1200,7 @@ int mcube_read_cali_file(struct i2c_client *client)
 	int err = 0;
 	char buf[64] = { 0 };
 
-	GSE_LOG("%s %d\n",__func__,__LINE__);
+	lidbg("%s %d\n",__func__,__LINE__);
 
 	initKernelEnv();
 
@@ -1208,7 +1208,7 @@ int mcube_read_cali_file(struct i2c_client *client)
 
 	if (fd_file == NULL) 
 	{
-		GSE_LOG("fail to open\n");
+		lidbg("fail to open\n");
 		cali_data[0] = 0;
 		cali_data[1] = 0;
 		cali_data[2] = 0;
@@ -1220,15 +1220,15 @@ int mcube_read_cali_file(struct i2c_client *client)
 		memset(buf, 0, 64); 
 
 		if ((err = readFile(fd_file, buf, 64)) > 0) 
-			GSE_LOG("buf:%s\n",buf); 
+			lidbg("buf:%s\n",buf); 
 		else 
-			GSE_LOG("read file error %d\n",err); 
+			lidbg("read file error %d\n",err); 
 
 		set_fs(oldfs); 
 		closeFile(fd_file); 
 
 		sscanf(buf, "%d %d %d", &cali_data[MC3XXX_AXIS_X], &cali_data[MC3XXX_AXIS_Y], &cali_data[MC3XXX_AXIS_Z]);
-		GSE_LOG("cali_data: %d %d %d\n", cali_data[MC3XXX_AXIS_X], cali_data[MC3XXX_AXIS_Y], cali_data[MC3XXX_AXIS_Z]); 	
+		lidbg("cali_data: %d %d %d\n", cali_data[MC3XXX_AXIS_X], cali_data[MC3XXX_AXIS_Y], cali_data[MC3XXX_AXIS_Z]); 	
 				
 		MC3XXX_WriteCalibration(client, cali_data);
 	}
@@ -1250,7 +1250,7 @@ static int mcube_write_log_data(struct i2c_client *client, u8 data[0x3f])
 	fd_file = openFile(DATA_PATH ,O_RDWR | O_CREAT,0); 
 	if (fd_file == NULL) 
 	{
-		GSE_LOG("mcube_write_log_data fail to open\n");	
+		lidbg("mcube_write_log_data fail to open\n");	
 	}
 	else
 	{
@@ -1265,7 +1265,7 @@ static int mcube_write_log_data(struct i2c_client *client, u8 data[0x3f])
 		_pszBuffer = kzalloc(_WRT_LOG_DATA_BUFFER_SIZE, GFP_KERNEL);
 		if (NULL == _pszBuffer)
 		{
-			GSE_ERR("fail to allocate memory for buffer\n");
+			lidbg("fail to allocate memory for buffer\n");
     		closeFile(fd_file); 
 			return -1;
 		}
@@ -1279,9 +1279,9 @@ static int mcube_write_log_data(struct i2c_client *client, u8 data[0x3f])
 		}
 		msleep(50);		
 		if ((err = writeFile(fd_file,_pszBuffer,n))>0) 
-			GSE_LOG("buf:%s\n",_pszBuffer); 
+			lidbg("buf:%s\n",_pszBuffer); 
 		else 
-			GSE_LOG("write file error %d\n",err); 
+			lidbg("write file error %d\n",err); 
 
 		kfree(_pszBuffer);
 
@@ -1301,7 +1301,7 @@ void MC3XXX_rbm(struct i2c_client *client, int enable)
 
     _baDataBuf[0] = my_i2c_smbus_read_byte_data(client, 0x04);
 
-    GSE_LOG("[%s] REG(0x04): 0x%X, enable: %d\n", __FUNCTION__, _baDataBuf[0], enable);
+    lidbg("[%s] REG(0x04): 0x%X, enable: %d\n", __FUNCTION__, _baDataBuf[0], enable);
     
     if (0x00 == (_baDataBuf[0] & 0x40))
     {
@@ -1312,7 +1312,7 @@ void MC3XXX_rbm(struct i2c_client *client, int enable)
         my_i2c_smbus_write_byte_data(client, 0x1B, _baDataBuf[0]);
     }
 
-    GSE_LOG("BEGIN - REG(0x04): 0x%X\n", _baDataBuf[0]);
+    lidbg("BEGIN - REG(0x04): 0x%X\n", _baDataBuf[0]);
     
     if (1 == enable)
     {
@@ -1329,7 +1329,7 @@ void MC3XXX_rbm(struct i2c_client *client, int enable)
 
         enable_RBM_calibration = 1;
 
-        GSE_LOG("set rbm!!\n");
+        lidbg("set rbm!!\n");
     }
     else if (0 == enable)
     {
@@ -1343,12 +1343,12 @@ void MC3XXX_rbm(struct i2c_client *client, int enable)
 
         enable_RBM_calibration = 0;
 
-        GSE_LOG("clear rbm!!\n");
+        lidbg("clear rbm!!\n");
     }
     
     _baDataBuf[0] = my_i2c_smbus_read_byte_data(client, 0x04);
 
-    GSE_LOG("RBM CONTROL DONE - REG(0x04): 0x%X\n", _baDataBuf[0]);
+    lidbg("RBM CONTROL DONE - REG(0x04): 0x%X\n", _baDataBuf[0]);
     
     if (_baDataBuf[0] & 0x40)
     {
@@ -1359,7 +1359,7 @@ void MC3XXX_rbm(struct i2c_client *client, int enable)
         my_i2c_smbus_write_byte_data(client, 0x1B, _baDataBuf[0]);
     }
     
-    GSE_LOG("END - REG(0x04): 0x%X\n", _baDataBuf[0]);
+    lidbg("END - REG(0x04): 0x%X\n", _baDataBuf[0]);
     
     _baDataBuf[0] = 0x41; 
     my_i2c_smbus_write_byte_data(client, 0x07, _baDataBuf[0]);
@@ -1392,7 +1392,7 @@ int MC3XXX_ReadOffset(struct i2c_client *client,s16 ofs[MC3XXX_AXES_NUM])
 
     MCUBE_RREMAP(ofs[MC3XXX_AXIS_X], ofs[MC3XXX_AXIS_Y]);
 
-	GSE_LOG("MC3XXX_ReadOffset %d %d %d\n", ofs[MC3XXX_AXIS_X], ofs[MC3XXX_AXIS_Y], ofs[MC3XXX_AXIS_Z]);
+	lidbg("MC3XXX_ReadOffset %d %d %d\n", ofs[MC3XXX_AXIS_X], ofs[MC3XXX_AXIS_Y], ofs[MC3XXX_AXIS_Z]);
 
     return err;  
 }
@@ -1412,20 +1412,20 @@ int MC3XXX_ResetCalibration(struct i2c_client *client)
 	err = my_i2c_smbus_write_byte_data(client, 0x07, buf[0]);
 	if(err)
 	{
-		GSE_ERR("error 0x07: %d\n", err);
+		lidbg("error 0x07: %d\n", err);
 	}
 
 	err = i2c_smbus_write_i2c_block_data(client, 0x21, 6, offset_buf);
 	if(err)
 	{
-		GSE_ERR("error: %d\n", err);
+		lidbg("error: %d\n", err);
 	}
 	
 	buf[0] = 0x41;
 	err = my_i2c_smbus_write_byte_data(client, 0x07, buf[0]);
 	if(err)
 	{
-		GSE_ERR("error: %d\n", err);
+		lidbg("error: %d\n", err);
 	}
 
 	msleep(20);
@@ -1467,7 +1467,7 @@ int MC3XXX_ReadCalibration(struct i2c_client *client, int dat[MC3XXX_AXES_NUM])
 
     if (err)
     {
-        GSE_ERR("read offset fail, %d\n", err);
+        lidbg("read offset fail, %d\n", err);
         return err;
     }    
     
@@ -1521,7 +1521,7 @@ int MC3XXX_ReadData(struct i2c_client *client, s16 buffer[MC3XXX_AXES_NUM])
 			buffer[2] = (signed short)buf1[2];
 		}
 	
-		mcprintkreg("MC3XXX_ReadData: %d %d %d\n", buffer[0], buffer[1], buffer[2]);
+		mclidbgreg("MC3XXX_ReadData: %d %d %d\n", buffer[0], buffer[1], buffer[2]);
 	}
 	else if (enable_RBM_calibration == 1)
 	{
@@ -1529,7 +1529,7 @@ int MC3XXX_ReadData(struct i2c_client *client, s16 buffer[MC3XXX_AXES_NUM])
 		buffer[MC3XXX_AXIS_Y] = (s16)((rbm_buf[2]) | (rbm_buf[3] << 8));
 		buffer[MC3XXX_AXIS_Z] = (s16)((rbm_buf[4]) | (rbm_buf[5] << 8));
 
-		GSE_LOG("%s RBM<<<<<[%08d %08d %08d]\n", __func__, buffer[MC3XXX_AXIS_X], buffer[MC3XXX_AXIS_Y], buffer[MC3XXX_AXIS_Z]);
+		lidbg("%s RBM<<<<<[%08d %08d %08d]\n", __func__, buffer[MC3XXX_AXIS_X], buffer[MC3XXX_AXIS_Y], buffer[MC3XXX_AXIS_Z]);
 
 		if(gain_data[0] == 0)
 		{
@@ -1544,10 +1544,10 @@ int MC3XXX_ReadData(struct i2c_client *client, s16 buffer[MC3XXX_AXES_NUM])
 		buffer[MC3XXX_AXIS_Y] = (buffer[MC3XXX_AXIS_Y] + offset_data[1]/2)*gsensor_gain.y/gain_data[1];
 		buffer[MC3XXX_AXIS_Z] = (buffer[MC3XXX_AXIS_Z] + offset_data[2]/2)*gsensor_gain.z/gain_data[2];
 			
-		GSE_LOG("%s offset_data <<<<<[%d %d %d]\n", __func__, offset_data[0], offset_data[1], offset_data[2]);
-		GSE_LOG("%s gsensor_gain <<<<<[%d %d %d]\n", __func__, gsensor_gain.x, gsensor_gain.y, gsensor_gain.z);
-		GSE_LOG("%s gain_data <<<<<[%d %d %d]\n", __func__, gain_data[0], gain_data[1], gain_data[2]);
-		GSE_LOG("%s RBM->RAW <<<<<[%d %d %d]\n", __func__, buffer[MC3XXX_AXIS_X], buffer[MC3XXX_AXIS_Y], buffer[MC3XXX_AXIS_Z]);
+		lidbg("%s offset_data <<<<<[%d %d %d]\n", __func__, offset_data[0], offset_data[1], offset_data[2]);
+		lidbg("%s gsensor_gain <<<<<[%d %d %d]\n", __func__, gsensor_gain.x, gsensor_gain.y, gsensor_gain.z);
+		lidbg("%s gain_data <<<<<[%d %d %d]\n", __func__, gain_data[0], gain_data[1], gain_data[2]);
+		lidbg("%s RBM->RAW <<<<<[%d %d %d]\n", __func__, buffer[MC3XXX_AXIS_X], buffer[MC3XXX_AXIS_Y], buffer[MC3XXX_AXIS_Z]);
 	}
 
     MCUBE_RREMAP(buffer[MC3XXX_AXIS_X], buffer[MC3XXX_AXIS_Y]);
@@ -1570,14 +1570,14 @@ int MC3XXX_ReadRawData(struct i2c_client *client, char * buf)
 	res = MC3XXX_ReadData(client, &raw_buf[0]);
 	if(res)
 	{     
-		GSE_ERR("I2C error: ret value=%d", res);
+		lidbg("I2C error: ret value=%d", res);
 		return -EIO;
 	}
 	else
 	{
     	const struct mc3xx0_hwmsen_convert *pCvt = &mc3xx0_cvt[mc3xx0_current_placement];
 
-		GSE_LOG("UPDATE dat: (%+3d %+3d %+3d)\n", raw_buf[MC3XXX_AXIS_X], raw_buf[MC3XXX_AXIS_Y], raw_buf[MC3XXX_AXIS_Z]);
+		lidbg("UPDATE dat: (%+3d %+3d %+3d)\n", raw_buf[MC3XXX_AXIS_X], raw_buf[MC3XXX_AXIS_Y], raw_buf[MC3XXX_AXIS_Z]);
 
         raw_buf[MC3XXX_AXIS_X] = ((raw_buf[MC3XXX_AXIS_X] * GRAVITY_1G_VALUE) / gsensor_gain.x);
         raw_buf[MC3XXX_AXIS_Y] = ((raw_buf[MC3XXX_AXIS_Y] * GRAVITY_1G_VALUE) / gsensor_gain.y);
@@ -1589,7 +1589,7 @@ int MC3XXX_ReadRawData(struct i2c_client *client, char * buf)
 
 		sprintf(buf, "%04x %04x %04x", G_RAW_DATA[MC3XXX_AXIS_X], G_RAW_DATA[MC3XXX_AXIS_Y], G_RAW_DATA[MC3XXX_AXIS_Z]);
 
-		GSE_LOG("G_RAW_DATA: (%+3d %+3d %+3d)\n", G_RAW_DATA[MC3XXX_AXIS_X], G_RAW_DATA[MC3XXX_AXIS_Y], G_RAW_DATA[MC3XXX_AXIS_Z]);
+		lidbg("G_RAW_DATA: (%+3d %+3d %+3d)\n", G_RAW_DATA[MC3XXX_AXIS_X], G_RAW_DATA[MC3XXX_AXIS_Y], G_RAW_DATA[MC3XXX_AXIS_Z]);
 	}
 
 	return 0;
@@ -1603,7 +1603,7 @@ static int MC3XXX_ReadRegMap(struct i2c_client *p_i2c_client, u8 *pbUserBuf)
     u8     _baData[MC3XXX_REGMAP_LENGTH] = { 0 };
     int    _nIndex = 0;
 
-    GSE_LOG("[%s]\n", __func__);
+    lidbg("[%s]\n", __func__);
 
     if(NULL == p_i2c_client)
         return (-EINVAL);
@@ -1615,7 +1615,7 @@ static int MC3XXX_ReadRegMap(struct i2c_client *p_i2c_client, u8 *pbUserBuf)
         if (NULL != pbUserBuf)
             pbUserBuf[_nIndex] = _baData[_nIndex];
 
-        printk(KERN_INFO "[%s] REG[0x%02X] = 0x%02X\n", __FUNCTION__, _nIndex, _baData[_nIndex]);
+        lidbg(KERN_INFO "[%s] REG[0x%02X] = 0x%02X\n", __FUNCTION__, _nIndex, _baData[_nIndex]);
     }
 
     mcube_write_log_data(p_i2c_client, _baData);
@@ -1720,18 +1720,18 @@ void MC3XXX_Reset(struct i2c_client *client)
     gain_data[1] = 256*8*128/3/(40+y_gain);
     gain_data[2] = 256*8*128/3/(40+z_gain);
     
-    GSE_LOG("offser gain = %d %d %d %d %d %d======================\n\n ", gain_data[0], gain_data[1], gain_data[2], offset_data[0], offset_data[1], offset_data[2]);
+    lidbg("offser gain = %d %d %d %d %d %d======================\n\n ", gain_data[0], gain_data[1], gain_data[2], offset_data[0], offset_data[1], offset_data[2]);
 }
 
 //=============================================================================
 static void MC3XXX_SaveDefaultOffset(struct i2c_client *p_i2c_client)
 {
-    GSE_LOG("[%s]\n", __func__);
+    lidbg("[%s]\n", __func__);
 
     my_i2c_smbus_read_i2c_block_data(p_i2c_client, 0x21, 3, &s_baOTP_OffsetData[0]);
     my_i2c_smbus_read_i2c_block_data(p_i2c_client, 0x24, 3, &s_baOTP_OffsetData[3]);
 
-    GSE_LOG("s_baOTP_OffsetData: 0x%02X - 0x%02X - 0x%02X - 0x%02X - 0x%02X - 0x%02X\n",
+    lidbg("s_baOTP_OffsetData: 0x%02X - 0x%02X - 0x%02X - 0x%02X - 0x%02X - 0x%02X\n",
             s_baOTP_OffsetData[0], s_baOTP_OffsetData[1], s_baOTP_OffsetData[2],
             s_baOTP_OffsetData[3], s_baOTP_OffsetData[4], s_baOTP_OffsetData[5]);
 }
@@ -1783,7 +1783,7 @@ int mc3xxx_read_accel_xyz(struct i2c_client *client, s16 *acc)
     acc[MC3XXX_AXIS_Y] = pCvt->sign[MC3XXX_AXIS_Y] * raw_data[pCvt->map[MC3XXX_AXIS_Y]];
     acc[MC3XXX_AXIS_Z] = pCvt->sign[MC3XXX_AXIS_Z] * raw_data[pCvt->map[MC3XXX_AXIS_Z]];
 
-    //printk(KERN_ERR"MC3XXX_DataAferMap: %d %d %d\n", acc[MC3XXX_AXIS_X], acc[MC3XXX_AXIS_Y] , acc[MC3XXX_AXIS_Z]);
+    //lidbg(KERN_ERR"MC3XXX_DataAferMap: %d %d %d\n", acc[MC3XXX_AXIS_X], acc[MC3XXX_AXIS_Y] , acc[MC3XXX_AXIS_Z]);
     
     return comres;
 }
@@ -1805,7 +1805,7 @@ static int mc3xxx_measure(struct i2c_client *client, struct acceleration *accel)
             else 
                 load_cali_flg--;
 
-            GSE_LOG("load_cali %d\n",ret); 
+            lidbg("load_cali %d\n",ret); 
         }  
     #endif
 
@@ -1897,47 +1897,47 @@ static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	switch (cmd) {
 	case IOCTL_SENSOR_SET_DELAY_ACCEL:
 		if(copy_from_user((void *)&sensor_duration, (void __user *) arg, sizeof(short))!=0){
-			printk("copy from error in %s.\n",__func__);
+			lidbg("copy from error in %s.\n",__func__);
 		}
 
 		break;
 
 	case IOCTL_SENSOR_GET_DELAY_ACCEL:
 		if(copy_to_user((void __user *) arg, (const void *)&sensor_duration, sizeof(short))!=0){
-			printk("copy to error in %s.\n",__func__);
+			lidbg("copy to error in %s.\n",__func__);
 		} 
 
 		break;
 
 	case IOCTL_SENSOR_GET_STATE_ACCEL:
 		if(copy_to_user((void __user *) arg, (const void *)&sensor_state_flag, sizeof(short))!=0){
-			printk("copy to error in %s.\n",__func__);
+			lidbg("copy to error in %s.\n",__func__);
 		}
 
 		break;
 
 	case IOCTL_SENSOR_SET_STATE_ACCEL:
 		if(copy_from_user((void *)&sensor_state_flag, (void __user *) arg, sizeof(short))!=0){
-			printk("copy from error in %s.\n",__func__);
+			lidbg("copy from error in %s.\n",__func__);
 		}     
 
 		break;
 	case IOCTL_SENSOR_GET_NAME:
 		if(copy_to_user((void __user *) arg,(const void *)MC3XXX_DISPLAY_NAME, sizeof(MC3XXX_DISPLAY_NAME))!=0){
-			printk("copy to error in %s.\n",__func__);
+			lidbg("copy to error in %s.\n",__func__);
 		}     			
 		break;		
 
 	case IOCTL_SENSOR_GET_VENDOR:
 		if(copy_to_user((void __user *) arg,(const void *)MC3XXX_DIPLAY_VENDOR, sizeof(MC3XXX_DIPLAY_VENDOR))!=0){
-			printk("copy to error in %s.\n",__func__);
+			lidbg("copy to error in %s.\n",__func__);
 		}     			
 		break;
 
 	case IOCTL_SENSOR_GET_CONVERT_PARA:
 		convert_para = MC3XXX_CONVERT_PARAMETER;
 		if(copy_to_user((void __user *) arg,(const void *)&convert_para,sizeof(float))!=0){
-			printk("copy to error in %s.\n",__func__);
+			lidbg("copy to error in %s.\n",__func__);
 		}     			
         break;
 			
@@ -1945,20 +1945,20 @@ static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	case GSENSOR_IOCTL_READ_SENSORDATA:	
 	case GSENSOR_IOCTL_READ_RAW_DATA:
 	case GSENSOR_MCUBE_IOCTL_READ_RBM_DATA:
-		GSE_LOG("fwq GSENSOR_IOCTL_READ_RAW_DATA\n");
+		lidbg("fwq GSENSOR_IOCTL_READ_RAW_DATA\n");
 
         mutex_lock(&data->lock);
 		MC3XXX_ReadRawData(client, strbuf);
         mutex_unlock(&data->lock);
 
 		if (copy_to_user((void __user *) arg, &strbuf, strlen(strbuf)+1)) {
-			printk("failed to copy sense data to user space.");
+			lidbg("failed to copy sense data to user space.");
 			return -EFAULT;
 		}
 		break;
 
 	case GSENSOR_MCUBE_IOCTL_SET_CALI:
-		GSE_LOG("fwq GSENSOR_MCUBE_IOCTL_SET_CALI!!\n");
+		lidbg("fwq GSENSOR_MCUBE_IOCTL_SET_CALI!!\n");
 		data1 = (void __user *)arg;
 
 		if(data1 == NULL)
@@ -1977,7 +1977,7 @@ static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			cali[MC3XXX_AXIS_Y] = sensor_data.y;
 			cali[MC3XXX_AXIS_Z] = sensor_data.z;	
 
-			GSE_LOG("GSENSOR_MCUBE_IOCTL_SET_CALI %d  %d  %d  %d  %d  %d!!\n", cali[MC3XXX_AXIS_X], cali[MC3XXX_AXIS_Y],cali[MC3XXX_AXIS_Z] ,sensor_data.x, sensor_data.y ,sensor_data.z);
+			lidbg("GSENSOR_MCUBE_IOCTL_SET_CALI %d  %d  %d  %d  %d  %d!!\n", cali[MC3XXX_AXIS_X], cali[MC3XXX_AXIS_Y],cali[MC3XXX_AXIS_Z] ,sensor_data.x, sensor_data.y ,sensor_data.z);
 				
             mutex_lock(&data->lock);
 			ret = MC3XXX_WriteCalibration(client, cali);			 
@@ -1986,14 +1986,14 @@ static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		break;
 		
 	case GSENSOR_IOCTL_CLR_CALI:
-		GSE_LOG("fwq GSENSOR_IOCTL_CLR_CALI!!\n");
+		lidbg("fwq GSENSOR_IOCTL_CLR_CALI!!\n");
         mutex_lock(&data->lock);
 		ret = MC3XXX_ResetCalibration(client);
         mutex_unlock(&data->lock);
 		break;
 
 	case GSENSOR_IOCTL_GET_CALI:
-		GSE_LOG("fwq mc3xxx GSENSOR_IOCTL_GET_CALI\n");
+		lidbg("fwq mc3xxx GSENSOR_IOCTL_GET_CALI\n");
 			
 		data1 = (unsigned char*)arg;
 		
@@ -2007,7 +2007,7 @@ static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		if((ret = MC3XXX_ReadCalibration(client, cali)))
 		{
             mutex_unlock(&data->lock);
-			GSE_LOG("fwq mc3xxx MC3XXX_ReadCalibration error!!!!\n");
+			lidbg("fwq mc3xxx MC3XXX_ReadCalibration error!!!!\n");
 			break;
 		}
         mutex_unlock(&data->lock);
@@ -2024,32 +2024,32 @@ static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		break;	
 
 	case GSENSOR_IOCTL_SET_CALI_MODE:
-		GSE_LOG("fwq mc3xxx GSENSOR_IOCTL_SET_CALI_MODE\n");
+		lidbg("fwq mc3xxx GSENSOR_IOCTL_SET_CALI_MODE\n");
 		break;
 
 	case GSENSOR_MCUBE_IOCTL_SET_RBM_MODE:
-		GSE_LOG("fwq GSENSOR_MCUBE_IOCTL_SET_RBM_MODE\n");
+		lidbg("fwq GSENSOR_MCUBE_IOCTL_SET_RBM_MODE\n");
         mutex_lock(&data->lock);
 		MC3XXX_rbm(client, 1);
         mutex_unlock(&data->lock);
 		break;
 
 	case GSENSOR_MCUBE_IOCTL_CLEAR_RBM_MODE:
-		GSE_LOG("fwq GSENSOR_MCUBE_IOCTL_CLEAR_RBM_MODE\n");
+		lidbg("fwq GSENSOR_MCUBE_IOCTL_CLEAR_RBM_MODE\n");
         mutex_lock(&data->lock);
 		MC3XXX_rbm(client, 0);
         mutex_unlock(&data->lock);
 		break;
 
 	case GSENSOR_MCUBE_IOCTL_REGISTER_MAP:
-		GSE_LOG("fwq GSENSOR_MCUBE_IOCTL_REGISTER_MAP\n");
+		lidbg("fwq GSENSOR_MCUBE_IOCTL_REGISTER_MAP\n");
         mutex_lock(&data->lock);
         MC3XXX_ReadRegMap(client, NULL);
         mutex_unlock(&data->lock);
 		break;
 
     case GSENSOR_MCUBE_IOCTL_READ_PRODUCT_ID:
-        GSE_LOG("fwq GSENSOR_MCUBE_IOCTL_READ_PRODUCT_ID\n");
+        lidbg("fwq GSENSOR_MCUBE_IOCTL_READ_PRODUCT_ID\n");
         data1 = (void __user *) arg;
         if(data1 == NULL)
         {
@@ -2064,13 +2064,13 @@ static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
         
         if(copy_to_user(data1, &temp, sizeof(temp)))
         {
-            GSE_LOG("%s: read pcode fail to copy!\n", __func__);
+            lidbg("%s: read pcode fail to copy!\n", __func__);
             return -EFAULT;
         }
         break;
 
 	case GSENSOR_MCUBE_IOCTL_READ_FILEPATH:
-		GSE_LOG("fwq GSENSOR_MCUBE_IOCTL_READ_FILEPATH\n");
+		lidbg("fwq GSENSOR_MCUBE_IOCTL_READ_FILEPATH\n");
 		data1 = (void __user *) arg;
 		if(data1 == NULL)
 		{
@@ -2151,7 +2151,7 @@ static int mc3xxx_acc_resume(struct mc3xxx_data *data)
 {
 	//char buf[1] = {0};
 	MSM_ACCEL_POWER_ON;
-	printk("%s\n", __func__);
+	lidbg("%s\n", __func__);
     //struct mc3xxx_data *data = dev_get_drvdata(dev);
     hrtimer_cancel(&data->timer);
     mutex_lock(&data->lock);
@@ -2167,7 +2167,7 @@ static int mc3xxx_acc_suspend(struct mc3xxx_data *data)
 {
 	//char buf[1] = {0};
 	MSM_ACCEL_POWER_OFF;
-	printk("%s\n", __func__);
+	lidbg("%s\n", __func__);
     //struct mc3xxx_data *data = dev_get_drvdata(dev);
     hrtimer_cancel(&data->timer);
 	//input_sync(data->input_dev);
@@ -2278,24 +2278,24 @@ _I2C_AUTO_PROBE_RECHECK_:
     {
         client->addr = mc3xxx_i2c_auto_probe_addr[_nCount];
 
-        GSE_LOG("[%s][%d] probing addr: 0x%X\n", __FUNCTION__, _nCount, client->addr);
+        lidbg("[%s][%d] probing addr: 0x%X\n", __FUNCTION__, _nCount, client->addr);
 
         _baData1Buf[0] = 0x3B;
         if (0 > my_i2c_master_send(client, &(_baData1Buf[0]), 1))
         {
-            GSE_ERR("ERR: addr: 0x%X fail to communicate-2!\n", client->addr);
+            lidbg("ERR: addr: 0x%X fail to communicate-2!\n", client->addr);
             continue;
         }
     
         if (0 > my_i2c_master_recv(client, &(_baData1Buf[0]), 1))
         {
-            GSE_ERR("ERR: addr: 0x%X fail to communicate-3!\n", client->addr);
+            lidbg("ERR: addr: 0x%X fail to communicate-3!\n", client->addr);
             continue;
         }
 
         _naCheckCount[_nCount]++;
 
-        GSE_LOG("[%s][%d] addr: 0x%X ok to read REG(0x3B): 0x%X\n", __FUNCTION__, _nCount, client->addr, _baData1Buf[0]);
+        lidbg("[%s][%d] addr: 0x%X ok to read REG(0x3B): 0x%X\n", __FUNCTION__, _nCount, client->addr, _baData1Buf[0]);
 
         if (0x00 == _baData1Buf[0])
         {
@@ -2324,7 +2324,7 @@ _I2C_AUTO_PROBE_RECHECK_:
 
             MC3XXX_SaveDefaultOffset(client);
 
-            GSE_LOG("[%s] addr: 0x%X confirmed ok to use. s_bPCODE: 0x%02X, s_bHWID: 0x%02X\n", __FUNCTION__, client->addr, s_bPCODE, s_bHWID);
+            lidbg("[%s] addr: 0x%X confirmed ok to use. s_bPCODE: 0x%02X, s_bHWID: 0x%02X\n", __FUNCTION__, client->addr, s_bPCODE, s_bHWID);
 
             return (MC3XXX_RETCODE_SUCCESS);
         }
@@ -2356,7 +2356,7 @@ static int mc3xxx_acc_enable_set(struct sensors_classdev *sensors_cdev,
 		struct mc3xxx_data, cdev);
 	int err;
 
-	printk("%s   enable = %d\n", __func__, enable);
+	lidbg("%s   enable = %d\n", __func__, enable);
 	if (enable)
 		err = mc3xxx_enable(acc, 1);
 	else
@@ -2370,10 +2370,10 @@ static int mc3xxx_probe(struct i2c_client *client,
 {
 	int ret = 0;
 	struct mc3xxx_data *data = NULL;
-	//printk(KERN_ERR"%s mc3xxx probe start... \n", __func__);
+	//lidbg(KERN_ERR"%s mc3xxx probe start... \n", __func__);
     if (MC3XXX_RETCODE_SUCCESS != mc3xxx_i2c_auto_probe(client))
     {
-        GSE_ERR("ERR: fail to probe mCube sensor!\n");
+        lidbg("ERR: fail to probe mCube sensor!\n");
         goto exit;
     }
 
@@ -2383,7 +2383,7 @@ static int mc3xxx_probe(struct i2c_client *client,
 		goto err_check_functionality_failed;
 	}
 
-	GSE_LOG("[%s] confirmed i2c addr: 0x%X\n", __FUNCTION__, client->addr);
+	lidbg("[%s] confirmed i2c addr: 0x%X\n", __FUNCTION__, client->addr);
 	
     #ifdef DOT_CALI
         load_cali_flg = 30;
@@ -2495,7 +2495,7 @@ static int mc3xxx_probe(struct i2c_client *client,
 	data->enabled = 1;
 
 	crash_detect_init();
-	printk(KERN_ERR"%s mc3xxx probe ok \n", __func__);
+	lidbg(KERN_ERR"%s mc3xxx probe ok \n", __func__);
 
 	return 0;
 
@@ -2513,7 +2513,7 @@ err_create_workqueue_failed:
 err_alloc_data_failed:
 err_check_functionality_failed:
 exit:
-	printk("mc3xxx probe failed \n");
+	lidbg("mc3xxx probe failed \n");
 	return ret;
 }
 
@@ -2587,15 +2587,15 @@ static int __init mc3xxx_init(void)
 #endif
 
 	MSM_ACCEL_POWER_ON;
-	printk("mc3xxx: init\n");
+	lidbg("mc3xxx: init\n");
 
 	if (gsensor_fetch_sysconfig_para())
 	{
-		printk("%s: err.\n", __func__);
+		lidbg("%s: err.\n", __func__);
 		return -1;
 	}
 
-	GSE_LOG("%s: after fetch_sysconfig_para:  normal_i2c: 0x%hx. normal_i2c[1]: 0x%hx \n", __func__, u_i2c_addr.normal_i2c[0], u_i2c_addr.normal_i2c[1]);
+	lidbg("%s: after fetch_sysconfig_para:  normal_i2c: 0x%hx. normal_i2c[1]: 0x%hx \n", __func__, u_i2c_addr.normal_i2c[0], u_i2c_addr.normal_i2c[1]);
 
 	ret = i2c_add_driver(&mc3xxx_driver);
 
