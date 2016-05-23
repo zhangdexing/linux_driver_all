@@ -515,6 +515,10 @@ int  show_logo()
 #endif
     display_logo_on_screen(&LogoRGB888Info);
 
+#ifdef BOOTLOADER_IMX6Q
+    memcpy ((unsigned char *)(0x16100000), (unsigned char *)fb_base_get(), 1024*600*2);
+#endif
+
 #ifndef LOGO_ADD_ALLOCED
     if (NULL != pDataRGB565)
     {
