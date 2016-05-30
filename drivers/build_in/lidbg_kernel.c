@@ -12,6 +12,11 @@
 #endif
 #include "lidbg_i2c.c"
 
+#ifdef PLATFORM_sabresd_6dq
+#include "showlogo.c"
+#endif
+
+
 LIDBG_THREAD_DEFINE;
 
 int __init lidbg_kernel_init(void)
@@ -21,6 +26,11 @@ int __init lidbg_kernel_init(void)
 #if defined(PLATFORM_MSM8226) || defined(PLATFORM_MSM8974) || defined(PLATFORM_MSM8909)
     freq_ctrl_start();
 #endif
+
+#ifdef PLATFORM_sabresd_6dq
+	uboot_logo_bakup();
+#endif
+
     lidbg_i2c_start();
     LIDBG_GET_THREAD;
     proc_create("lidbg_lcd_off", 0, NULL, &lcd_p_fops);
