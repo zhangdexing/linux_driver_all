@@ -194,6 +194,64 @@ static jint set_debug_level(JNIEnv * /*env*/, jobject /*clazz*/,  jint level)
         return -1;
     }
 }
+static jint urgent_record_camera_setPath(JNIEnv *env, jobject /*clazz*/, jint id, jstring path )
+{
+    char *mpath = (char *)env->GetStringUTFChars(path, NULL);
+    lidbg(DEBG_TAG"[%s].mpath=%s\n", __FUNCTION__, mpath);
+
+    if(sHalInterface != NULL)
+    {
+        int ret = sHalInterface->urgent_record_set_path(id, mpath);
+        env->ReleaseStringUTFChars(path, mpath);
+        return ret;
+    }
+    else
+    {
+        lidbg(DEBG_TAG"[%s].sHalInterface,g_lidbg_devices->dev[%s,%s]\n", __FUNCTION__, sHalInterface, g_lidbg_devices->dev);
+        return -1;
+    }
+}
+static jint urgent_record_camera_setTimes(JNIEnv * /*env*/, jobject /*clazz*/, jint id, jint times_in_S)
+{
+    if(sHalInterface != NULL)
+    {
+        return sHalInterface->urgent_record_set_times(id, times_in_S);
+    }
+    else
+    {
+        lidbg(DEBG_TAG"[%s].sHalInterface:%s\n", __FUNCTION__, sHalInterface);
+        return -1;
+    }
+}
+
+static jstring urgent_record_camera_get_status(JNIEnv *env, jobject /*clazz*/, jint id)
+{
+    if(sHalInterface != NULL)
+    {
+        char *status = sHalInterface->urgent_record_get_status(id);
+        lidbg(DEBG_TAG"[%s].status=%s\n", __FUNCTION__, status);
+        return env->NewStringUTF(status);
+    }
+    else
+    {
+        lidbg(DEBG_TAG"[%s].sHalInterface:%s\n", __FUNCTION__, sHalInterface);
+        return env->NewStringUTF("sHalInterface = NULL");;
+    }
+}
+
+static jint urgent_record_camera_ctrl(JNIEnv * /*env*/, jobject /*clazz*/, jint id, jint start_stop)
+{
+    if(sHalInterface != NULL)
+    {
+        return sHalInterface->urgent_record_ctrl(id, start_stop);
+    }
+    else
+    {
+        lidbg(DEBG_TAG"[%s].sHalInterface:%s\n", __FUNCTION__, sHalInterface);
+        return -1;
+    }
+}
+
 static JNINativeMethod methods[] =
 {
     { "nativeInit", "(I)J", (void *)native_init },
@@ -202,6 +260,10 @@ static JNINativeMethod methods[] =
     { "CameraSetPath", "(ILjava/lang/String;)I", (void *)Camera_setPath },
     { "CameraStartRecord", "(I)I", (void *)Camera_start_record },
     { "CameraStopRecord", "(I)I", (void *)Camera_stop_record },
+    { "UrgentRecordCameraSetPath", "(ILjava/lang/String;)I", (void *)urgent_record_camera_setPath },
+    { "UrgentRecordCameraSetTimes", "(II)I", (void *)urgent_record_camera_setTimes },
+    { "UrgentRecordCameraCtrl", "(II)I", (void *)urgent_record_camera_ctrl },
+    { "UrgentRecordCameraGetStatus", "(I)Ljava/lang/String;", (void *)urgent_record_camera_get_status },
 };
 //add up below:
 static jclass registerNativeMethods(JNIEnv *env, const char *className, JNINativeMethod *gMethods, int numMethods)

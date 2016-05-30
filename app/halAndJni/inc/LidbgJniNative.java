@@ -24,17 +24,32 @@ public class LidbgJniNative
 	private Context gcontext;
 	private LidbgJniNativeClient mclient = null;
 
-	public native long nativeInit(int id);
+	public native long nativeInit(int CameraId);
 
 	public native int nativeDestroy(long dev);
 
-	public native int CameraSetPath(int id, String path);
+	public native int CameraSetPath(int CameraId, String path);
 
-	public native int CameraStartRecord(int id);
+	public native int CameraStartRecord(int CameraId);
 
-	public native int CameraStopRecord(int id);
+	public native int CameraStopRecord(int CameraId);
 
 	public native int setDebugLevel(int level);
+
+	public native int UrgentRecordCameraSetPath(int CameraId, String path);
+
+	public native int UrgentRecordCameraSetTimes(int CameraId, int TimesInS);
+
+	public native int UrgentRecordCameraCtrl(int CameraId, int StartOrStop);
+
+	public native String UrgentRecordCameraGetStatus(int CameraId);
+
+	public char[] UrgentRecordCameraGetStatusToCharArray(int CameraId)
+	{
+		String ret = UrgentRecordCameraGetStatus(CameraId);
+		printKernelMsg("CharArray:" + ret);
+		return ret.toCharArray();
+	}
 
 	private void hal2jni2appCallBack(String msg)
 	{
@@ -55,7 +70,6 @@ public class LidbgJniNative
 	// ////////////////////////////////////////////
 	static
 	{
-		sInitialized = 0;
 		try
 		{
 			System.load("/flysystem/lib/out/liblidbg_jni.so");
