@@ -68,8 +68,8 @@ static int lidbg_get_current_time(char isXUSet , char *time_string, struct rtc_t
 #endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION (2,6,32)
-#define V4L_BUFFERS_DEFAULT	16//6,16
-#define V4L_BUFFERS_MAX		32//16,32
+#define V4L_BUFFERS_DEFAULT	6//6,16
+#define V4L_BUFFERS_MAX		16//16,32
 #else
 #define V4L_BUFFERS_DEFAULT	3
 #define V4L_BUFFERS_MAX		3
