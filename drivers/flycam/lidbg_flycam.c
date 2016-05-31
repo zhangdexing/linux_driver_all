@@ -1012,10 +1012,13 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 	    }
 		if(ret != 3)
 		{
-			if(!isDVRRec)
+			if(!(isDVRFirstInit && isDualCam && !((pfly_UsbCamInfo->camStatus>>4) & FLY_CAM_ISSONIX)))
 			{
-				lidbg("%s:==AUTO start==\n",__func__);
-				dvr_start_recording();
+				if(!isDVRRec)
+				{
+					lidbg("%s:==AUTO start==\n",__func__);
+					dvr_start_recording();
+				}
 			}
 		}
 	}
