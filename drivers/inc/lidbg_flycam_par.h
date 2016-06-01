@@ -31,6 +31,13 @@ typedef enum {
 }cam_ctrl_t;
 
 typedef enum {
+  NR_EM_PATH,
+  NR_EM_STATUS,
+  NR_EM_TIME,
+  NR_EM_START,
+}em_ctrl_t;
+
+typedef enum {
   NR_STATUS,
   NR_ACCON_CAM_READY,
   NR_DVR_FW_VERSION,
@@ -72,6 +79,7 @@ typedef enum {
 #define FLYCAM_STATUS_IOC_MAGIC  's'
 #define FLYCAM_FW_IOC_MAGIC  'w'
 #define FLYCAM_REC_MAGIC  'c'
+#define FLYCAM_EM_MAGIC  'e'
 
 typedef enum {
   RET_SUCCESS,
