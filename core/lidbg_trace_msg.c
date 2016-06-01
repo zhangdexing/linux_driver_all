@@ -27,10 +27,15 @@ void kmsg_fifo_collect(char *buff, int buff_len)
 
     if(kfifo_is_full(p_kmsg_collect) || kfifo_avail(p_kmsg_collect) < buff_len)
     {
-#if 0
-        int ret;
-        char tmp_buff[buff_len];
-        ret = kfifo_out_spinlocked(p_kmsg_collect, tmp_buff, buff_len , &spinlock_kmsg_collect);
+#if 1
+        int ret = 0, tmp;
+        char tmp_buff[512];
+        while(ret < 256 * 2)
+        {
+            ret++;
+            tmp = kfifo_out_spinlocked(p_kmsg_collect, tmp_buff, sizeof(tmp_buff) , &spinlock_kmsg_collect);
+        }
+        lidbg("[%s]:kfifo_is_full\n", __func__);
 #else
         kfifo_reset(p_kmsg_collect);
 #endif
@@ -354,7 +359,7 @@ static int  lidbg_trace_msg_probe(struct platform_device *ppdev)
     FS_REGISTER_INT(tmp, "kmsg_fifo_save", 0, cb_int_kmsg_fifo_save);
 
 #ifdef  TRACE_MSG_FROM_KMSG
-    if((gboot_mode == MD_FLYSYSTEM)||(gboot_mode == MD_DEBUG))
+    if((gboot_mode == MD_FLYSYSTEM) || (gboot_mode == MD_DEBUG))
         CREATE_KTHREAD(thread_trace_msg_in, NULL);
 #endif
     CREATE_KTHREAD(thread_trace_msg_out, NULL);
@@ -423,7 +428,7 @@ void trace_msg_main(int argc, char **argv)
     else if(!strncmp(argv[0], "save", strlen("save")))
         kmsg_fifo_save();
     else if(!strncmp(argv[0], "len", strlen("len")))
-        lidbg("[%s]:kfifo_len: %d\n", __func__, kfifo_len(p_kmsg_collect));
+        lidbg("[%s]:kfifo_len: %d byte/%d KB\n", __func__, kfifo_len(p_kmsg_collect), kfifo_len(p_kmsg_collect) / 1024);
 
 }
 
