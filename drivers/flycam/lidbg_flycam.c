@@ -186,6 +186,9 @@ static int lidbg_flycam_event(struct notifier_block *this,
 					//else complete(&auto_detect_wait);
 					status_fifo_in(RET_DVR_SONIX);//camera already working
 					//notify_online(RET_ONLINE_FOUND_SONIX);
+					isDVRFirstResume = 0;
+					isDVRACCResume = 0;
+					isDVRAfterFix = 1;
 				}
 				isKSuspend = 0;
 			}
@@ -730,6 +733,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 1&");
 					if(!isSuspend)
 					{
+						//lidbg("=====CHECK::isDVRFirstResume = %d =====\n",isDVRFirstResume);
 						if(!isDVRFirstResume) schedule_delayed_work(&work_t_DVR_fixScreenBlurred, 0);
 #if 0
 						else
