@@ -241,15 +241,16 @@ public class FlyBootService extends Service {
 								previousACCOffTime = SystemClock.elapsedRealtime();
 								SendBroadcastToService(KeyBootState, keyScreenOFF);
 							}else if(pmState == FBS_DEVICE_DOWN){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_DEVICE_DOWN");
+								LIDBG_PRINT("FlyBootService get pm state: FBS_DEVICE_DOWN\n");
 								if(!blDozeModeFlag)
 									FlyaudioInternetDisable();
 								AirplaneEnable = SystemProperties.getBoolean("persist.lidbg.AirplaneEnable",false);
-								if((AirplaneEnable) || (!blSuspendUnairplaneFlag)){
-									LIDBG_PRINT("FlyBootService device down enable AirplaneMode");
+								LIDBG_PRINT("FlyBootService FBS_DEVICE_DOWN:isSimCardReady:"+isSimCardReady+"/AirplaneEnable:"+AirplaneEnable+"/blSuspendUnairplaneFlag:"+blSuspendUnairplaneFlag+"\n");
+								if((AirplaneEnable) || (!blSuspendUnairplaneFlag)||!isSimCardReady){
+									LIDBG_PRINT("FlyBootService device down enable AirplaneMode\n");
 									enterAirplaneMode();
 								}else
-									LIDBG_PRINT("FlyBootService device down disable AirplaneMode");
+									LIDBG_PRINT("FlyBootService device down disable AirplaneMode\n");
 								SendBroadcastToService(KeyBootState, keyEearlySusupendOFF);
 								LIDBG_PRINT("FlyBootService sent device_down to hal\n");
 								isWifiApEnabled = isWifiApEnabled();
@@ -264,34 +265,35 @@ public class FlyBootService extends Service {
 									setWifiState(false);
 								}
 							}else if(pmState == FBS_FASTBOOT_REQUEST){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_FASTBOOT_REQUEST");
+								LIDBG_PRINT("FlyBootService get pm state: FBS_FASTBOOT_REQUEST\n");
 							}else if(pmState == FBS_ANDROID_DOWN){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_ANDROID_DOWN");
+								LIDBG_PRINT("FlyBootService get pm state: FBS_ANDROID_DOWN\n");
 								SendBroadcastToService(KeyBootState, keyFastSusupendOFF);
 								start_fastboot();
 							}else if(pmState == FBS_GOTO_SLEEP){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_GOTO_SLEEP");
+								LIDBG_PRINT("FlyBootService get pm state: FBS_GOTO_SLEEP\n");
 								//if(blSuspendUnairplaneFlag)
 								//	KillProcess();
 								system_gotosleep();
 							}else if(pmState == FBS_KERNEL_DOWN){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_KERNEL_DOWN");
+								LIDBG_PRINT("FlyBootService get pm state: FBS_KERNEL_DOWN\n");
 							}else if(pmState == FBS_KERNEL_UP){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_KERNEL_UP");
+								LIDBG_PRINT("FlyBootService get pm state: FBS_KERNEL_UP\n");
 								if(blSuspendUnairplaneFlag){
 									fbPm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 									fbPm.wakeUp(SystemClock.uptimeMillis());
 								}
 							}else if(pmState == FBS_ANDROID_UP){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_ANDROID_UP");
+								LIDBG_PRINT("FlyBootService get pm state: FBS_ANDROID_UP\n");
 								SendBroadcastToService(KeyBootState, keyFastSusupendON);
 								sendBroadcast(new Intent(SYSTEM_RESUME));
 								Intent intentBoot = new Intent(Intent.ACTION_BOOT_COMPLETED);
 								intentBoot.putExtra("flyauduio_accon", "accon");
 								sendBroadcast(intentBoot);
 							}else if(pmState == FBS_DEVICE_UP){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_DEVICE_UP");
-								if((AirplaneEnable) || (!blSuspendUnairplaneFlag))
+								LIDBG_PRINT("FlyBootService get pm state: FBS_DEVICE_UP\n");
+								LIDBG_PRINT("FlyBootService FBS_DEVICE_UP:isSimCardReady:"+isSimCardReady+"/AirplaneEnable:"+AirplaneEnable+"/blSuspendUnairplaneFlag:"+blSuspendUnairplaneFlag+"\n");
+								if((AirplaneEnable) || (!blSuspendUnairplaneFlag)||!isSimCardReady)
 									restoreAirplaneMode(mFlyBootService);
 								SendBroadcastToService(KeyBootState, keyEearlySusupendON);
 								InternetEnable();
