@@ -4009,6 +4009,8 @@ openfd:
 			lidbg( "SONiX_UVC_TestAP @main : XU_H264_Get_BitRate Failed\n");
 		lidbg("Current bit rate1: %.2f Kbps\n",m_BitRate);
 	}
+
+	XU_H264_Set_GOP(dev, 10);
 		
 		
 	if(GetFreeRam(&freeram) && freeram<1843200*nbufs+4194304)
