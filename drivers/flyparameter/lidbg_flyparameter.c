@@ -131,9 +131,8 @@ bool flyparameter_info_get(void)
                 lidbg("fail to cpy parameter\n");
             }
             lidbg_shell_cmd( parameter );
-            fs_mem_log("flyparameter=%c%c%c%c%c%c%c%c\n", g_recovery_meg->hwInfo.info[0], g_recovery_meg->hwInfo.info[1],
-                       g_recovery_meg->hwInfo.info[2], g_recovery_meg->hwInfo.info[3],
-                       g_recovery_meg->hwInfo.info[4], g_recovery_meg->hwInfo.info[5], g_recovery_meg->hwInfo.info[6], g_recovery_meg->hwInfo.info[7]);
+            lidbg("flyparameter=[%s]\n", g_recovery_meg->hwInfo.info);
+            fs_mem_log("flyparameter=[%s]\n", g_recovery_meg->hwInfo.info);
 
             lidbg("flyparameter3 :%d,%d,%d,%d,%d\n", g_recovery_meg->hwInfo.info[0] - '0', g_recovery_meg->hwInfo.info[1] - '0', g_recovery_meg->hwInfo.info[2] - '0', g_recovery_meg->hwInfo.info[3] - '0', g_recovery_meg->hwInfo.info[4] - '0');
             g_var.hw_info.ts_config = 10 * (g_recovery_meg->hwInfo.info[0] - '0') + g_recovery_meg->hwInfo.info[1] - '0';
