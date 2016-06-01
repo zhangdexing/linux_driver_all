@@ -127,8 +127,12 @@ static void status_fifo_in(unsigned char status)
 		dvr_fail_proc();
 		rear_fail_proc();
 	}
-	else if(status == RET_DVR_DISCONNECT) dvr_fail_proc();
-	else if(status == RET_REAR_DISCONNECT) rear_fail_proc();
+	else if(status == RET_DVR_DISCONNECT)
+	{
+		isDVRRec = 0;
+		isOnlineRec = 0;
+	}
+	else if(status == RET_REAR_DISCONNECT) isRearRec = 0;
 	lidbg("%s:====fifo in => %d====\n",__func__,status);
 	down(&pfly_UsbCamInfo->sem);
 	//if(kfifo_is_full(&camStatus_data_fifo));
