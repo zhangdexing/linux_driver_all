@@ -174,7 +174,7 @@ static int lidbg_flycam_event(struct notifier_block *this,
 				}
 				
 				if(!isOnlineRec && !isDVRRec) 
-					schedule_delayed_work(&work_t_DVR_fixScreenBlurred, 0);/*Rec Block mode(First ACCON)*/
+					schedule_delayed_work(&work_t_DVR_fixScreenBlurred, 1*HZ);/*Rec Block mode(First ACCON)*/
 				else 
 				{
 					/*Online Rec when ACCON,stop online & start dvr*/
