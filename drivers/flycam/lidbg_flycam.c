@@ -2280,7 +2280,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 							lidbg("%s:Rear Is not SonixCam ,ioctl fail!\n",__func__);
 							rearRespond[2] = RET_NOTSONIX;
 						}
-						else dvrRespond[2] = RET_SUCCESS;
+						else rearRespond[2] = RET_SUCCESS;
 						
 						initMsg[length] = 0xB0;
 						length++;
