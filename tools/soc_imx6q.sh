@@ -27,6 +27,7 @@ function soc_build_recovery()
 function soc_build_recoveryimage()
 {
 	echo $FUNCNAME
+	lidbg_build_all
 	rm -rf $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/out
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/recovery
 	rm -rf $DBG_OUT_PATH/*.apk $DBG_OUT_PATH/ES.ko $DBG_OUT_PATH/ST.ko $DBG_OUT_PATH/mkfs.exfat $DBG_OUT_PATH/GPS.ko $DBG_OUT_PATH/*.so $DBG_OUT_PATH/FlyBootService
