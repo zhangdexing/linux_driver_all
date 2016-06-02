@@ -45,7 +45,7 @@ u8 cfg_info_group36[] = CTP927_CFG_GROUP13;
 u8 cfg_info_group37[] = CTP_CFG_GROUP14;
 u8 cfg_info_group38[] = CTP927_CFG_GROUP14;
 u8 cfg_info_group39[] = CTP_CFG_GROUP23;
-u8 cfg_info_group40[] = CTP927_CFG_GROUP11;
+u8 cfg_info_group40[] = CTP927_CFG_GROUP15;
 
 u8 *send_cfg_buf[] = {cfg_info_group1, cfg_info_group2,
                   cfg_info_group3, cfg_info_group4, cfg_info_group5, cfg_info_group6,
@@ -110,8 +110,11 @@ EXPORT_SYMBOL(cfg_info_len);
 static int ts_config_init(void)
 {
     DUMP_BUILD_TIME;
-    //g_var.hw_info.ts_config = 35;
-    //g_var.hw_info.virtual_key = 0;
+    if(0)
+   {
+    	g_var.hw_info.ts_config = 40;
+    	g_var.hw_info.virtual_key = 0;
+    }
     return 0;
 }
 
