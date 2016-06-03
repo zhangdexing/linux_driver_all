@@ -3,8 +3,9 @@
 
 static bool is_first_init=0;
 static bool io_ready=1;
+static u32 count=0;
 #define GPIO_OFFSET 0
-
+#define REG_NUM 450
 struct io_status
 {
     u32 gpio;
@@ -13,19 +14,130 @@ struct io_status
     bool force_reconfig;
     bool out_mod;
     u32 suspend_mod;
+	u32 reg_addr;
 };
+
 static struct io_status io_config[IO_LOG_NUM];
+static u32 reg_value[REG_NUM];
+
+void set_gpio_hz(u32 phy_reg_addr)
+{
+
+    volatile unsigned long *virt_reg_addr;
+	u32 reg_vulue;
+	if((phy_reg_addr==0x20E0650)|(phy_reg_addr==0x20E0654) |(phy_reg_addr==0x20E06DC)|(phy_reg_addr==0x20E06E0))
+	{
+		return;
+	}
+	virt_reg_addr=(unsigned long *)ioremap(phy_reg_addr,4);
+	reg_vulue=ioread32(virt_reg_addr);
+	reg_value[count++]=reg_vulue;
+	reg_vulue&=(~(7<<3));
+	iowrite32(reg_vulue,virt_reg_addr);
+	iounmap((void *)virt_reg_addr);
+}
+
+void reset_gpio_status(u32 phy_reg_addr)
+{
+
+    volatile unsigned long *virt_reg_addr;
+	if((phy_reg_addr==0x20E0650)|(phy_reg_addr==0x20E0654) |(phy_reg_addr==0x20E06DC)|(phy_reg_addr==0x20E06E0))
+	{
+		return;
+	}
+	virt_reg_addr=(unsigned long *)ioremap(phy_reg_addr,4);
+	iowrite32(reg_value[count++],virt_reg_addr);
+	iounmap((void *)virt_reg_addr);
+}
+
+
+void shutdown_lvds(void)
+{
+
+    volatile unsigned long *virt_reg_addr;
+	u32 reg_vulue;
+	virt_reg_addr=(unsigned long *)ioremap(0x20E0008 ,4);
+	reg_vulue=ioread32(virt_reg_addr);
+	reg_value[count++]=reg_vulue;
+	reg_vulue&=(~(0x1f));
+	iowrite32(reg_vulue,virt_reg_addr);
+	reg_vulue=ioread32(virt_reg_addr);
+	iounmap((void *)virt_reg_addr);
+}
+
+void poweron_lvds(void)
+{
+
+    volatile unsigned long *virt_reg_addr;
+	u32 reg_vulue;
+	virt_reg_addr=(unsigned long *)ioremap(0x20E0008 ,4);
+	iowrite32(reg_value[count++],virt_reg_addr);
+	reg_vulue=ioread32(virt_reg_addr);
+	iounmap((void *)virt_reg_addr);
+}
+
+
+void shutdown_hdmi(void)
+{
+
+    volatile unsigned long *virt_reg_addr;
+	u32 reg_vulue;
+	virt_reg_addr=(unsigned long *)ioremap(0x123000 ,4);
+	reg_vulue=ioread8(virt_reg_addr);
+	lidbg("hdmi phy conf0 value is start 0x%x",reg_vulue);
+	reg_vulue&=(~(0x04));
+	iowrite8(reg_vulue,virt_reg_addr);
+	reg_vulue=ioread8(virt_reg_addr);
+	lidbg("hdmi phy conf0 value is stop 0x%x",reg_vulue);
+	iounmap((void *)virt_reg_addr);
+}
+
+//set all gpio_hz except for memery and flash and cpu debug uart
+void set_all_gpio_hz(void)
+{
+	u32 i;
+	u32 size;
+	size=(0x20E0508-0x20E004C)/4;
+	for(i=0;i<size;i++)
+		set_gpio_hz(0x20E004C+i*4);
+	size=(0x20E0700-0x20E05C8)/4;
+	for(i=0;i<size;i++)
+		set_gpio_hz(0x20E05C8+i*4);
+	size=(0x20E0744-0x20E0724)/4;
+	for(i=0;i<size;i++)
+		set_gpio_hz(0x20E0724+i*4);
+}
+
+void reset_all_gpio_status(void)
+{
+	u32 i;
+	u32 size;
+	size=(0x20E0508-0x20E004C)/4;
+	for(i=0;i<size;i++)
+		reset_gpio_status(0x20E004C+i*4);
+	size=(0x20E0700-0x20E05C8)/4;
+	for(i=0;i<size;i++)
+		reset_gpio_status(0x20E05C8+i*4);
+	size=(0x20E0744-0x20E0724)/4;
+	for(i=0;i<size;i++)
+		reset_gpio_status(0x20E0724+i*4);
+}
+
 
 int soc_io_suspend(void)
 {
-    int i;
+	int i;
     DUMP_FUN;
     for( i = 0; i < IO_LOG_NUM; i++)
-        if(io_config[i].gpio != 0)
-        {
-            gpio_direction_input(io_config[i].gpio);
-           // gpio_pull_updown(io_config[i].gpio, GPIO_CFG_NO_PULL);
-        }
+    if(io_config[i].gpio != 0)
+    {
+      gpio_direction_input(io_config[i].gpio);
+    }
+
+	count=0;
+	shutdown_lvds();
+//	shutdown_hdmi();
+	set_all_gpio_hz();
     return 0;
 }
 
@@ -41,9 +153,12 @@ int soc_io_resume(void)
             else
             {
                 gpio_direction_input(io_config[i].gpio);
-             //   gpio_pull_updown(io_config[i].gpio, io_config[i].pull);
+             // gpio_pull_updown(io_config[i].gpio, io_config[i].pull);
             }
         }
+	count=0;
+	poweron_lvds();
+	reset_all_gpio_status();
     return 0;
 }
 
@@ -153,7 +268,6 @@ free_gpio:
 
 int soc_io_output(u32 group, u32 index, bool status)
 {
-   
     if(io_ready == 0)  {lidbg("%d,%d io not ready\n",group,index);return 0;}
 	
     gpio_direction_output(index, status);
