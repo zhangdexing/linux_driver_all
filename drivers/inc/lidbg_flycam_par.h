@@ -32,9 +32,10 @@ typedef enum {
 
 typedef enum {
   NR_EM_PATH,
+  NR_EM_START,
   NR_EM_STATUS,
   NR_EM_TIME,
-  NR_EM_START,
+  NR_EM_MANUAL,
 }em_ctrl_t;
 
 typedef enum {
