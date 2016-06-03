@@ -369,12 +369,12 @@ static  struct file_operations rmtctrl_fops =
 
 static int thread_check_acc_and_response_acc_off_delay(void *data)
 {
-   g_var.acc_flag = SOC_IO_Input(MCU_ACC_STATE_IO, MCU_ACC_STATE_IO, GPIO_CFG_PULL_UP);
+   //g_var.acc_flag = SOC_IO_Input(MCU_ACC_STATE_IO, MCU_ACC_STATE_IO, GPIO_CFG_PULL_UP);
    
    while(0==g_var.android_boot_completed)
     {
         ssleep(1);
-		lidbg("wait for android_boot_completed.\n");
+	 lidbg("wait for android_boot_completed.\n");
     }
 
     ssleep(20);
