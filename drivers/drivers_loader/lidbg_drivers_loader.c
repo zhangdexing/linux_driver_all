@@ -9,12 +9,15 @@ struct judgment
 {
     char *key;
     int value;
-} judgment_list[] =
+    char *pvalue;
+};
+struct judgment judgment_list[] =
 {
-    {"platform_id", -1},
-    {"Factory", -1},
-    {"gboot_mode", -1},
-    {"is_uart_print_enable", -1},
+    {"platform_id", -1, NULL},
+    {"Factory", -1, NULL},
+    {"gboot_mode", -1, NULL},
+    {"is_uart_print_enable", -1, NULL},
+    {"car_type", -1, NULL},
 };
 void judgment_list_print(void)
 {
@@ -22,7 +25,7 @@ void judgment_list_print(void)
     size = ARRAY_SIZE(judgment_list);
     for(cunt = 0; cunt < size; cunt++)
     {
-        LIDBG_WARN("%d<%s,%d>\n", cunt, judgment_list[cunt].key , judgment_list[cunt].value);
+        LIDBG_WARN("%d<%s,%d,%s>\n", cunt, judgment_list[cunt].key , judgment_list[cunt].value, judgment_list[cunt].pvalue);
     }
 }
 void judgment_list_init(void)
@@ -97,21 +100,24 @@ void judgment_list_init(void)
         char temp_cmd[256];
         sprintf(temp_cmd, "setprop persist.lidbg.intPlatformId %d", judgment_list[0].value);
         lidbg_shell_cmd(temp_cmd);
-        judgment_list_print();
     }
-    g_var.platformid=judgment_list[0].value;
-    LIDBG_WARN("g_var.platformid:%d\n",g_var.platformid);
+    g_var.platformid = judgment_list[0].value;
+    LIDBG_WARN("g_var.platformid:%d\n", g_var.platformid);
+    judgment_list[4].pvalue = g_var.car_type ;
+
+
+    judgment_list_print();
 }
-int get_judgment_list_value(char *key)
+struct judgment *get_judgment_list(char *key)
 {
     int cunt, size;
     size = ARRAY_SIZE(judgment_list);
     for(cunt = 0; cunt < size; cunt++)
     {
         if(strncmp(key, judgment_list[cunt].key, strlen(judgment_list[cunt].key)) == 0)
-            return  judgment_list[cunt].value;
+            return  &judgment_list[cunt];
     }
-    return -2;
+    return NULL;
 }
 
 bool judgment_cmd(char *judgmentcmd, int *judgmenttimes)
@@ -159,12 +165,13 @@ bool judgment_cmd(char *judgmentcmd, int *judgmenttimes)
                 //LIDBG_WARN("%d/%d.start toke:<%s>\n", loops, cmd_num, arg[loops]);
                 if(arg[loops] && lidbg_token_string(arg[loops], "=", arg2) == 2)
                 {
-                    judgmentvalue = get_judgment_list_value(arg2[0]);
-                    if(judgmentvalue == -2)
+                    struct judgment *p = get_judgment_list(arg2[0]);
+                    if(p == NULL)
                     {
                         LIDBG_WARN("error unknown judgment <%s>\n", arg2[0]);
                         goto skip_current_cmd;
                     }
+                    judgmentvalue = p->value;
                     tokenvalue = simple_strtoul(arg2[1], 0, 0);
 
                     LIDBG_WARN("<%d/%d. check :[%s,%d,%d]>\n", loops, cmd_num, arg2[0], tokenvalue, judgmentvalue);
@@ -172,11 +179,26 @@ bool judgment_cmd(char *judgmentcmd, int *judgmenttimes)
                     //check
                     if( or != NULL || ( or == NULL && and == NULL))
                     {
-                        if( tokenvalue == judgmentvalue)
+                        if(p->pvalue == NULL)
                         {
-                            LIDBG_WARN("<judgment OK [||]>\n");
-                            goto skip_current_cmd;
+                            //compare int
+                            if( tokenvalue == judgmentvalue)
+                            {
+                                LIDBG_WARN("<judgment OK [||]>\n");
+                                goto skip_current_cmd;
+                            }
                         }
+                        else
+                        {
+                            //compare String
+                            LIDBG_WARN("<%d[||]judgmentString:[%s,%s] >\n", loops, p->pvalue, arg2[1]);
+                            if (!strncmp(p->pvalue, arg2[1], strlen(arg2[1])) )
+                            {
+                                LIDBG_WARN("<judgment OK [||]>\n");
+                                goto skip_current_cmd;
+                            }
+                        }
+
                         if(loops == cmd_num - 1)
                         {
                             LIDBG_WARN("<judgment error [||]>\n");
@@ -186,11 +208,26 @@ bool judgment_cmd(char *judgmentcmd, int *judgmenttimes)
 
                     if( and != NULL)
                     {
-                        if( tokenvalue != judgmentvalue)
+                        if(p->pvalue == NULL)
                         {
-                            LIDBG_WARN("<judgment error [&&]>\n");
-                            goto start_skip_below_cmd;
+                            //compare int
+                            if( tokenvalue != judgmentvalue)
+                            {
+                                LIDBG_WARN("<judgment error [&&]>\n");
+                                goto start_skip_below_cmd;
+                            }
                         }
+                        else
+                        {
+                            //compare String
+                            LIDBG_WARN("<%d[&&]judgmentString:[%s,%s] >\n", loops, p->pvalue, arg2[1]);
+                            if (strncmp(p->pvalue, arg2[1], strlen(arg2[1])) )
+                            {
+                                LIDBG_WARN("<judgment error [&&]>\n");
+                                goto start_skip_below_cmd;
+                            }
+                        }
+
                         if(loops == cmd_num - 1)
                         {
                             LIDBG_WARN("<judgment OK [&&]>\n");
@@ -291,27 +328,27 @@ static int thread_drivers_loader_analyze(void *data)
     fs_fill_list(get_lidbg_file_path(buff, "lidbg.init.rc.conf"), FS_CMD_FILE_LISTMODE, &lidbg_list);
     analyze_list_cmd(&lidbg_list);
 
-    if((gboot_mode == MD_FLYSYSTEM)||(gboot_mode == MD_DEBUG))
+    if((gboot_mode == MD_FLYSYSTEM) || (gboot_mode == MD_DEBUG))
     {
-        LIDBG_WARN("<==gboot_mode==%d==>\n",gboot_mode);
+        LIDBG_WARN("<==gboot_mode==%d==>\n", gboot_mode);
 
-	if(fs_is_file_exist("/flysystem/lib/modules/flyaudio.modules.conf"))
+        if(fs_is_file_exist("/flysystem/lib/modules/flyaudio.modules.conf"))
             fs_fill_list( "/flysystem/lib/modules/flyaudio.modules.conf", FS_CMD_FILE_LISTMODE, &flyaudio_hal_list);
-	else
+        else
             fs_fill_list(get_lidbg_file_path(buff, "flyaudio.modules.conf"), FS_CMD_FILE_LISTMODE, &flyaudio_hal_list);
 
-	analyze_list_cmd(&flyaudio_hal_list);
+        analyze_list_cmd(&flyaudio_hal_list);
 
     }
 
-	while(0==g_var.android_boot_completed)
-	{
-	    LIDBG_WARN("<flyaudio.init.rc.conf: waiting for g_var.android_boot_completed....>\n");
-	    ssleep(1);
-	};
+    while(0 == g_var.android_boot_completed)
+    {
+        LIDBG_WARN("<flyaudio.init.rc.conf: waiting for g_var.android_boot_completed....>\n");
+        ssleep(1);
+    };
 
-	fs_fill_list(get_lidbg_file_path(buff, "flyaudio.init.rc.conf"), FS_CMD_FILE_LISTMODE, &flyaudio_list);
-	analyze_list_cmd(&flyaudio_list);
+    fs_fill_list(get_lidbg_file_path(buff, "flyaudio.init.rc.conf"), FS_CMD_FILE_LISTMODE, &flyaudio_list);
+    analyze_list_cmd(&flyaudio_list);
 
 
     ssleep(30);//later,exit
