@@ -152,7 +152,10 @@ bool flyparameter_info_get(void)
 	     lidbg("car_type=%s\n",g_var.car_type);
 #if 1
             if( !strncmp(g_var.car_type, "822", 3))//Israel
+            	{
+            		 lidbg("Israel car_type,suspend_airplane_mode\n");
 		 	g_var.suspend_airplane_mode = true;
+            	}
 #endif
             return true;
         }
