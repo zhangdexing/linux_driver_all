@@ -37,7 +37,7 @@ int find_ad_key(struct ad_key_remap *p)
     }
     if(val > p->max)
         val = p->max;
-    pr_debug("ch=%d,val=%d", p->ch, val);
+    pr_debug("ch=%d,val=%d\n", p->ch, val);
     val_buf[count++] = val;
     if(count < 4)
         return  1;
