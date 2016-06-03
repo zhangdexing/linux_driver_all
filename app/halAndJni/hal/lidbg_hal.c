@@ -26,10 +26,8 @@ static JniCallbacks jni_call_backs;
 static int dbg_level = 0;
 static int flycam_fd = -1;
 static int thread_exit = 0;
-char para[128] ;
 
-
-static int send_driver_ioctl(const char *who, char magic , char nr, unsigned long  arg)
+static int send_driver_ioctl(char *who, char magic , char nr, unsigned long  arg)
 {
     int ret = DEFAULT_ERR_VALUE;
 
@@ -58,7 +56,7 @@ static void lidbg_hal_thread( void *arg)
         {
         case 0 :
         {
-            int ret = send_driver_ioctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, 0x06, (unsigned long) NULL);
+            int ret = send_driver_ioctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, 0x06, NULL);
             if ((thread_exit == 0) && jni_call_backs.driver_abnormal_cb)
             {
                 jni_call_backs.driver_abnormal_cb(ret);
@@ -112,52 +110,15 @@ int   lidbg_hal_set_path(int camera_id, char *path)
 int   lidbg_hal_start_record(int camera_id)
 {
     lidbg(DEBG_TAG"[%s].in.[camera_id:%d,%s]\n", __FUNCTION__, camera_id, "null");
-    return  send_driver_ioctl(__FUNCTION__, FLYCAM_FRONT_ONLINE_IOC_MAGIC, NR_START_REC, (unsigned long) NULL);
+    return  send_driver_ioctl(__FUNCTION__, FLYCAM_FRONT_ONLINE_IOC_MAGIC, NR_START_REC, NULL);
 };
 int   lidbg_hal_stop_record(int camera_id)
 {
     lidbg(DEBG_TAG"[%s].in.[camera_id:%d,%s]\n", __FUNCTION__, camera_id, "null");
-    return  send_driver_ioctl(__FUNCTION__, FLYCAM_FRONT_ONLINE_IOC_MAGIC, NR_STOP_REC, (unsigned long) NULL);
+    return  send_driver_ioctl(__FUNCTION__, FLYCAM_FRONT_ONLINE_IOC_MAGIC, NR_STOP_REC, NULL);
 };
-int   lidbg_hal_urgent_record_set_path(int camera_id, char *path)
-{
-    int ret = -1;
-    strncpy(para, path, sizeof(para) - 1);
-    ret = ioctl(flycam_fd, _IO(FLYCAM_EM_MAGIC, NR_EM_PATH), para);
-    lidbg(DEBG_TAG"[%s].in.[camera_id:%d,path:%s,para:%s,ret:%d]\n", __FUNCTION__, camera_id, path, para, ret);
-    return ret;
-};
-int   lidbg_hal_urgent_record_set_times(int camera_id, int times_in_S)
-{
-    int ret = -1;
-    para[0] = times_in_S;
-    ret = ioctl(flycam_fd, _IO(FLYCAM_EM_MAGIC, NR_EM_TIME), para);
-    lidbg(DEBG_TAG"[%s].in.[camera_id:%d,times_in_S:%d/%d,ret:%d]\n", __FUNCTION__, camera_id, times_in_S, para[0], ret);
 
-    return ret;
-};
-int   lidbg_hal_urgent_record_ctrl(int camera_id, int start_stop)
-{
-    int ret = -1;
-    para[0] = start_stop;
-    ret = ioctl(flycam_fd, _IO(FLYCAM_EM_MAGIC, NR_EM_START), para);
-    lidbg(DEBG_TAG"[%s].in.[camera_id:%d,start_stop:%d/%d,ret:%d]\n", __FUNCTION__, camera_id, start_stop, para[0], ret);
-    return ret;
-};
-char    *lidbg_hal_urgent_record_get_status(int camera_id)
-{
-    int ret = -1;
-    memset(para,0,sizeof(para)-1);
-    ret = ioctl(flycam_fd, _IO(FLYCAM_EM_MAGIC, NR_EM_STATUS), para);
-    lidbg(DEBG_TAG"[%s].in.[camera_id:%d,ret:%d,para[0]:%d/%d/%d]\n", __FUNCTION__, camera_id,  ret, para[0], para[1], para[2]);
-    for(ret = 0; ret < sizeof(para)/3; ret++)
-    {
-        para[ret] +=  48;
-    }
-    para[ret] = '\0';
-    return para;
-};
-static HalInterface sLidbgHalInterface =
+static const HalInterface sLidbgHalInterface =
 {
     sizeof(HalInterface),
     lidbg_hal_set_debg_level,
@@ -165,10 +126,6 @@ static HalInterface sLidbgHalInterface =
     lidbg_hal_set_path,
     lidbg_hal_start_record,
     lidbg_hal_stop_record,
-    lidbg_hal_urgent_record_set_path,
-    lidbg_hal_urgent_record_set_times,
-    lidbg_hal_urgent_record_ctrl,
-    lidbg_hal_urgent_record_get_status,
 };
 const HalInterface *lidbg_hal_interface(struct lidbg_device_t *dev)
 {

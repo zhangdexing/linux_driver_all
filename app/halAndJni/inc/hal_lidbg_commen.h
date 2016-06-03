@@ -28,14 +28,10 @@ typedef struct
 {
     size_t	size;
     int   (*set_debug_level)(int level);
-    int   (*hal_init)(int camera_id, JniCallbacks *callbacks);
-    int   (*set_path)(int camera_id, char *path);
-    int   (*start_record)(int camera_id);
-    int   (*stop_record)(int camera_id);
-    int   (*urgent_record_set_path)(int camera_id, char *path);
-    int   (*urgent_record_set_times)(int camera_id, int times_in_S);
-    int   (*urgent_record_ctrl)(int camera_id, int start_stop);
-    char    *(*urgent_record_get_status)(int camera_id);
+    int   (*hal_init)(int id, JniCallbacks *callbacks);
+    int   (*set_path)(int id, char *path);
+    int   (*start_record)(int id);
+    int   (*stop_record)(int id);
 } HalInterface;
 
 struct lidbg_device_t
