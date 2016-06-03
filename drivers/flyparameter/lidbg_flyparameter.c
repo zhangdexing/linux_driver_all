@@ -150,8 +150,8 @@ bool flyparameter_info_get(void)
             }
 	     g_var.car_type = g_recovery_meg->bootParam.upName.flags;
 	     lidbg("car_type=%s\n",g_var.car_type);
-#if 0
-	     if()
+#if 1
+            if( !strncmp(g_var.car_type, "822", 3))//Israel
 		 	g_var.suspend_airplane_mode = true;
 #endif
             return true;
