@@ -147,10 +147,10 @@ int   lidbg_hal_urgent_record_ctrl(int camera_id, int start_stop)
 char    *lidbg_hal_urgent_record_get_status(int camera_id)
 {
     int ret = -1;
-    memset(para, 0, sizeof(para) - 1);
+    memset(para,0,sizeof(para)-1);
     ret = ioctl(flycam_fd, _IO(FLYCAM_EM_MAGIC, NR_EM_STATUS), para);
     lidbg(DEBG_TAG"[%s].in.[camera_id:%d,ret:%d,para[0]:%d/%d/%d]\n", __FUNCTION__, camera_id,  ret, para[0], para[1], para[2]);
-    for(ret = 0; ret < (int)(sizeof(para) / 3); ret++)
+    for(ret = 0; ret < sizeof(para)/3; ret++)
     {
         para[ret] +=  48;
     }
