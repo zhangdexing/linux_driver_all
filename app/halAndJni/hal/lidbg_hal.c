@@ -160,6 +160,15 @@ char    *lidbg_hal_urgent_record_get_status(int camera_id)
     para[ret] = '\0';
     return para;
 };
+int   lidbg_hal_urgent_record_manual(int camera_id, int start_stop)
+{
+    int ret = -1;
+    para[0] = camera_id;
+    para[1] = start_stop;
+    ret = ioctl(flycam_fd, _IO(FLYCAM_EM_MAGIC, NR_EM_MANUAL), para);
+    lidbg(DEBG_TAG"[%s].in.[camera_id:%d,start_stop:%d/%d,ret:%d]\n", __FUNCTION__, camera_id, start_stop, para[0], ret);
+    return ret;
+};
 static HalInterface sLidbgHalInterface =
 {
     sizeof(HalInterface),
@@ -172,6 +181,7 @@ static HalInterface sLidbgHalInterface =
     lidbg_hal_urgent_record_set_times,
     lidbg_hal_urgent_record_ctrl,
     lidbg_hal_urgent_record_get_status,
+    lidbg_hal_urgent_record_manual,
 };
 const HalInterface *lidbg_hal_interface(struct lidbg_device_t *dev)
 {

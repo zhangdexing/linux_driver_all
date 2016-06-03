@@ -51,6 +51,8 @@ public class LidbgJniNative
 		return ret.toCharArray();
 	}
 
+	public native int UrgentRecordCameraManual(int CameraId, int StartOrStop);
+
 	private void hal2jni2appCallBack(String msg)
 	{
 		if (mclient != null)
