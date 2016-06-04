@@ -63,7 +63,7 @@ static int r_rec_bitrate = 8000000,r_rec_time = 300,r_rec_filenum = 5,r_rec_tota
 char r_rec_res[100] = "1280x720",r_rec_path[100] = EMMC_MOUNT_POINT1"/camera_rec/";
 
 char em_path[100] = EMMC_MOUNT_POINT1"/camera_rec/BlackRec/";
-static int em_time = 10;
+static int top_em_time = 10,bottom_em_time = 10;
 
 static struct timer_list suspend_stoprec_timer;
 static struct timer_list set_par_timer;
@@ -2734,9 +2734,13 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				if(1 == ((char*)arg)[0])
 				{
 					lidbg("%s:NR_EM_TOP_TIME = [%d]\n",__func__,((char*)arg)[1]);
-					em_time = ((char*)arg)[1];
-					dvrRespond[2] = em_time;
-					rearRespond[2] = em_time;
+					if(((char*)arg)[1] <= 20)
+						top_em_time = ((char*)arg)[1];
+					else top_em_time = 10;
+					sprintf(temp_cmd, "setprop fly.uvccam.top.emtime %d", top_em_time);
+					lidbg_shell_cmd(temp_cmd);
+					dvrRespond[2] = top_em_time;
+					rearRespond[2] = top_em_time;
 					memcpy(returnRespond + length,dvrRespond,3);
 					length += 3;
 					memcpy(returnRespond + length,rearRespond,3);
@@ -2749,9 +2753,13 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				else if(0 == ((char*)arg)[0])
 				{
 					lidbg("%s:NR_EM_BOTTOM_TIME = [%d]\n",__func__,((char*)arg)[1]);
-					em_time = ((char*)arg)[1];
-					dvrRespond[2] = em_time;
-					rearRespond[2] = em_time;
+					if(((char*)arg)[1] <= 20)
+						bottom_em_time = ((char*)arg)[1];
+					else bottom_em_time = 10;
+					sprintf(temp_cmd, "setprop fly.uvccam.bottom.emtime %d", bottom_em_time);
+					lidbg_shell_cmd(temp_cmd);
+					dvrRespond[2] = bottom_em_time;
+					rearRespond[2] = bottom_em_time;
 					memcpy(returnRespond + length,dvrRespond,3);
 					length += 3;
 					memcpy(returnRespond + length,rearRespond,3);

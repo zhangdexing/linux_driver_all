@@ -144,7 +144,8 @@ char Rec_Bitrate_String[PROPERTY_VALUE_MAX];
 char isDualCam_String[PROPERTY_VALUE_MAX];
 char isColdBootRec_String[PROPERTY_VALUE_MAX];
 char isBlackBoxRec[PROPERTY_VALUE_MAX];
-char Em_Sec_String[PROPERTY_VALUE_MAX];
+char Em_Top_Sec_String[PROPERTY_VALUE_MAX];
+char Em_Bottom_Sec_String[PROPERTY_VALUE_MAX];
 
 char startNight[PROPERTY_VALUE_MAX];
 //char startCapture[PROPERTY_VALUE_MAX];
@@ -164,10 +165,10 @@ unsigned int tmp_count = 0;
 char isNormDequeue = 0;
 char isTopDequeue = 0;
 
-int Emergency_Sec = 10;
+int Emergency_Top_Sec = 10,Emergency_Bottom_Sec = 10;
 
-unsigned int totalFrames = 0;
-unsigned int lastFrames = 0;
+static unsigned int top_totalFrames ,bottom_totalFrames;
+static unsigned int top_lastFrames ,bottom_lastFrames;
 
 //lidbg("CAMID[%d] :",cam_id);
 #define camdbg(msg...) do{\
@@ -1508,9 +1509,9 @@ void *thread_top_dequeue(void *par)
 			if(!isDequeue)
 			{
 				isDequeue = 1;
-				if(lastFrames < (Emergency_Sec*30 - 150)) count = Emergency_Sec*30 - 150;
-				else if(lastFrames > (Emergency_Sec*30 + 30)) count = Emergency_Sec*30 + 30;
-				else count = (lastFrames/10)*10 + 10;
+				if(top_lastFrames < (Emergency_Top_Sec*30 - 150)) count = Emergency_Top_Sec*30 - 150;
+				else if(top_lastFrames > (Emergency_Top_Sec*30 + 30)) count = Emergency_Top_Sec*30 + 30;
+				else count = (top_lastFrames/10)*10 + 10;
 				XU_H264_Set_IFRAME(dev);
 				lidbg_get_current_time(0 , deq_time_buf, NULL);
 				if(msize > count)
@@ -1529,14 +1530,25 @@ void *thread_top_dequeue(void *par)
 	return 0;
 }
 
-void *thread_count_frame(void *par)
+void *thread_top_count_frame(void *par)
 {
 	while(1)
 	{
-		sleep(Emergency_Sec);
-		lidbg("%s: [%d] Total frames = %d \n", __func__,cam_id,totalFrames);
-		lastFrames = totalFrames;
-		totalFrames = 0;
+		sleep(Emergency_Top_Sec);
+		lidbg("%s: [%d] top_totalFrames = %d \n", __func__,cam_id,top_totalFrames);
+		top_lastFrames = top_totalFrames;
+		top_totalFrames = 0;
+	}
+}
+
+void *thread_bottom_count_frame(void *par)
+{
+	while(1)
+	{
+		sleep(Emergency_Bottom_Sec);
+		lidbg("%s: [%d] bottom_totalFrames = %d \n", __func__,cam_id,bottom_totalFrames);
+		bottom_lastFrames = bottom_totalFrames;
+		bottom_totalFrames = 0;
 	}
 }
 
@@ -2015,8 +2027,10 @@ static void switch_scan(void)
 		property_get("lidbg.uvccam.rear.blackbox", isBlackBoxRec, "0");
 	}
 	property_get("fly.uvccam.empath", Em_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
-	property_get("fly.uvccam.emtime", Em_Sec_String, "10");
-	Emergency_Sec = atoi(Em_Sec_String);
+	property_get("fly.uvccam.top.emtime", Em_Top_Sec_String, "10");
+	property_get("fly.uvccam.bottom.emtime", Em_Bottom_Sec_String, "10");
+	Emergency_Top_Sec = atoi(Em_Top_Sec_String);
+	Emergency_Bottom_Sec = atoi(Em_Bottom_Sec_String);
 	return;
 }
 
@@ -2444,7 +2458,8 @@ int main(int argc, char *argv[])
 	pthread_t thread_capture_id;
 	pthread_t thread_dequeue_id;
 	pthread_t thread_top_dequeue_id;
-	pthread_t thread_count_frame_dequeue_id;
+	pthread_t thread_count_top_frame_dequeue_id;
+	pthread_t thread_count_bottom_frame_dequeue_id;
 	//pthread_t thread_switch_id;
 	//pthread_t thread_nightMode_id;
 	int flytmpcnt = 0,rc;
@@ -4352,9 +4367,11 @@ openfd:
 	
 	pthread_create(&thread_top_dequeue_id,NULL,thread_top_dequeue,NULL);
 	pthread_create(&thread_dequeue_id,NULL,thread_dequeue,NULL);
-	pthread_create(&thread_count_frame_dequeue_id,NULL,thread_count_frame,NULL);
+	pthread_create(&thread_count_top_frame_dequeue_id,NULL,thread_top_count_frame,NULL);
+	pthread_create(&thread_count_bottom_frame_dequeue_id,NULL,thread_bottom_count_frame,NULL);
 
-	lastFrames = Emergency_Sec * 30;
+	top_lastFrames = Emergency_Top_Sec * 30;
+	bottom_lastFrames = Emergency_Bottom_Sec * 30;
 		
 	if(GetFreeRam(&freeram) && freeram<1843200*nbufs+4194304)
 	{
@@ -4609,7 +4626,7 @@ openfd:
 		{
 			if((isBlackBoxTopRec == 0) && (isBlackBoxBottomRec == 0))
 			{
-				if(msize <= (Emergency_Sec * 30))
+				if(msize <= (Emergency_Top_Sec * 30))
 				{
 					lidbg("Waiting for msize restoration!\n");
 #if 0
@@ -4644,9 +4661,10 @@ openfd:
 				property_set("lidbg.uvccam.rear.blackbox", "0");
 		}
 
-		totalFrames++;
+		top_totalFrames++;
+		bottom_totalFrames++;
 
-		if((msize > (Emergency_Sec*30)) && isBlackBoxTopWaitDequeue && (isBlackBoxTopRec == 0) && (isBlackBoxBottomRec == 0))
+		if((msize > (Emergency_Top_Sec*30)) && isBlackBoxTopWaitDequeue && (isBlackBoxTopRec == 0) && (isBlackBoxBottomRec == 0))
 		{
 			lidbg("***isBlackBoxTopWaitDequeue***\n");
 			//pthread_create(&thread_dequeue_id,NULL,thread_top_dequeue,NULL);
@@ -4654,7 +4672,7 @@ openfd:
 			isBlackBoxTopWaitDequeue = 0;
 		}
 
-		if(msize == (Emergency_Sec*30)) XU_H264_Set_IFRAME(dev);
+		if(msize == (Emergency_Top_Sec*30)) XU_H264_Set_IFRAME(dev);
 		
 		if((!strncmp(startRecording, "0", 1)) && (!do_save) )
 		{
@@ -5147,16 +5165,17 @@ openfd:
 					}
 						
 						//fwrite(mem0[buf0.index], buf0.bytesused, 1, rec_fp1);//write data to the output file
-					if(isBlackBoxBottomRec && (msize > (Emergency_Sec*30)) && (isBlackBoxTopRec == 0))
+					if(isBlackBoxBottomRec && (msize > (Emergency_Bottom_Sec*30)) && (isBlackBoxTopRec == 0))
 					{
-						if(lastFrames < (Emergency_Sec*30 - 150)) tmp_count = Emergency_Sec*30 - 150;
-						else if(lastFrames > (Emergency_Sec*30 + 30)) tmp_count = Emergency_Sec*30 + 30;
-						else tmp_count = (lastFrames/10)*10 + 10;
+						lidbg("======Bottom write===lastFrames:%d,Bottom_Sec:%d======\n",bottom_lastFrames,Emergency_Bottom_Sec);
+						if(bottom_lastFrames < (Emergency_Bottom_Sec*30 - 150)) tmp_count = Emergency_Bottom_Sec*30 - 150;
+						else if(bottom_lastFrames > (Emergency_Bottom_Sec*30 + 30)) tmp_count = Emergency_Bottom_Sec*30 + 30;
+						else tmp_count = (bottom_lastFrames/10)*10 + 10;
 						//tmp_count = 300;
 						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
 						isNormDequeue = 1;
 					}
-					else if((msize % 100 == 0) && (msize >= (Emergency_Sec * 30 *2)))
+					else if(!isBlackBoxBottomRec && (msize % 100 == 0) && (msize >= (Emergency_Top_Sec * 30 *2)))
 					{
 						/*
 						int tmpi = 200;
@@ -5172,7 +5191,7 @@ openfd:
 							free(tempa);
 						}
 						*/
-						tmp_count = Emergency_Sec * 30;
+						tmp_count = Emergency_Top_Sec * 30;
 						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
 						isNormDequeue = 1;
 					}
