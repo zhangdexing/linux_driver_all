@@ -638,7 +638,7 @@ static void lpc_late_resume(struct early_suspend *handler) {}
 static int lpc_suspend(struct device *dev)
 {
     DUMP_FUN;
-   // lpc_work_en = false;
+    lpc_work_en = false;
     return 0;
 }
 
