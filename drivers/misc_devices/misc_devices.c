@@ -430,9 +430,17 @@ static void parse_cmd(char *pt)
 		  if(g_var.acc_flag == FLY_ACC_OFF)
 		 	usb_camera_enable(false);
 #endif
-
-
     }
+    else if (!strcmp(argv[0], "usb_reboot"))
+    {
+        lidbg("Misc devices ctrl: usb_reboot");
+        USB_POWER_DISABLE;
+	 msleep(500);
+	 USB_ID_HIGH_DEV;
+        ssleep(2);
+	 USB_ID_LOW_HOST;
+	 USB_POWER_ENABLE;
+	}
     else if (!strcmp(argv[0], "gps_request"))
     {
         	lidbg("Misc devices ctrl: gps_request");
