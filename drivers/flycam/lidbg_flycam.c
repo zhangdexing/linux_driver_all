@@ -69,7 +69,7 @@ static struct timer_list ui_start_rec_timer;
 /*bool var*/
 static char isDVRRec,isOnlineRec,isRearRec,isDVRFirstInit,isRearViewFirstInit,isRearCheck = 1,isDVRCheck = 1,isOnlineNotifyReady,isDualCam,isColdBootRec,isDVRACCRec,isRearACCRec;
 static char isSuspend,isDVRAfterFix,isRearViewAfterFix,isDVRFirstResume,isRearFirstResume,isUpdating,isKSuspend,isDVRReady,isRearReady,isDVRACCResume,isRearACCResume;
-static char isUIStartRec;
+static char isUIStartRec,isDVRPlugRec,isRearPlugRec;
 
 //struct work_struct work_t_fixScreenBlurred;
 
@@ -672,6 +672,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 				/*usb camera plug out */
 				if(((oldCamStatus>>4) & FLY_CAM_ISVALID) && !((pfly_UsbCamInfo->camStatus>>4) & FLY_CAM_ISVALID))
 				{
+					isRearPlugRec = isRearRec;
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 0&");
 					status_fifo_in(RET_REAR_DISCONNECT);
@@ -708,6 +709,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 				/*usb camera plug out :notify RET_DISCONNECT*/
 				if((oldCamStatus & FLY_CAM_ISVALID) && !(pfly_UsbCamInfo->camStatus & FLY_CAM_ISVALID))
 				{
+					isDVRPlugRec = isDVRRec;
 					status_fifo_in(RET_DVR_DISCONNECT);
 					notify_online(RET_ONLINE_DISCONNECT);
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.osdset 0&");
@@ -1002,7 +1004,6 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 		fixScreenBlurred(DVR_ID,0);
 
 	/*Auto start*/
-	lidbg("%s:==isDVRACCResume:%d,isDVRFirstResume:%d==\n",__func__,isDVRACCResume,isDVRFirstResume);
 	if((isDVRFirstInit && isColdBootRec) || (isDVRACCResume && isDVRACCRec))
 	{
 		lidbg("%s:==FirstInit==\n",__func__);
@@ -1025,6 +1026,10 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 				}
 			}
 		}
+	}
+	else if(isDVRPlugRec && !isOnlineRec)
+	{
+		dvr_start_recording();
 	}
 
 	//complete(&auto_detect_wait);
@@ -1119,6 +1124,10 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 				rear_start_recording();
 			}
 		}
+	}
+	else if(isRearPlugRec && isDualCam && !isOnlineRec)
+	{
+		rear_start_recording();
 	}
 	
 	isRearViewFirstInit = 0;
