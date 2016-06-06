@@ -61,6 +61,7 @@ char r_rec_res[100] = "1280x720",r_rec_path[100] = EMMC_MOUNT_POINT1"/camera_rec
 static struct timer_list suspend_stoprec_timer;
 static struct timer_list set_par_timer;
 static struct timer_list ui_start_rec_timer;
+
 #define SUSPEND_STOPREC_ONLINE_TIME   (jiffies + 180*HZ)  /* 3min stop Rec after online*/
 #define SUSPEND_STOPREC_ACCOFF_TIME   (jiffies + 180*HZ)  /* 3min stop Rec after accoff,fix online then accoff*/
 #define SET_PAR_WAIT_TIME   (jiffies + 2*HZ) 
@@ -87,6 +88,8 @@ u8 camera_rear_res[100] = {0};
 u8 camera_DVR_res[100] = {0};
 
 char tm_cmd[100] = {0};
+
+static int dvr_osd_fail_times,rear_osd_fail_times;
 
 #if 0
 //ioctl
@@ -120,6 +123,28 @@ static void status_fifo_in(unsigned char status)
 	{
 		lidbg("%s:====receive msg => %d====\n",__func__,status);
 		wake_up_interruptible(&pfly_UsbCamInfo->camStatus_wait_queue);
+		return;
+	}
+	else if(status == RET_DVR_OSD_FAIL)
+	{
+		lidbg("%s:===DVR_OSD_FAIL==%d===\n",__func__,g_var.android_boot_completed);
+		if(1==g_var.android_boot_completed)  dvr_osd_fail_times++;
+		if(dvr_osd_fail_times)// 1 per 2 real times
+		{
+			if(!isSuspend) lidbg_shell_cmd("echo 'usb_reboot' > /dev/flydev0");
+			dvr_osd_fail_times = 0;
+		}
+		return;
+	}
+	else if(status == RET_REAR_OSD_FAIL)
+	{
+		lidbg("%s:===REAR_OSD_FAIL==%d===\n",__func__,g_var.android_boot_completed);
+		if(1==g_var.android_boot_completed) 	rear_osd_fail_times++;
+		if(rear_osd_fail_times)// 1 per 2 real times
+		{
+			if(!isSuspend) lidbg_shell_cmd("echo 'usb_reboot' > /dev/flydev0");
+			rear_osd_fail_times = 0;
+		}
 		return;
 	}
 	else if(status == RET_DVR_DISCONNECT || status == RET_DVR_INIT_INSUFFICIENT_SPACE_STOP)
@@ -249,16 +274,19 @@ static void suspend_stoprec_timer_isr(unsigned long data)
 	    lidbg("-------[TIMER]uvccam stop_recording -----\n");
 		complete(&timer_stop_rec_wait);
 	//}
+	return;
 }
 
 static void set_par_timer_isr(unsigned long data)
 {
 	complete(&set_par_wait);
+	return;
 }
 
 static void ui_start_rec_timer_isr(unsigned long data)
 {
 	complete(&ui_start_rec_wait);
+	return;
 }
 
 
@@ -2978,7 +3006,6 @@ int thread_flycam_init(void *data)
 	    ui_start_rec_timer.data = 0;
 	    ui_start_rec_timer.expires = 0;
 	    ui_start_rec_timer.function = ui_start_rec_timer_isr;
-
 
 		lidbg("%s:====start osd set====\n",__func__);
 		lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 0");

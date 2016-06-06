@@ -52,6 +52,7 @@
 #include "../inc/lidbg_flycam_app.h"
 
 static int lidbg_get_current_time(char isXUSet , char *time_string, struct rtc_time *ptm);
+static void send_driver_msg(char magic ,char nr,unsigned long arg);
 
 
 #define TESTAP_VERSION		"v1.0.21_SONiX_UVC_TestAP_Multi"
@@ -1331,6 +1332,7 @@ void osd_set(int cam_id)
 	char time_buf[100] = {0};
 	char devName[50] = {0};
 	char OSDSet_Str[PROPERTY_VALUE_MAX];
+	int fail_times = 0;
 	int rc = -1;
     lidbg("%s:E\n",__func__); 
     while(1)
@@ -1350,9 +1352,15 @@ void osd_set(int cam_id)
 				else
 				{
 					dev = video_open(devName);
+					if(dev != NULL && (2 == ++fail_times)) 
+					{
+						send_driver_msg(FLYCAM_STATUS_IOC_MAGIC,NR_STATUS,RET_DVR_OSD_FAIL);
+					}
+					lidbg("===fail_times:%d==\n",fail_times);
 				}
 				//XU_OSD_Timer_Ctrl(dev, 0);
 			}
+			else fail_times = 0;
 			sleep(9);
 		}
 		sleep(1);
