@@ -90,6 +90,7 @@ u8 camera_DVR_res[100] = {0};
 char tm_cmd[100] = {0};
 
 static int dvr_osd_fail_times,rear_osd_fail_times;
+static char isDVROSDFail,isRearOSDFail;
 
 #if 0
 //ioctl
@@ -128,22 +129,30 @@ static void status_fifo_in(unsigned char status)
 	else if(status == RET_DVR_OSD_FAIL)
 	{
 		lidbg("%s:===DVR_OSD_FAIL==%d===\n",__func__,g_var.android_boot_completed);
-		if(1==g_var.android_boot_completed)  dvr_osd_fail_times++;
-		if(dvr_osd_fail_times)// 1 per 2 real times
+		if(1==g_var.android_boot_completed)  
+		{
+			isDVROSDFail = 1;
+			dvr_osd_fail_times++;
+		}
+		if(isDVROSDFail && (dvr_osd_fail_times < 5))// 1 per 2 real times
 		{
 			if(!isSuspend) lidbg_shell_cmd("echo 'usb_reboot' > /dev/flydev0");
-			dvr_osd_fail_times = 0;
+			isDVROSDFail = 0;
 		}
 		return;
 	}
 	else if(status == RET_REAR_OSD_FAIL)
 	{
 		lidbg("%s:===REAR_OSD_FAIL==%d===\n",__func__,g_var.android_boot_completed);
-		if(1==g_var.android_boot_completed) 	rear_osd_fail_times++;
-		if(rear_osd_fail_times)// 1 per 2 real times
+		if(1==g_var.android_boot_completed) 	
+		{
+			isRearOSDFail = 1;
+			rear_osd_fail_times++;
+		}
+		if(isRearOSDFail && (rear_osd_fail_times < 5))// 1 per 2 real times
 		{
 			if(!isSuspend) lidbg_shell_cmd("echo 'usb_reboot' > /dev/flydev0");
-			rear_osd_fail_times = 0;
+			isRearOSDFail = 0;
 		}
 		return;
 	}
@@ -186,6 +195,8 @@ static int lidbg_flycam_event(struct notifier_block *this,
 			isSuspend = 0;
 			isDVRACCResume = 1;
 			isRearACCResume = 1;
+			dvr_osd_fail_times = 0;
+			rear_osd_fail_times = 0;
 			del_timer(&suspend_stoprec_timer);
 			if(isKSuspend)
 			{

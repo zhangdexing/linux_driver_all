@@ -1352,7 +1352,7 @@ void osd_set(int cam_id)
 				else
 				{
 					dev = video_open(devName);
-					if(dev != NULL && (2 == ++fail_times)) 
+					if(dev != NULL && (3 == ++fail_times) && (XU_Ctrl_ReadChipID(dev) < 0)) 
 					{
 						send_driver_msg(FLYCAM_STATUS_IOC_MAGIC,NR_STATUS,RET_DVR_OSD_FAIL);
 					}
@@ -1361,7 +1361,7 @@ void osd_set(int cam_id)
 				//XU_OSD_Timer_Ctrl(dev, 0);
 			}
 			else fail_times = 0;
-			sleep(9);
+			sleep(4);
 		}
 		sleep(1);
     } 
