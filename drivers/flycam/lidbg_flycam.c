@@ -98,8 +98,12 @@ u8 camera_DVR_res[100] = {0};
 
 char tm_cmd[100] = {0};
 
+
 static int dvr_osd_fail_times,rear_osd_fail_times;
 static char isDVROSDFail,isRearOSDFail;
+
+#define HYUNDAI_MODE	1
+
 
 #if 0
 //ioctl
@@ -1237,7 +1241,11 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 	    }
 		if(ret != 3)
 		{
+#if HYUNDAI_MODE
+			if( !isRearRec)
+#else
 			if( isDualCam && !isRearRec)
+#endif
 			{
 				lidbg("%s:==AUTO start==\n",__func__);
 				rear_start_recording();
@@ -3315,7 +3323,11 @@ int thread_flycam_init(void *data)
 	init_completion(&DVR_fw_get_wait);
 	init_completion(&accon_start_rec_wait);
 	//init_completion(&auto_detect_wait);
-	
+
+#if HYUNDAI_MODE
+	lidbg_shell_cmd("setprop fly.uvccam.coldboot.isRec 1");
+#endif
+
 	if(g_var.recovery_mode == 0)/*do not process when in recovery mode*/
 	{
 		CREATE_KTHREAD(thread_stop_rec_func, NULL);
