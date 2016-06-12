@@ -156,6 +156,16 @@ int cam_id = -1;
 
 FILE *rec_fp1 = NULL;
 
+unsigned int tmp_count = 0;
+
+char isNormDequeue = 0;
+char isTopDequeue = 0;
+
+int Emergency_Sec = 10;
+
+unsigned int totalFrames = 0;
+unsigned int lastFrames = 0;
+
 //lidbg("CAMID[%d] :",cam_id);
 #define camdbg(msg...) do{\
 	lidbg(msg);\
@@ -277,6 +287,26 @@ bool enqueue(void *data,int count)
 	//free(tmpData);
     pthread_mutex_unlock(&alock);
     return true;
+}
+
+int query_length()
+{
+	int length;
+	camera_q_node* node = NULL;
+    //void* data = NULL;
+    struct cam_list *head = NULL;
+    struct cam_list *pos = NULL;
+
+    pthread_mutex_lock(&alock);
+    head = &mhead.list;
+    pos = head->next;
+    if (pos != head) {
+        node = member_of(pos, camera_q_node, list);
+    }
+    pthread_mutex_unlock(&alock);
+	
+	if (NULL != node)  return node->length;
+	else return 0;
 }
 
 int dequeue(void* data)
@@ -1422,13 +1452,16 @@ void dequeue_buf(int count , char* rec_fp)
 	{
 		void* tempa;
 		int lengtha;
-		tempa = malloc(200000);  
+		//tempa = malloc(220000);  
+		lengtha = query_length();
+		if(lengtha == 0) lengtha = 220000;
+		tempa = malloc(lengtha);
 		lengtha = dequeue(tempa);
 		//lidbg("=====dequeue2===%d===\n",lengtha);
 		//fwrite(tempa, lengtha, 1, rec_fp);//write data to the output file
 		if(isBlackBoxTopRec) fwrite(tempa, lengtha, 1, fp1);
 		else if(isBlackBoxBottomRec) fwrite(tempa, lengtha, 1, fp2);
-		free(tempa);
+		if(tempa != NULL) free(tempa);
 	}
 	if(fp1 != NULL) fclose(fp1);
 	if(fp2 != NULL) fclose(fp2);
@@ -1436,16 +1469,26 @@ void dequeue_buf(int count , char* rec_fp)
 	isBlackBoxTopRec = 0;
 }
 
+
 void *thread_dequeue(void *par)
 {
-	unsigned int count = *(unsigned int*)par;
-	lidbg("%s: count = %d \n", __func__,count);
-	if(!isDequeue)
+	//unsigned int count = *(unsigned int*)par;
+	unsigned int count = tmp_count;
+	while(1)
 	{
-		isDequeue = 1;
-		XU_H264_Set_IFRAME(dev);
-		dequeue_buf(count,rec_fp1);
-		isDequeue = 0;
+		if(isNormDequeue)
+		{
+			lidbg("%s: count = %d \n", __func__,count);
+			if(!isDequeue)
+			{
+				isDequeue = 1;
+				XU_H264_Set_IFRAME(dev);
+				dequeue_buf(tmp_count,rec_fp1);
+				isDequeue = 0;
+			}
+			isNormDequeue = 0;
+		}
+		usleep(10*1000);
 	}
 	return 0;
 }
@@ -1453,18 +1496,45 @@ void *thread_dequeue(void *par)
 void *thread_top_dequeue(void *par)
 {
 	//unsigned int count = *(unsigned int*)par;
-	lidbg("%s: E \n", __func__);
-	if(!isDequeue)
+	unsigned int count;
+	while(1)
 	{
-		isDequeue = 1;
-		XU_H264_Set_IFRAME(dev);
-		dequeue_buf(msize - 300,rec_fp1);
-		isBlackBoxTopRec = 1;
-		isBlackBoxBottomRec = 1;
-		dequeue_buf(300,rec_fp1);
-		isDequeue = 0;
+		if(isTopDequeue)
+		{
+			lidbg("%s: E \n", __func__);
+			if(!isDequeue)
+			{
+				isDequeue = 1;
+				if(lastFrames < (Emergency_Sec*30 - 150)) count = Emergency_Sec*30 - 150;
+				else if(lastFrames > (Emergency_Sec*30 + 30)) count = Emergency_Sec*30 + 30;
+				else count = (lastFrames/10)*10 + 10;
+				XU_H264_Set_IFRAME(dev);
+				lidbg_get_current_time(0 , deq_time_buf, NULL);
+				if(msize > count)
+					dequeue_buf(msize - count,rec_fp1);
+				isBlackBoxTopRec = 1;
+				isBlackBoxBottomRec = 1;
+				if(count < msize)
+					dequeue_buf(count,rec_fp1);
+				else dequeue_buf(msize,rec_fp1);
+				isDequeue = 0;
+			}
+			isTopDequeue = 0;
+		}
+		usleep(10*1000);
 	}
 	return 0;
+}
+
+void *thread_count_frame(void *par)
+{
+	while(1)
+	{
+		sleep(Emergency_Sec);
+		lidbg("%s: [%d] Total frames = %d \n", __func__,cam_id,totalFrames);
+		lastFrames = totalFrames;
+		totalFrames = 0;
+	}
 }
 
 void *thread_capture(void *par)
@@ -2368,6 +2438,8 @@ int main(int argc, char *argv[])
 	char osd_string[12] = {"0"};
 	pthread_t thread_capture_id;
 	pthread_t thread_dequeue_id;
+	pthread_t thread_top_dequeue_id;
+	pthread_t thread_count_frame_dequeue_id;
 	//pthread_t thread_switch_id;
 	//pthread_t thread_nightMode_id;
 	int flytmpcnt = 0,rc;
@@ -2377,7 +2449,7 @@ int main(int argc, char *argv[])
 	unsigned char isExceed = 0;
 	unsigned long totalSize = 0;
 	unsigned char tryopencnt = 20;
-	unsigned int tmp_count = 0;
+
 	
  //cjc -
 #if(CARCAM_PROJECT == 1)
@@ -4224,6 +4296,7 @@ openfd:
 	}
 
 
+
     //yiling:should get/set substream framerate after video_set_framerate() 
     //because this two functions need to execute video_get_framerate() to get framerate of main stream(sub<=main)
 	if(do_multi_stream_set_sub_fr)
@@ -4271,6 +4344,12 @@ openfd:
 	}
 
 	XU_H264_Set_GOP(dev, 10);
+	
+	pthread_create(&thread_top_dequeue_id,NULL,thread_top_dequeue,NULL);
+	pthread_create(&thread_dequeue_id,NULL,thread_dequeue,NULL);
+	pthread_create(&thread_count_frame_dequeue_id,NULL,thread_count_frame,NULL);
+
+	lastFrames = Emergency_Sec * 30;
 		
 	if(GetFreeRam(&freeram) && freeram<1843200*nbufs+4194304)
 	{
@@ -4525,9 +4604,9 @@ openfd:
 		{
 			if((isBlackBoxTopRec == 0) && (isBlackBoxBottomRec == 0))
 			{
-				if(msize <= 300)
+				if(msize <= (Emergency_Sec * 30))
 				{
-					lidbg("***isBlackBoxTopWaitDequeue______SET***\n");
+					lidbg("Waiting for msize restoration!\n");
 #if 0
 					isBlackBoxTopRec = 1;
 					isBlackBoxBottomRec = 1;
@@ -4548,7 +4627,8 @@ openfd:
 					tmp_count = 300;
 					pthread_create(&thread_dequeue_id,NULL,thread_dequeue,300);
 #endif
-					pthread_create(&thread_dequeue_id,NULL,thread_top_dequeue,NULL);
+					//pthread_create(&thread_dequeue_id,NULL,thread_top_dequeue,NULL);
+					isTopDequeue = 1;
 				}
 			}
 			//else isBlackBoxTopWaitDequeue = 1;
@@ -4559,14 +4639,17 @@ openfd:
 				property_set("lidbg.uvccam.rear.blackbox", "0");
 		}
 
-		if(msize > 300 && isBlackBoxTopWaitDequeue && (isBlackBoxTopRec == 0) && (isBlackBoxBottomRec == 0))
+		totalFrames++;
+
+		if((msize > (Emergency_Sec*30)) && isBlackBoxTopWaitDequeue && (isBlackBoxTopRec == 0) && (isBlackBoxBottomRec == 0))
 		{
 			lidbg("***isBlackBoxTopWaitDequeue***\n");
-			pthread_create(&thread_dequeue_id,NULL,thread_top_dequeue,NULL);
+			//pthread_create(&thread_dequeue_id,NULL,thread_top_dequeue,NULL);
+			isTopDequeue = 1;
 			isBlackBoxTopWaitDequeue = 0;
 		}
 
-		if(msize == 300) XU_H264_Set_IFRAME(dev);
+		if(msize == (Emergency_Sec*30)) XU_H264_Set_IFRAME(dev);
 		
 		if((!strncmp(startRecording, "0", 1)) && (!do_save) )
 		{
@@ -5059,12 +5142,16 @@ openfd:
 					}
 						
 						//fwrite(mem0[buf0.index], buf0.bytesused, 1, rec_fp1);//write data to the output file
-					if(isBlackBoxBottomRec && (msize > 300) && (isBlackBoxTopRec == 0))
+					if(isBlackBoxBottomRec && (msize > (Emergency_Sec*30)) && (isBlackBoxTopRec == 0))
 					{
-						tmp_count = 300;
-						pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
+						if(lastFrames < (Emergency_Sec*30 - 150)) tmp_count = Emergency_Sec*30 - 150;
+						else if(lastFrames > (Emergency_Sec*30 + 30)) tmp_count = Emergency_Sec*30 + 30;
+						else tmp_count = (lastFrames/10)*10 + 10;
+						//tmp_count = 300;
+						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
+						isNormDequeue = 1;
 					}
-					else if((msize % 100 == 0) && (msize >= 600))
+					else if((msize % 100 == 0) && (msize >= (Emergency_Sec * 30 *2)))
 					{
 						/*
 						int tmpi = 200;
@@ -5080,8 +5167,9 @@ openfd:
 							free(tempa);
 						}
 						*/
-						tmp_count = 300;
-						pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
+						tmp_count = Emergency_Sec * 30;
+						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
+						isNormDequeue = 1;
 					}
 					
 				//}
