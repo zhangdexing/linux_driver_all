@@ -49,6 +49,8 @@ static DECLARE_COMPLETION (DVR_res_get_wait);
 static DECLARE_COMPLETION (accon_start_rec_wait);
 static DECLARE_COMPLETION (set_par_wait);
 static DECLARE_COMPLETION (ui_start_rec_wait);
+static DECLARE_COMPLETION (start_dvr_rec_wait);
+static DECLARE_COMPLETION (start_rear_rec_wait);
 //static DECLARE_COMPLETION (auto_detect_wait);
 
 /*Camera DVR & Online recording parameters*/
@@ -66,6 +68,8 @@ static int em_time = 10;
 static struct timer_list suspend_stoprec_timer;
 static struct timer_list set_par_timer;
 static struct timer_list ui_start_rec_timer;
+static struct timer_list em_start_dvr_rec_timer;
+static struct timer_list em_start_rear_rec_timer;
 
 #define SUSPEND_STOPREC_ONLINE_TIME   (jiffies + 180*HZ)  /* 3min stop Rec after online*/
 #define SUSPEND_STOPREC_ACCOFF_TIME   (jiffies + 180*HZ)  /* 3min stop Rec after accoff,fix online then accoff*/
@@ -75,7 +79,7 @@ static struct timer_list ui_start_rec_timer;
 /*bool var*/
 static char isDVRRec,isOnlineRec,isRearRec,isDVRFirstInit,isRearViewFirstInit,isRearCheck = 1,isDVRCheck = 1,isOnlineNotifyReady,isDualCam,isColdBootRec,isDVRACCRec,isRearACCRec;
 static char isSuspend,isDVRAfterFix,isRearViewAfterFix,isDVRFirstResume,isRearFirstResume,isUpdating,isKSuspend,isDVRReady,isRearReady,isDVRACCResume,isRearACCResume;
-static char isUIStartRec,isDVRPlugRec,isRearPlugRec;
+static char isUIStartRec,isDVRPlugRec,isRearPlugRec,isEMDVRStartRec,isEMRearStartRec;
 
 //struct work_struct work_t_fixScreenBlurred;
 
@@ -311,6 +315,16 @@ static void ui_start_rec_timer_isr(unsigned long data)
 	return;
 }
 
+static void start_dvr_rec_timer_isr(unsigned long data)
+{
+	complete(&start_dvr_rec_wait);
+}
+
+static void start_rear_rec_timer_isr(unsigned long data)
+{
+	complete(&start_rear_rec_wait);
+}
+
 
 /*can not block in ISR function*/
 static int thread_stop_rec_func(void *data)
@@ -377,6 +391,61 @@ static int thread_set_par_func(void *data)
 		{
 			lidbg("%s:Dual => start Rear recording\n",__func__);
 			rear_start_recording();
+		}
+	}
+	return 0;
+}
+
+static int thread_start_dvr_rec_func(void *data)
+{
+	int rc = -1;
+	while(1)
+	{
+		wait_for_completion(&start_dvr_rec_wait);
+		if(((pfly_UsbCamInfo->camStatus)  & FLY_CAM_ISSONIX))
+		{
+			if(isEMDVRStartRec== 1)
+			{
+				/*DVR start recording*/
+				rc = dvr_start_recording();
+				if(rc == -1)
+					dvr_fail_proc();
+			}
+			else if(isEMDVRStartRec == 0)
+			{
+				/*DVR stop recording*/
+				rc = dvr_stop_recording();
+				if(rc == -1)
+					dvr_fail_proc();
+			}
+		}
+	}
+	return 0;
+}
+
+static int thread_start_rear_rec_func(void *data)
+{
+	int rc = -1;
+	while(1)
+	{
+		wait_for_completion(&start_rear_rec_wait);
+		if(((pfly_UsbCamInfo->camStatus >> 4)  & FLY_CAM_ISSONIX))
+		{
+			if(isEMRearStartRec== 1)
+			{
+				/*Rear start recording*/
+				rc = rear_start_recording();
+				if(rc == -1)
+					rear_fail_proc();
+			}
+			//else if(((char*)arg)[1] == 0)//stop
+			else if(isEMRearStartRec == 0)
+			{
+				/*Rear stop recording*/
+				rc = rear_stop_recording();
+				if(rc == -1)
+					rear_fail_proc();
+			}
 		}
 	}
 	return 0;
@@ -2578,6 +2647,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					lidbg("%s:copy_to_user ERR\n",__func__);
 				}
 		        break;
+#if 0
 			case NR_EM_START:
 		        lidbg("%s:NR_EM_START\n",__func__);
 				isUIStartRec = ((char*)arg)[0];
@@ -2613,6 +2683,38 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				}
 				mod_timer(&ui_start_rec_timer,UI_REC_WAIT_TIME);
 		        break;
+#endif
+			case NR_EM_START:
+				if(DVR_ID == ((char*)arg)[0])
+				{
+			        lidbg("%s:NR_EM_DVR_START\n",__func__);
+					isEMDVRStartRec = ((char*)arg)[1];
+					if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID) dvrRespond[2] = 1;
+						else dvrRespond[2] = 0;
+					memcpy(returnRespond + length,dvrRespond,3);
+					length += 3;
+					if(copy_to_user((char*)arg,returnRespond,length))
+					{
+						lidbg("%s:copy_to_user ERR\n",__func__);
+					}
+					mod_timer(&em_start_dvr_rec_timer,UI_REC_WAIT_TIME);
+				}
+				else if(REARVIEW_ID == ((char*)arg)[0])
+				{
+			        lidbg("%s:NR_EM_REAR_START\n",__func__);
+					isEMRearStartRec = ((char*)arg)[1];
+					if((pfly_UsbCamInfo->camStatus >> 4) & FLY_CAM_ISVALID) rearRespond[2] = 1;
+						else rearRespond[2] = 0;
+					memcpy(returnRespond + length,rearRespond,3);
+					length += 3;
+					if(copy_to_user((char*)arg,returnRespond,length))
+					{
+						lidbg("%s:copy_to_user ERR\n",__func__);
+					}
+					mod_timer(&em_start_rear_rec_timer,UI_REC_WAIT_TIME);
+				}
+				break;
+			
 			case NR_EM_STATUS:
 		        lidbg("%s:NR_EM_STATUS\n",__func__);
 				//ret = isDVRRec;
@@ -2627,6 +2729,40 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					lidbg("%s:copy_to_user ERR\n",__func__);
 				}
 		        break;
+			
+			case NR_EM_TIME:
+				if(1 == ((char*)arg)[0])
+				{
+					lidbg("%s:NR_EM_TOP_TIME = [%d]\n",__func__,((char*)arg)[1]);
+					em_time = ((char*)arg)[1];
+					dvrRespond[2] = em_time;
+					rearRespond[2] = em_time;
+					memcpy(returnRespond + length,dvrRespond,3);
+					length += 3;
+					memcpy(returnRespond + length,rearRespond,3);
+					length += 3;
+					if(copy_to_user((char*)arg,returnRespond,length))
+					{
+						lidbg("%s:copy_to_user ERR\n",__func__);
+					}
+				}
+				else if(0 == ((char*)arg)[0])
+				{
+					lidbg("%s:NR_EM_BOTTOM_TIME = [%d]\n",__func__,((char*)arg)[1]);
+					em_time = ((char*)arg)[1];
+					dvrRespond[2] = em_time;
+					rearRespond[2] = em_time;
+					memcpy(returnRespond + length,dvrRespond,3);
+					length += 3;
+					memcpy(returnRespond + length,rearRespond,3);
+					length += 3;
+					if(copy_to_user((char*)arg,returnRespond,length))
+					{
+						lidbg("%s:copy_to_user ERR\n",__func__);
+					}
+				}
+		        break;
+#if 0
 			case NR_EM_TIME:
 				lidbg("%s:NR_EM_TIME = [%d]\n",__func__,((char*)arg)[0]);
 				em_time = ((char*)arg)[0];
@@ -2640,6 +2776,12 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				{
 					lidbg("%s:copy_to_user ERR\n",__func__);
 				}
+		        break;
+#endif
+			case NR_EM_MANUAL:
+				lidbg("%s:NR_EM_MANUAL\n",__func__);
+				if(isDVRRec) lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
+				if(isRearRec) lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
 		        break;
 			default:
 		        return -ENOTTY;
@@ -3172,6 +3314,8 @@ int thread_flycam_init(void *data)
 		CREATE_KTHREAD(thread_accon_start_rec, NULL);
 		CREATE_KTHREAD(thread_set_par_func, NULL);
 		CREATE_KTHREAD(thread_ui_startrec_func, NULL);
+		CREATE_KTHREAD(thread_start_dvr_rec_func, NULL);
+		CREATE_KTHREAD(thread_start_rear_rec_func, NULL);
 		register_lidbg_notifier(&lidbg_notifier);/*ACCON/OFF notifier*/
 		/*Stop recording timer(in ACCOFF scene)*/
 		init_timer(&suspend_stoprec_timer);
@@ -3188,7 +3332,17 @@ int thread_flycam_init(void *data)
 	    ui_start_rec_timer.data = 0;
 	    ui_start_rec_timer.expires = 0;
 	    ui_start_rec_timer.function = ui_start_rec_timer_isr;
-			
+
+		init_timer(&em_start_dvr_rec_timer);
+	    em_start_dvr_rec_timer.data = 0;
+	    em_start_dvr_rec_timer.expires = 0;
+	    em_start_dvr_rec_timer.function = start_dvr_rec_timer_isr;
+
+		init_timer(&em_start_rear_rec_timer);
+	    em_start_rear_rec_timer.data = 0;
+	    em_start_rear_rec_timer.expires = 0;
+	    em_start_rear_rec_timer.function = start_rear_rec_timer_isr;
+
 		lidbg_shell_cmd("echo 1 > /sys/class/sensors/mc3xxx-accel/enable");
 		lidbg("%s:====start osd set====\n",__func__);
 		lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 0");
