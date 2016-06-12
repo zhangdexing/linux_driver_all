@@ -1489,6 +1489,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	char ret = 0;
 	unsigned char ret_st = 0;
 	char temp_cmd[256];
+	struct file *file_path;
 	//lidbg("=====camStatus => %d======\n",pfly_UsbCamInfo->camStatus);
 	if(_IOC_TYPE(cmd) == FLYCAM_FRONT_REC_IOC_MAGIC)//front cam recording mode
 	{
@@ -2539,6 +2540,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		{
 			case NR_EM_PATH:
 				lidbg("%s:NR_EM_PATH  = [%s]\n",__func__,(char*)arg);
+#if 0
 				ret_st = checkSDCardStatus((char*)arg);
 				if((ret_st != 1) || (ret_st != 2)) 
 				{
@@ -2549,7 +2551,27 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				else
 					lidbg("%s: em_path access wrong! %d", __func__ ,EFAULT);//not happend
 				if(ret_st > 0) dvrRespond[1] = RET_FAIL;
-				strcpy(dvrRespond + 2,em_path);
+#endif
+				sprintf(temp_cmd, "mkdir -p %s", (char*)arg);
+				lidbg_shell_cmd(temp_cmd);
+
+				file_path = filp_open((char*)arg, O_RDONLY | O_DIRECTORY, 0);
+				if(IS_ERR(file_path))
+				{
+					lidbg("%s:EM_PATH ERR!!\n",__func__);
+					lidbg_shell_cmd("setprop fly.uvccam.empath "EMMC_MOUNT_POINT1"/camera_rec/BlackRec/");
+					strcpy(dvrRespond + 2,EMMC_MOUNT_POINT1"/camera_rec/BlackRec/");
+				}
+				else
+				{
+					lidbg("%s:EMPATH OK!!\n",__func__);
+					strcpy(em_path,(char*)arg);
+					sprintf(temp_cmd, "setprop fly.uvccam.empath %s", em_path);
+					lidbg_shell_cmd(temp_cmd);
+					strcpy(dvrRespond + 2,em_path);
+				}
+				if(!IS_ERR(file_path)) filp_close(file_path, 0);
+				
 				length += 100;
 				if(copy_to_user((char*)arg,dvrRespond,length))
 				{
@@ -2606,8 +2628,8 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				}
 		        break;
 			case NR_EM_TIME:
-				lidbg("%s:NR_EM_TIME = [%ld]\n",__func__,arg);
-				em_time = ((char*)arg)[1];
+				lidbg("%s:NR_EM_TIME = [%d]\n",__func__,((char*)arg)[0]);
+				em_time = ((char*)arg)[0];
 				dvrRespond[2] = em_time;
 				rearRespond[2] = em_time;
 				memcpy(returnRespond + length,dvrRespond,3);

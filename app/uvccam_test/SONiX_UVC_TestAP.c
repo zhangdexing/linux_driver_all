@@ -1417,13 +1417,13 @@ void dequeue_buf(int count , char* rec_fp)
 	{
 		if(cam_id == DVR_ID)
 		{
-			sprintf(dvr_blackbox_filename, "%s/BlackBox/F%s.h264", Rec_Save_Dir, deq_time_buf);
+			sprintf(dvr_blackbox_filename, "%s/F%s.h264", Em_Save_Dir, deq_time_buf);
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,dvr_blackbox_filename);
 			fp1 = fopen(dvr_blackbox_filename, "ab+");
 		}
 		else if(cam_id == REARVIEW_ID)
 		{
-			sprintf(rear_blackbox_filename, "%s/BlackBox/R%s.h264", Rec_Save_Dir, deq_time_buf);
+			sprintf(rear_blackbox_filename, "%s/R%s.h264", Em_Save_Dir, deq_time_buf);
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,rear_blackbox_filename);
 			fp1 = fopen(rear_blackbox_filename, "ab+");
 		}
