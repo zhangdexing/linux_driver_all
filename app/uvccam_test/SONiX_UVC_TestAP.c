@@ -146,6 +146,7 @@ char isColdBootRec_String[PROPERTY_VALUE_MAX];
 char isBlackBoxRec[PROPERTY_VALUE_MAX];
 char Em_Top_Sec_String[PROPERTY_VALUE_MAX];
 char Em_Bottom_Sec_String[PROPERTY_VALUE_MAX];
+char Wait_Deq_Str[PROPERTY_VALUE_MAX];
 
 char startNight[PROPERTY_VALUE_MAX];
 //char startCapture[PROPERTY_VALUE_MAX];
@@ -1413,6 +1414,15 @@ void dequeue_buf(int count , char* rec_fp)
 {
 	FILE *fp1 = NULL;
 	FILE *fp2 = NULL;
+
+	while(1)
+	{
+		property_get("lidbg.uvccam.isdequeue", Wait_Deq_Str, "0");
+		if(strncmp(Wait_Deq_Str, "1", 1)) break;
+		usleep(10*1000);
+	}
+	system("setprop lidbg.uvccam.isdequeue 1");
+	
 	lidbg("=====dequeue_buf===count => %d==\n",count);
 	if(isBlackBoxTopRec)
 	{
@@ -1471,6 +1481,7 @@ void dequeue_buf(int count , char* rec_fp)
 	if(fp2 != NULL) fclose(fp2);
 	if(isBlackBoxTopRec == 0) isBlackBoxBottomRec = 0;
 	isBlackBoxTopRec = 0;
+	system("setprop lidbg.uvccam.isdequeue 0");
 }
 
 
@@ -5167,7 +5178,7 @@ openfd:
 						//fwrite(mem0[buf0.index], buf0.bytesused, 1, rec_fp1);//write data to the output file
 					if(isBlackBoxBottomRec && (msize > (Emergency_Bottom_Sec*30)) && (isBlackBoxTopRec == 0))
 					{
-						lidbg("======Bottom write===lastFrames:%d,Bottom_Sec:%d======\n",bottom_lastFrames,Emergency_Bottom_Sec);
+						//lidbg("======Bottom write===lastFrames:%d,Bottom_Sec:%d======\n",bottom_lastFrames,Emergency_Bottom_Sec);
 						if(bottom_lastFrames < (Emergency_Bottom_Sec*30 - 150)) tmp_count = Emergency_Bottom_Sec*30 - 150;
 						else if(bottom_lastFrames > (Emergency_Bottom_Sec*30 + 30)) tmp_count = Emergency_Bottom_Sec*30 + 30;
 						else tmp_count = (bottom_lastFrames/10)*10 + 10;

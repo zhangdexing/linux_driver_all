@@ -92,25 +92,31 @@ open_dev:
 	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_PATH), "/storage/sdcard1/camera_rec/Bl/");
 	lidbg("@@==NR_EM_PATH==0:0x%x,1:%d,2:%d,3:%d,4:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3],testCMD[4]);
 
-	testCMD[0] = 5;
+	testCMD[0] = 0;
+	testCMD[1] = 5;
 	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_TIME), testCMD);
 	lidbg("@@==NR_EM_TIME==0:0x%x,1:%d,2:%d,3:%d,4:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3],testCMD[4]);
 
-	testCMD[0] = 1;
-	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_START), testCMD);
-	lidbg("@@==NR_EM_START==0:0x%x,1:%d,2:%d,3:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3]);
-
+	testCMD[0] = 0;
 	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_STATUS), testCMD);
 	lidbg("@@==NR_EM_STATUS==0:0x%x,1:%d,2:%d,3:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3]);
+
+	testCMD[0] = 1;
+	testCMD[1] = 1;
+	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_START), testCMD);
+	lidbg("@@==NR_EM_START==0:0x%x,1:%d,2:%d,3:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3]);
 
 	sleep(20);
 
 	testCMD[0] = 0;
+	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_STATUS), testCMD);
+	lidbg("@@==NR_EM_STATUS==0:0x%x,1:%d,2:%d,3:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3]);
+
+	testCMD[0] = 1;
+	testCMD[1] = 0;
 	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_START), testCMD);
 	lidbg("@@==NR_EM_START==0:0x%x,1:%d,2:%d,3:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3]);
 
-	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_STATUS), testCMD);
-	lidbg("@@==NR_EM_STATUS==0:0x%x,1:%d,2:%d,3:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3]);
 
 #if 0
 	testCMD[0] = CMD_TIME_SEC;
