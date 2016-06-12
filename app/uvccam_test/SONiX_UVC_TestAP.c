@@ -116,8 +116,10 @@ static void send_driver_msg(char magic ,char nr,unsigned long arg);
 #define NONE_HUB_SUPPORT	0
 //#define REC_SAVE_DIR	EMMC_MOUNT_POINT0"/camera_rec/"
 char Rec_Save_Dir[100] = EMMC_MOUNT_POINT1"/camera_rec/";
+char Em_Save_Dir[100] = EMMC_MOUNT_POINT1"/camera_rec/BlackBox/";
 int Max_Rec_Num = 1;
 int Rec_Sec = 300;//s
+//int Em_Sec = 10;//s
 unsigned int Rec_File_Size = 300;//MB
 unsigned int Rec_Bitrate = 8000000;//b/s
 int isDualCam = 0;
@@ -142,6 +144,7 @@ char Rec_Bitrate_String[PROPERTY_VALUE_MAX];
 char isDualCam_String[PROPERTY_VALUE_MAX];
 char isColdBootRec_String[PROPERTY_VALUE_MAX];
 char isBlackBoxRec[PROPERTY_VALUE_MAX];
+char Em_Sec_String[PROPERTY_VALUE_MAX];
 
 char startNight[PROPERTY_VALUE_MAX];
 //char startCapture[PROPERTY_VALUE_MAX];
@@ -2011,7 +2014,9 @@ static void switch_scan(void)
 		property_get("lidbg.uvccam.rearview.recording", startRecording, "0");
 		property_get("lidbg.uvccam.rear.blackbox", isBlackBoxRec, "0");
 	}
-	
+	property_get("fly.uvccam.empath", Em_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
+	property_get("fly.uvccam.emtime", Em_Sec_String, "10");
+	Emergency_Sec = atoi(Em_Sec_String);
 	return;
 }
 
