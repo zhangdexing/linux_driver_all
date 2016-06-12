@@ -4,6 +4,16 @@
 #define HAL_SO "/flysystem/lib/out/lidbg_loader.ko"
 LIDBG_DEFINE;
 
+static LIST_HEAD(flyhal_config_list);
+#ifdef SOC_msm8x25
+#if (defined(BOARD_V1) || defined(BOARD_V2) || defined(BOARD_V3))
+#define FLYHAL_CONFIG_PATH "/flydata/flyhalconfig"
+#else
+#define FLYHAL_CONFIG_PATH "/flysystem/flyconfig/default/lidbgconfig/flylidbgconfig.txt"
+#endif
+#else
+#define FLYHAL_CONFIG_PATH "/flysystem/flyconfig/default/lidbgconfig/flylidbgconfig.txt"
+#endif
 
 static int bl_event_handle(struct notifier_block *this,
                            unsigned long event, void *ptr)
@@ -463,6 +473,14 @@ int fly_interface_init(void)
     memset(&(plidbg_dev->soc_pvar_tbl), (int)NULL, sizeof(struct lidbg_pvar_t));
 
     set_func_tbl();
+
+
+    {
+        int ret = fs_fill_list(FLYHAL_CONFIG_PATH, FS_CMD_FILE_LISTMODE, &flyhal_config_list);
+        LIDBG_WARN("FLYHAL_CONFIG_PATH:%s ret=%d", FLYHAL_CONFIG_PATH, ret);
+        g_var.pflyhal_config_list = &flyhal_config_list;
+    }
+
 
     g_var.temp = 0;
     g_var.system_status = FLY_SCREEN_ON;

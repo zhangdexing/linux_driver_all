@@ -541,6 +541,20 @@ void checkif_wifiap_error(void)
 #endif
     }
 }
+void check_airplane_mode(void)
+{
+
+    int ret = fs_find_string(g_var.pflyhal_config_list, "AirPlaneModeOn");
+    if(ret > 0)
+    {
+	g_var.suspend_airplane_mode = true;
+	LIDBG_WARN("<suspend_airplane_mode = true ret=%d>\n",ret);
+    }
+    else
+	LIDBG_WARN("<suspend_airplane_mode = false ret=%d>\n",ret);
+
+}
+
 int misc_init(void *data)
 {
     LIDBG_WARN("<==IN==>\n");
@@ -584,6 +598,8 @@ int misc_init(void *data)
     usb_register_notify(&usb_nb_misc);
 
     checkif_wifiap_error();
+
+    check_airplane_mode();
 
     LIDBG_WARN("<==OUT==>\n\n");
     LIDBG_MODULE_LOG;

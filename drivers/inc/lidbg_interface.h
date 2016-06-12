@@ -359,7 +359,7 @@ struct lidbg_pvar_t
     bool enable_gsensor_data_for_android;
     int platformid;
     int keep_lcd_on;
-
+    struct list_head *pflyhal_config_list;
 };
 
 typedef struct

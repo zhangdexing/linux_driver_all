@@ -22,23 +22,12 @@ static LIST_HEAD(lidbg_ts_config_list);
 struct ts_devices g_ts_devices;
 
 
-#ifdef SOC_msm8x25
-#if (defined(BOARD_V1) || defined(BOARD_V2) || defined(BOARD_V3))
-#define FLYHAL_CONFIG_PATH "/flydata/flyhalconfig"
-#else
-#define FLYHAL_CONFIG_PATH "/flysystem/flyconfig/default/lidbgconfig/flylidbgconfig.txt"
-#endif
-#else
-#define FLYHAL_CONFIG_PATH "/flysystem/flyconfig/default/lidbgconfig/flylidbgconfig.txt"
-#endif
-
 #define GTP_SWAP SWAP
 #define GTP_REVERT(x, y)     do{\
          x = max_x-x;\
          y = max_y-y;\
        }while (0)
 
-static LIST_HEAD(flyhal_config_list);
 static int ts_scan_delayms;
 
 int ts_should_revert = -1;
@@ -336,10 +325,9 @@ void ts_probe_prepare(void)
 {
     char buff[50] = {0};
 
-    fs_fill_list(FLYHAL_CONFIG_PATH, FS_CMD_FILE_LISTMODE, &flyhal_config_list);
     FS_REGISTER_INT(ts_scan_delayms, "ts_scan_delayms", 500, NULL);
 
-    ts_should_revert = fs_find_string(&flyhal_config_list, "TSMODE_XYREVERT");
+    ts_should_revert = fs_find_string(g_var.pflyhal_config_list, "TSMODE_XYREVERT");
    if(g_recovery_meg->hwInfo.info[7]=='1')
     {
         LIDBG_WARN("<hwInfo.info[7]=1,ts_should_revert=1,[%d]>\n",ts_should_revert);
