@@ -411,6 +411,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#091--rm /data/out\n");
             fs_mem_log("*158#092--enable 158013 then upload the log to internet\n");
             fs_mem_log("*158#093--rm all log created by 158013\n");
+            fs_mem_log("*158#094--rm flysystem/lib/hw and flysystem/lib/modules\n");
+            fs_mem_log("*158#095--recovery flysystem/lib/hw and flysystem/lib/modules\n");
 
             show_password_list();
             lidbg_domineering_ack();
@@ -1028,6 +1030,22 @@ void parse_cmd(char *pt)
             lidbg("*158#093--rm all log created by 158013\n");
             lidbg_shell_cmd("rm -rf /sdcard/ID*");
             lidbg_shell_cmd("rm -rf /storage/udisk/ID*");
+            lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#094"))
+        {
+            lidbg("*158#094--rm flysystem/lib/hw and flysystem/lib/modules\n");
+            lidbg_shell_cmd("mount -o remount /system");
+            lidbg_shell_cmd("mv /flysystem/lib/hw /flysystem/lib/hw1");
+            lidbg_shell_cmd("mv /flysystem/lib/modules /flysystem/lib/modules1");
+            lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#095"))
+        {
+            lidbg("*158#095--recovery flysystem/lib/hw and flysystem/lib/modules\n");
+            lidbg_shell_cmd("mount -o remount /system");
+            lidbg_shell_cmd("mv /flysystem/lib/hw1 /flysystem/lib/hw");
+            lidbg_shell_cmd("mv /flysystem/lib/modules1 /flysystem/lib/modules");
             lidbg_domineering_ack();
         }
 
