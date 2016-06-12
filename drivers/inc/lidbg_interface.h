@@ -279,7 +279,7 @@ struct lidbg_fn_t
     void (*pfnSOC_Key_Report)(unsigned int key_value, unsigned int type);
     int  (*pfnSOC_BL_Set)( unsigned int level);
     int  (*pfnSOC_Display_Get_Res)(unsigned int *screen_x, unsigned int *screen_y);
-    void (*pfnSOC_LPC_Send)(unsigned char *p, unsigned int len);
+    int  (*pfnSOC_LPC_Send)(unsigned char *p, unsigned int len);
     void (*pfnSOC_System_Status)(FLY_SYSTEM_STATUS status);
     void (*pfnSOC_WakeLock_Stat)(bool lock, const char *name);
 

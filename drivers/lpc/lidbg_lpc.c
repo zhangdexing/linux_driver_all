@@ -123,7 +123,7 @@ int thread_lpc_ping_test(void *data)
 }
 
 
-void LPCCombinDataStream(BYTE *p, UINT len)
+int LPCCombinDataStream(BYTE *p, UINT len)
 {
     UINT i = 0;
     int ret ;
@@ -133,7 +133,7 @@ void LPCCombinDataStream(BYTE *p, UINT len)
     bool bMalloc = FALSE;
 
     if((!lpc_work_en) || (g_hw.lpc_disable))
-        return;
+        return 1;
 
     if (3 + len + 1 > 16)
     {
@@ -176,6 +176,7 @@ void LPCCombinDataStream(BYTE *p, UINT len)
         kfree(buf);
         buf = NULL;
     }
+    return ret;
 }
 
 

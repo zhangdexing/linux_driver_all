@@ -4,9 +4,16 @@
 
 
 #define LPC_CMD_LCD_ON  do{\
+		int loop=0;int ret=-1;\
 		u8 buff[] = {0x02, 0x0d, 0x1};\
-        SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
-				}while(0)
+		while(ret<0&&loop<3)\
+		{\
+       			loop++;\
+       			ret=SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
+       			lidbg("LPC_CMD_LCD_ON.ret:%d/loop:%d\n",ret,loop);\
+       			if(ret<0)msleep(100);\
+		}\
+		}while(0)
 #define LPC_CMD_LCD_OFF   do{\
 		u8 buff[] = {0x02, 0x0d, 0x0};\
         SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
