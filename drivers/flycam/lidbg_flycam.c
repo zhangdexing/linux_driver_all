@@ -102,8 +102,6 @@ char tm_cmd[100] = {0};
 static int dvr_osd_fail_times,rear_osd_fail_times;
 static char isDVROSDFail,isRearOSDFail;
 
-#define HYUNDAI_MODE	1
-
 
 #if 0
 //ioctl

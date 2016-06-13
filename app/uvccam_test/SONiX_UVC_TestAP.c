@@ -114,7 +114,6 @@ static void send_driver_msg(char magic ,char nr,unsigned long arg);
 
 //flyaudio
 #define NONE_HUB_SUPPORT	0
-#define HYUNDAI_MODE	1
 
 //#define REC_SAVE_DIR	EMMC_MOUNT_POINT0"/camera_rec/"
 char Rec_Save_Dir[100] = EMMC_MOUNT_POINT1"/camera_rec/";

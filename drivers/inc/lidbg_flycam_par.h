@@ -1,6 +1,8 @@
 #ifndef __LIDBG_FLYCAM_PAR_
 #define __LIDBG_FLYCAM_PAR_
 
+#define HYUNDAI_MODE	0
+
 #define REARVIEW_ID	0
 #define DVR_ID				1
 #define REAR_BLOCK_ID_MODE				2
