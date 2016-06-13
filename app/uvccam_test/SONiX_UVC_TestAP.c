@@ -1503,7 +1503,7 @@ void *thread_dequeue(void *par)
 	{
 		if(isNormDequeue)
 		{
-			lidbg("%s: count = %d \n", __func__,count);
+			lidbg("%s: count = %d ,isDequeue:%d\n", __func__,tmp_count,isDequeue);
 			if(!isDequeue)
 			{
 				isDequeue = 1;
@@ -4387,6 +4387,7 @@ openfd:
 	}
 
 	XU_H264_Set_GOP(dev, 10);
+	property_set("lidbg.uvccam.isdequeue", "0");
 	
 	pthread_create(&thread_top_dequeue_id,NULL,thread_top_dequeue,NULL);
 	pthread_create(&thread_dequeue_id,NULL,thread_dequeue,NULL);
@@ -4707,7 +4708,7 @@ openfd:
 				system(tmpCMD);
 			}
 #endif
-			dequeue_buf(msize,rec_fp1);
+			//dequeue_buf(msize,rec_fp1);
 			//system("echo 'udisk_unrequest' > /dev/flydev0");
 			property_set("fly.uvccam.curprevnum", "-1");
 			send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_STOP);
@@ -5143,13 +5144,17 @@ openfd:
 						//tmp_count = msize;
 						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize);
 						//pthread_join(thread_capture_id,NULL);
-						if(rec_fp1 != NULL) fclose(rec_fp1);
+						
 #if 1
 						//while(isDequeue) usleep(100*1000);
 						//dequeue_buf(msize,rec_fp1);
-						old_rec_fp1 = fopen(flyh264_filename, "ab+");
-						isOldFp = 1;
-						isNormDequeue = 1;	
+						if(rec_fp1 != NULL) 
+						{
+							fclose(rec_fp1);
+							old_rec_fp1 = fopen(flyh264_filename, "ab+");
+							isOldFp = 1;
+							isNormDequeue = 1;	
+						}
 #endif
 #if 1
 						isIframe = 1;
@@ -5207,20 +5212,6 @@ openfd:
 					}
 					else if(!isBlackBoxBottomRec && (msize % 100 == 0) && (msize >= (Emergency_Top_Sec * 30 *2)))
 					{
-						/*
-						int tmpi = 200;
-						while((tmpi --) > 0)
-						{
-							void* tempa;
-							int lengtha;
-							tempa = malloc(100000);  
-							lidbg("=====dequeue1===%d===\n",tmpi);
-							lengtha = dequeue(tempa);
-							lidbg("=====dequeue2===%d===\n",lengtha);
-							fwrite(tempa, lengtha, 1, rec_fp1);//write data to the output file
-							free(tempa);
-						}
-						*/
 						tmp_count = Emergency_Top_Sec * 30;
 						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
 						isNormDequeue = 1;
