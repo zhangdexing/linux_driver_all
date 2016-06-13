@@ -114,6 +114,8 @@ static void send_driver_msg(char magic ,char nr,unsigned long arg);
 
 //flyaudio
 #define NONE_HUB_SUPPORT	0
+#define HYUNDAI_MODE	1
+
 //#define REC_SAVE_DIR	EMMC_MOUNT_POINT0"/camera_rec/"
 char Rec_Save_Dir[100] = EMMC_MOUNT_POINT1"/camera_rec/";
 char Em_Save_Dir[100] = EMMC_MOUNT_POINT1"/camera_rec/BlackBox/";
@@ -1472,7 +1474,11 @@ void dequeue_buf(int count , char* rec_fp)
 		tempa = malloc(lengtha);
 		lengtha = dequeue(tempa);
 		//lidbg("=====dequeue2===%d===\n",lengtha);
-		//fwrite(tempa, lengtha, 1, rec_fp);//write data to the output file
+#if HYUNDAI_MODE
+						
+#else
+		fwrite(tempa, lengtha, 1, rec_fp);//write data to the output file
+#endif
 		if(isBlackBoxTopRec) fwrite(tempa, lengtha, 1, fp1);
 		else if(isBlackBoxBottomRec) fwrite(tempa, lengtha, 1, fp2);
 		if(tempa != NULL) free(tempa);
@@ -5148,7 +5154,11 @@ openfd:
 						
 						lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);
 						if(rec_fp1 != NULL) fclose(rec_fp1);
-						//rec_fp1 = fopen(flyh264_filename, "wb");
+#if HYUNDAI_MODE
+						
+#else
+						rec_fp1 = fopen(flyh264_filename, "wb");
+#endif
 					}
 					#if 0
 					/*only if within Rec_File_Size,otherwise del oldest file again.*/
