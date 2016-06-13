@@ -129,6 +129,7 @@ int isBlackBoxTopRec = 0;
 int isBlackBoxBottomRec = 0;
 int isBlackBoxTopWaitDequeue = 0;
 int isDequeue = 0;
+int isOldFp = 0;
 
 // chris -
 
@@ -161,6 +162,7 @@ int isIframe = 0;
 int cam_id = -1;
 
 FILE *rec_fp1 = NULL;
+FILE *old_rec_fp1 = NULL;
 
 unsigned int tmp_count = 0;
 
@@ -1415,14 +1417,16 @@ void dequeue_buf(int count , char* rec_fp)
 {
 	FILE *fp1 = NULL;
 	FILE *fp2 = NULL;
-
+#if 1
 	while(1)
 	{
 		property_get("lidbg.uvccam.isdequeue", Wait_Deq_Str, "0");
 		if(strncmp(Wait_Deq_Str, "1", 1)) break;
-		usleep(10*1000);
+		usleep(100*1000);
 	}
-	system("setprop lidbg.uvccam.isdequeue 1");
+#endif
+	//system("setprop lidbg.uvccam.isdequeue 1");
+	property_set("lidbg.uvccam.isdequeue", "1");
 	
 	lidbg("=====dequeue_buf===count => %d==\n",count);
 	if(isBlackBoxTopRec)
@@ -1462,7 +1466,7 @@ void dequeue_buf(int count , char* rec_fp)
 		}
 		//if(rec_fp != NULL) fclose(rec_fp);
 	}
-	else lidbg_get_current_time(0 , deq_time_buf, NULL);
+	//else lidbg_get_current_time(0 , deq_time_buf, NULL);
 	while((count --) > 0)
 	{
 		void* tempa;
@@ -1486,7 +1490,8 @@ void dequeue_buf(int count , char* rec_fp)
 	if(fp2 != NULL) fclose(fp2);
 	if(isBlackBoxTopRec == 0) isBlackBoxBottomRec = 0;
 	isBlackBoxTopRec = 0;
-	system("setprop lidbg.uvccam.isdequeue 0");
+	//system("setprop lidbg.uvccam.isdequeue 0");
+	property_set("lidbg.uvccam.isdequeue", "0");
 }
 
 
@@ -1503,10 +1508,12 @@ void *thread_dequeue(void *par)
 			{
 				isDequeue = 1;
 				XU_H264_Set_IFRAME(dev);
-				dequeue_buf(tmp_count,rec_fp1);
+				if(isOldFp) dequeue_buf(msize,old_rec_fp1);
+				else dequeue_buf(tmp_count,rec_fp1);
 				isDequeue = 0;
 			}
 			isNormDequeue = 0;
+			isOldFp = 0;
 		}
 		usleep(10*1000);
 	}
@@ -5136,9 +5143,13 @@ openfd:
 						//tmp_count = msize;
 						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize);
 						//pthread_join(thread_capture_id,NULL);
-#if 0
-						while(isDequeue) usleep(100*1000);
-						dequeue_buf(msize,rec_fp1);
+						if(rec_fp1 != NULL) fclose(rec_fp1);
+#if 1
+						//while(isDequeue) usleep(100*1000);
+						//dequeue_buf(msize,rec_fp1);
+						old_rec_fp1 = fopen(flyh264_filename, "ab+");
+						isOldFp = 1;
+						isNormDequeue = 1;	
 #endif
 #if 1
 						isIframe = 1;
@@ -5151,8 +5162,7 @@ openfd:
 						else if(cam_id == REARVIEW_ID)
 							sprintf(flyh264_filename, "%sR%s.mp4", Rec_Save_Dir, time_buf);
 						
-						lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);
-						if(rec_fp1 != NULL) fclose(rec_fp1);
+						lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);		
 #if HYUNDAI_MODE
 						
 #else
