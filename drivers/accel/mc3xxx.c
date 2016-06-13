@@ -292,7 +292,6 @@ static int load_cali_flg = 0;
             {                                                                         \
                 if (s_bMPOL & 0x01)    nDataX = -nDataX;                              \
                 if (s_bMPOL & 0x02)    nDataY = -nDataY;                              \
-                lidbg("[%s] 35X0 remap [s_bMPOL: %d]\n", __FUNCTION__, s_bMPOL);    \
             }
 
 #define MCUBE_WREMAP(nDataX, nDataY)                                                  \

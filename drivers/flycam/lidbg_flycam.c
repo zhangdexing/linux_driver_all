@@ -1077,6 +1077,7 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 	//if(isSuspend) mod_timer(&suspend_stoprec_timer,SUSPEND_STOPREC_ONLINE_TIME);
 	if(isDVRFirstInit)
 	{
+		lidbg_shell_cmd("echo 1 > /sys/class/sensors/mc3xxx-accel/enable");
 		pfly_UsbCamInfo->camStatus = lidbg_checkCam();
 		if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX))
 		{
@@ -3360,8 +3361,7 @@ int thread_flycam_init(void *data)
 	    em_start_rear_rec_timer.data = 0;
 	    em_start_rear_rec_timer.expires = 0;
 	    em_start_rear_rec_timer.function = start_rear_rec_timer_isr;
-
-		lidbg_shell_cmd("echo 1 > /sys/class/sensors/mc3xxx-accel/enable");
+	
 		lidbg("%s:====start osd set====\n",__func__);
 		lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 0");
 		lidbg_shell_cmd("./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 6&");
