@@ -104,7 +104,7 @@ int thread_dump_log_cp2_udisk(void *data)
 	lidbg_shell_cmd("dumpsys location >> /data/lidbg/pm_info/location.txt");
 	lidbg_shell_cmd("chmod 777 /data/lidbg/* -R");
 	lidbg_shell_cmd("chmod 777 /data/lidbg/*");
-	ssleep(5);
+	ssleep(8);
 	lidbg_shell_cmd("am start -n com.mypftf.android.BugReport/.MainActivity &");
 	ssleep(50);
 	lidbg_shell_cmd("screencap -p /data/lidbg/screenshot.png &");
@@ -126,6 +126,7 @@ int thread_dump_log_cp2_udisk(void *data)
     sprintf(shell_cmd, "cp -rf /sdcard/ID-%d-%s "USB_MOUNT_POINT, get_machine_id() , tbuff);
     lidbg_shell_cmd(shell_cmd);
 
+    lidbg_shell_cmd("am start -n com.mypftf.android.BugReport/.MainActivity &");
     ssleep(10);
     lidbg_shell_cmd("sync");
     ssleep(1);
