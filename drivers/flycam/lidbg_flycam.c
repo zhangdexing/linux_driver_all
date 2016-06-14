@@ -1507,6 +1507,11 @@ static int rear_start_recording(void)
 {
 	int ret_st = -1;
 	lidbg("%s:Rear CMD_START_REC\n",__func__);
+	if(isPrevYUV)
+	{
+		lidbg("%s:Not enough bandwidth for rear recording when preview use YUV!\n",__func__);
+		return RET_SUCCESS;
+	}
 	setDVRProp(REARVIEW_ID);
 	ret_st = checkSDCardStatus(f_rec_path);
 	if(ret_st == 2 || ret_st == 1) return RET_FAIL;
