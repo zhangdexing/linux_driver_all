@@ -130,6 +130,7 @@ int isBlackBoxBottomRec = 0;
 int isBlackBoxTopWaitDequeue = 0;
 int isDequeue = 0;
 int isOldFp = 0;
+int isDisableVideoLoop = 0;
 
 // chris -
 
@@ -149,6 +150,7 @@ char isBlackBoxRec[PROPERTY_VALUE_MAX];
 char Em_Top_Sec_String[PROPERTY_VALUE_MAX];
 char Em_Bottom_Sec_String[PROPERTY_VALUE_MAX];
 char Wait_Deq_Str[PROPERTY_VALUE_MAX];
+char isDisableVideoLoop_Str[PROPERTY_VALUE_MAX];
 
 char startNight[PROPERTY_VALUE_MAX];
 //char startCapture[PROPERTY_VALUE_MAX];
@@ -1477,11 +1479,8 @@ void dequeue_buf(int count , char* rec_fp)
 		tempa = malloc(lengtha);
 		lengtha = dequeue(tempa);
 		//lidbg("=====dequeue2===%d===\n",lengtha);
-#if HYUNDAI_MODE
-						
-#else
-		fwrite(tempa, lengtha, 1, rec_fp);//write data to the output file
-#endif
+		if(isDisableVideoLoop <= 0)
+			fwrite(tempa, lengtha, 1, rec_fp);//write data to the output file
 		if(isBlackBoxTopRec) fwrite(tempa, lengtha, 1, fp1);
 		else if(isBlackBoxBottomRec) fwrite(tempa, lengtha, 1, fp2);
 		if(tempa != NULL) free(tempa);
@@ -2179,6 +2178,10 @@ static void get_driver_prop(int camID)
 			isColdBootRec = atoi(isColdBootRec_String);
 			lidbg("======== isColdBootRec-> %d=======\n",isColdBootRec);
 		}
+
+		property_get("lidbg.uvccam.isDisableVideoLoop", isDisableVideoLoop_Str, "0");
+		isDisableVideoLoop = atoi(isDisableVideoLoop_Str);
+		lidbg("======== isDisableVideoLoop-> %d=======\n",isDisableVideoLoop);
 
 		/*
 		char i = 10;
@@ -5168,11 +5171,8 @@ openfd:
 							sprintf(flyh264_filename, "%sR%s.mp4", Rec_Save_Dir, time_buf);
 						
 						lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);		
-#if HYUNDAI_MODE
-						
-#else
-						rec_fp1 = fopen(flyh264_filename, "wb");
-#endif
+						if(isDisableVideoLoop <= 0)
+							rec_fp1 = fopen(flyh264_filename, "wb");
 					}
 					#if 0
 					/*only if within Rec_File_Size,otherwise del oldest file again.*/

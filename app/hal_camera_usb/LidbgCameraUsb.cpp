@@ -958,6 +958,8 @@ try_open_again:
         int     i = 0, mjpegSupported = -1, h264Supported = -1;
         struct v4l2_fmtdesc fmtdesc;
 		struct v4l2_frmsizeenum	frmsize;
+		int isPrevYUV = 0;
+		char isPrevYUV_Str[PROPERTY_VALUE_MAX];
 
         memset(&fmtdesc, 0, sizeof(v4l2_fmtdesc));
 
@@ -1052,6 +1054,15 @@ try_open_again:
 			ALOGE("-------uvccam captureFormat use YUYV -----");
 		}
 #endif
+
+		property_get("lidbg.uvccam.isPrevYUV", isPrevYUV_Str, "0");
+		isPrevYUV = atoi(isPrevYUV_Str);
+		if(isPrevYUV > 0) 
+		{
+			lidbg("======== Force to Use YUV!=======\n",isPrevYUV);
+			camHal->captureFormat = V4L2_PIX_FMT_YUYV;
+		}
+
 		return camHal->captureFormat;
         //return V4L2_PIX_FMT_YUYV;
     }

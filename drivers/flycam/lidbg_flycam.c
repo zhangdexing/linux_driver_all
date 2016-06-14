@@ -102,6 +102,8 @@ char tm_cmd[100] = {0};
 static int dvr_osd_fail_times,rear_osd_fail_times;
 static char isDVROSDFail,isRearOSDFail;
 
+static int isDisableVideoLoop,isPrevYUV;
+
 
 #if 0
 //ioctl
@@ -1240,14 +1242,22 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 	    }
 		if(ret != 3)
 		{
-#if HYUNDAI_MODE
-			if( !isRearRec)
-#else
-			if( isDualCam && !isRearRec)
-#endif
+			/*for HYUNDAI*/
+			if(isDisableVideoLoop > 0)
 			{
-				lidbg("%s:==AUTO start==\n",__func__);
-				rear_start_recording();
+				if( !isRearRec)
+				{
+					lidbg("%s:==AUTO start==\n",__func__);
+					rear_start_recording();
+				}
+			}
+			else
+			{
+				if( isDualCam && !isRearRec)
+				{
+					lidbg("%s:==AUTO start==\n",__func__);
+					rear_start_recording();
+				}
 			}
 		}
 	}
@@ -3289,7 +3299,7 @@ static struct platform_driver flycam_driver =
 
 int thread_flycam_init(void *data)
 {
-
+	char temp_cmd[256];
 #ifndef	FLY_USB_CAMERA_SUPPORT
 	lidbg("%s:FLY_USB_CAMERA_SUPPORT not define,exit\n",__func__);
   	return 0;
@@ -3323,9 +3333,8 @@ int thread_flycam_init(void *data)
 	init_completion(&accon_start_rec_wait);
 	//init_completion(&auto_detect_wait);
 
-#if HYUNDAI_MODE
-	lidbg_shell_cmd("setprop fly.uvccam.coldboot.isRec 1");
-#endif
+	if(isDisableVideoLoop > 0)
+		lidbg_shell_cmd("setprop fly.uvccam.coldboot.isRec 1");
 
 	if(g_var.recovery_mode == 0)/*do not process when in recovery mode*/
 	{
@@ -3336,6 +3345,17 @@ int thread_flycam_init(void *data)
 		CREATE_KTHREAD(thread_start_dvr_rec_func, NULL);
 		CREATE_KTHREAD(thread_start_rear_rec_func, NULL);
 		register_lidbg_notifier(&lidbg_notifier);/*ACCON/OFF notifier*/
+
+		isDisableVideoLoop = fs_find_string(g_var.pflyhal_config_list, "DisableVideoLoop");
+		lidbg("%s:====isDisableVideoLoop:%d====\n",__func__,isDisableVideoLoop);
+		sprintf(temp_cmd, "setprop lidbg.uvccam.isDisableVideoLoop %d", isDisableVideoLoop);
+		lidbg_shell_cmd(temp_cmd);
+
+		isPrevYUV = fs_find_string(g_var.pflyhal_config_list, "YUV");
+		lidbg("%s:====isPrevYUV:%d====\n",__func__,isPrevYUV);
+		sprintf(temp_cmd, "setprop lidbg.uvccam.isPrevYUV %d", isPrevYUV);
+		lidbg_shell_cmd(temp_cmd);
+		
 		/*Stop recording timer(in ACCOFF scene)*/
 		init_timer(&suspend_stoprec_timer);
 	    suspend_stoprec_timer.data = 0;
