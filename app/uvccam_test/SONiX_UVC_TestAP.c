@@ -1527,9 +1527,10 @@ void *thread_top_dequeue(void *par)
 	{
 		if(isTopDequeue)
 		{
-			lidbg("%s: E \n", __func__);
+			//lidbg("%s: E \n", __func__);
 			if(!isDequeue)
 			{
+				lidbg("%s: E dq\n", __func__);
 				isDequeue = 1;
 				if(top_lastFrames < (Emergency_Top_Sec*30 - 150)) count = Emergency_Top_Sec*30 - 150;
 				else if(top_lastFrames > (Emergency_Top_Sec*30 + 30)) count = Emergency_Top_Sec*30 + 30;
@@ -1544,8 +1545,8 @@ void *thread_top_dequeue(void *par)
 					dequeue_buf(count,rec_fp1);
 				else dequeue_buf(msize,rec_fp1);
 				isDequeue = 0;
+				isTopDequeue = 0;
 			}
-			isTopDequeue = 0;
 		}
 		usleep(10*1000);
 	}
