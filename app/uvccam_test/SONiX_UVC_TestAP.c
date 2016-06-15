@@ -1507,7 +1507,11 @@ void *thread_dequeue(void *par)
 			{
 				isDequeue = 1;
 				XU_H264_Set_IFRAME(dev);
-				if(isOldFp) dequeue_buf(msize,old_rec_fp1);
+				if(isOldFp) 
+				{
+					dequeue_buf(msize,old_rec_fp1);
+					if(old_rec_fp1 != NULL) fclose(old_rec_fp1);
+				}
 				else dequeue_buf(tmp_count,rec_fp1);
 				isDequeue = 0;
 			}
@@ -4928,12 +4932,12 @@ openfd:
 						//lidbg(EMMC_MOUNT_POINT0"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
 						if(!isPreview)
 						{
-							if(mbFreedisk < 300)
+							if(mbFreedisk < 300 && !isOldFp)
 							{
-								lidbg("======DVR:EMMC Free space less than 300MB!!======\n");
+								lidbg("======DVR:EMMC Free space less than 300MB!![%dMB]======\n",mbFreedisk);
 								if(i == 0)
 								{
-									lidbg("======Init Free space less than 300MB!!Force quit!======\n");
+									lidbg("======Init Free space less than 300MB!!Force quit![%dMB]======\n",mbFreedisk);
 									send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
 									close(dev);
 									close(flycam_fd);
@@ -4967,12 +4971,12 @@ openfd:
 						//lidbg(EMMC_MOUNT_POINT1"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
 						if(!isPreview)
 						{
-							if(mbFreedisk < 10 && mbFreedisk != 0)
+							if(mbFreedisk < 10 && !isOldFp)
 							{
-								lidbg("======DVR: Free space less than 10MB!!======\n");
+								lidbg("======DVR: Free space less than 10MB!![%dMB]======\n",mbFreedisk);
 								if(i == 0)
 								{
-									lidbg("======Init Free space less than 10MB!!Force quit!======\n");
+									lidbg("======Init Free space less than 10MB!!Force quit![%dMB]======\n",mbFreedisk);
 									send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
 									close(dev);
 									close(flycam_fd);
