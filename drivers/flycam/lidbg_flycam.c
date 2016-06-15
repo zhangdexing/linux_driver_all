@@ -1507,7 +1507,7 @@ static int rear_start_recording(void)
 {
 	int ret_st = -1;
 	lidbg("%s:Rear CMD_START_REC\n",__func__);
-	if(isPrevYUV)
+	if(isPrevYUV > 0)
 	{
 		lidbg("%s:Not enough bandwidth for rear recording when preview use YUV!\n",__func__);
 		return RET_SUCCESS;

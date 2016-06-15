@@ -4967,7 +4967,7 @@ openfd:
 						//lidbg(EMMC_MOUNT_POINT1"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
 						if(!isPreview)
 						{
-							if(mbFreedisk < 10)
+							if(mbFreedisk < 10 && mbFreedisk != 0)
 							{
 								lidbg("======DVR: Free space less than 10MB!!======\n");
 								if(i == 0)
@@ -5188,19 +5188,16 @@ openfd:
 					#endif
 					
 				}
-				//if(rec_fp1 != NULL)
-				//{
+				
+				if(isPreview) 
+					fwrite(mem0[buf0.index], buf0.bytesused, 1, rec_fp1);
+				else
+				{
 					if (isIframe == 1)
 						isIframe = 0;
-					else
-					{
-						//if(i > 30)
-							enqueue(mem0[buf0.index], buf0.bytesused);
-						//else
-						//	fwrite(mem0[buf0.index], buf0.bytesused, 1, rec_fp1);
-					}
-						
-						//fwrite(mem0[buf0.index], buf0.bytesused, 1, rec_fp1);//write data to the output file
+					else if(msize <=  (Emergency_Top_Sec * 30 *2) + 1000)
+						enqueue(mem0[buf0.index], buf0.bytesused);
+
 					if(isBlackBoxBottomRec && (msize > (Emergency_Bottom_Sec*30)) && (isBlackBoxTopRec == 0))
 					{
 						//lidbg("======Bottom write===lastFrames:%d,Bottom_Sec:%d======\n",bottom_lastFrames,Emergency_Bottom_Sec);
@@ -5217,8 +5214,7 @@ openfd:
 						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
 						isNormDequeue = 1;
 					}
-					
-				//}
+				}
 				isExceed = 0;
 			}
 		}
