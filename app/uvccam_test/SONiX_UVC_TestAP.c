@@ -2053,9 +2053,9 @@ static void switch_scan(void)
 		property_get("lidbg.uvccam.rearview.recording", startRecording, "0");
 		property_get("lidbg.uvccam.rear.blackbox", isBlackBoxRec, "0");
 	}
-	property_get("fly.uvccam.empath", Em_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
-	property_get("fly.uvccam.top.emtime", Em_Top_Sec_String, "10");
-	property_get("fly.uvccam.bottom.emtime", Em_Bottom_Sec_String, "10");
+	property_get("persist.uvccam.empath", Em_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
+	property_get("persist.uvccam.top.emtime", Em_Top_Sec_String, "10");
+	property_get("persist.uvccam.bottom.emtime", Em_Bottom_Sec_String, "10");
 	Emergency_Top_Sec = atoi(Em_Top_Sec_String);
 	Emergency_Bottom_Sec = atoi(Em_Bottom_Sec_String);
 	return;
@@ -4394,7 +4394,7 @@ openfd:
 		lidbg("Current bit rate1: %.2f Kbps\n",m_BitRate);
 	}
 
-	XU_H264_Set_GOP(dev, 10);
+	//XU_H264_Set_GOP(dev, 10);
 	property_set("lidbg.uvccam.isdequeue", "0");
 	
 	pthread_create(&thread_top_dequeue_id,NULL,thread_top_dequeue,NULL);

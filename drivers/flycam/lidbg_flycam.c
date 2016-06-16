@@ -2636,7 +2636,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				if((ret_st != 1) || (ret_st != 2)) 
 				{
 					strcpy(em_path,(char*)arg);
-					sprintf(temp_cmd, "setprop fly.uvccam.empath %s", em_path);
+					sprintf(temp_cmd, "setprop persist.uvccam.empath %s", em_path);
 					lidbg_shell_cmd(temp_cmd);
 				}
 				else
@@ -2650,14 +2650,14 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				if(IS_ERR(file_path))
 				{
 					lidbg("%s:EM_PATH ERR!!\n",__func__);
-					lidbg_shell_cmd("setprop fly.uvccam.empath "EMMC_MOUNT_POINT1"/camera_rec/BlackRec/");
+					lidbg_shell_cmd("setprop persist.uvccam.empath "EMMC_MOUNT_POINT1"/camera_rec/BlackRec/");
 					strcpy(dvrRespond + 2,EMMC_MOUNT_POINT1"/camera_rec/BlackRec/");
 				}
 				else
 				{
 					lidbg("%s:EMPATH OK!!\n",__func__);
 					strcpy(em_path,(char*)arg);
-					sprintf(temp_cmd, "setprop fly.uvccam.empath %s", em_path);
+					sprintf(temp_cmd, "setprop persist.uvccam.empath %s", em_path);
 					lidbg_shell_cmd(temp_cmd);
 					strcpy(dvrRespond + 2,em_path);
 				}
@@ -2759,7 +2759,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					if(((char*)arg)[1] <= 20)
 						top_em_time = ((char*)arg)[1];
 					else top_em_time = 10;
-					sprintf(temp_cmd, "setprop fly.uvccam.top.emtime %d", top_em_time);
+					sprintf(temp_cmd, "setprop persist.uvccam.top.emtime %d", top_em_time);
 					lidbg_shell_cmd(temp_cmd);
 					dvrRespond[2] = top_em_time;
 					rearRespond[2] = top_em_time;
@@ -2778,7 +2778,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					if(((char*)arg)[1] <= 20)
 						bottom_em_time = ((char*)arg)[1];
 					else bottom_em_time = 10;
-					sprintf(temp_cmd, "setprop fly.uvccam.bottom.emtime %d", bottom_em_time);
+					sprintf(temp_cmd, "setprop persist.uvccam.bottom.emtime %d", bottom_em_time);
 					lidbg_shell_cmd(temp_cmd);
 					dvrRespond[2] = bottom_em_time;
 					rearRespond[2] = bottom_em_time;
