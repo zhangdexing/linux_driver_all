@@ -307,8 +307,8 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
     int hw_info = -1;
     dprintf(INFO, "----- LK Build Time: %s %s -----\n", __DATE__, __TIME__);
 
-    send_hw_info(hw_info);//lpc i2c
-    backlight_disable();
+    //send_hw_info(hw_info);//lpc i2c
+    //backlight_disable();
     flyaudio_hw_init();
 
     fly_fbcon_clear();
@@ -356,8 +356,8 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
     bp_meg = RecoveryMeg.bootParam.upName.val;
     dprintf(INFO, "flyaboot init bp_meg = %d\n", bp_meg);
 
-    //send_hw_info(hw_info);
-    //backlight_disable();
+    send_hw_info(hw_info);
+    backlight_disable();
     ctp_type_get();
     /*
     *don't show static logo before displaying green screen when auto-up
