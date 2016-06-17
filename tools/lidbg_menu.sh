@@ -201,7 +201,7 @@ function auto_build()
 # apt-get install expect
 cd build
 source env_entry.sh
-
+./build_cfg.sh $DBG_SOC $BOARD_VERSION $DBG_PLATFORM $DBG_VENDOR
 git config gc.auto 0
 
 . $DBG_TOOLS_PATH/soc_$DBG_SOC.sh

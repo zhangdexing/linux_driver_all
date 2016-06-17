@@ -343,7 +343,7 @@ dsi83_config_start:
             dprintf(INFO, "dsi83:DSI83 config failed, something wrong, cnt = %d !\n", cnt);
     }
     mdelay(100);
-#ifdef BOOTLOADER_VENDOR_QCOM	
+#ifdef BOOTLOADER_MSM8909
 	dprintf(INFO, "Display Init: +\n");
     	target_display_init(device.display_panel);
 	dprintf(INFO, "Display Init: -\n");
