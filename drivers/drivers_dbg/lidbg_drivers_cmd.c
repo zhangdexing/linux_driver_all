@@ -80,7 +80,7 @@ int thread_dump_log_cp2_udisk(void *data)
 	lidbg_shell_cmd("cat /proc/cmdline >> /data/lidbg/machine/machine.txt");
 	lidbg_shell_cmd("getprop fly.version.mcu >> /data/lidbg/machine/machine.txt");
 	lidbg_shell_cmd("getprop ro.release.version >> /data/lidbg/machine/machine.txt");
-	lidbg_shell_cmd("top -n 15 -t -d 1 >/data/lidbg/machine/top.txt &");
+	lidbg_shell_cmd("top -n 15 -t -d 1 -m 25 >/data/lidbg/machine/top.txt &");
 	lidbg_shell_cmd("procrank > /data/lidbg/machine/procrank.txt &");
 	lidbg_shell_cmd("ps > /data/lidbg/machine/ps.txt");
 	lidbg_shell_cmd("df > /data/lidbg/machine/df.txt");
@@ -107,7 +107,7 @@ int thread_dump_log_cp2_udisk(void *data)
 	ssleep(10);
 	lidbg_shell_cmd("am start -n com.mypftf.android.BugReport/.MainActivity &");
 	ssleep(50);
-	lidbg_shell_cmd("screencap -p /data/lidbg/screenshot.png &");
+//	lidbg_shell_cmd("screencap -p /data/lidbg/screenshot.png &");
 	ssleep(2);
 #ifdef SOC_msm8x25
     fs_cp_data_to_udisk(true);
