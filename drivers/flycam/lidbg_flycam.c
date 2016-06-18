@@ -2036,11 +2036,15 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			case NR_DVR_FW_VERSION:
 		        lidbg("%s:NR_DVR_FW_VERSION\n",__func__);
 				strcpy(camera_DVR_fw_version,(char*)arg);
+				sprintf(temp_cmd, "am broadcast -a com.lidbg.flybootserver.action --es toast DVR_%s&",camera_DVR_fw_version );
+				lidbg_shell_cmd(temp_cmd);
 				complete(&DVR_fw_get_wait);/*HAL get version*/
 		        break;
 			case NR_REAR_FW_VERSION:
 		        lidbg("%s:NR_REAR_FW_VERSION\n",__func__);
 				strcpy(camera_rear_fw_version,(char*)arg);
+				sprintf(temp_cmd, "am broadcast -a com.lidbg.flybootserver.action --es toast REAR_%s&",camera_rear_fw_version );
+				lidbg_shell_cmd(temp_cmd);
 				complete(&Rear_fw_get_wait);/*HAL get version*/
 		        break;
 			case NR_DVR_RES:

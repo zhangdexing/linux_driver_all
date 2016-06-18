@@ -416,6 +416,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#093--rm all log created by 158013\n");
             fs_mem_log("*158#094--rm flysystem/lib/hw and flysystem/lib/modules\n");
             fs_mem_log("*158#095--recovery flysystem/lib/hw and flysystem/lib/modules\n");
+			fs_mem_log("*158#096--read camera FW version\n");
 
             show_password_list();
             lidbg_domineering_ack();
@@ -1051,7 +1052,23 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("mv /flysystem/lib/modules1 /flysystem/lib/modules");
             lidbg_domineering_ack();
         }
-
+		else if (!strncmp(argv[1], "*158#096", 8))
+        {
+            //opt args,ex:*158#0960
+            int n;
+            lidbg("*158#096--read camera FW version\n");
+            n = strlen(argv[1]);
+            if(n != 9)//wrong args
+            {
+                lidbg("wrong args!");
+                return;
+            }
+            lidbg("--------CAMERA FW MODE:%s-----------", argv[1] + 8);
+            if(!strcmp((argv[1] + 8), "0"))
+                lidbg_shell_cmd("/flysystem/lib/out/fw_update -2 -2&");
+            else if(!strcmp((argv[1] + 8), "1"))
+                lidbg_shell_cmd("/flysystem/lib/out/fw_update -2 -3&");
+        }
 	
     }
     else if(!strcmp(argv[0], "monkey") )
