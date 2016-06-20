@@ -1411,8 +1411,8 @@ static struct option opts[] = {
 	{0, 0, 0, 0}
 };
 
-char dvr_blackbox_filename[100] = {0};
-char rear_blackbox_filename[100] = {0};
+char dvr_blackbox_filename[200] = {0};
+char rear_blackbox_filename[200] = {0};
 char deq_time_buf[100] = {0};
 
 void dequeue_buf(int count , char* rec_fp)
