@@ -3,8 +3,8 @@ DATE=$(date +%Y%m%d_%H%M)
 VERSION_DATE=$(date +-%Y-%m-%d-%H-%M)
 
 if [ $DBG_PLATFORM = msm8909 ];then
-	BUILD_TYPE=700s_usbcamera
-	SOURCE_OUT_DIR=$RELEASE_REPOSITORY/out/8909-usbcamera-alpha
+	BUILD_TYPE=G8II-alpha
+	SOURCE_OUT_DIR=$RELEASE_REPOSITORY/out/$BUILD_TYPE
 
 elif [ $DBG_PLATFORM = sabresd_6dq ];then
 	BUILD_TYPE=700s_usbcamera
@@ -60,7 +60,7 @@ make_origin_full_package()
 	lidbg_build_all
 	soc_build_all
 
-	cp $DBG_SOC_PATH/$DBG_SOC/init.lidbg.rc        $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/root/init.lidbg.rc
+	cp $DBG_ROOT_PATH/conf/init.lidbg.rc           $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/root/init.lidbg.rc
 	cp $DBG_OUT_PATH/lidbg_load		       $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin/lidbg_load
 	cp $DBG_OUT_PATH/vold		       	       $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin/vold
 	cp -rf $DBG_OUT_PATH                           $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/lib/modules/out
@@ -70,13 +70,14 @@ make_origin_full_package()
 	cp -rf $DBG_OUT_PATH/FlyBootService  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/FlyBootService
 	echo "build_origin" > $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/etc/build_origin
 
-	cp -rf $RELEASE_REPOSITORY/systemlib/.   $TARGET_OUT_DIR/system/lib/
-	cp -rf $SOURCE_OUT_DIR/flyupdate/flyaudio/. $TARGET_FLYAUDIO_DIR/
+	#cp -rf $RELEASE_REPOSITORY/systemlib/.   $TARGET_OUT_DIR/system/lib/
+	#cp -rf $SOURCE_OUT_DIR/flyupdate/flyaudio/. $TARGET_FLYAUDIO_DIR/
 	#cp  $RELEASE_REPOSITORY/flyapdata/carlife/bdcl   $TARGET_OUT_DIR/system/bin/
 	rm -rf $TARGET_FLYAUDIO_DIR/
 	cd $DBG_SYSTEM_DIR
 	soc_make_otapackage
 	cp $TARGET_OUT_DIR/$OTA_PACKAGE_NAME $FLYTMP_OUT_DIR/flyupdate/baseqcom.flb
+	cp $SOURCE_OUT_DIR/flyupdate/TotalVersion.cypt $FLYTMP_OUT_DIR/flyupdate/
 	cd $FLYTMP_OUT_DIR/flyupdate
 	zip -r  $TARGET_OUT_DIR/flyupdate-$BUILD_TYPE-$DATE.fup .
 	echo "output:"
