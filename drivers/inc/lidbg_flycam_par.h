@@ -100,6 +100,8 @@ typedef enum {
   RET_ONLINE_FOUND_NOTSONIX,
   RET_ONLINE_INTERRUPTED,
   RET_ONLINE_FORCE_STOP,
+  RET_EM_ISREC_ON,
+  RET_EM_ISREC_OFF,
 }onlineNotify_ret_t;
 
 typedef enum {

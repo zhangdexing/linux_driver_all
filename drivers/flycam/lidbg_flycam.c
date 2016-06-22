@@ -274,6 +274,7 @@ static int lidbg_flycam_event(struct notifier_block *this,
 			lidbg("flycam event:emergency recording %ld\n", event);
 			if(isDVRRec) lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
 			if(isRearRec) lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
+			notify_online(RET_EM_ISREC_ON);
 			break;
 	    default:
 	        break;
@@ -2816,6 +2817,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				lidbg("%s:NR_EM_MANUAL\n",__func__);
 				if(isDVRRec) lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
 				if(isRearRec) lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
+				notify_online(RET_EM_ISREC_ON);
 		        break;
 			default:
 		        return -ENOTTY;

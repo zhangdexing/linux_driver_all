@@ -1489,6 +1489,8 @@ void dequeue_buf(int count , char* rec_fp)
 	if(fp2 != NULL) fclose(fp2);
 	if(isBlackBoxTopRec == 0) isBlackBoxBottomRec = 0;
 	isBlackBoxTopRec = 0;
+	if(isBlackBoxBottomRec == 1 && cam_id == DVR_ID) 
+		send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_ONLINE_INVOKE_NOTIFY, RET_EM_ISREC_OFF);
 	//system("setprop lidbg.uvccam.isdequeue 0");
 	property_set("lidbg.uvccam.isdequeue", "0");
 }
