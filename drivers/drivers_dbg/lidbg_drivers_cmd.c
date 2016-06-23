@@ -86,6 +86,7 @@ int thread_dump_log_cp2_udisk(void *data)
 	lidbg_shell_cmd("df > /data/lidbg/machine/df.txt");
 	lidbg_shell_cmd("getprop > /data/lidbg/machine/getprop.txt");
 	lidbg_shell_cmd("lsmod > /data/lidbg/machine/lsmod.txt");
+	lidbg_shell_cmd("cat /proc/buddyinfo > /data/lidbg/machine/buddyinfo.txt");
 
 	//power
 	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/wakeup_sources.txt");
