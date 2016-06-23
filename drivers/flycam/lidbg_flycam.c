@@ -3344,9 +3344,6 @@ int thread_flycam_init(void *data)
 	init_completion(&accon_start_rec_wait);
 	//init_completion(&auto_detect_wait);
 
-	if(isDisableVideoLoop > 0)
-		lidbg_shell_cmd("setprop fly.uvccam.coldboot.isRec 1");
-
 	if(g_var.recovery_mode == 0)/*do not process when in recovery mode*/
 	{
 		CREATE_KTHREAD(thread_stop_rec_func, NULL);
@@ -3361,6 +3358,9 @@ int thread_flycam_init(void *data)
 		lidbg("%s:====isDisableVideoLoop:%d====\n",__func__,isDisableVideoLoop);
 		sprintf(temp_cmd, "setprop lidbg.uvccam.isDisableVideoLoop %d", isDisableVideoLoop);
 		lidbg_shell_cmd(temp_cmd);
+
+		if(isDisableVideoLoop > 0)
+			lidbg_shell_cmd("setprop fly.uvccam.coldboot.isRec 1");
 
 		isPrevYUV = fs_find_string(g_var.pflyhal_config_list, "YUV");
 		lidbg("%s:====isPrevYUV:%d====\n",__func__,isPrevYUV);
