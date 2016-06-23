@@ -50,22 +50,27 @@
 #include <linux/fs.h>*/
 #include	<linux/sensors.h>
 #include "lidbg.h"
-#include "lidbg_crash_detect.c"
+//#include "lidbg_crash_detect.c"
+
+static int cnt_crash_detected = 0;
+static struct wake_lock irq_wakelock;
+
+#define TAP_X_Thresh	0x1f	//0~0xff,0xff阀值最大
+#define TAP_Y_Thresh	0x1f
+#define TAP_Z_Thresh	0x1f
+#define IRQ_READ_CNT	10		//中断函数读reg[0x03]，最大的循环次数
 
 //=== CONFIGURATIONS ==========================================================
 #define DOT_CALI
-//#define _MC3XXX_DEBUG_ON_
+#define _MC3XXX_DEBUG_ON_
 
 //=============================================================================
 #ifdef _MC3XXX_DEBUG_ON_
     #define mclidbgreg(x...)     lidbg(x)
     #define mclidbgfunc(x...)    lidbg(x)
-    #define lidbg(x...) 	      lidbg(x)
-    #define lidbg(x...) 	      lidbg(x)
 #else
     #define mclidbgreg(x...)
     #define mclidbgfunc(x...)
-    #define lidbg(x...)
     #define lidbg(x...)
 #endif
 
@@ -966,6 +971,21 @@ static struct attribute_group mc3xxx_group =
 };
 
 //=============================================================================
+int mc3xxx_set_mode(struct i2c_client *client, unsigned char mode) 
+{
+	int comres = 0;
+	unsigned char data = 0;
+
+	if (mode < 4)
+	{
+		data = (0x40 | mode);
+		comres = my_i2c_smbus_write_byte_data(client, MC3XXX_MODE_FEATURE_REG, data);
+	} 
+
+	return comres;
+}
+
+//=============================================================================
 static int mc3xxx_chip_init(struct i2c_client *client)
 {
     int ret = 0;
@@ -986,37 +1006,41 @@ static int mc3xxx_chip_init(struct i2c_client *client)
     mc3xxx_set_gain();
     
     _baDataBuf[0] = MC3XXX_TAP_DETECTION_ENABLE_REG;
-    _baDataBuf[1] = 0x00;
+    _baDataBuf[1] = 0xff;
     my_i2c_master_send(client, _baDataBuf, 0x2);
     
     _baDataBuf[0] = MC3XXX_INTERRUPT_ENABLE_REG;
-    _baDataBuf[1] = 0x00;
+    _baDataBuf[1] = 0x3f;
     my_i2c_master_send(client, _baDataBuf, 0x2);
+
+//0x0a 0x0b 0x0c
+    _baDataBuf[0] = MC3XXX_TAP_DWELL_REJECT_REG;
+    _baDataBuf[1] = TAP_X_Thresh;
+    my_i2c_master_send(client, _baDataBuf, 0x2);
+
+    _baDataBuf[0] = MC3XXX_DROP_CONTROL_REG;
+    _baDataBuf[1] = TAP_Y_Thresh;
+    my_i2c_master_send(client, _baDataBuf, 0x2);
+
+    _baDataBuf[0] = MC3XXX_SHAKE_DEBOUNCE_REG;
+    _baDataBuf[1] = TAP_Z_Thresh;
+    my_i2c_master_send(client, _baDataBuf, 0x2);
+
+
 
     _baDataBuf[0] = 0x2A;
     my_i2c_master_send(client, &(_baDataBuf[0]), 1);
     my_i2c_master_recv(client, &(_baDataBuf[0]), 1);
     s_bMPOL = (_baDataBuf[0] & 0x03);
 
+    mc3xxx_set_mode(client, MC3XXX_WAKE);
+
     lidbg("[%s] init ok.\n", __FUNCTION__);
 
     return (MC3XXX_RETCODE_SUCCESS);
 }
 
-//=============================================================================
-int mc3xxx_set_mode(struct i2c_client *client, unsigned char mode) 
-{
-	int comres = 0;
-	unsigned char data = 0;
 
-	if (mode < 4)
-	{
-		data = (0x40 | mode);
-		comres = my_i2c_smbus_write_byte_data(client, MC3XXX_MODE_FEATURE_REG, data);
-	} 
-
-	return comres;
-}
 
 #ifdef DOT_CALI
 //=============================================================================
@@ -1788,6 +1812,7 @@ int mc3xxx_read_accel_xyz(struct i2c_client *client, s16 *acc)
 }
 
 //=============================================================================
+/*
 static int mc3xxx_measure(struct i2c_client *client, struct acceleration *accel)
 {
 	s16 raw[3] = { 0 };
@@ -1816,11 +1841,34 @@ static int mc3xxx_measure(struct i2c_client *client, struct acceleration *accel)
 	
 	return 0;
 }
-
+*/
 //=============================================================================
 static void mc3xxx_work_func(struct work_struct *work)
 {
 	struct mc3xxx_data *data = container_of(work, struct mc3xxx_data, work);
+	u8 buff = 0, cnt = IRQ_READ_CNT;
+
+	WAKEUP_MCU_BEGIN;
+	msleep(1);
+	WAKEUP_MCU_END;
+	msleep(50);
+
+	my_i2c_smbus_read_i2c_block_data(data->client, 0x03, 1, &buff);
+
+	if(!(buff & 0x80))
+	{
+		while(!(buff & 0x80) && cnt){
+			lidbg("Warning: mc3xxx failed to read Register[0x03] = 0x%x, by %d times \n", buff, IRQ_READ_CNT-cnt+1);
+			my_i2c_smbus_read_i2c_block_data(data->client, 0x03, 1, &buff);
+			cnt--;
+			msleep(10);
+		}
+		if(!(buff & 0x80))
+			lidbg("ERROR: mc3xxx failed to read Register[0x03], can not works normally! \n");
+	}
+
+	wake_unlock(&irq_wakelock);
+/*
 	struct acceleration accel = { 0 };
 	ktime_t ts; 
 
@@ -1838,7 +1886,7 @@ static void mc3xxx_work_func(struct work_struct *work)
 	
 		input_sync(data->input_dev);
 	}
-	get_gsensor_data(accel.x, accel.y, accel.z);
+	get_gsensor_data(accel.x, accel.y, accel.z);*/
 }
 
 //=============================================================================
@@ -1853,6 +1901,29 @@ static enum hrtimer_restart mc3xxx_timer_func(struct hrtimer *timer)
 	return HRTIMER_NORESTART;
 }
 
+static irqreturn_t mc3xxx_irq_func(int irq, void *handle)
+{
+    struct mc3xxx_data *data = handle;
+
+	wake_lock(&irq_wakelock);
+	cnt_crash_detected++;
+	printk(KERN_ERR"Tap Event Detected! \n");
+	//fs_mem_log("Tap Event Detected! by %d times\n", cnt_crash_detected);
+
+	if (data == NULL)
+		return IRQ_HANDLED;
+	if (data->client == NULL)
+		return IRQ_HANDLED;
+
+    //queue_work(data->mc3xxx_wq, &data->work);
+
+    if(!work_pending(&data->work))
+        schedule_work(&data->work);
+
+    return IRQ_HANDLED;
+}
+
+
 //=============================================================================
 static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 {
@@ -1862,12 +1933,12 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
         mutex_lock(&data->lock);
 		mc3xxx_chip_init(data->client);                
         mutex_unlock(&data->lock);
-		hrtimer_start(&data->timer, ktime_set(0, sensor_duration * 1000000), HRTIMER_MODE_REL);
+		//hrtimer_start(&data->timer, ktime_set(0, sensor_duration * 1000000), HRTIMER_MODE_REL);
 		data->enabled = true;
 	}
 	else
 	{
-		hrtimer_cancel(&data->timer);
+		//hrtimer_cancel(&data->timer);
 		data->enabled = false;
 	}
 
@@ -2198,7 +2269,7 @@ static int fb_notifier_callback(struct notifier_block *self,
 }
 
 #endif
-
+/*
 #ifdef SUSPEND_ONLINE
 
 static int mc3xxx_event(struct notifier_block *this,
@@ -2228,7 +2299,7 @@ static struct notifier_block lidbg_notifier =
     .notifier_call = mc3xxx_event,
 };
 #endif
-
+*/
 
 //=============================================================================
 static struct miscdevice mc3xxx_device =
@@ -2454,10 +2525,18 @@ static int mc3xxx_probe(struct i2c_client *client,
 
 	ret = sysfs_create_group(&data->input_dev->dev.kobj, &mc3xxx_group);
 
-	if (!data->use_irq){
+	if (data->use_irq){
 		hrtimer_init(&data->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 		data->timer.function = mc3xxx_timer_func;
 		hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
+	}
+	else
+	{
+		//ret = request_irq(GPIO_TO_INT(ACCEL_INT1), mc3xxx_irq_func, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, "mc3xxx", data);
+		SOC_IO_Input(ACCEL_INT1, ACCEL_INT1, GPIO_CFG_NO_PULL);
+		SOC_IO_ISR_Add(ACCEL_INT1, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, mc3xxx_irq_func, data);
+		enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
+		wake_lock_init(&irq_wakelock, WAKE_LOCK_SUSPEND, "irq_wakelock");
 	}
 
 	data->cdev = mc3xxx_acc_cdev;
@@ -2471,8 +2550,8 @@ static int mc3xxx_probe(struct i2c_client *client,
 	}
 
 #ifdef SUSPEND_ONLINE
-	data->fb_notif = lidbg_notifier;
-	register_lidbg_notifier(&data->fb_notif);
+	//data->fb_notif = lidbg_notifier;
+	//register_lidbg_notifier(&data->fb_notif);
 	if(0)
 #endif
 {
@@ -2493,8 +2572,8 @@ static int mc3xxx_probe(struct i2c_client *client,
 }
 	data->enabled = 1;
 
-	crash_detect_init();
-	lidbg(KERN_ERR"%s mc3xxx probe ok \n", __func__);
+	//crash_detect_init();
+	lidbg("%s mc3xxx probe ok \n", __func__);
 
 	return 0;
 
