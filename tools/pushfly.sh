@@ -16,6 +16,7 @@ adb push $DBG_OUT_PATH/LidbgCommenLogic/LidbgCommenLogic.apk  /flysystem/app/Lid
 adb push $DBG_OUT_PATH/FlyBootService.apk /flysystem/app/FlyBootService.apk
 adb push $DBG_OUT_PATH/FlyBootService/FlyBootService.apk  /flysystem/app/FlyBootService.apk
 adb push $DBG_OUT_PATH/FlyBootService  /flysystem/app/FlyBootService
+adb push $DBG_HAL_PATH/apk/H264ToMp4Service.apk  /flysystem/app/H264ToMp4Service.apk
 adb shell chmod 777 /system/bin/vold
 adb shell chmod 777 /system/bin/lidbg_load
 . $DBG_TOOLS_PATH/pushfly_$DBG_SOC.sh

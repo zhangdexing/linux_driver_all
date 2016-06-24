@@ -167,6 +167,10 @@ public class FlyBootService extends Service {
         Intent mIntent = new Intent();
         mIntent.setComponent(new ComponentName("com.fly.lidbg.LidbgCommenLogic","com.fly.lidbg.LidbgCommenLogic.LidbgCommenLogicService"));
         this.startService(mIntent);
+        LIDBG_PRINT("flybootservice onCreate-->start H264ToMp4Service\n");
+        Intent mIntent2 = new Intent();
+        mIntent2.setComponent(new ComponentName("com.flyaudio.lidbg.H264ToMp4","com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service"));
+        this.startService(mIntent2);
         writeToFile("/dev/lidbg_pm0","flyaudio PmServiceStar");
 
 	acquireWakeLock();
