@@ -133,7 +133,10 @@ int LPCCombinDataStream(BYTE *p, UINT len)
     bool bMalloc = FALSE;
 
     if((!lpc_work_en) || (g_hw.lpc_disable))
+    {
+        lidbg("ToMCU.skip:%x %x %x\n", p[0], p[1], p[2]);
         return 1;
+    }
 
     if (3 + len + 1 > 16)
     {
