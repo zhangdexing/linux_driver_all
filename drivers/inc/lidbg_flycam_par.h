@@ -28,6 +28,8 @@ typedef enum {
   NR_TONE,
   NR_BRIGHT,
   NR_CONTRAST,
+  NR_CAPTURE,
+  NR_CAPTURE_PATH,
   NR_ISDUALCAM,
   NR_ISCOLDBOOTREC,
 }cam_ctrl_t;
