@@ -120,6 +120,8 @@ int find_earliest_file(char* Dir,char* minRecName);
 char Rec_Save_Dir[100] = EMMC_MOUNT_POINT1"/camera_rec/";
 char Em_Save_Dir[100] = EMMC_MOUNT_POINT1"/camera_rec/BlackBox/";
 char Em_Save_Tmp_Dir[100] = EMMC_MOUNT_POINT1"/camera_rec/BlackBox//.tmp/";
+char Capture_Save_Dir[100] = EMMC_MOUNT_POINT0"/preview_cache/";
+
 int Max_Rec_Num = 1;
 int Rec_Sec = 300;//s
 //int Em_Sec = 10;//s
@@ -3621,7 +3623,10 @@ getuvcdevice:
 	//rc = get_hub_uvc_device(devName,do_save,do_record);
 	lidbg("************cam_id -> %d************\n",cam_id);
 	if(cam_id == -1)	cam_id = DVR_ID;
-	rc = lidbg_get_hub_uvc_device(RECORD_MODE,devName,cam_id,1);
+	if(pixelformat == V4L2_PIX_FMT_MJPEG)
+		rc = lidbg_get_hub_uvc_device(RECORD_MODE,devName,cam_id,0);
+	else
+		rc = lidbg_get_hub_uvc_device(RECORD_MODE,devName,cam_id,1);
     if((rc == -1)  || (*devName == '\0'))
     {
         lidbg("%s: No UVC node found \n", __func__);
@@ -5036,8 +5041,16 @@ openfd:
 			struct tm *p; 
 			time(&timep); 
 			p=gmtime(&timep); 
-			sprintf(filename, EMMC_MOUNT_POINT0"/camera_rec/FA%04d%02d%02d%02d%02d%02d.jpg",
-				(1900+p->tm_year),(1+p->tm_mon),p->tm_mday,p->tm_hour,p->tm_min,p->tm_sec);
+			property_get("persist.uvccam.capturepath", Capture_Save_Dir, EMMC_MOUNT_POINT0"/preview_cache/");
+			lidbg("==========[%d]Capture_Save_Dir -> %s===========\n",cam_id,Capture_Save_Dir);
+			lidbg_get_current_time(0 , time_buf, NULL);
+			if(cam_id == DVR_ID)
+				sprintf(filename, "%s/F%s.jpg", Capture_Save_Dir, time_buf);
+			else if(cam_id == REARVIEW_ID)
+				sprintf(filename, "%s/R%s.jpg", Capture_Save_Dir, time_buf);
+			
+			//sprintf(filename, "%s/FA%04d%02d%02d%02d%02d%02d.jpg",
+			//	(1900+p->tm_year),(1+p->tm_mon),p->tm_mday,p->tm_hour,p->tm_min,p->tm_sec);
 			file = fopen(filename, "wb");
 			if (file != NULL) {
 				fwrite(mem0[buf0.index], buf0.bytesused, 1, file);
@@ -5590,7 +5603,10 @@ try_open_again:
 		//lidbg("%s: Camera may extract unexpected!try open again!-> %d\n", __func__,tryopencnt);
 		lidbg("%s: Camera open fail!try open again!-> %d\n", __func__,tryopencnt);
 		//rc = get_hub_uvc_device(devName,do_save,do_record);
-		rc = lidbg_get_hub_uvc_device(RECORD_MODE,devName,cam_id,1);
+		if(pixelformat == V4L2_PIX_FMT_MJPEG)
+			rc = lidbg_get_hub_uvc_device(RECORD_MODE,devName,cam_id,0);
+		else
+			rc = lidbg_get_hub_uvc_device(RECORD_MODE,devName,cam_id,1);
 		if((rc == -1) || (*devName == '\0'))
         {
             lidbg("%s: No UVC node found again\n", __func__);

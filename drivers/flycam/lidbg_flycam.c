@@ -65,6 +65,8 @@ char r_rec_res[100] = "1280x720",r_rec_path[100] = EMMC_MOUNT_POINT1"/camera_rec
 char em_path[100] = EMMC_MOUNT_POINT1"/camera_rec/BlackRec/";
 static int top_em_time = 5,bottom_em_time = 10;
 
+char capture_path[100] = EMMC_MOUNT_POINT0"/preview_cache/";
+
 static struct timer_list suspend_stoprec_timer;
 static struct timer_list set_par_timer;
 static struct timer_list ui_start_rec_timer;
@@ -1751,7 +1753,8 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	}
 	else if(_IOC_TYPE(cmd) == FLYCAM_FRONT_ONLINE_IOC_MAGIC)//front cam online mode
 	{
-		if(isSuspend && (_IOC_NR(cmd) == NR_START_REC))
+		char temp_cmd[256];
+		if(isSuspend && ((_IOC_NR(cmd) == NR_START_REC) ||(_IOC_NR(cmd) == NR_CAPTURE)))
 		{
 			lidbg("%s:====udisk_request==suspend online==\n",__func__);
 			lidbg_shell_cmd("echo 'udisk_request' > /dev/flydev0");
@@ -1868,7 +1871,43 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					ret = RET_REPEATREQ;
 				}
 		        break;
+			case NR_CAPTURE:
+				lidbg("%s:Online NR_CAPTURE\n",__func__);
+				lidbg_shell_cmd("./flysystem/lib/out/lidbg_testuvccam /dev/video0 -b 1 -c -f mjpg -S");
+				break;
+			case NR_CAPTURE_PATH:
+				lidbg("%s:Online NR_CAPTURE_PATH  = [%s]\n",__func__,(char*)arg);
+				sprintf(temp_cmd, "mkdir -p %s", (char*)arg);
+				lidbg_shell_cmd(temp_cmd);
+
+				file_path = filp_open((char*)arg, O_RDONLY | O_DIRECTORY, 0);
+				if(IS_ERR(file_path))
+				{
+					lidbg("%s:CAPTURE_PATH ERR!!\n",__func__);
+					lidbg_shell_cmd("setprop persist.uvccam.capturepath "EMMC_MOUNT_POINT0"/preview_cache/");
+				}
+				else
+				{
+					lidbg("%s:CAPTURE_PATH OK!!\n",__func__);
+					strcpy(capture_path,(char*)arg);
+					sprintf(temp_cmd, "setprop persist.uvccam.capturepath %s", capture_path);
+					lidbg_shell_cmd(temp_cmd);
+				}
+				if(!IS_ERR(file_path)) filp_close(file_path, 0);
+		        break;
 		    default:
+		        return -ENOTTY;
+		}
+	}
+	else if(_IOC_TYPE(cmd) == FLYCAM_REAR_ONLINE_IOC_MAGIC)//rear cam online mode
+	{
+		switch(_IOC_NR(cmd))
+		{
+			case NR_CAPTURE:
+				lidbg("%s:Online NR_CAPTURE\n",__func__);
+				lidbg_shell_cmd("./flysystem/lib/out/lidbg_testuvccam /dev/video0 -b 0  -c -f mjpg -S");
+				break;
+			default:
 		        return -ENOTTY;
 		}
 	}
