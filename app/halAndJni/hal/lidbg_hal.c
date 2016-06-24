@@ -119,6 +119,22 @@ int   lidbg_hal_stop_record(int camera_id)
     lidbg(DEBG_TAG"[%s].in.[camera_id:%d,%s]\n", __FUNCTION__, camera_id, "null");
     return  send_driver_ioctl(__FUNCTION__, FLYCAM_FRONT_ONLINE_IOC_MAGIC, NR_STOP_REC, (unsigned long) NULL);
 };
+int   lidbg_hal_take_picture(int camera_id, char *path)
+{
+    int ret = -1;
+    lidbg(DEBG_TAG"[%s].in.[camera_id:%d,%s]\n", __FUNCTION__, camera_id, path);
+    if(camera_id == CAM_ID_FRONT)
+    {
+        ret = send_driver_ioctl(__FUNCTION__, FLYCAM_FRONT_ONLINE_IOC_MAGIC, NR_CAPTURE_PATH, (unsigned long) path);
+        ret = send_driver_ioctl(__FUNCTION__, FLYCAM_FRONT_ONLINE_IOC_MAGIC, NR_CAPTURE, (unsigned long) NULL);
+    }
+    else
+    {
+        ret = send_driver_ioctl(__FUNCTION__, FLYCAM_REAR_ONLINE_IOC_MAGIC, NR_CAPTURE_PATH, (unsigned long) path);
+        ret = send_driver_ioctl(__FUNCTION__, FLYCAM_REAR_ONLINE_IOC_MAGIC, NR_CAPTURE, (unsigned long) NULL);
+    }
+    return ret;
+};
 int   lidbg_hal_urgent_record_set_path(int camera_id, char *path)
 {
     int ret = -1;
@@ -177,6 +193,7 @@ static HalInterface sLidbgHalInterface =
     lidbg_hal_set_path,
     lidbg_hal_start_record,
     lidbg_hal_stop_record,
+    lidbg_hal_take_picture,
     lidbg_hal_urgent_record_set_path,
     lidbg_hal_urgent_record_set_times,
     lidbg_hal_urgent_record_ctrl,

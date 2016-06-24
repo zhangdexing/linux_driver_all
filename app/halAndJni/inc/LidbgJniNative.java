@@ -34,6 +34,8 @@ public class LidbgJniNative
 
 	public native int CameraStopRecord(int CameraId);
 
+	public native int CameraTakePicture(int CameraId, String path);
+
 	public native int setDebugLevel(int level);
 
 	public native int UrgentRecordCameraSetPath(int CameraId, String path);
@@ -143,3 +145,4 @@ public class LidbgJniNative
 		return true;
 	}
 }
+

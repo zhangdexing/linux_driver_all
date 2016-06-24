@@ -181,6 +181,21 @@ static jint Camera_stop_record(JNIEnv * /*env*/, jobject /*clazz*/, jint id)
         return -1;
     }
 }
+static jint Camera_take_picture(JNIEnv *env, jobject /*clazz*/, jint id, jstring path)
+{
+    char *mpath = (char *)env->GetStringUTFChars(path, NULL);
+    if(sHalInterface != NULL)
+    {
+        int ret = sHalInterface->take_picture(id, mpath);
+        env->ReleaseStringUTFChars(path, mpath);
+        return ret;
+    }
+    else
+    {
+        lidbg(DEBG_TAG"[%s].sHalInterface:%s\n", __FUNCTION__, sHalInterface);
+        return -1;
+    }
+}
 
 static jint set_debug_level(JNIEnv * /*env*/, jobject /*clazz*/,  jint level)
 {
@@ -255,7 +270,7 @@ static jint urgent_record_camera_manual(JNIEnv * /*env*/, jobject /*clazz*/, jin
 {
     if(sHalInterface != NULL)
     {
-        return sHalInterface->urgent_record_manual(id,start_stop);
+        return sHalInterface->urgent_record_manual(id, start_stop);
     }
     else
     {
@@ -272,6 +287,7 @@ static JNINativeMethod methods[] =
     { "CameraSetPath", "(ILjava/lang/String;)I", (void *)Camera_setPath },
     { "CameraStartRecord", "(I)I", (void *)Camera_start_record },
     { "CameraStopRecord", "(I)I", (void *)Camera_stop_record },
+    { "CameraTakePicture", "(ILjava/lang/String;)I", (void *)Camera_take_picture },
     { "UrgentRecordCameraSetPath", "(ILjava/lang/String;)I", (void *)urgent_record_camera_setPath },
     { "UrgentRecordCameraSetTimes", "(II)I", (void *)urgent_record_camera_setTimes },
     { "UrgentRecordCameraCtrl", "(II)I", (void *)urgent_record_camera_ctrl },

@@ -32,6 +32,7 @@ typedef struct
     int   (*set_path)(int camera_id, char *path);
     int   (*start_record)(int camera_id);
     int   (*stop_record)(int camera_id);
+    int   (*take_picture)(int camera_id, char *path);
     int   (*urgent_record_set_path)(int camera_id, char *path);
     int   (*urgent_record_set_times)(int camera_id, int times_in_S);
     int   (*urgent_record_ctrl)(int camera_id, int start_stop);

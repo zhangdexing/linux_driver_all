@@ -88,6 +88,11 @@ typedef enum {
 #define FLYCAM_EM_MAGIC  'e'
 
 typedef enum {
+ CAM_ID_BACK,
+ CAM_ID_FRONT,
+}cam_id_t;
+
+typedef enum {
   RET_SUCCESS,
   RET_NOTVALID,
   RET_NOTSONIX,
