@@ -1049,7 +1049,7 @@ int BootAnimation::read_pic(char *buf,unsigned int buflen)
 {
 	UNUSED(buflen);
         int len;
-	const char *devicesname = "/dev/block/mmcblk0p21";
+	const char *devicesname = "/dev/block/platform/msm_sdcc.1/by-name/logo";
         //char *devicesname="/dev/block/platform/msm_sdcc.1/by-name/logo";
 	flybootloader_header_t* head = (flybootloader_header_t*)malloc(sizeof(flybootloader_header_t));
 
