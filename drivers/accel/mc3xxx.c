@@ -1033,8 +1033,6 @@ static int mc3xxx_chip_init(struct i2c_client *client)
     my_i2c_master_recv(client, &(_baDataBuf[0]), 1);
     s_bMPOL = (_baDataBuf[0] & 0x03);
 
-    mc3xxx_set_mode(client, MC3XXX_WAKE);
-
     lidbg("[%s] init ok.\n", __FUNCTION__);
 
     return (MC3XXX_RETCODE_SUCCESS);
@@ -1931,7 +1929,11 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 	{
 		msleep(10);  //
         mutex_lock(&data->lock);
-		mc3xxx_chip_init(data->client);                
+		mc3xxx_chip_init(data->client);
+
+		enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
+		mc3xxx_set_mode(data->client, MC3XXX_WAKE);
+
         mutex_unlock(&data->lock);
 		//hrtimer_start(&data->timer, ktime_set(0, sensor_duration * 1000000), HRTIMER_MODE_REL);
 		data->enabled = true;
@@ -1939,6 +1941,8 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 	else
 	{
 		//hrtimer_cancel(&data->timer);
+		disable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
+		mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
 		data->enabled = false;
 	}
 
@@ -2532,10 +2536,8 @@ static int mc3xxx_probe(struct i2c_client *client,
 	}
 	else
 	{
-		//ret = request_irq(GPIO_TO_INT(ACCEL_INT1), mc3xxx_irq_func, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, "mc3xxx", data);
 		SOC_IO_Input(ACCEL_INT1, ACCEL_INT1, GPIO_CFG_NO_PULL);
 		SOC_IO_ISR_Add(ACCEL_INT1, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, mc3xxx_irq_func, data);
-		enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
 		wake_lock_init(&irq_wakelock, WAKE_LOCK_SUSPEND, "irq_wakelock");
 	}
 
