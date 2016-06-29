@@ -55,6 +55,9 @@
 static int cnt_crash_detected = 0;
 static struct wake_lock irq_wakelock;
 
+#define NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE	(130)
+#define NOTIFIER_MINOR_EXCEED_THRESHOLD 		(10)
+
 #define TAP_X_Thresh	0x1f	//0~0xff,0xff阀值最大
 #define TAP_Y_Thresh	0x1f
 #define TAP_Z_Thresh	0x1f
@@ -1846,6 +1849,8 @@ static void mc3xxx_work_func(struct work_struct *work)
 	struct mc3xxx_data *data = container_of(work, struct mc3xxx_data, work);
 	u8 buff = 0, cnt = IRQ_READ_CNT;
 
+	lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD));
+
 	WAKEUP_MCU_BEGIN;
 	msleep(1);
 	WAKEUP_MCU_END;
@@ -1931,6 +1936,7 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
         mutex_lock(&data->lock);
 		mc3xxx_chip_init(data->client);
 
+		SOC_IO_ISR_Enable(ACCEL_INT1);
 		enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
 		mc3xxx_set_mode(data->client, MC3XXX_WAKE);
 
@@ -1941,6 +1947,7 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 	else
 	{
 		//hrtimer_cancel(&data->timer);
+		SOC_IO_ISR_Disable(ACCEL_INT1);
 		disable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
 		mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
 		data->enabled = false;
