@@ -4973,12 +4973,12 @@ openfd:
 						//lidbg(EMMC_MOUNT_POINT1"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
 						if(!isPreview)
 						{
-							if(mbFreedisk < 10 && !isOldFp)
+							if(mbFreedisk < 300 && !isOldFp)
 							{
-								lidbg("======DVR: Free space less than 10MB!![%dMB]======\n",mbFreedisk);
+								lidbg("======DVR: Free space less than 300MB!![%dMB]======\n",mbFreedisk);
 								if(i == 0)
 								{
-									lidbg("======Init Free space less than 10MB!!Force quit![%dMB]======\n",mbFreedisk);
+									lidbg("======Init Free space less than 300MB!!Force quit![%dMB]======\n",mbFreedisk);
 									send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
 									close(dev);
 									close(flycam_fd);
