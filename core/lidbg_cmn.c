@@ -629,11 +629,8 @@ bool scan_mounted_volumes(char *info_path)
 struct mounted_volume *find_mounted_volume_by_mount_point(char *mount_point)
 {
     int i;
-    if (invaled_mount_point <= 0)
-    {
-        scan_mounted_volumes("/proc/mounts");
-        msleep(300);
-    }
+    scan_mounted_volumes("/proc/mounts");
+    msleep(300);
     if (invaled_mount_point <= 0)
     {
         lidbg("err.invaled_mount_point <= 0,%d\n", invaled_mount_point);

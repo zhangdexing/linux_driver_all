@@ -37,14 +37,11 @@ int thread_dumpsys_meminfo(void *data)
     }
 }
 
-static struct mounted_volume *sdcard1 = NULL;
 int thread_format_sdcard1(void *data)
 {
+    struct mounted_volume *sdcard1 = NULL;
     lidbg_shell_cmd("echo ==thread_format_sdcard1.start==== > /dev/lidbg_msg");
-    if(sdcard1 == NULL)
-    {
-        sdcard1 = find_mounted_volume_by_mount_point("/mnt/media_rw/sdcard1") ;
-    }
+    sdcard1 = find_mounted_volume_by_mount_point("/mnt/media_rw/sdcard1") ;
     if(sdcard1 != NULL)
     {
         char shell_cmd[128] = {0};
@@ -62,14 +59,11 @@ int thread_format_sdcard1(void *data)
     return 0;
 }
 
-static struct mounted_volume *udisk = NULL;
 int thread_format_udisk(void *data)
 {
     lidbg_shell_cmd("echo ==thread_format_udisk.start==== > /dev/lidbg_msg");
-    if(udisk == NULL)
-    {
-        udisk = find_mounted_volume_by_mount_point("/mnt/media_rw/udisk") ;
-    }
+    struct mounted_volume *udisk = NULL;
+    udisk = find_mounted_volume_by_mount_point("/mnt/media_rw/udisk") ;
     if(udisk != NULL)
     {
         char shell_cmd[128] = {0};
