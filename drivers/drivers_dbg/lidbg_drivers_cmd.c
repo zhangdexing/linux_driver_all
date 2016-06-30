@@ -37,7 +37,7 @@ int thread_dumpsys_meminfo(void *data)
     }
 }
 
-struct mounted_volume *sdcard1 = NULL;
+static struct mounted_volume *sdcard1 = NULL;
 int thread_format_sdcard1(void *data)
 {
     lidbg_shell_cmd("echo ==thread_format_sdcard1.start==== > /dev/lidbg_msg");
@@ -59,6 +59,31 @@ int thread_format_sdcard1(void *data)
         LIDBG_WARN("sdcard1.device:NULL");
     }
     lidbg_shell_cmd("echo ==thread_format_sdcard1.stop==== > /dev/lidbg_msg");
+    return 0;
+}
+
+static struct mounted_volume *udisk = NULL;
+int thread_format_udisk(void *data)
+{
+    lidbg_shell_cmd("echo ==thread_format_udisk.start==== > /dev/lidbg_msg");
+    if(udisk == NULL)
+    {
+        udisk = find_mounted_volume_by_mount_point("/mnt/media_rw/udisk") ;
+    }
+    if(udisk != NULL)
+    {
+        char shell_cmd[128] = {0};
+        LIDBG_WARN("udisk.device:%s\n", udisk->device);
+        sprintf(shell_cmd, "/flysystem/lib/out/busybox fdisk %s < /flysystem/lib/out/fdiskcmd.txt",  udisk->device);
+        lidbg_shell_cmd(shell_cmd);
+        sprintf(shell_cmd, "/flysystem/lib/out/busybox mkfs.vfat %s",  udisk->device);
+        lidbg_shell_cmd(shell_cmd);
+    }
+    else
+    {
+        LIDBG_WARN("udisk.device:NULL");
+    }
+    lidbg_shell_cmd("echo ==thread_format_udisk.stop==== > /dev/lidbg_msg");
     return 0;
 }
 
@@ -445,6 +470,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#095--recovery flysystem/lib/hw and flysystem/lib/modules\n");
             fs_mem_log("*158#096--read camera FW version\n");
             fs_mem_log("*158#097--format SDCARD1\n");
+            fs_mem_log("*158#098--format udisk\n");
 
             show_password_list();
             lidbg_domineering_ack();
@@ -1097,6 +1123,12 @@ void parse_cmd(char *pt)
         {
             lidbg("*158#097--format SDCARD1\n");
             CREATE_KTHREAD(thread_format_sdcard1, NULL);
+            lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#098"))
+        {
+            lidbg("*158#098--format udisk\n");
+            CREATE_KTHREAD(thread_format_udisk, NULL);
             lidbg_domineering_ack();
         }
 
