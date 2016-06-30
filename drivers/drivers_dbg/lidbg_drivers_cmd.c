@@ -36,6 +36,14 @@ int thread_dumpsys_meminfo(void *data)
         ssleep( 10 * 60 );
     }
 }
+int thread_format_sdcard1(void *data)
+{
+	lidbg_shell_cmd("echo ==thread_format_sdcard1.start==== > /dev/lidbg_msg");
+	lidbg_shell_cmd("/flysystem/lib/out/busybox fdisk /dev/block/vold/179:65 < /flysystem/lib/out/fdiskcmd.txt");
+	lidbg_shell_cmd("/flysystem/lib/out/busybox mkfs.vfat /dev/block/vold/179:65");
+	lidbg_shell_cmd("echo ==thread_format_sdcard1.stop==== > /dev/lidbg_msg");
+}
+
 int thread_antutu_test(void *data)
 {
     int cnt = 0;
@@ -417,7 +425,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#093--rm all log created by 158013\n");
             fs_mem_log("*158#094--rm flysystem/lib/hw and flysystem/lib/modules\n");
             fs_mem_log("*158#095--recovery flysystem/lib/hw and flysystem/lib/modules\n");
-			fs_mem_log("*158#096--read camera FW version\n");
+            fs_mem_log("*158#096--read camera FW version\n");
+            fs_mem_log("*158#097--format SDCARD1\n");
 
             show_password_list();
             lidbg_domineering_ack();
@@ -1049,7 +1058,7 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("mv /flysystem/lib/modules1 /flysystem/lib/modules");
             lidbg_domineering_ack();
         }
-		else if (!strncmp(argv[1], "*158#096", 8))
+        else if (!strncmp(argv[1], "*158#096", 8))
         {
             //opt args,ex:*158#0960
             int n;
@@ -1066,6 +1075,13 @@ void parse_cmd(char *pt)
             else if(!strcmp((argv[1] + 8), "1"))
                 lidbg_shell_cmd("/flysystem/lib/out/fw_update -2 -3&");
         }
+        else if (!strcmp(argv[1], "*158#097"))
+        {
+            lidbg("*158#097--format SDCARD1\n");
+            CREATE_KTHREAD(thread_format_sdcard1, NULL);
+            lidbg_domineering_ack();
+        }
+
 	
     }
     else if(!strcmp(argv[0], "monkey") )
