@@ -36,12 +36,30 @@ int thread_dumpsys_meminfo(void *data)
         ssleep( 10 * 60 );
     }
 }
+
+struct mounted_volume *sdcard1 = NULL;
 int thread_format_sdcard1(void *data)
 {
-	lidbg_shell_cmd("echo ==thread_format_sdcard1.start==== > /dev/lidbg_msg");
-	lidbg_shell_cmd("/flysystem/lib/out/busybox fdisk /dev/block/vold/179:65 < /flysystem/lib/out/fdiskcmd.txt");
-	lidbg_shell_cmd("/flysystem/lib/out/busybox mkfs.vfat /dev/block/vold/179:65");
-	lidbg_shell_cmd("echo ==thread_format_sdcard1.stop==== > /dev/lidbg_msg");
+    lidbg_shell_cmd("echo ==thread_format_sdcard1.start==== > /dev/lidbg_msg");
+    if(sdcard1 == NULL)
+    {
+        sdcard1 = find_mounted_volume_by_mount_point("/mnt/media_rw/sdcard1") ;
+    }
+    if(sdcard1 != NULL)
+    {
+        char shell_cmd[128] = {0};
+        LIDBG_WARN("sdcard1.device:%s\n", sdcard1->device);
+        sprintf(shell_cmd, "/flysystem/lib/out/busybox fdisk %s < /flysystem/lib/out/fdiskcmd.txt",  sdcard1->device);
+        lidbg_shell_cmd(shell_cmd);
+        sprintf(shell_cmd, "/flysystem/lib/out/busybox mkfs.vfat %s",  sdcard1->device);
+        lidbg_shell_cmd(shell_cmd);
+    }
+    else
+    {
+        LIDBG_WARN("sdcard1.device:NULL");
+    }
+    lidbg_shell_cmd("echo ==thread_format_sdcard1.stop==== > /dev/lidbg_msg");
+    return 0;
 }
 
 int thread_antutu_test(void *data)
