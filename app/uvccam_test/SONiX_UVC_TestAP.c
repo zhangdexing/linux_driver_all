@@ -1563,7 +1563,7 @@ void *thread_dequeue(void *par)
 	{
 		if(isNormDequeue)
 		{
-			lidbg("%s: count = %d ,isDequeue:%d\n", __func__,tmp_count,isDequeue);
+			//lidbg("%s: count = %d ,isDequeue:%d\n", __func__,tmp_count,isDequeue);
 			if(!isDequeue)
 			{
 				isDequeue = 1;
@@ -1623,7 +1623,7 @@ void *thread_top_count_frame(void *par)
 	while(1)
 	{
 		sleep(Emergency_Top_Sec);
-		lidbg("%s: [%d] top_totalFrames = %d \n", __func__,cam_id,top_totalFrames);
+		//lidbg("%s: [%d] top_totalFrames = %d \n", __func__,cam_id,top_totalFrames);
 		top_lastFrames = top_totalFrames;
 		top_totalFrames = 0;
 	}
@@ -1634,7 +1634,7 @@ void *thread_bottom_count_frame(void *par)
 	while(1)
 	{
 		sleep(Emergency_Bottom_Sec);
-		lidbg("%s: [%d] bottom_totalFrames = %d \n", __func__,cam_id,bottom_totalFrames);
+		//lidbg("%s: [%d] bottom_totalFrames = %d \n", __func__,cam_id,bottom_totalFrames);
 		bottom_lastFrames = bottom_totalFrames;
 		bottom_totalFrames = 0;
 	}
@@ -1873,7 +1873,7 @@ static int lidbg_get_current_time(char isXUSet , char *time_string, struct rtc_t
         sprintf(time_string, "%d-%02d-%02d__%02d.%02d.%02d", (1900+p->tm_year), (1+p->tm_mon), p->tm_mday,p->tm_hour , p->tm_min,p->tm_sec);
 	//sprintf(rtc_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 --xuset-rtc %d %d %d %d %d %d", (1900+p->tm_year), (1+p->tm_mon), p->tm_mday,p->tm_hour , p->tm_min,p->tm_sec);
 	//system(rtc_cmd);
-	lidbg("\n===OSDSETTIME[%d] => %d-%02d-%02d__%02d.%02d.%02d===\n", cam_id ,(1900+p->tm_year), (1+p->tm_mon), p->tm_mday,p->tm_hour , p->tm_min,p->tm_sec);
+	//lidbg("\n===OSDSETTIME[%d] => %d-%02d-%02d__%02d.%02d.%02d===\n", cam_id ,(1900+p->tm_year), (1+p->tm_mon), p->tm_mday,p->tm_hour , p->tm_min,p->tm_sec);
 	if(isXUSet)
 	{
 		if(XU_OSD_Set_RTC(dev, 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec) <0)
@@ -5048,17 +5048,19 @@ openfd:
 						//lidbg(EMMC_MOUNT_POINT1"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
 						if(!isPreview)
 						{
-							if(mbFreedisk < 300 && !isOldFp)
+							if(mbFreedisk < 1024 && !isOldFp)
 							{
-								lidbg("======DVR: Free space less than 300MB!![%dMB]======\n",mbFreedisk);
+								lidbg("======DVR: Free space less than 1024MB!![%dMB]======\n",mbFreedisk);
+#if 0								
 								if(i == 0)
 								{
-									lidbg("======Init Free space less than 300MB!!Force quit![%dMB]======\n",mbFreedisk);
+									lidbg("======Init Free space less than 1024MB!!Force quit![%dMB]======\n",mbFreedisk);
 									send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
 									close(dev);
 									close(flycam_fd);
 									return 0;
 								}
+#endif
 								isExceed = 1;
 								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INSUFFICIENT_SPACE_CIRC);
 							}
