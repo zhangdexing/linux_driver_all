@@ -63,7 +63,7 @@ static int r_rec_bitrate = 8000000,r_rec_time = 300,r_rec_filenum = 5,r_rec_tota
 char r_rec_res[100] = "1280x720",r_rec_path[100] = EMMC_MOUNT_POINT1"/camera_rec/";
 
 char em_path[100] = EMMC_MOUNT_POINT1"/camera_rec/BlackRec/";
-static int top_em_time = 10,bottom_em_time = 10;
+static int top_em_time = 5,bottom_em_time = 5;
 
 static struct timer_list suspend_stoprec_timer;
 static struct timer_list set_par_timer;

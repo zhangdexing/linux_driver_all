@@ -2115,8 +2115,8 @@ static void switch_scan(void)
 		property_get("lidbg.uvccam.rear.blackbox", isBlackBoxRec, "0");
 	}
 	property_get("persist.uvccam.empath", Em_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
-	property_get("persist.uvccam.top.emtime", Em_Top_Sec_String, "10");
-	property_get("persist.uvccam.bottom.emtime", Em_Bottom_Sec_String, "10");
+	property_get("persist.uvccam.top.emtime", Em_Top_Sec_String, "5");
+	property_get("persist.uvccam.bottom.emtime", Em_Bottom_Sec_String, "5");
 	Emergency_Top_Sec = atoi(Em_Top_Sec_String);
 	Emergency_Bottom_Sec = atoi(Em_Bottom_Sec_String);
 
