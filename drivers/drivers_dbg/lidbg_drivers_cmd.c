@@ -61,8 +61,8 @@ int thread_format_sdcard1(void *data)
 
 int thread_format_udisk(void *data)
 {
-    lidbg_shell_cmd("echo ==thread_format_udisk.start==== > /dev/lidbg_msg");
     struct mounted_volume *udisk = NULL;
+    lidbg_shell_cmd("echo ==thread_format_udisk.start==== > /dev/lidbg_msg");
     udisk = find_mounted_volume_by_mount_point("/mnt/media_rw/udisk") ;
     if(udisk != NULL)
     {
@@ -72,6 +72,9 @@ int thread_format_udisk(void *data)
         lidbg_shell_cmd(shell_cmd);
         sprintf(shell_cmd, "/flysystem/lib/out/busybox mkfs.vfat %s",  udisk->device);
         lidbg_shell_cmd(shell_cmd);
+        lidbg_shell_cmd("sync");
+        ssleep(5);
+        lidbg_shell_cmd("echo appcmd *158#052 > /dev/lidbg_drivers_dbg0");
     }
     else
     {
