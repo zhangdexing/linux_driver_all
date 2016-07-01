@@ -2,7 +2,7 @@
 
 #define BUFF_SIZE (512)
 #define DEVICE_NAME "lidbg_mem_log"
-#define LIDBG_FIFO_SIZE (2 * 1024 * 1024)
+#define LIDBG_FIFO_SIZE (1 * 1024 * 1024)
 #define MEM_LOG_EN
 
 
