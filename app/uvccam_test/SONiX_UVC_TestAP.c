@@ -131,6 +131,8 @@ int isBlackBoxTopWaitDequeue = 0;
 int isDequeue = 0;
 int isOldFp = 0;
 int isDisableVideoLoop = 0;
+int isToDel = 0;
+int isTranscoding = 0;
 
 // chris -
 
@@ -151,6 +153,7 @@ char Em_Top_Sec_String[PROPERTY_VALUE_MAX];
 char Em_Bottom_Sec_String[PROPERTY_VALUE_MAX];
 char Wait_Deq_Str[PROPERTY_VALUE_MAX];
 char isDisableVideoLoop_Str[PROPERTY_VALUE_MAX];
+char isTranscoding_Str[PROPERTY_VALUE_MAX];
 
 char startNight[PROPERTY_VALUE_MAX];
 //char startCapture[PROPERTY_VALUE_MAX];
@@ -160,6 +163,7 @@ int dev,flycam_fd;
 unsigned int originRecsec = 0;
 unsigned int oldRecsec = 1;
 int isIframe = 0;
+
 
 int cam_id = -1;
 
@@ -175,6 +179,9 @@ int Emergency_Top_Sec = 10,Emergency_Bottom_Sec = 10;
 
 static unsigned int top_totalFrames ,bottom_totalFrames;
 static unsigned int top_lastFrames ,bottom_lastFrames;
+
+void *iFrameData;
+int iframe_length;
 
 //lidbg("CAMID[%d] :",cam_id);
 #define camdbg(msg...) do{\
@@ -196,6 +203,10 @@ struct thread_parameter
 
 struct cam_list {
   struct cam_list *next, *prev;
+};
+
+struct trans_list {
+  struct trans_list *next, *prev;
 };
 
 static inline void cam_list_init(struct cam_list *ptr)
@@ -241,9 +252,19 @@ typedef struct {
 	int length;
 } camera_q_node;
 
+typedef struct {
+    struct trans_list list;
+    char dest[100];
+	char src[100];
+} trans_q_node;
+
 camera_q_node mhead; /* dummy head */
 unsigned int msize;
 pthread_mutex_t alock;
+
+trans_q_node trans_head; /* dummy head */
+unsigned int trans_size;
+pthread_mutex_t trans_lock;
 
 bool pri_enqueue(void *data,int count)
 {
@@ -347,6 +368,28 @@ int dequeue(void* data)
 
     return ret;
 }
+
+
+bool trans_enqueue(char* dest,char* src)
+{
+    trans_q_node *node =
+        (trans_q_node *)malloc(sizeof(trans_q_node));
+    if (NULL == node) {
+        lidbg("%s: No memory for trans_q_node", __func__);
+        return false;
+    }
+	lidbg("==dest:%s,src:%s==\n",dest,src);
+    memset(node, 0, sizeof(trans_q_node));
+	strcpy(node->dest, dest);	
+	strcpy(node->src, src);	
+
+    pthread_mutex_lock(&trans_lock);
+    cam_list_add_tail_node(&node->list, &trans_head.list);
+    trans_size++;
+    pthread_mutex_unlock(&trans_lock);
+    return true;
+}
+
 
 #if 0
 static void pantilt(int dev, char *dir, char *length)
@@ -1435,15 +1478,17 @@ void dequeue_buf(int count , char* rec_fp)
 	{
 		if(cam_id == DVR_ID)
 		{
-			sprintf(dvr_blackbox_filename, "%s/F%s.mp4", Em_Save_Dir, deq_time_buf);
+			sprintf(dvr_blackbox_filename, "%s/F%s.tmp", Em_Save_Dir, deq_time_buf);
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,dvr_blackbox_filename);
 			fp1 = fopen(dvr_blackbox_filename, "ab+");
+			fwrite(iFrameData, iframe_length , 1, fp1);
 		}
 		else if(cam_id == REARVIEW_ID)
 		{
-			sprintf(rear_blackbox_filename, "%s/R%s.mp4", Em_Save_Dir, deq_time_buf);
+			sprintf(rear_blackbox_filename, "%s/R%s.tmp", Em_Save_Dir, deq_time_buf);
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,rear_blackbox_filename);
 			fp1 = fopen(rear_blackbox_filename, "ab+");
+			fwrite(iFrameData, iframe_length , 1, fp1);
 		}
 		//if(rec_fp != NULL) fclose(rec_fp);
 	}
@@ -1487,10 +1532,24 @@ void dequeue_buf(int count , char* rec_fp)
 	}
 	if(fp1 != NULL) fclose(fp1);
 	if(fp2 != NULL) fclose(fp2);
+	
+	if(isBlackBoxTopRec == 0 && isBlackBoxBottomRec == 1) 
+	{
+		char tmp_cmd[300] = {0};
+		//trans_enqueue("/storage/sdcard0/em_test/trans.tmp",dvr_blackbox_filename);
+		if(cam_id == DVR_ID) 
+		{
+			int length;
+			length = strlen(dvr_blackbox_filename);
+			dvr_blackbox_filename[length - 4] = '\0';
+			sprintf(tmp_cmd, "am broadcast -a com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service --ei action 0 --es src %s.tmp --es dec %s.mp4&",dvr_blackbox_filename,dvr_blackbox_filename);
+			system(tmp_cmd);
+			//isToDel = 1;
+			send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_ONLINE_INVOKE_NOTIFY, RET_EM_ISREC_OFF);
+		}
+	}
 	if(isBlackBoxTopRec == 0) isBlackBoxBottomRec = 0;
 	isBlackBoxTopRec = 0;
-	if(isBlackBoxBottomRec == 1 && cam_id == DVR_ID) 
-		send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_ONLINE_INVOKE_NOTIFY, RET_EM_ISREC_OFF);
 	//system("setprop lidbg.uvccam.isdequeue 0");
 	property_set("lidbg.uvccam.isdequeue", "0");
 }
@@ -2060,6 +2119,21 @@ static void switch_scan(void)
 	property_get("persist.uvccam.bottom.emtime", Em_Bottom_Sec_String, "10");
 	Emergency_Top_Sec = atoi(Em_Top_Sec_String);
 	Emergency_Bottom_Sec = atoi(Em_Bottom_Sec_String);
+
+	//if(isToDel)
+	//{
+		property_get("lidbg.uvccam.isTranscoding", isTranscoding_Str, "0");
+		isTranscoding = atoi(isTranscoding_Str);
+		if(isTranscoding) isToDel = 1;
+		if(!isTranscoding && isToDel) 
+		{
+			char tmp_cmd[300] = {0};
+			sprintf(tmp_cmd, "rm -rf %s.tmp&",dvr_blackbox_filename);
+			system(tmp_cmd);
+			lidbg("****del %s.tmp****\n",dvr_blackbox_filename);
+			isToDel = 0;
+		}
+	//}
 	return;
 }
 
@@ -2232,6 +2306,7 @@ int main(int argc, char *argv[])
 								EMMC_MOUNT_POINT0"/flytmp5.mp4"};
 */						    
 	char flyh264_filename[100] = {0};
+	char old_flyh264_filename[100] = {0};
 	char flypreview_filename[100] = {0};
 	char flypreview_prevcnt[20] = {0};
 	
@@ -5162,11 +5237,12 @@ openfd:
 						{
 							fclose(rec_fp1);
 							old_rec_fp1 = fopen(flyh264_filename, "ab+");
+							strcpy(old_flyh264_filename, flyh264_filename);
 							isOldFp = 1;
 							isNormDequeue = 1;	
 						}
 #endif
-#if 1
+#if 0
 						isIframe = 1;
 						XU_H264_Set_IFRAME(dev);
 #endif
@@ -5179,7 +5255,10 @@ openfd:
 						
 						lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);		
 						if(isDisableVideoLoop <= 0)
+						{
 							rec_fp1 = fopen(flyh264_filename, "wb");
+							if(i > 0) fwrite(iFrameData, iframe_length , 1, rec_fp1);
+						}
 					}
 					#if 0
 					/*only if within Rec_File_Size,otherwise del oldest file again.*/
@@ -5199,9 +5278,17 @@ openfd:
 					fwrite(mem0[buf0.index], buf0.bytesused, 1, rec_fp1);
 				else
 				{
-					if (isIframe == 1)
-						isIframe = 0;
-					else if(msize <=  (Emergency_Top_Sec * 30 *2) + 1000)
+					//if (isIframe == 1)
+					//	isIframe = 0;
+					if(i == 0) 
+					{
+						iframe_length = buf0.bytesused;
+						lidbg("=====IFRAME SAVE!length:%d======\n",iframe_length);
+						iFrameData = malloc(iframe_length);  
+						memcpy(iFrameData, mem0[buf0.index], iframe_length);
+					}
+					
+					if(msize <=  (Emergency_Top_Sec * 30 *2) + 1000)
 						enqueue(mem0[buf0.index], buf0.bytesused);
 
 					if(isBlackBoxBottomRec && (msize > (Emergency_Bottom_Sec*30)) && (isBlackBoxTopRec == 0))
