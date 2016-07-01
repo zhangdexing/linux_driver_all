@@ -3420,8 +3420,8 @@ int thread_flycam_init(void *data)
 			schedule_delayed_work(&work_t_RearView_fixScreenBlurred,11*HZ);/*at about kernel 35s, lidbgshell it's ready*/
 		else isRearViewFirstInit = 0;
 #endif
-		schedule_delayed_work(&work_t_DVR_fixScreenBlurred,10*HZ);/*at about kernel 30s, lidbgshell it's ready*/
-		schedule_delayed_work(&work_t_RearView_fixScreenBlurred,11*HZ);/*at about kernel 31s, lidbgshell it's ready*/
+		schedule_delayed_work(&work_t_DVR_fixScreenBlurred,15*HZ);/*at about kernel 30s, lidbgshell it's ready*/
+		schedule_delayed_work(&work_t_RearView_fixScreenBlurred,16*HZ);/*at about kernel 31s, lidbgshell it's ready*/
 		
 	}
 	usb_register_notify(&usb_nb_cam);/*USB notifier:must after isDVRFirstInit&isRearViewFirstInit*/
