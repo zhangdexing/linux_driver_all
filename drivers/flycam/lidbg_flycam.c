@@ -5,6 +5,7 @@ LIDBG_DEFINE;
 
 static void work_DVR_fixScreenBlurred(struct work_struct *work);
 static void work_RearView_fixScreenBlurred(struct work_struct *work);
+static void work_format_done(struct work_struct *work);
 static int start_rec(char cam_id,char isPowerCtl);
 static int stop_rec(char cam_id,char isPowerCtl);
 static int dvr_start_recording(void);
@@ -41,6 +42,7 @@ struct fly_UsbCamInfo
 struct fly_UsbCamInfo *pfly_UsbCamInfo;
 static DECLARE_DELAYED_WORK(work_t_DVR_fixScreenBlurred, work_DVR_fixScreenBlurred);
 static DECLARE_DELAYED_WORK(work_t_RearView_fixScreenBlurred, work_RearView_fixScreenBlurred);
+static DECLARE_DELAYED_WORK(work_t_format_done, work_format_done);
 static DECLARE_COMPLETION (timer_stop_rec_wait);
 static DECLARE_COMPLETION (Rear_fw_get_wait);
 static DECLARE_COMPLETION (DVR_fw_get_wait);
@@ -1296,6 +1298,15 @@ static void work_stopRec(struct work_struct *work)
 }
 #endif
 
+static void work_format_done(struct work_struct *work)
+{
+	lidbg("%s:====E====\n",__func__);
+	status_fifo_in(RET_FORMAT_SUCCESS);
+	return;
+}
+
+
+
 /******************************************************************************
  * Function: setDVRProp
  * Description: Set DVR property for recording.
@@ -2402,6 +2413,33 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						if(((char*)arg)[1] == 1) isDualCam = 1;
 						else isDualCam = 0;
 						length += 2;
+						break;
+					case CMD_FORMAT_SDCARD:
+						lidbg("%s:CMD_FORMAT_SDCARD\n",__func__);
+						if(!strncmp(f_rec_path, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)))
+						{
+							dvr_stop_recording();
+							rear_stop_recording();
+						}
+						if(((char*)arg)[1] == 1) 
+						{
+							lidbg("%s:Begin format sdcard!\n",__func__);
+							lidbg_shell_cmd("echo appcmd *158#097 > /dev/lidbg_drivers_dbg0");
+							dvrRespond[1] = 1;
+						}
+						else
+						{
+							lidbg("%s:Stop format sdcard!\n",__func__);
+							dvrRespond[1] = 0;
+						}
+
+						schedule_delayed_work(&work_t_format_done, 5*HZ);
+						
+						length += 2;
+						if(copy_to_user((char*)arg,dvrRespond,length))
+						{
+							lidbg("%s:copy_to_user ERR\n",__func__);
+						}
 						break;
 					case CMD_AUTO_DETECT:
 						lidbg("%s:CMD_AUTO_DETECT\n",__func__);

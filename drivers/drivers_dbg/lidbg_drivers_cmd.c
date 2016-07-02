@@ -50,6 +50,7 @@ int thread_format_sdcard1(void *data)
         lidbg_shell_cmd(shell_cmd);
         sprintf(shell_cmd, "/flysystem/lib/out/busybox mkfs.vfat %s",  sdcard1->device);
         lidbg_shell_cmd(shell_cmd);
+        lidbg_shell_cmd("mount -o remount /mnt/media_rw/sdcard1");
     }
     else
     {
