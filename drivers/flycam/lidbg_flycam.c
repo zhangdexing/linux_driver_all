@@ -5,7 +5,6 @@ LIDBG_DEFINE;
 
 static void work_DVR_fixScreenBlurred(struct work_struct *work);
 static void work_RearView_fixScreenBlurred(struct work_struct *work);
-static void work_format_done(struct work_struct *work);
 static int start_rec(char cam_id,char isPowerCtl);
 static int stop_rec(char cam_id,char isPowerCtl);
 static int dvr_start_recording(void);
@@ -42,7 +41,6 @@ struct fly_UsbCamInfo
 struct fly_UsbCamInfo *pfly_UsbCamInfo;
 static DECLARE_DELAYED_WORK(work_t_DVR_fixScreenBlurred, work_DVR_fixScreenBlurred);
 static DECLARE_DELAYED_WORK(work_t_RearView_fixScreenBlurred, work_RearView_fixScreenBlurred);
-static DECLARE_DELAYED_WORK(work_t_format_done, work_format_done);
 static DECLARE_COMPLETION (timer_stop_rec_wait);
 static DECLARE_COMPLETION (Rear_fw_get_wait);
 static DECLARE_COMPLETION (DVR_fw_get_wait);
@@ -1298,13 +1296,6 @@ static void work_stopRec(struct work_struct *work)
 }
 #endif
 
-static void work_format_done(struct work_struct *work)
-{
-	lidbg("%s:====E====\n",__func__);
-	status_fifo_in(RET_FORMAT_SUCCESS);
-	return;
-}
-
 
 
 /******************************************************************************
@@ -2433,7 +2424,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 							dvrRespond[1] = 0;
 						}
 
-						schedule_delayed_work(&work_t_format_done, 5*HZ);
+						//schedule_delayed_work(&work_t_format_done, 5*HZ);
 						
 						length += 2;
 						if(copy_to_user((char*)arg,dvrRespond,length))
@@ -3261,6 +3252,14 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			recfilesizeVal = simple_strtoul(keyval[1], 0, 0);
 			lidbg("recfilesizeVal = %d",recfilesizeVal);
 			f_online_totalsize = recfilesizeVal;
+		}
+		else if(!strcmp(keyval[0], "formatcomplete") )
+		{
+			int formatVal;
+			formatVal = simple_strtoul(keyval[1], 0, 0);
+			lidbg("formatcomplete = %d\n",formatVal);
+			if(formatVal == 1) status_fifo_in(RET_FORMAT_SUCCESS);
+			else status_fifo_in(RET_FORMAT_FAIL);
 		}
 #if 0
 		else if(!strcmp(keyval[0], "test") )
