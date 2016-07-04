@@ -521,6 +521,11 @@ static int video_set_format(int dev, unsigned int w, unsigned int h, unsigned in
 		lidbg("%s: select 720P!\n",__func__);
 		w = 1280;
 		h = 720;
+		if(cam_id == REARVIEW_ID)
+		{
+			w = 640;
+			h = 360;
+		}
 	}
 	else if(!strncmp(Res_String, "1920x1080", 9) || !strncmp(Res_String, "1920*1080", 9))
 	{
@@ -4473,8 +4478,16 @@ openfd:
 		XU_H264_Set_Mode(dev, 1);
 		if(XU_Ctrl_ReadChipID(dev) < 0)
 			lidbg( "XU_Ctrl_ReadChipID Failed\n");
-		if(XU_H264_Set_BitRate(dev, 12000000) < 0 )
-			lidbg( "XU_H264_Set_BitRate Failed\n");
+		if(cam_id == DVR_ID)
+		{
+			if(XU_H264_Set_BitRate(dev, 12000000) < 0 )
+				lidbg( "XU_H264_Set_BitRate Failed\n");
+		}
+		else if(cam_id == REARVIEW_ID)
+		{
+			if(XU_H264_Set_BitRate(dev, 4000000) < 0 )
+				lidbg( "XU_H264_Set_BitRate Failed\n");
+		}
 		XU_H264_Get_BitRate(dev, &m_BitRate);
 		if(m_BitRate < 0 )
 			lidbg( "SONiX_UVC_TestAP @main : XU_H264_Get_BitRate Failed\n");
