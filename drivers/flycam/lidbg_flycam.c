@@ -79,7 +79,7 @@ static struct timer_list em_start_rear_rec_timer;
 /*bool var*/
 static char isDVRRec,isOnlineRec,isRearRec,isDVRFirstInit,isRearViewFirstInit,isRearCheck = 1,isDVRCheck = 1,isOnlineNotifyReady,isDualCam,isColdBootRec,isDVRACCRec,isRearACCRec;
 static char isSuspend,isDVRAfterFix,isRearViewAfterFix,isDVRFirstResume,isRearFirstResume,isUpdating,isKSuspend,isDVRReady,isRearReady,isDVRACCResume,isRearACCResume;
-static char isUIStartRec,isDVRPlugRec,isRearPlugRec,isEMDVRStartRec,isEMRearStartRec;
+static char isUIStartRec,isDVRPlugRec,isRearPlugRec,isEMDVRStartRec,isEMRearStartRec,isBeforeFormatDVRRec,isBeforeFormatRearRec;
 
 //struct work_struct work_t_fixScreenBlurred;
 
@@ -2143,6 +2143,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		unsigned char returnRespond[200] = {0};
 		unsigned char initMsg[400] = {0};
 		int length = 0;
+		struct mounted_volume *sdcard1 = NULL;
 		
 		dvrRespond[0] = ((char*)arg)[0];
 		rearRespond[0] = ((char*)arg)[0];
@@ -2407,23 +2408,40 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						break;
 					case CMD_FORMAT_SDCARD:
 						lidbg("%s:CMD_FORMAT_SDCARD\n",__func__);
-						if(!strncmp(f_rec_path, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)))
+						sdcard1 = find_mounted_volume_by_mount_point("/mnt/media_rw/sdcard1") ;
+   						if(sdcard1 == NULL)
 						{
-							dvr_stop_recording();
-							rear_stop_recording();
-						}
-						if(((char*)arg)[1] == 1) 
-						{
-							lidbg("%s:Begin format sdcard!\n",__func__);
-							lidbg_shell_cmd("echo appcmd *158#097 > /dev/lidbg_drivers_dbg0");
-							dvrRespond[1] = 1;
+							lidbg("%s:sdcard not exist!\n",__func__);
+							dvrRespond[1] = 0;
 						}
 						else
 						{
-							lidbg("%s:Stop format sdcard!\n",__func__);
-							dvrRespond[1] = 0;
+							if(!strncmp(f_rec_path, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)))
+							{
+								if(isDVRRec)
+								{
+									isBeforeFormatDVRRec = 1;
+									dvr_stop_recording();
+								}
+								if(isRearRec)
+								{
+									isBeforeFormatRearRec = 1;
+									rear_stop_recording();
+								}
+							}
+							if(((char*)arg)[1] == 1) 
+							{
+								lidbg("%s:Begin format sdcard!\n",__func__);
+								lidbg_shell_cmd("echo appcmd *158#097 > /dev/lidbg_drivers_dbg0");
+								dvrRespond[1] = 1;
+							}
+							else
+							{
+								lidbg("%s:Stop format sdcard!\n",__func__);
+								dvrRespond[1] = 0;
+							}
 						}
-
+						
 						//schedule_delayed_work(&work_t_format_done, 5*HZ);
 						
 						length += 2;
@@ -3260,6 +3278,12 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			lidbg("formatcomplete = %d\n",formatVal);
 			if(formatVal == 1) status_fifo_in(RET_FORMAT_SUCCESS);
 			else status_fifo_in(RET_FORMAT_FAIL);
+			if(!isDVRRec && !isOnlineRec&&  isBeforeFormatDVRRec)
+				dvr_start_recording();
+			if(!isRearRec &&  isBeforeFormatRearRec)
+				rear_start_recording();
+			isBeforeFormatDVRRec = 0;
+			isBeforeFormatRearRec = 0;
 		}
 #if 0
 		else if(!strcmp(keyval[0], "test") )
