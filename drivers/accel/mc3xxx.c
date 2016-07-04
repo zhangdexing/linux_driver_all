@@ -780,9 +780,9 @@ static ssize_t mc3xxx_enable_store(struct device *dev,
 {
 	bool new_enable = false;
 
-	struct i2c_client *client = container_of(mc3xxx_device.parent, struct i2c_client, dev);
+	//struct i2c_client *client = container_of(mc3xxx_device.parent, struct i2c_client, dev);
 	
-	struct mc3xxx_data *mc3xxx = i2c_get_clientdata(client);
+	//struct mc3xxx_data *mc3xxx = i2c_get_clientdata(client);
 
 	if (sysfs_streq(buf, "1"))
 		new_enable = true;
@@ -793,7 +793,7 @@ static ssize_t mc3xxx_enable_store(struct device *dev,
 		return -EINVAL;
 	}
 
-	mc3xxx_enable(mc3xxx, new_enable);
+	//mc3xxx_enable(mc3xxx, new_enable);
 
 	return count;
 }
@@ -1930,6 +1930,9 @@ static irqreturn_t mc3xxx_irq_func(int irq, void *handle)
 //=============================================================================
 static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 {
+	if(data->enabled == enable)
+		return 0;
+
 	if(enable)
 	{
 		msleep(10);  //
@@ -2441,7 +2444,10 @@ static int mc3xxx_acc_enable_set(struct sensors_classdev *sensors_cdev,
 	if (enable)
 		err = mc3xxx_enable(acc, 1);
 	else
-		err = mc3xxx_enable(acc, 0);
+	{
+		lidbg("%s  do nothing! \n", __func__);
+		//err = mc3xxx_enable(acc, 0);
+	}
 	return err;
 }
 
@@ -2545,6 +2551,7 @@ static int mc3xxx_probe(struct i2c_client *client,
 	{
 		SOC_IO_Input(ACCEL_INT1, ACCEL_INT1, GPIO_CFG_NO_PULL);
 		SOC_IO_ISR_Add(ACCEL_INT1, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, mc3xxx_irq_func, data);
+		SOC_IO_ISR_Disable(ACCEL_INT1);
 		wake_lock_init(&irq_wakelock, WAKE_LOCK_SUSPEND, "irq_wakelock");
 	}
 
@@ -2579,7 +2586,8 @@ static int mc3xxx_probe(struct i2c_client *client,
 	register_early_suspend(&data->early_suspend);
 #endif
 }
-	data->enabled = 1;
+	mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
+	data->enabled = false;
 
 	//crash_detect_init();
 	lidbg("%s mc3xxx probe ok \n", __func__);
