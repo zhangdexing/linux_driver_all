@@ -54,6 +54,12 @@ void lcd_off(void)
     printk(KERN_CRIT"===lcd_off===\n");
     lpc_send_cmd(buff, sizeof(buff));
 }
+void lcd_reset_power(void)
+{
+    u8 buff[] = {0x00, 0xfb};
+    printk(KERN_CRIT"===lcd_reset_power===\n");
+    lpc_send_cmd(buff, sizeof(buff));
+}
 
 void soc_io_output(u32 group, u32 index, bool status)
 {
@@ -90,6 +96,8 @@ static int thread_lcd_off(void *data)
     printk(KERN_CRIT"thread_lcd_off+\n");
     lcd_off();
     msleep(1500);
+    lcd_reset_power();
+    msleep(300);
     lcd_on();
     printk(KERN_CRIT"thread_lcd_off-\n");
     return 1;
