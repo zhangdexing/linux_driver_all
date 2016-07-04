@@ -1125,7 +1125,7 @@ void parse_cmd(char *pt)
         {
             lidbg("*158#097--format SDCARD1\n");
             CREATE_KTHREAD(thread_format_sdcard1, NULL);
-            lidbg_domineering_ack();
+            //lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#098"))
         {
