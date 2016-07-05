@@ -1462,6 +1462,7 @@ void dequeue_buf(int count , char* rec_fp)
 {
 	FILE *fp1 = NULL;
 	FILE *fp2 = NULL;
+	int isBeginTopDeq = 0;
 #if 1
 	while(1)
 	{
@@ -1481,14 +1482,14 @@ void dequeue_buf(int count , char* rec_fp)
 			sprintf(dvr_blackbox_filename, "%s/F%s.h264", Em_Save_Dir, deq_time_buf);
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,dvr_blackbox_filename);
 			fp1 = fopen(dvr_blackbox_filename, "ab+");
-			fwrite(iFrameData, iframe_length , 1, fp1);
+			//fwrite(iFrameData, iframe_length , 1, fp1);
 		}
 		else if(cam_id == REARVIEW_ID)
 		{
 			sprintf(rear_blackbox_filename, "%s/R%s.h264", Em_Save_Dir, deq_time_buf);
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,rear_blackbox_filename);
 			fp1 = fopen(rear_blackbox_filename, "ab+");
-			fwrite(iFrameData, iframe_length , 1, fp1);
+			//fwrite(iFrameData, iframe_length , 1, fp1);
 		}
 		//if(rec_fp != NULL) fclose(rec_fp);
 	}
@@ -1524,9 +1525,18 @@ void dequeue_buf(int count , char* rec_fp)
 		tempa = malloc(lengtha);
 		lengtha = dequeue(tempa);
 		//lidbg("=====dequeue2===%d===\n",lengtha);
+		if(!isBeginTopDeq && isBlackBoxTopRec)
+		{
+			unsigned char tmp_val = 0;
+			tmp_val = *(unsigned char*)(tempa + 26);
+			if(tmp_val == 0x65) isBeginTopDeq = 1;
+		}
 		if(isDisableVideoLoop <= 0)
 			fwrite(tempa, lengtha, 1, rec_fp);//write data to the output file
-		if(isBlackBoxTopRec) fwrite(tempa, lengtha, 1, fp1);
+		if(isBlackBoxTopRec) 
+		{
+			if(isBeginTopDeq)	fwrite(tempa, lengtha, 1, fp1);
+		}
 		else if(isBlackBoxBottomRec) fwrite(tempa, lengtha, 1, fp2);
 		if(tempa != NULL) free(tempa);
 	}
@@ -5282,6 +5292,8 @@ openfd:
 				{
 					//if (isIframe == 1)
 					//	isIframe = 0;
+					unsigned char tmp_val = 0;
+					
 					if(i == 0) 
 					{
 						iframe_length = buf0.bytesused;
@@ -5293,6 +5305,20 @@ openfd:
 					if(msize <=  (Emergency_Top_Sec * 30 *2) + 1000)
 						enqueue(mem0[buf0.index], buf0.bytesused);
 
+#if 0
+					unsigned char a = 0;
+					for(a = 0;a < 30;a++){
+						tmp_val = *(unsigned char*)(mem0[buf0.index] + a);
+						lidbg("======tmp_val[%d]:%d=====\n",a,tmp_val);
+						if(tmp_val == 0x65) lidbg("=====****IFRAME detect!!***======\n");
+					}
+
+
+					tmp_val = *(unsigned char*)(mem0[buf0.index] + 26);
+					if(tmp_val == 0x65)
+						lidbg("=====****IFRAME detect!!***%dBytes======\n",buf0.bytesused);
+#endif
+					
 					if(isBlackBoxBottomRec && (msize > (Emergency_Bottom_Sec*30)) && (isBlackBoxTopRec == 0))
 					{
 						//lidbg("======Bottom write===lastFrames:%d,Bottom_Sec:%d======\n",bottom_lastFrames,Emergency_Bottom_Sec);
