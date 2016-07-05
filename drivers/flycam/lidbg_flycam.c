@@ -54,7 +54,7 @@ static DECLARE_COMPLETION (start_rear_rec_wait);
 //static DECLARE_COMPLETION (auto_detect_wait);
 
 /*Camera DVR & Online recording parameters*/
-static int f_rec_bitrate = 8000000,f_rec_time = 300,f_rec_filenum = 5,f_rec_totalsize = 4096;
+static int f_rec_bitrate = 8000000,f_rec_time = 300,f_rec_filenum = 5,f_rec_totalsize = 8192;
 static int f_online_bitrate = 500000,f_online_time = 60,f_online_filenum = 1,f_online_totalsize = 500;
 char f_rec_res[100] = "1280x720",f_rec_path[100] = EMMC_MOUNT_POINT1"/camera_rec/";
 char f_online_res[100] = "480x272",f_online_path[100] = EMMC_MOUNT_POINT0"/preview_cache/";

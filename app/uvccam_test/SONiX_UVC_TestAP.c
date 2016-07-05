@@ -121,7 +121,7 @@ char Em_Save_Dir[100] = EMMC_MOUNT_POINT1"/camera_rec/BlackBox/";
 int Max_Rec_Num = 1;
 int Rec_Sec = 300;//s
 //int Em_Sec = 10;//s
-unsigned int Rec_File_Size = 300;//MB
+unsigned int Rec_File_Size = 8192;//MB
 unsigned int Rec_Bitrate = 8000000;//b/s
 int isDualCam = 0;
 int isColdBootRec = 0;
@@ -2220,15 +2220,15 @@ static void get_driver_prop(int camID)
 		
 		/*set record file total size*/
 		if(camID == DVR_ID)
-			property_get("fly.uvccam.dvr.recfilesize", Rec_File_Size_String, "1000");
+			property_get("fly.uvccam.dvr.recfilesize", Rec_File_Size_String, "8192");
 		else if(camID == REARVIEW_ID)
-			property_get("fly.uvccam.rearview.recfilesize", Rec_File_Size_String, "1000");
+			property_get("fly.uvccam.rearview.recfilesize", Rec_File_Size_String, "8192");
 		Rec_File_Size = atoi(Rec_File_Size_String);
 		lidbg("======== video file total size-> %ld MB=======\n",Rec_File_Size);
 		if(Rec_File_Size == 0) 
 		{
-			lidbg("not allow video file size = 0MB !!reset to 1000MB.\n");
-			Rec_File_Size = 1000;
+			lidbg("not allow video file size = 0MB !!reset to 8192MB.\n");
+			Rec_File_Size = 8192;
 		}
 
 		/*set record file bitrate*/
