@@ -1478,14 +1478,14 @@ void dequeue_buf(int count , char* rec_fp)
 	{
 		if(cam_id == DVR_ID)
 		{
-			sprintf(dvr_blackbox_filename, "%s/F%s.tmp", Em_Save_Dir, deq_time_buf);
+			sprintf(dvr_blackbox_filename, "%s/F%s.h264", Em_Save_Dir, deq_time_buf);
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,dvr_blackbox_filename);
 			fp1 = fopen(dvr_blackbox_filename, "ab+");
 			fwrite(iFrameData, iframe_length , 1, fp1);
 		}
 		else if(cam_id == REARVIEW_ID)
 		{
-			sprintf(rear_blackbox_filename, "%s/R%s.tmp", Em_Save_Dir, deq_time_buf);
+			sprintf(rear_blackbox_filename, "%s/R%s.h264", Em_Save_Dir, deq_time_buf);
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,rear_blackbox_filename);
 			fp1 = fopen(rear_blackbox_filename, "ab+");
 			fwrite(iFrameData, iframe_length , 1, fp1);
@@ -1536,13 +1536,13 @@ void dequeue_buf(int count , char* rec_fp)
 	if(isBlackBoxTopRec == 0 && isBlackBoxBottomRec == 1) 
 	{
 		char tmp_cmd[300] = {0};
-		//trans_enqueue("/storage/sdcard0/em_test/trans.tmp",dvr_blackbox_filename);
+		//trans_enqueue("/storage/sdcard0/em_test/trans.h264",dvr_blackbox_filename);
 		if(cam_id == DVR_ID) 
 		{
 			int length;
 			length = strlen(dvr_blackbox_filename);
-			dvr_blackbox_filename[length - 4] = '\0';
-			sprintf(tmp_cmd, "am broadcast -a com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service --ei action 0 --es src %s.tmp --es dec %s.mp4&",dvr_blackbox_filename,dvr_blackbox_filename);
+			dvr_blackbox_filename[length - 5] = '\0';
+			sprintf(tmp_cmd, "am broadcast -a com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service --ei action 0 --es src %s.h264 --es dec %s.mp4&",dvr_blackbox_filename,dvr_blackbox_filename);
 			system(tmp_cmd);
 			//isToDel = 1;
 			send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_ONLINE_INVOKE_NOTIFY, RET_EM_ISREC_OFF);
@@ -2128,9 +2128,9 @@ static void switch_scan(void)
 		if(!isTranscoding && isToDel) 
 		{
 			char tmp_cmd[300] = {0};
-			sprintf(tmp_cmd, "rm -rf %s.tmp&",dvr_blackbox_filename);
+			sprintf(tmp_cmd, "rm -rf %s.h264&",dvr_blackbox_filename);
 			system(tmp_cmd);
-			lidbg("****del %s.tmp****\n",dvr_blackbox_filename);
+			lidbg("****del %s.h264****\n",dvr_blackbox_filename);
 			isToDel = 0;
 		}
 	//}
@@ -5259,7 +5259,7 @@ openfd:
 						if(isDisableVideoLoop <= 0)
 						{
 							rec_fp1 = fopen(flyh264_filename, "wb");
-							if(i > 0) fwrite(iFrameData, iframe_length , 1, rec_fp1);
+							//if(i > 0) fwrite(iFrameData, iframe_length , 1, rec_fp1);
 						}
 					}
 					#if 0
