@@ -4955,7 +4955,7 @@ openfd:
 				}
 				*/
 				/*DVR Check save Dir size:whether change file name*/
-				if((i % 30 == 0) && !isPreview)
+				if((i % 30 == 0) && !isPreview && (cam_id == DVR_ID))
 				{
 					DIR *pDir ;
 					struct dirent *ent;
@@ -4971,7 +4971,7 @@ openfd:
 					         {  
 					                //if((strcmp(ent->d_name,".") == 0) || (strcmp(ent->d_name,"..") == 0) || (ent->d_reclen != 48) ) 
 					                //        continue; 
-									if((!strncmp(ent->d_name, "F", 1) && (cam_id == DVR_ID)) ||(!strncmp(ent->d_name, "R", 1) && (cam_id == REARVIEW_ID)) )
+									if((!strncmp(ent->d_name, "F", 1))  ||(!strncmp(ent->d_name, "R", 1)) )
 									{
 										sprintf(path , "%s%s",Rec_Save_Dir,ent->d_name);
 										if (stat(path,&buf) == -1)
@@ -4995,7 +4995,7 @@ openfd:
 				}
 				
 				/*reserve for storage*/
-				if((i % 30 == 0) )
+				if((i % 30 == 0) && (cam_id == DVR_ID))
 				{
 					if(!strncmp(Rec_Save_Dir, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)) )
 					{
