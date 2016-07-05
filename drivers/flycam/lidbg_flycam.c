@@ -272,8 +272,10 @@ static int lidbg_flycam_event(struct notifier_block *this,
 			break;
 		case NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD):
 			lidbg("flycam event:emergency recording %ld\n", event);
+#if 0
 			if(isDVRRec) lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
 			if(isRearRec) lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
+#endif
 			notify_online(RET_EM_ISREC_ON);
 			break;
 	    default:
@@ -1080,7 +1082,9 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 	//if(isSuspend) mod_timer(&suspend_stoprec_timer,SUSPEND_STOPREC_ONLINE_TIME);
 	if(isDVRFirstInit)
 	{
+#if 0
 		lidbg_shell_cmd("echo 1 > /sys/class/sensors/mc3xxx-accel/enable");
+#endif
 		pfly_UsbCamInfo->camStatus = lidbg_checkCam();
 		if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX))
 		{
@@ -2862,8 +2866,10 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #endif
 			case NR_EM_MANUAL:
 				lidbg("%s:NR_EM_MANUAL\n",__func__);
+#if 0				
 				if(isDVRRec) lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
 				if(isRearRec) lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
+#endif				
 				notify_online(RET_EM_ISREC_ON);
 		        break;
 			default:
