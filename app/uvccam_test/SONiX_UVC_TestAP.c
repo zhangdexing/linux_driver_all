@@ -53,6 +53,7 @@
 
 static int lidbg_get_current_time(char isXUSet , char *time_string, struct rtc_time *ptm);
 static void send_driver_msg(char magic ,char nr,unsigned long arg);
+int find_earliest_file(char* Dir,char* minRecName);
 
 
 #define TESTAP_VERSION		"v1.0.21_SONiX_UVC_TestAP_Multi"
@@ -118,6 +119,7 @@ static void send_driver_msg(char magic ,char nr,unsigned long arg);
 //#define REC_SAVE_DIR	EMMC_MOUNT_POINT0"/camera_rec/"
 char Rec_Save_Dir[100] = EMMC_MOUNT_POINT1"/camera_rec/";
 char Em_Save_Dir[100] = EMMC_MOUNT_POINT1"/camera_rec/BlackBox/";
+char Em_Save_Tmp_Dir[100] = EMMC_MOUNT_POINT1"/camera_rec/BlackBox//.tmp/";
 int Max_Rec_Num = 1;
 int Rec_Sec = 300;//s
 //int Em_Sec = 10;//s
@@ -1461,6 +1463,8 @@ static struct option opts[] = {
 
 char dvr_blackbox_filename[200] = {0};
 char rear_blackbox_filename[200] = {0};
+char dvr_blackbox_dest_filename[200] = {0};
+char rear_blackbox_dest_filename[200] = {0};
 char deq_time_buf[100] = {0};
 
 void dequeue_buf(int count , char* rec_fp)
@@ -1484,14 +1488,16 @@ void dequeue_buf(int count , char* rec_fp)
 	{
 		if(cam_id == DVR_ID)
 		{
-			sprintf(dvr_blackbox_filename, "%s/F%s.h264", Em_Save_Dir, deq_time_buf);
+			sprintf(dvr_blackbox_filename, "%s/F%s.h264", Em_Save_Tmp_Dir, deq_time_buf);
+			sprintf(dvr_blackbox_dest_filename, "%s/F%s.mp4", Em_Save_Dir, deq_time_buf);
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,dvr_blackbox_filename);
 			fp1 = fopen(dvr_blackbox_filename, "ab+");
 			//fwrite(iFrameData, iframe_length , 1, fp1);
 		}
 		else if(cam_id == REARVIEW_ID)
 		{
-			sprintf(rear_blackbox_filename, "%s/R%s.h264", Em_Save_Dir, deq_time_buf);
+			sprintf(rear_blackbox_filename, "%s/R%s.h264", Em_Save_Tmp_Dir, deq_time_buf);
+			sprintf(rear_blackbox_dest_filename, "%s/R%s.mp4", Em_Save_Dir, deq_time_buf);
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,rear_blackbox_filename);
 			fp1 = fopen(rear_blackbox_filename, "ab+");
 			//fwrite(iFrameData, iframe_length , 1, fp1);
@@ -1554,13 +1560,26 @@ void dequeue_buf(int count , char* rec_fp)
 		//trans_enqueue("/storage/sdcard0/em_test/trans.h264",dvr_blackbox_filename);
 		if(cam_id == DVR_ID) 
 		{
+#if 0		
 			int length;
 			length = strlen(dvr_blackbox_filename);
 			dvr_blackbox_filename[length - 5] = '\0';
-			sprintf(tmp_cmd, "am broadcast -a com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service --ei action 0 --es src %s.h264 --es dec %s.mp4&",dvr_blackbox_filename,dvr_blackbox_filename);
+#endif			
+			sprintf(tmp_cmd, "am broadcast -a com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service --ei action 0 --es src %s --es dec %s&",dvr_blackbox_filename,dvr_blackbox_dest_filename);
 			system(tmp_cmd);
 			//isToDel = 1;
 			send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_ONLINE_INVOKE_NOTIFY, RET_EM_ISREC_OFF);
+		}
+		else if(cam_id == REARVIEW_ID) 
+		{
+#if 0				
+			int length;
+			length = strlen(rear_blackbox_filename);
+			rear_blackbox_filename[length - 5] = '\0';
+#endif			
+			sprintf(tmp_cmd, "am broadcast -a com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service --ei action 0 --es src %s --es dec %s&",rear_blackbox_filename,rear_blackbox_dest_filename);
+			system(tmp_cmd);
+			//isToDel = 1;
 		}
 	}
 	if(isBlackBoxTopRec == 0) isBlackBoxBottomRec = 0;
@@ -1652,6 +1671,31 @@ void *thread_bottom_count_frame(void *par)
 		//lidbg("%s: [%d] bottom_totalFrames = %d \n", __func__,cam_id,bottom_totalFrames);
 		bottom_lastFrames = bottom_totalFrames;
 		bottom_totalFrames = 0;
+	}
+}
+
+void *thread_del_tmp_emfile(void *par)
+{
+	char minRecName[100] = {0};
+	int filecnt = 0;
+	char minRecPath[200] = {0};
+	int a,b;
+	while(1)
+	{
+		sleep(10);
+		filecnt = find_earliest_file(Em_Save_Tmp_Dir,minRecName);
+		sprintf(minRecPath, "%s/%s",Em_Save_Tmp_Dir,minRecName);//minRecPath
+		//lidbg("\n****dvr:%s\n,rear:%s,\nmini:%s\n,filecnt:%d****\n",dvr_blackbox_filename,rear_blackbox_filename,minRecPath,filecnt);
+		if(filecnt > 4)
+		{
+			if(strcmp(minRecPath,dvr_blackbox_filename) != 0)
+			{
+				char tmp_cmd[300] = {0};
+				sprintf(tmp_cmd, "rm -rf %s/%s&",Em_Save_Tmp_Dir,minRecName);
+				system(tmp_cmd);
+				lidbg("%s:****del %s/%s****\n",__func__,Em_Save_Tmp_Dir,minRecName);
+			}
+		}
 	}
 }
 
@@ -2130,6 +2174,7 @@ static void switch_scan(void)
 		property_get("lidbg.uvccam.rear.blackbox", isBlackBoxRec, "0");
 	}
 	property_get("persist.uvccam.empath", Em_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
+	sprintf(Em_Save_Tmp_Dir, "%s/.tmp/", Em_Save_Dir);//Em_Save_Tmp_Dir
 	property_get("persist.uvccam.top.emtime", Em_Top_Sec_String, "5");
 	property_get("persist.uvccam.bottom.emtime", Em_Bottom_Sec_String, "10");
 	Emergency_Top_Sec = atoi(Em_Top_Sec_String);
@@ -2137,6 +2182,7 @@ static void switch_scan(void)
 
 	//if(isToDel)
 	//{
+#if 0	
 		property_get("lidbg.uvccam.isTranscoding", isTranscoding_Str, "0");
 		isTranscoding = atoi(isTranscoding_Str);
 		if(isTranscoding) isToDel = 1;
@@ -2148,6 +2194,7 @@ static void switch_scan(void)
 			lidbg("****del %s.h264****\n",dvr_blackbox_filename);
 			isToDel = 0;
 		}
+#endif		
 	//}
 	return;
 }
@@ -2168,6 +2215,70 @@ static void send_driver_msg(char magic ,char nr,unsigned long arg)
       	lidbg("%s:nr => %d ioctl fail=======\n",__func__,nr);
 	}	
 	return;
+}
+
+int find_earliest_file(char* Dir,char* minRecName)
+{
+	DIR *pDir ;
+	struct dirent *ent; 
+	unsigned char filecnt = 0;
+	int ret;
+	char *date_time_key[5] = {NULL};
+	char *date_key[3] = {NULL};
+	char *time_key[3] = {NULL};
+	int cur_date[3] = {0,0,0};
+	int cur_time[3] = {0,0,0};
+	int min_date[3] = {5000,13,50};
+	int min_time[3] = {13,100,100};
+	char tmpDName[100] = {0};
+	struct tm prevTm,curTm;
+	time_t prevtimep = 0,curtimep;
+	
+	/*find the earliest rec file and del*/
+	pDir=opendir(Dir);  
+	while((ent=readdir(pDir))!=NULL)  
+	{  
+	        if(!(ent->d_type & DT_DIR))  
+	        {  
+	                if((strcmp(ent->d_name,".") == 0) || (strcmp(ent->d_name,"..") == 0) || (ent->d_reclen != 48) ) 
+	                        continue;  
+					//if((!strncmp(ent->d_name, "F", 1) && (cam_id == DVR_ID)) ||(!strncmp(ent->d_name, "R", 1) && (cam_id == REARVIEW_ID)) )
+					//{
+						filecnt++;
+		                //lidbg("ent->d_name:%s====ent->d_reclen:%d=====\n", ent->d_name,ent->d_reclen); 
+
+						strcpy(tmpDName, ent->d_name + 1);
+						lidbg_token_string(tmpDName, "__", date_time_key);
+						//lidbg("date_time_key0:%s====date_time_key1:%s=====", date_time_key[0],date_time_key[2]);	
+						lidbg_token_string(date_time_key[0], "-", date_key);
+						//lidbg("date_key:%s====%s===%s==", date_key[0],date_key[1],date_key[2]);	
+						lidbg_token_string(date_time_key[2], ".", time_key);
+						//lidbg("time_key:%s====%s===%s==", time_key[0],time_key[1],time_key[2]);	
+						
+						curTm.tm_year = atoi(date_key[0]) -1900;
+						curTm.tm_mon = atoi(date_key[1]) -1;
+						curTm.tm_mday = atoi(date_key[2]);
+						curTm.tm_hour = atoi(time_key[0]);
+						curTm.tm_min = atoi(time_key[1]);
+						curTm.tm_sec	 = atoi(time_key[2]);	
+						curtimep = mktime(&curTm);
+						
+						#if 0
+						lidbg("prevtimep=======%d========",  prevtimep);
+						lidbg("curtimep=======%d========",  curtimep);
+						lidbg("difftime=======%d========", difftime(curtimep, prevtimep));
+						#endif
+						if((curtimep < prevtimep) || (prevtimep == 0))
+						{
+							prevtimep = curtimep;
+							strcpy(minRecName, ent->d_name);
+							//lidbg("minRecName---->%s\n",minRecName);
+						}
+					//}
+	        }  
+	}
+	closedir(pDir);
+	return filecnt;
 }
 
 static void get_driver_prop(int camID)
@@ -2583,6 +2694,7 @@ int main(int argc, char *argv[])
 	pthread_t thread_top_dequeue_id;
 	pthread_t thread_count_top_frame_dequeue_id;
 	pthread_t thread_count_bottom_frame_dequeue_id;
+	pthread_t thread_del_tmp_emfile_id;
 	//pthread_t thread_switch_id;
 	//pthread_t thread_nightMode_id;
 	int flytmpcnt = 0,rc;
@@ -4501,6 +4613,8 @@ openfd:
 	pthread_create(&thread_dequeue_id,NULL,thread_dequeue,NULL);
 	pthread_create(&thread_count_top_frame_dequeue_id,NULL,thread_top_count_frame,NULL);
 	pthread_create(&thread_count_bottom_frame_dequeue_id,NULL,thread_bottom_count_frame,NULL);
+	if(cam_id == DVR_ID)
+		pthread_create(&thread_del_tmp_emfile_id,NULL,thread_del_tmp_emfile,NULL);
 
 	top_lastFrames = Emergency_Top_Sec * 30;
 	bottom_lastFrames = Emergency_Bottom_Sec * 30;
@@ -5139,6 +5253,10 @@ openfd:
 				else if(((buf0.timestamp.tv_sec - originRecsec) % Rec_Sec == 0)
 					&&(oldRecsec != (buf0.timestamp.tv_sec - originRecsec)) || isExceed)
 				{
+					char minRecName[100] = EMMC_MOUNT_POINT0"/camera_rec/1111.mp4";//error for del
+					unsigned char filecnt = 0;
+					int ret;
+#if 0				
 					DIR *pDir ;
 					struct dirent *ent; 
 					int ret;
@@ -5156,7 +5274,7 @@ openfd:
 
 					struct tm prevTm,curTm;
 					time_t prevtimep = 0,curtimep;
-
+#endif
 					/*get last timeval: prevent from repetition*/
 					if(!isExceed) oldRecsec = buf0.timestamp.tv_sec - originRecsec;
 					
@@ -5167,7 +5285,7 @@ openfd:
 						else flytmpcnt = 0;
 					}
 					#endif
-			
+#if 0			
 					/*find the earliest rec file and del*/
 					pDir=opendir(Rec_Save_Dir);  
 					while((ent=readdir(pDir))!=NULL)  
@@ -5213,7 +5331,8 @@ openfd:
 					}
 					closedir(pDir);
 					//lidbg("minRecName end------>%s\n",minRecName);
-
+#endif
+					filecnt = find_earliest_file(Rec_Save_Dir,minRecName);
 					/*
 						1.storage exceed process:del the oldest rec file,keep writing last file;if filecnt < 2,create new file.
 						2.time exceed process:write a new file.
