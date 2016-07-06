@@ -4613,8 +4613,10 @@ openfd:
 	pthread_create(&thread_dequeue_id,NULL,thread_dequeue,NULL);
 	pthread_create(&thread_count_top_frame_dequeue_id,NULL,thread_top_count_frame,NULL);
 	pthread_create(&thread_count_bottom_frame_dequeue_id,NULL,thread_bottom_count_frame,NULL);
+#if 0
 	if(cam_id == DVR_ID)
 		pthread_create(&thread_del_tmp_emfile_id,NULL,thread_del_tmp_emfile,NULL);
+#endif	
 
 	top_lastFrames = Emergency_Top_Sec * 30;
 	bottom_lastFrames = Emergency_Bottom_Sec * 30;
