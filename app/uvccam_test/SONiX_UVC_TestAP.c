@@ -1498,9 +1498,9 @@ void dequeue_buf(int count , char* rec_fp)
 #if 0
 		lidbg_get_current_time(0 , time_buf, NULL);
 		if(cam_id == DVR_ID)
-			sprintf(flyh264_filename, "%s/BlackBox/F%s.mp4", Rec_Save_Dir, time_buf);
+			sprintf(flyh264_filename, "%s/BlackBox/F%s.h264", Rec_Save_Dir, time_buf);
 		else if(cam_id == REARVIEW_ID)
-			sprintf(flyh264_filename, "%s/BlackBox/R%s.mp4", Rec_Save_Dir, time_buf);
+			sprintf(flyh264_filename, "%s/BlackBox/R%s.h264", Rec_Save_Dir, time_buf);
 #endif
 		if(cam_id == DVR_ID)
 		{
@@ -2303,17 +2303,17 @@ static void get_driver_prop(int camID)
 int main(int argc, char *argv[])
 {
 	char filename[100] = EMMC_MOUNT_POINT0"/quickcam-0000.jpg";
-	char rec_filename[30] = EMMC_MOUNT_POINT0"/RecordH264.mp4";			/*"H264.ts"*/
-	char rec_filename1[30] = EMMC_MOUNT_POINT0"/RecordH264HD.mp4";		/*"H264.ts"*/
-	char rec_filename2[30] = EMMC_MOUNT_POINT0"/RecordH264QVGA.mp4";	/*"H264.ts"*/
-	char rec_filename3[30] = EMMC_MOUNT_POINT0"/RecordH264QQVGA.mp4";	/*"H264.ts"*/
-	char rec_filename4[30] = EMMC_MOUNT_POINT0"/RecordH264VGA.mp4";		/*"H264.ts"*/
+	char rec_filename[30] = EMMC_MOUNT_POINT0"/RecordH264.h264";			/*"H264.ts"*/
+	char rec_filename1[30] = EMMC_MOUNT_POINT0"/RecordH264HD.h264";		/*"H264.ts"*/
+	char rec_filename2[30] = EMMC_MOUNT_POINT0"/RecordH264QVGA.h264";	/*"H264.ts"*/
+	char rec_filename3[30] = EMMC_MOUNT_POINT0"/RecordH264QQVGA.h264";	/*"H264.ts"*/
+	char rec_filename4[30] = EMMC_MOUNT_POINT0"/RecordH264VGA.h264";		/*"H264.ts"*/
 /*
-	char flyh264_filename[5][100] = {  EMMC_MOUNT_POINT0"/flytmp1.mp4",
-								EMMC_MOUNT_POINT0"/flytmp2.mp4",
-								EMMC_MOUNT_POINT0"/flytmp3.mp4",
-								EMMC_MOUNT_POINT0"/flytmp4.mp4",
-								EMMC_MOUNT_POINT0"/flytmp5.mp4"};
+	char flyh264_filename[5][100] = {  EMMC_MOUNT_POINT0"/flytmp1.h264",
+								EMMC_MOUNT_POINT0"/flytmp2.h264",
+								EMMC_MOUNT_POINT0"/flytmp3.h264",
+								EMMC_MOUNT_POINT0"/flytmp4.h264",
+								EMMC_MOUNT_POINT0"/flytmp5.h264"};
 */						    
 	char flyh264_filename[100] = {0};
 	char old_flyh264_filename[100] = {0};
@@ -4711,8 +4711,8 @@ openfd:
     if(multi_stream_format == MULTI_STREAM_HD_180P || multi_stream_format == MULTI_STREAM_HD_360P ||
             multi_stream_format == MULTI_STREAM_HD_180P_360P || multi_stream_format == MULTI_STREAM_360P_180P)
     {
-        sprintf(rec_filename2, "RecordH264_180P.mp4");
-        sprintf(rec_filename4, "RecordH264_360P.mp4");
+        sprintf(rec_filename2, "RecordH264_180P.h264");
+        sprintf(rec_filename4, "RecordH264_360P.h264");
     }
 	#if 0
 	if(!do_save)//recording
@@ -4960,7 +4960,7 @@ openfd:
 				if(rec_fp1 == NULL)
 				{
 					lidbg_get_current_time(time_buf, NULL);
-					sprintf(flyh264_filename[flytmpcnt], "%s%s_%d.mp4", REC_SAVE_DIR, time_buf,flytmpcnt);
+					sprintf(flyh264_filename[flytmpcnt], "%s%s_%d.h264", REC_SAVE_DIR, time_buf,flytmpcnt);
 					rec_fp1 = fopen(flyh264_filename[flytmpcnt], "wb");
 				}
 				*/
@@ -5136,7 +5136,7 @@ openfd:
 					int cur_time[3] = {0,0,0};
 					int min_date[3] = {5000,13,50};
 					int min_time[3] = {13,100,100};
-					char minRecName[100] = EMMC_MOUNT_POINT0"/camera_rec/1111.mp4";//error for del
+					char minRecName[100] = EMMC_MOUNT_POINT0"/camera_rec/1111.h264";//error for del
 					char tmpDName[100] = {0};
 					unsigned char filecnt = 0;
 					unsigned char memcpyFlag = 0;
@@ -5221,7 +5221,7 @@ openfd:
 							lidbg("======Can not del processing file!Stop!======\n");
 #if 0
 							lidbg_get_current_time(time_buf, NULL);
-							sprintf(flyh264_filename, "%s%s.mp4", Rec_Save_Dir, time_buf);
+							sprintf(flyh264_filename, "%s%s.h264", Rec_Save_Dir, time_buf);
 							lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);
 							rec_fp1 = fopen(flyh264_filename, "wb");
 #endif
@@ -5261,9 +5261,9 @@ openfd:
 						lidbg_get_current_time(0 , time_buf, NULL);
 
 						if(cam_id == DVR_ID)
-							sprintf(flyh264_filename, "%sF%s.mp4", Rec_Save_Dir, time_buf);
+							sprintf(flyh264_filename, "%sF%s.h264", Rec_Save_Dir, time_buf);
 						else if(cam_id == REARVIEW_ID)
-							sprintf(flyh264_filename, "%sR%s.mp4", Rec_Save_Dir, time_buf);
+							sprintf(flyh264_filename, "%sR%s.h264", Rec_Save_Dir, time_buf);
 						
 						lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);		
 						if(isDisableVideoLoop <= 0)
@@ -5277,7 +5277,7 @@ openfd:
 					if(((totalSize - filebuf.st_size) /1000000) < Rec_File_Size)
 					{
 						lidbg_get_current_time(time_buf, NULL);
-						sprintf(flyh264_filename, "%s%s.mp4", Rec_Save_Dir, time_buf);
+						sprintf(flyh264_filename, "%s%s.h264", Rec_Save_Dir, time_buf);
 						lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);
 						rec_fp1 = fopen(flyh264_filename, "wb");
 					}
