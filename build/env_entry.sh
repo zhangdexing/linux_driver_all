@@ -522,6 +522,37 @@ case "$DBG_PLATFORM_ID" in
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=master
 	export MAKE_PAKG_NUM= ;;
+
+    16)
+        export DBG_PLATFORM=cust3561_64_common
+        export BOARD_VERSION=V1
+        export ANDROID_VERSION=601
+        export DBG_CROSS_COMPILE=$DBG_SYSTEM_DIR/prebuilts/gcc/linux-x86/arm/arm-eabi-4.8/bin/arm-eabi-
+        export JAVA_HOME=$PATHJAVA1P7
+        export JRE_HOME=$JAVA_HOME/jre
+        export CLASSPATH=$JAVA_HOME/lib:$JRE_HOME/lib:$CLASSPATH
+        export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH
+        export SYSTEM_BUILD_TYPE=userdebug
+        export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/bootable/bootloader/lk
+	export DBG_BOOTLOADER_TYPE=LK
+        export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
+        export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ
+        export UPDATA_BIN_PLATFORM_DIR=$RELEASE_REPOSITORY/others/8974_5.1
+        export UPDATA_BIN_DIR=$UPDATA_BIN_PLATFORM_DIR/driver
+        export UPDATA_BASESYSTEM_DIR=$UPDATA_BIN_PLATFORM_DIR/basesystem
+        export DBG_PASSWORD=git
+        export DBG_REPO_PASSWORD=git
+        export DBG_VENDOR=VENDOR_QCOM
+        export OTA_PACKAGE_NAME=msm8974-ota-eng.*.zip
+        export DBG_SOC=mt35x
+        export TEST_PACKAGE_PATH=//192.168.128.128/8974/升级包发布/专项测试包
+        export REPOSITORY_WORK_BRANCH=master
+        export SYSTEM_WORK_BRANCH=master
+        export MAKE_PAKG_NUM=19
+        export NON_HLOS_FILE_PATH=$BP_SOURCE_PATH/common/build/bin/asic
+        export RPM_FILE_PATH=$RPM_PATH/ms/bin/AAAAANAAR
+        export SBL_FILE_PATH=$BOOT_IMAGE_PATH/bin/8974
+        export TZ_FILE_PATH=$TZ_PATH/bin/AAAAANAA
 esac 
 
 
