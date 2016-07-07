@@ -1679,18 +1679,24 @@ void *thread_del_tmp_emfile(void *par)
 	char minRecName[100] = {0};
 	int filecnt = 0;
 	char minRecPath[200] = {0};
-	int a,b;
+	char tmp_cmd[300] = {0};
 	while(1)
 	{
 		sleep(10);
 		filecnt = find_earliest_file(Em_Save_Tmp_Dir,minRecName);
+		if(filecnt < 0) 
+		{
+			lidbg("======Em_Save_Tmp_Dir access error!======\n");
+			sprintf(tmp_cmd, "mkdir -p %s&",Em_Save_Tmp_Dir,minRecName);
+			system(tmp_cmd);
+			continue;
+		}
 		sprintf(minRecPath, "%s/%s",Em_Save_Tmp_Dir,minRecName);//minRecPath
 		//lidbg("\n****dvr:%s\n,rear:%s,\nmini:%s\n,filecnt:%d****\n",dvr_blackbox_filename,rear_blackbox_filename,minRecPath,filecnt);
 		if(filecnt > 4)
 		{
 			if(strcmp(minRecPath,dvr_blackbox_filename) != 0)
 			{
-				char tmp_cmd[300] = {0};
 				sprintf(tmp_cmd, "rm -rf %s/%s&",Em_Save_Tmp_Dir,minRecName);
 				system(tmp_cmd);
 				lidbg("%s:****del %s/%s****\n",__func__,Em_Save_Tmp_Dir,minRecName);
@@ -2236,6 +2242,7 @@ int find_earliest_file(char* Dir,char* minRecName)
 	
 	/*find the earliest rec file and del*/
 	pDir=opendir(Dir);  
+	if(pDir == NULL) return -1;
 	while((ent=readdir(pDir))!=NULL)  
 	{  
 	        if(!(ent->d_type & DT_DIR))  
@@ -4613,7 +4620,7 @@ openfd:
 	pthread_create(&thread_dequeue_id,NULL,thread_dequeue,NULL);
 	pthread_create(&thread_count_top_frame_dequeue_id,NULL,thread_top_count_frame,NULL);
 	pthread_create(&thread_count_bottom_frame_dequeue_id,NULL,thread_bottom_count_frame,NULL);
-#if 0
+#if 1
 	if(cam_id == DVR_ID)
 		pthread_create(&thread_del_tmp_emfile_id,NULL,thread_del_tmp_emfile,NULL);
 #endif	

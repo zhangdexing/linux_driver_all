@@ -1424,6 +1424,8 @@ static int checkSDCardStatus(char *path)
 			lidbg("%s: New Rec Dir => %s\n",__func__,path);
 			sprintf(temp_cmd, "mkdir -p %s", path);
 			lidbg_shell_cmd(temp_cmd);
+			sprintf(temp_cmd, "mkdir -p %s/BlackBox/.tmp", path);
+			lidbg_shell_cmd(temp_cmd);
 			ret = 3;
 		}
 		else lidbg("%s: Check Rec Dir OK => %s\n",__func__,path);
@@ -1447,6 +1449,8 @@ static int checkSDCardStatus(char *path)
 		{
 			lidbg("%s: New Rec Dir => %s\n",__func__,path);
 			sprintf(temp_cmd, "mkdir -p %s", path);
+			lidbg_shell_cmd(temp_cmd);
+			sprintf(temp_cmd, "mkdir -p %s/BlackBox/.tmp", path);
 			lidbg_shell_cmd(temp_cmd);
 			ret = 3;
 		}
@@ -2701,6 +2705,8 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #endif
 				sprintf(temp_cmd, "mkdir -p %s", (char*)arg);
 				lidbg_shell_cmd(temp_cmd);
+				sprintf(temp_cmd, "mkdir -p %s/BlackBox/.tmp", (char*)arg);
+				lidbg_shell_cmd(temp_cmd);
 
 				file_path = filp_open((char*)arg, O_RDONLY | O_DIRECTORY, 0);
 				if(IS_ERR(file_path))
@@ -3284,6 +3290,7 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			lidbg("formatcomplete = %d\n",formatVal);
 			if(formatVal == 1) status_fifo_in(RET_FORMAT_SUCCESS);
 			else status_fifo_in(RET_FORMAT_FAIL);
+			ssleep(5);
 			if(!isDVRRec && !isOnlineRec&&  isBeforeFormatDVRRec)
 				dvr_start_recording();
 			if(!isRearRec &&  isBeforeFormatRearRec)
