@@ -104,7 +104,7 @@ char tm_cmd[100] = {0};
 static int dvr_osd_fail_times,rear_osd_fail_times;
 static char isDVROSDFail,isRearOSDFail;
 
-static int isDisableVideoLoop,isPrevYUV,isEmRecPermitted;
+static int isDisableVideoLoop,isPrevYUV,isEmRecPermitted = 1;
 
 
 #if 0
@@ -2492,6 +2492,26 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						
 						//schedule_delayed_work(&work_t_format_done, 5*HZ);
 						
+						length += 2;
+						if(copy_to_user((char*)arg,dvrRespond,length))
+						{
+							lidbg("%s:copy_to_user ERR\n",__func__);
+						}
+						break;
+					case CMD_EM_EVENT_SWITCH:
+						lidbg("%s:CMD_EM_EVENT_SWITCH\n",__func__);
+						if(((char*)arg)[1] == 0) 
+						{
+							lidbg("%s:Emergency event permitted!\n",__func__);
+							isEmRecPermitted = 1;
+							dvrRespond[1] = isEmRecPermitted;
+						}
+						else
+						{
+							lidbg("%s:Emergency event rejected!\n",__func__);
+							isEmRecPermitted = 0;
+							dvrRespond[1] = isEmRecPermitted;
+						}
 						length += 2;
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
