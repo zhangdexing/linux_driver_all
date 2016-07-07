@@ -50,9 +50,12 @@ int thread_format_sdcard1(void *data)
 		 lidbg_shell_cmd("echo ==thread_format_sdcard1.remove complete==== > /dev/lidbg_msg");
         sprintf(shell_cmd, "/flysystem/lib/out/busybox fdisk %s < /flysystem/lib/out/fdiskcmd.txt",  sdcard1->device);
         lidbg_shell_cmd(shell_cmd);
+        lidbg_shell_cmd("echo ==thread_format_sdcard1.fdiskcmd complete==== > /dev/lidbg_msg");
         sprintf(shell_cmd, "/flysystem/lib/out/busybox mkfs.vfat %s",  sdcard1->device);
         lidbg_shell_cmd(shell_cmd);
+        lidbg_shell_cmd("echo ==thread_format_sdcard1.mkfs.vfat complete==== > /dev/lidbg_msg");
         lidbg_shell_cmd("mount -o remount /mnt/media_rw/sdcard1");
+        lidbg_shell_cmd("echo ==thread_format_sdcard1.remount complete==== > /dev/lidbg_msg");
         lidbg_shell_cmd("echo \"formatcomplete=1\" > /dev/lidbg_flycam0");
     }
     else
