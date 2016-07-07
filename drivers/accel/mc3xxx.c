@@ -55,6 +55,8 @@
 static int cnt_crash_detected = 0;
 static struct wake_lock irq_wakelock;
 
+static struct mc3xxx_data *flydata = NULL;
+
 #define NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE	(130)
 #define NOTIFIER_MINOR_EXCEED_THRESHOLD 		(10)
 
@@ -1940,7 +1942,7 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 		mc3xxx_chip_init(data->client);
 
 		SOC_IO_ISR_Enable(ACCEL_INT1);
-		enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
+		//enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
 		mc3xxx_set_mode(data->client, MC3XXX_WAKE);
 
         mutex_unlock(&data->lock);
@@ -1951,7 +1953,7 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 	{
 		//hrtimer_cancel(&data->timer);
 		SOC_IO_ISR_Disable(ACCEL_INT1);
-		disable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
+		//disable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
 		mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
 		data->enabled = false;
 	}
@@ -2231,8 +2233,20 @@ static void mc3xxx_early_resume(struct early_suspend *handler)
 	hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
 }
 #else
-static int mc3xxx_acc_resume(struct mc3xxx_data *data)
+static int mc3xxx_acc_resume(struct device *dev)
 {
+	if(flydata->enabled == 1)
+	{
+        mutex_lock(&flydata->lock);
+		mc3xxx_chip_init(flydata->client);
+
+		SOC_IO_ISR_Enable(ACCEL_INT1);
+		//enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
+		mc3xxx_set_mode(flydata->client, MC3XXX_WAKE);
+
+        mutex_unlock(&flydata->lock);
+	}
+/*
 	//char buf[1] = {0};
 	MSM_ACCEL_POWER_ON;
 	lidbg("%s\n", __func__);
@@ -2243,12 +2257,15 @@ static int mc3xxx_acc_resume(struct mc3xxx_data *data)
     mutex_unlock(&data->lock);
 	if(data->enabled == true)
 		hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
-
+*/
     return 0;
 }
 
-static int mc3xxx_acc_suspend(struct mc3xxx_data *data)
+static int mc3xxx_acc_suspend(struct device *dev)
 {
+	if(flydata->enabled == 1)
+		SOC_IO_ISR_Disable(ACCEL_INT1);
+/*
 	//char buf[1] = {0};
 	MSM_ACCEL_POWER_OFF;
 	lidbg("%s\n", __func__);
@@ -2258,14 +2275,14 @@ static int mc3xxx_acc_suspend(struct mc3xxx_data *data)
     mutex_lock(&data->lock);
     mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
     mutex_unlock(&data->lock);
-
+*/
     return 0;
 }
 
 static int fb_notifier_callback(struct notifier_block *self,
                                 unsigned long event, void *data)
 {
-    struct fb_event *evdata = data;
+/*    struct fb_event *evdata = data;
     int *blank;
 	struct mc3xxx_data *mc_data =
         container_of(self, struct mc3xxx_data, fb_notif);
@@ -2278,7 +2295,7 @@ static int fb_notifier_callback(struct notifier_block *self,
         else if (*blank == FB_BLANK_POWERDOWN)
             mc3xxx_acc_suspend(mc_data);
     }
-
+*/
     return 0;
 }
 
@@ -2436,6 +2453,8 @@ static int mc3xxx_acc_poll_delay_set(struct sensors_classdev *sensors_cdev,
 static int mc3xxx_acc_enable_set(struct sensors_classdev *sensors_cdev,
 	unsigned int enable)
 {
+	return 0;
+	/*
 	struct mc3xxx_data *acc = container_of(sensors_cdev,
 		struct mc3xxx_data, cdev);
 	int err;
@@ -2448,8 +2467,51 @@ static int mc3xxx_acc_enable_set(struct sensors_classdev *sensors_cdev,
 		lidbg("%s  do nothing! \n", __func__);
 		//err = mc3xxx_enable(acc, 0);
 	}
-	return err;
+	return err;*/
 }
+
+ssize_t  mc3xxx_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
+{
+
+	char mc3xxx_state[2] = {0};
+	sprintf(mc3xxx_state, "%d", flydata->enabled);
+
+	if(copy_to_user(buffer, mc3xxx_state, strlen(mc3xxx_state)))
+	{
+		lidbg("copy_from_user ERR\n");
+	}
+
+	return size;
+}
+
+ssize_t mc3xxx_write (struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
+{
+    char cmd_buf[2];
+    memset(cmd_buf, '\0', 2);
+
+    if(copy_from_user(cmd_buf, buf, 1))
+    {
+        PM_ERR("copy_from_user ERR\n");
+    }
+
+	if (sysfs_streq(cmd_buf, "0"))
+		mc3xxx_enable(flydata, 0);
+
+	else if (sysfs_streq(cmd_buf, "1"))
+		mc3xxx_enable(flydata, 1);
+
+	else
+		lidbg("%s: invalid value %s\n", __func__, cmd_buf);
+
+	return size;
+}
+
+static  struct file_operations mc3xxx_fops =
+{
+    .owner = THIS_MODULE,
+    .read = mc3xxx_read,
+    .write = mc3xxx_write,
+};
 
 //=============================================================================
 static int mc3xxx_probe(struct i2c_client *client,
@@ -2482,6 +2544,8 @@ static int mc3xxx_probe(struct i2c_client *client,
 		ret = -ENOMEM;
 		goto err_alloc_data_failed;
 	}
+
+	flydata = data;
 
 	data->mc3xxx_wq = create_singlethread_workqueue("mc3xxx_wq");
 	if (!data->mc3xxx_wq)
@@ -2589,6 +2653,8 @@ static int mc3xxx_probe(struct i2c_client *client,
 	mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
 	data->enabled = false;
 
+	lidbg_new_cdev(&mc3xxx_fops, "mc3xxx_enable");
+
 	//crash_detect_init();
 	lidbg("%s mc3xxx probe ok \n", __func__);
 
@@ -2648,10 +2714,11 @@ static struct of_device_id mc3xxx_acc_match_table[] = {
 	{ .compatible = "mcube, mc3xxx",},
 	{ },
 };
-/*static const struct dev_pm_ops mc3xxx_pm_ops = {
+
+static const struct dev_pm_ops mc3xxx_pm_ops = {
 	.suspend	= mc3xxx_acc_suspend,
 	.resume 	= mc3xxx_acc_resume,
-};*/
+};
 
 static struct i2c_driver mc3xxx_driver =
 {
@@ -2661,7 +2728,7 @@ static struct i2c_driver mc3xxx_driver =
                   .owner = THIS_MODULE,
                   .name	 = SENSOR_NAME,
         	    .of_match_table = mc3xxx_acc_match_table,
-        	    //.pm = &mc3xxx_pm_ops,
+        	    .pm = &mc3xxx_pm_ops,
               },
 
     .id_table	  = mc3xxx_id,
