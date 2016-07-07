@@ -104,7 +104,7 @@ char tm_cmd[100] = {0};
 static int dvr_osd_fail_times,rear_osd_fail_times;
 static char isDVROSDFail,isRearOSDFail;
 
-static int isDisableVideoLoop,isPrevYUV;
+static int isDisableVideoLoop,isPrevYUV,isEmRecPermitted;
 
 
 #if 0
@@ -274,8 +274,11 @@ static int lidbg_flycam_event(struct notifier_block *this,
 			break;
 		case NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD):
 			lidbg("flycam event:emergency recording %ld\n", event);
-			if(isDVRRec) lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
-			if(isRearRec) lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
+			if(isEmRecPermitted)
+			{
+				if(isDVRRec) lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
+				if(isRearRec) lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
+			}
 			notify_online(RET_EM_ISREC_ON);
 			break;
 	    default:
@@ -2909,8 +2912,11 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #endif
 			case NR_EM_MANUAL:
 				lidbg("%s:NR_EM_MANUAL\n",__func__);
-				if(isDVRRec) lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
-				if(isRearRec) lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
+				if(isEmRecPermitted)
+				{
+					if(isDVRRec) lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
+					if(isRearRec) lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
+				}
 				notify_online(RET_EM_ISREC_ON);
 		        break;
 			default:
@@ -3469,7 +3475,10 @@ int thread_flycam_init(void *data)
 		lidbg_shell_cmd(temp_cmd);
 
 		if(isDisableVideoLoop > 0)
+		{
 			lidbg_shell_cmd("setprop fly.uvccam.coldboot.isRec 1");
+			isEmRecPermitted = 1;
+		}
 
 		isPrevYUV = fs_find_string(g_var.pflyhal_config_list, "YUV");
 		lidbg("%s:====isPrevYUV:%d====\n",__func__,isPrevYUV);
