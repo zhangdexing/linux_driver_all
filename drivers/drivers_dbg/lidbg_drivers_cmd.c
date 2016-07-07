@@ -39,19 +39,18 @@ int thread_dumpsys_meminfo(void *data)
 
 int thread_format_sdcard1(void *data)
 {
-    struct mounted_volume *sdcard1 = NULL;
+    char *pdevices="/dev/block/mmcblk1p1";
     lidbg_shell_cmd("echo ==thread_format_sdcard1.start==== > /dev/lidbg_msg");
-    sdcard1 = find_mounted_volume_by_mount_point("/mnt/media_rw/sdcard1") ;
-    if(sdcard1 != NULL)
+    if(fs_is_file_exist(pdevices))
     {
         char shell_cmd[128] = {0};
-        LIDBG_WARN("sdcard1.device:%s\n", sdcard1->device);
+        LIDBG_WARN("sdcard1.device:%s\n", pdevices);
         lidbg_shell_cmd("rm -rf /storage/sdcard1/*");
 		 lidbg_shell_cmd("echo ==thread_format_sdcard1.remove complete==== > /dev/lidbg_msg");
-        sprintf(shell_cmd, "/flysystem/lib/out/busybox fdisk %s < /flysystem/lib/out/fdiskcmd.txt",  sdcard1->device);
+        sprintf(shell_cmd, "/flysystem/lib/out/busybox fdisk %s < /flysystem/lib/out/fdiskcmd.txt",  pdevices);
         lidbg_shell_cmd(shell_cmd);
         lidbg_shell_cmd("echo ==thread_format_sdcard1.fdiskcmd complete==== > /dev/lidbg_msg");
-        sprintf(shell_cmd, "/flysystem/lib/out/busybox mkfs.vfat %s",  sdcard1->device);
+        sprintf(shell_cmd, "/flysystem/lib/out/busybox mkfs.vfat %s",  pdevices);
         lidbg_shell_cmd(shell_cmd);
         lidbg_shell_cmd("echo ==thread_format_sdcard1.mkfs.vfat complete==== > /dev/lidbg_msg");
         lidbg_shell_cmd("mount -o remount /mnt/media_rw/sdcard1");
@@ -1227,6 +1226,10 @@ void parse_cmd(char *pt)
     {
         fs_file_write2(argv[1], argv[2]);
         lidbg("%s:[%s]\n", argv[1], argv[2]);
+    }
+    else if(!strcmp(argv[0], "exist") )
+    {
+        lidbg("exist:[%d,%s]\n", fs_is_file_exist(argv[1]),argv[1]);
     }
     else if (!strcmp(argv[0], "lpc"))
     {
