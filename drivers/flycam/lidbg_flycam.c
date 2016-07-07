@@ -2151,7 +2151,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		unsigned char returnRespond[200] = {0};
 		unsigned char initMsg[400] = {0};
 		int length = 0;
-		struct mounted_volume *sdcard1 = NULL;
+		//struct mounted_volume *sdcard1 = NULL;
 		
 		dvrRespond[0] = ((char*)arg)[0];
 		rearRespond[0] = ((char*)arg)[0];
@@ -2416,14 +2416,16 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						break;
 					case CMD_FORMAT_SDCARD:
 						lidbg("%s:CMD_FORMAT_SDCARD\n",__func__);
+#if 0						
 						sdcard1 = find_mounted_volume_by_mount_point("/mnt/media_rw/sdcard1") ;
    						if(sdcard1 == NULL)
 						{
 							lidbg("%s:sdcard not exist!\n",__func__);
 							dvrRespond[1] = 0;
 						}
-						else
-						{
+#endif							
+						//else
+						//{
 							if(!strncmp(f_rec_path, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)))
 							{
 								if(isDVRRec)
@@ -2448,7 +2450,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 								lidbg("%s:Stop format sdcard!\n",__func__);
 								dvrRespond[1] = 0;
 							}
-						}
+						//}
 						
 						//schedule_delayed_work(&work_t_format_done, 5*HZ);
 						
