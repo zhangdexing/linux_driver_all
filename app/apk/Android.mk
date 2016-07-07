@@ -2,6 +2,14 @@ LOCAL_PATH := $(call my-dir)
 
 
 include $(CLEAR_VARS)
+LOCAL_MODULE := H264ToMp4Service.apk
+LOCAL_SRC_FILES := H264ToMp4Service.apk
+LOCAL_MODULE_CLASS := bin
+LOCAL_MODULE_TAGS := optional debug eng tests samples
+LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+include $(BUILD_PREBUILT)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := fdiskcmd.txt
 LOCAL_SRC_FILES := fdiskcmd.txt
 LOCAL_MODULE_CLASS := bin
