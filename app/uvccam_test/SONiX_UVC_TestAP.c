@@ -2395,8 +2395,8 @@ static void get_driver_prop(int camID)
 			isColdBootRec = atoi(isColdBootRec_String);
 			lidbg("======== isColdBootRec-> %d=======\n",isColdBootRec);
 
-			property_get("persist.uvccam.isEmPermit", isEmPermit_Str, "0");
-			isEmPermit = atoi(isEmPermit_Str);
+			property_get("persist.uvccam.isEmNotPermit", isEmPermit_Str, "0");
+			isEmPermit = !(atoi(isEmPermit_Str));
 			lidbg("======== isEmPermit-> %d=======\n",isEmPermit);
 		}
 

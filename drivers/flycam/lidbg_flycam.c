@@ -2516,7 +2516,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 							isEmRecPermitted = 0;
 							dvrRespond[1] = !isEmRecPermitted;
 						}
-						sprintf(temp_cmd, "setprop persist.uvccam.isEmPermit %d", isEmRecPermitted);
+						sprintf(temp_cmd, "setprop persist.uvccam.isEmNotPermit %d", !isEmRecPermitted);
 						lidbg_shell_cmd(temp_cmd);
 						length += 2;
 						if(copy_to_user((char*)arg,dvrRespond,length))
