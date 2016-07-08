@@ -92,10 +92,8 @@ void gps_power_enable(void)
 
 struct probe_device i2c_probe_dev[] =
 {
-#if 0
   	{DEV_ACCEL, accel_i2c_bus, 0x18, 0x00, "bma2x2.ko", NULL, NULL},
   	{DEV_ACCEL, accel_i2c_bus, 0x4c, 0x00, "mc3xxx.ko", accel_power_enable, mc3x_find_cb},
-#endif  	
 
 	{DEV_GPS, gps_i2c_bus, 0x42, 0x00, "lidbg_gps.ko", gps_power_enable, NULL ,0},
 	{DEV_DISPLAY, display_i2c_bus, 0x2d, 0x00, "dsi83.ko", NULL, NULL ,0},
