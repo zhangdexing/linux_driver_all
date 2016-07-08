@@ -563,6 +563,12 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
             MCU_WP_GPIO_ON;
             MCU_APP_GPIO_ON;
             SOC_System_Status(FLY_ANDROID_UP);
+
+#if ANDROID_VERSION >= 600
+			lidbg_shell_cmd("dumpsys deviceidle disable");
+			lidbg("quit doze mode.\n");
+#endif
+
         }
         else  if(!strcmp(cmd[1], "android_down"))
         {
