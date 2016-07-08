@@ -212,9 +212,10 @@ int thread_thermal(void *data)
 	 cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
         maxcpu= get_file_int(CPU_MAX_NODE);
         mincpu= get_file_int(CPU_MIN_NODE);
+	 max_freq = get_scaling_max_freq();
 	if(0==g_var.android_boot_completed)
-        		lidbg("mem_temp=%d,cpu_temp=%d,freq=%d,max_freq=%d,maxcpu=%d,mincpu=%d,status=%s",cur_temp, cur_temp, cpufreq_get(0), max_freq,maxcpu,mincpu,get_cpu_status());
-        pr_debug("mem_temp=%d,cpu_temp=%d,freq=%d,max_freq=%d,maxcpu=%d,mincpu=%d,status=%s",cur_temp, cpu_temp, cpufreq_get(0), max_freq,maxcpu,mincpu,get_cpu_status());
+        		lidbg("mem_temp=%d,cpu_temp=%d,freq=%d,max_freq=%d,maxcpu=%d,mincpu=%d,status=%s",cur_temp, cpu_temp, cpufreq_get(0), max_freq,maxcpu,mincpu,get_cpu_status());
+       pr_debug("mem_temp=%d,cpu_temp=%d,freq=%d,max_freq=%d,maxcpu=%d,mincpu=%d,status=%s",cur_temp, cpu_temp, cpufreq_get(0), max_freq,maxcpu,mincpu,get_cpu_status());
 		
 	if(0)
         //fan ctrl
@@ -261,7 +262,7 @@ int thread_thermal(void *data)
 
 thermal_ctrl:
 
-        max_freq = get_scaling_max_freq();
+        //max_freq = get_scaling_max_freq();
         //lidbg("MSM_THERM: %d\n",cur_temp);
         for(i = 0; i < SIZE_OF_ARRAY(g_hw.cpu_freq_thermal); i++)
         {        
