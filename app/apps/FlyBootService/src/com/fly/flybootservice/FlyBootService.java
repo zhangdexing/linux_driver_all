@@ -126,7 +126,8 @@ public class FlyBootService extends Service {
             "android.process.media", "com.android.systemui",
             "com.android.deskclock", "sys.DeviceHealth", "system",
             "com.fly.flybootservice","com.android.keyguard","android.policy","com.android.launcher3",
-	        "com.example.sleeptest","com.flyaudio.proxyservice","com.goodocom.gocsdk","cn.flyaudio.assistant","cn.flyaudio.handleservice"
+	        "com.example.sleeptest","com.flyaudio.proxyservice","com.goodocom.gocsdk","cn.flyaudio.assistant","cn.flyaudio.handleservice",
+		"cn.flyaudio.clientservice","cn.flyaudio.clientservice:pushservice"
     };
 
 

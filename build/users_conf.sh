@@ -48,11 +48,12 @@ case "$USERS_ID" in
 		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/msm8226
 		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8x26-release;;
                 14)
-		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/M8974AAAAANLYD4275;;
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/M8974AAAAANLYD4275
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8x26-release;;
                 15)
 		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/imx6qdl-sabresd;;
                 16)
-		export DBG_SYSTEM_DIR=/home/msm/swlee/20160704/mt3561_flyaudio_01;;
+		export DBG_SYSTEM_DIR=/home/msm/swlee/20160704/mt3561;;
 	esac;;
 	
    	1)

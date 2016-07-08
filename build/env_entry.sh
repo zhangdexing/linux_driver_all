@@ -470,7 +470,7 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_BOOTLOADER_TYPE=LK
         export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
         export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ
-        export UPDATA_BIN_PLATFORM_DIR=$RELEASE_REPOSITORY/others/8974_5.1
+        export UPDATA_BIN_PLATFORM_DIR=$RELEASE_REPOSITORY/others/8974_6.0
         export UPDATA_BIN_DIR=$UPDATA_BIN_PLATFORM_DIR/driver
         export UPDATA_BASESYSTEM_DIR=$UPDATA_BIN_PLATFORM_DIR/basesystem
         export DBG_PASSWORD=git
@@ -479,8 +479,8 @@ case "$DBG_PLATFORM_ID" in
         export OTA_PACKAGE_NAME=msm8974-ota-eng.*.zip
         export DBG_SOC=msm8x26
         export TEST_PACKAGE_PATH=//192.168.128.128/8974/升级包发布/专项测试包
-        export REPOSITORY_WORK_BRANCH=master
-        export SYSTEM_WORK_BRANCH=master
+        export REPOSITORY_WORK_BRANCH=dev-8974-6.0
+        export SYSTEM_WORK_BRANCH=msm8974-6.0
         export MAKE_PAKG_NUM=19
         export NON_HLOS_FILE_PATH=$BP_SOURCE_PATH/common/build/bin/asic
         export RPM_FILE_PATH=$RPM_PATH/ms/bin/AAAAANAAR
