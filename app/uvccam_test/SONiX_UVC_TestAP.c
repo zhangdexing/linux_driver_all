@@ -137,7 +137,7 @@ int isOldFp = 0;
 int isDisableVideoLoop = 0;
 int isToDel = 0;
 int isTranscoding = 0;
-
+int isEmPermit = 0;
 // chris -
 
 struct H264Format *gH264fmt = NULL;
@@ -158,6 +158,7 @@ char Em_Bottom_Sec_String[PROPERTY_VALUE_MAX];
 char Wait_Deq_Str[PROPERTY_VALUE_MAX];
 char isDisableVideoLoop_Str[PROPERTY_VALUE_MAX];
 char isTranscoding_Str[PROPERTY_VALUE_MAX];
+char isEmPermit_Str[PROPERTY_VALUE_MAX];
 
 char startNight[PROPERTY_VALUE_MAX];
 //char startCapture[PROPERTY_VALUE_MAX];
@@ -2393,6 +2394,10 @@ static void get_driver_prop(int camID)
 			property_get("fly.uvccam.coldboot.isRec", isColdBootRec_String, "0");
 			isColdBootRec = atoi(isColdBootRec_String);
 			lidbg("======== isColdBootRec-> %d=======\n",isColdBootRec);
+
+			property_get("persist.uvccam.isEmPermit", isEmPermit_Str, "0");
+			isEmPermit = atoi(isEmPermit_Str);
+			lidbg("======== isEmPermit-> %d=======\n",isEmPermit);
 		}
 
 		property_get("lidbg.uvccam.isDisableVideoLoop", isDisableVideoLoop_Str, "0");
@@ -3600,6 +3605,7 @@ int main(int argc, char *argv[])
 		ioctl(flycam_fd,_IO(FLYCAM_FRONT_REC_IOC_MAGIC, NR_PATH), Rec_Save_Dir);
 		ioctl(flycam_fd,_IO(FLYCAM_FRONT_REC_IOC_MAGIC, NR_ISDUALCAM), isDualCam);
 		ioctl(flycam_fd,_IO(FLYCAM_FRONT_REC_IOC_MAGIC, NR_ISCOLDBOOTREC), isColdBootRec);
+		ioctl(flycam_fd,_IO(FLYCAM_FRONT_REC_IOC_MAGIC, NR_ISEMPERMITTED), isEmPermit);
 		osd_set(DVR_ID);//loop
 		return 0;
 	}

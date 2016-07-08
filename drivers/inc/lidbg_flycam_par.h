@@ -32,6 +32,7 @@ typedef enum {
   NR_CAPTURE_PATH,
   NR_ISDUALCAM,
   NR_ISCOLDBOOTREC,
+  NR_ISEMPERMITTED,
 }cam_ctrl_t;
 
 typedef enum {

@@ -1085,7 +1085,7 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 	//if(isSuspend) mod_timer(&suspend_stoprec_timer,SUSPEND_STOPREC_ONLINE_TIME);
 	if(isDVRFirstInit)
 	{
-		lidbg_shell_cmd("echo 1 > /sys/class/sensors/mc3xxx-accel/enable");
+		lidbg_shell_cmd("echo 1 > /dev/mc3xxx_enable0");
 		pfly_UsbCamInfo->camStatus = lidbg_checkCam();
 		if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX))
 		{
@@ -1655,6 +1655,10 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			case NR_ISCOLDBOOTREC:
 				lidbg("%s:DVR NR_ISCOLDBOOTREC\n",__func__);
 				isColdBootRec= arg;
+		        break;
+			case NR_ISEMPERMITTED:
+				lidbg("%s:DVR NR_ISEMPERMITTED\n",__func__);
+				isEmRecPermitted= arg;
 		        break;
 			case NR_START_REC:
 		        lidbg("%s:DVR NR_START_REC\n",__func__);
@@ -2504,14 +2508,16 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						{
 							lidbg("%s:Emergency event permitted!\n",__func__);
 							isEmRecPermitted = 1;
-							dvrRespond[1] = isEmRecPermitted;
+							dvrRespond[1] = !isEmRecPermitted;
 						}
 						else
 						{
 							lidbg("%s:Emergency event rejected!\n",__func__);
 							isEmRecPermitted = 0;
-							dvrRespond[1] = isEmRecPermitted;
+							dvrRespond[1] = !isEmRecPermitted;
 						}
+						sprintf(temp_cmd, "setprop persist.uvccam.isEmPermit %d", isEmRecPermitted);
+						lidbg_shell_cmd(temp_cmd);
 						length += 2;
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
@@ -2669,6 +2675,14 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						initMsg[length] = CMD_DUAL_CAM;
 						length++;
 						initMsg[length] = isDualCam;
+						length++;
+						/*------msgTAIL------*/
+						initMsg[length] = ';';
+						length++;
+
+						initMsg[length] = CMD_EM_EVENT_SWITCH;
+						length++;
+						initMsg[length] = !isEmRecPermitted;
 						length++;
 						/*------msgTAIL------*/
 						initMsg[length] = ';';
