@@ -62,7 +62,9 @@ int find_earliest_file(char* Dir,char* minRecName);
 #define min(x,y) (((x)<(y))?(x):(y))
 #endif
 
+#ifndef V4L2_PIX_FMT_H264
 #define V4L2_PIX_FMT_H264 v4l2_fourcc('H','2','6','4') /* H264 */
+#endif
 #define V4L2_PIX_FMT_MP2T v4l2_fourcc('M','P','2','T') /* MPEG-2 TS */
 
 #ifndef KERNEL_VERSION
@@ -182,7 +184,7 @@ unsigned int tmp_count = 0;
 char isNormDequeue = 0;
 char isTopDequeue = 0;
 
-int Emergency_Top_Sec = 10,Emergency_Bottom_Sec = 10;
+static unsigned int Emergency_Top_Sec = 10,Emergency_Bottom_Sec = 10;
 
 static unsigned int top_totalFrames ,bottom_totalFrames;
 static unsigned int top_lastFrames ,bottom_lastFrames;
@@ -376,7 +378,7 @@ int dequeue(void* data)
     return ret;
 }
 
-
+#if 0
 bool trans_enqueue(char* dest,char* src)
 {
     trans_q_node *node =
@@ -396,7 +398,7 @@ bool trans_enqueue(char* dest,char* src)
     pthread_mutex_unlock(&trans_lock);
     return true;
 }
-
+#endif
 
 #if 0
 static void pantilt(int dev, char *dir, char *length)
@@ -1474,7 +1476,7 @@ char dvr_blackbox_dest_filename[200] = {0};
 char rear_blackbox_dest_filename[200] = {0};
 char deq_time_buf[100] = {0};
 
-void dequeue_buf(int count , char* rec_fp)
+void dequeue_buf(int count , FILE * rec_fp)
 {
 	FILE *fp1 = NULL;
 	FILE *fp2 = NULL;
@@ -1694,7 +1696,7 @@ void *thread_del_tmp_emfile(void *par)
 		if(filecnt < 0) 
 		{
 			lidbg("======Em_Save_Tmp_Dir access error!======\n");
-			sprintf(tmp_cmd, "mkdir -p %s&",Em_Save_Tmp_Dir,minRecName);
+			sprintf(tmp_cmd, "mkdir -p %s&",Em_Save_Tmp_Dir);
 			system(tmp_cmd);
 			continue;
 		}

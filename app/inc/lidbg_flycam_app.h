@@ -62,7 +62,7 @@ static inline int lidbg_get_hub_uvc_device(int mode,char *devname,int cam_id,int
 	memset(temp_devname,0,sizeof(temp_devname));  
 
 	//fix for attenuation hub.find the deepest one.
-	int back_charcnt = 0,front_charcnt = 0;
+	unsigned int back_charcnt = 0,front_charcnt = 0;
 	pDir=opendir("/sys/bus/usb/drivers/usb/");  
 	while((ent=readdir(pDir))!=NULL)  
 	{  
