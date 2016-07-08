@@ -323,7 +323,8 @@ bool enqueue(void *data,int count)
     pthread_mutex_lock(&alock);
     cam_list_add_tail_node(&node->list, &mhead.list);
     msize++;
-	if( msize % 100 == 0 ) lidbg("[%d]:=====enqueue => %d======\n",cam_id,msize);
+	if((msize >  (Emergency_Top_Sec * 30 *2)) &&  (msize % 100 == 0)) 
+		lidbg("[%d]:=====enqueue => %d======\n",cam_id,msize);
 	//free(tmpData);
     pthread_mutex_unlock(&alock);
     return true;
@@ -1492,7 +1493,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 	//system("setprop lidbg.uvccam.isdequeue 1");
 	property_set("lidbg.uvccam.isdequeue", "1");
 	
-	lidbg("=====dequeue_buf===count => %d==\n",count);
+	ALOGE("=====dequeue_buf===count => %d==\n",count);
 	if(isBlackBoxTopRec)
 	{
 		if(cam_id == DVR_ID)
@@ -5488,6 +5489,7 @@ openfd:
 						if(((oldFrameSize > buf0.bytesused) && ((oldFrameSize - buf0.bytesused) > 50000)) || (buf0.bytesused < 40000))
 						{
 							//lidbg("=====IFRAME set!Throw!======\n");
+							ALOGE("********<%d>=>Frame[%4u] %u bytes %ld.%06ld %ld.%06ld*******\n ",cam_id, i, buf0.bytesused, buf0.timestamp.tv_sec, buf0.timestamp.tv_usec, ts.tv_sec, ts.tv_usec);
 							isBrokenIFrame = 1;
 							XU_H264_Set_IFRAME(dev);
 						}
