@@ -138,6 +138,7 @@ int isDisableVideoLoop = 0;
 int isToDel = 0;
 int isTranscoding = 0;
 int isEmPermit = 0;
+int isBrokenIFrame = 0;
 // chris -
 
 struct H264Format *gH264fmt = NULL;
@@ -169,6 +170,7 @@ unsigned int originRecsec = 0;
 unsigned int oldRecsec = 1;
 int isIframe = 0;
 
+unsigned int oldFrameSize = 0;
 
 int cam_id = -1;
 
@@ -526,11 +528,13 @@ static int video_set_format(int dev, unsigned int w, unsigned int h, unsigned in
 		lidbg("%s: select 720P!\n",__func__);
 		w = 1280;
 		h = 720;
+		/*
 		if(cam_id == REARVIEW_ID)
 		{
 			w = 640;
 			h = 360;
 		}
+		*/
 	}
 	else if(!strncmp(Res_String, "1920x1080", 9) || !strncmp(Res_String, "1920*1080", 9))
 	{
@@ -4615,7 +4619,7 @@ openfd:
 		}
 		else if(cam_id == REARVIEW_ID)
 		{
-			if(XU_H264_Set_BitRate(dev, 4000000) < 0 )
+			if(XU_H264_Set_BitRate(dev, 12000000) < 0 )
 				lidbg( "XU_H264_Set_BitRate Failed\n");
 		}
 		XU_H264_Get_BitRate(dev, &m_BitRate);
@@ -5461,9 +5465,6 @@ openfd:
 						iFrameData = malloc(iframe_length);  
 						memcpy(iFrameData, mem0[buf0.index], iframe_length);
 					}
-					
-					if(msize <=  (Emergency_Top_Sec * 30 *2) + 1000)
-						enqueue(mem0[buf0.index], buf0.bytesused);
 
 #if 0
 					unsigned char a = 0;
@@ -5478,6 +5479,31 @@ openfd:
 					if(tmp_val == 0x65)
 						lidbg("=====****IFRAME detect!!***%dBytes======\n",buf0.bytesused);
 #endif
+					tmp_val = *(unsigned char*)(mem0[buf0.index] + 26);
+					if(tmp_val == 0x65) 
+					{
+						//lidbg("********<%d>=>Frame[%4u] %u bytes %ld.%06ld %ld.%06ld*******\n ",cam_id, i, buf0.bytesused, buf0.timestamp.tv_sec, buf0.timestamp.tv_usec, ts.tv_sec, ts.tv_usec);
+						if(((oldFrameSize > buf0.bytesused) && ((oldFrameSize - buf0.bytesused) > 50000)) || (buf0.bytesused < 40000))
+						{
+							//lidbg("=====IFRAME set!Throw!======\n");
+							isBrokenIFrame = 1;
+							XU_H264_Set_IFRAME(dev);
+						}
+						else
+						{
+							isBrokenIFrame = 0;
+							if(msize <=  (Emergency_Top_Sec * 30 *2) + 1000)
+								enqueue(mem0[buf0.index], buf0.bytesused);
+						}
+						oldFrameSize = buf0.bytesused;
+					}
+					else if(!isBrokenIFrame)
+					{
+						if(msize <=  (Emergency_Top_Sec * 30 *2) + 1000)
+							enqueue(mem0[buf0.index], buf0.bytesused);
+					}
+					//else lidbg("=====other throw!======\n");
+						
 					
 					if(isBlackBoxBottomRec && (msize > (Emergency_Bottom_Sec*30)) && (isBlackBoxTopRec == 0))
 					{
