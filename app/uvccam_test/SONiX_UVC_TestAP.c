@@ -5152,12 +5152,12 @@ openfd:
 										      //return (-1);
 									    }
 										//lidbg("%s -> size = %d , ent->d_reclen = %ld/n",ent->d_name,buf.st_size,ent->d_reclen); 
-										totalSize += buf.st_size;
+										totalSize += buf.st_size/1000000;
 									}
 						 	 }
 						}
 						if(((totalSize/1000000)%50) == 0) lidbg("total file size = %dMB\n",totalSize/1000000); 
-						if((totalSize/1000000) >= Rec_File_Size)	
+						if((totalSize) >= Rec_File_Size)	
 						{
 							isExceed = 1;
 							send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_EXCEED_UPPER_LIMIT);
@@ -5486,7 +5486,7 @@ openfd:
 					if(tmp_val == 0x65) 
 					{
 						//lidbg("********<%d>=>Frame[%4u] %u bytes %ld.%06ld %ld.%06ld*******\n ",cam_id, i, buf0.bytesused, buf0.timestamp.tv_sec, buf0.timestamp.tv_usec, ts.tv_sec, ts.tv_usec);
-						if(((oldFrameSize > buf0.bytesused) && ((oldFrameSize - buf0.bytesused) > 50000)) || (buf0.bytesused < 40000))
+						if(((oldFrameSize > buf0.bytesused) && ((oldFrameSize - buf0.bytesused) > 50000)) || (buf0.bytesused < 50000))
 						{
 							//lidbg("=====IFRAME set!Throw!======\n");
 							ALOGE("********<%d>=>Frame[%4u] %u bytes %ld.%06ld %ld.%06ld*******\n ",cam_id, i, buf0.bytesused, buf0.timestamp.tv_sec, buf0.timestamp.tv_usec, ts.tv_sec, ts.tv_usec);
