@@ -313,7 +313,9 @@ static int lidbg_dev_event(struct notifier_block *this,
 	if(g_var.keep_lcd_on) LCD_ON;
         //if(!g_var.is_fly)
     {
+#ifdef SUSPEND_ONLINE
         g_var.usb_status = 0;
+#endif
         if((g_var.led_hal_status & g_var.led_app_status)/*&&(g_var.fb_on == 1)*/&&(g_var.flyaudio_reboot==0))
         {
         		lidbg("LCD_ON3\n");

@@ -316,10 +316,8 @@ static struct platform_driver lidbg_powerkey_driver =
 
 static int __init lidbg_powerkey_init(void)
 {
-    DUMP_FUN;
-#ifdef SUSPEND_ONLINE
     return 0;
-#endif
+    DUMP_FUN;
     LIDBG_GET;
     platform_device_register(&lidbg_powerkey);
     platform_driver_register(&lidbg_powerkey_driver);
