@@ -531,6 +531,24 @@ void usb_enumerate_monitor(char *key_word, void *data)
 #endif
 }
 
+
+void sd_error_monitor(char *key_word, void *data)
+{
+    static int sd_error_monitor_limit = 7;
+
+    DUMP_FUN;
+    lidbg("find key word.in\n");
+    if( sd_error_monitor_limit <= 0)
+    {
+        lidbg("find key word.return %d\n", sd_error_monitor_limit);
+        return;
+    }
+    lidbg_shell_cmd("mount -o remount /mnt/media_rw/sdcard1");
+    sd_error_monitor_limit--;
+    
+}
+
+
 int thread_udisk_stability_test(void *data)
 {
     u32 cnt = 0;
@@ -612,6 +630,7 @@ static int soc_dev_probe(struct platform_device *pdev)
     lidbg_new_cdev(&dev_fops, "flydev");
 
     lidbg_trace_msg_cb_register("unable to enumerate USB device", NULL, usb_enumerate_monitor);
+    lidbg_trace_msg_cb_register("clusters badly computed", NULL, sd_error_monitor);
 
     FS_REGISTER_INT(udisk_stability_test, "udisk_stability_test", 0, NULL);
 
