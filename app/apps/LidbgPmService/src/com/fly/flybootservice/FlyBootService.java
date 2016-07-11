@@ -211,6 +211,7 @@ public class FlyBootService extends Service {
 		case 10:	//msm8226 Android_5.1.1
 		case 12:	//msm8226 Android_4.4.4
 		case 13:	//A80 Android_4.4
+		case 14:	//G9 Android_6.0
 			blSuspendUnairplaneFlag = false;
 			break;
 		default:

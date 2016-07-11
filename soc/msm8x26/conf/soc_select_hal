@@ -10,8 +10,6 @@ export CONFIG_HAL_USB_CAMERA=y
     case $DBG_PLATFORM_ID in
     2)
         export CONFIG_APP_LIDBGPMSERVICE=n;;
-    14)
-	export CONFIG_APP_LIDBGPMSERVICE=n;;
     *)
         export CONFIG_APP_LIDBGPMSERVICE=y;;
     esac
