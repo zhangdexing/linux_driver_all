@@ -5486,7 +5486,7 @@ openfd:
 					if(tmp_val == 0x65) 
 					{
 						//lidbg("********<%d>=>Frame[%4u] %u bytes %ld.%06ld %ld.%06ld*******\n ",cam_id, i, buf0.bytesused, buf0.timestamp.tv_sec, buf0.timestamp.tv_usec, ts.tv_sec, ts.tv_usec);
-						if(((oldFrameSize > buf0.bytesused) && ((oldFrameSize - buf0.bytesused) > 50000)) || (buf0.bytesused < 50000))
+						if(((oldFrameSize > buf0.bytesused) && ((oldFrameSize - buf0.bytesused) > 70000)) || (buf0.bytesused < 45000))
 						{
 							//lidbg("=====IFRAME set!Throw!======\n");
 							ALOGE("********<%d>=>Frame[%4u] %u bytes %ld.%06ld %ld.%06ld*******\n ",cam_id, i, buf0.bytesused, buf0.timestamp.tv_sec, buf0.timestamp.tv_usec, ts.tv_sec, ts.tv_usec);
