@@ -77,6 +77,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_C_INCLUDES := $(common_c_includes)
 LOCAL_CFLAGS := $(vold_cflags)
+include $(DBG_BUILD_PATH)/build_cfg.mk
 LOCAL_CONLYFLAGS := $(vold_conlyflags)
 
 ifeq ($(TARGET_HW_DISK_ENCRYPTION),true)
