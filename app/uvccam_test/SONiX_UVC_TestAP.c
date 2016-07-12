@@ -536,14 +536,12 @@ static int video_set_format(int dev, unsigned int w, unsigned int h, unsigned in
 	{
 		lidbg("%s: select 720P!\n",__func__);
 		w = 1280;
-		h = 720;
-		/*
+		h = 720;		
 		if(cam_id == REARVIEW_ID)
 		{
 			w = 640;
 			h = 360;
-		}
-		*/
+		}		
 	}
 	else if(!strncmp(Res_String, "1920x1080", 9) || !strncmp(Res_String, "1920*1080", 9))
 	{
@@ -4686,7 +4684,7 @@ openfd:
 		}
 		else if(cam_id == REARVIEW_ID)
 		{
-			if(XU_H264_Set_BitRate(dev, 6000000) < 0 )
+			if(XU_H264_Set_BitRate(dev, 4000000) < 0 )
 				lidbg( "XU_H264_Set_BitRate Failed\n");
 			iframe_diff_val = 35000;
 			iframe_threshold_val = 22500;
@@ -5677,9 +5675,10 @@ openfd:
 							enqueue(mem0[buf0.index], buf0.bytesused);
 					}
 					//else lidbg("=====other throw!======\n");
-#endif					
+#else
 					if(msize <=  (Emergency_Top_Sec * 30 *2) + 1000)
 							enqueue(mem0[buf0.index], buf0.bytesused);
+#endif
 						
 					
 					if(isBlackBoxBottomRec && (msize > (Emergency_Bottom_Sec*30)) && (isBlackBoxTopRec == 0))
