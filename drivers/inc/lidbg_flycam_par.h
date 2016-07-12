@@ -33,6 +33,7 @@ typedef enum {
   NR_ISDUALCAM,
   NR_ISCOLDBOOTREC,
   NR_ISEMPERMITTED,
+  NR_ISVIDEOLOOP,
 }cam_ctrl_t;
 
 typedef enum {

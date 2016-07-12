@@ -136,7 +136,9 @@ int isBlackBoxBottomRec = 0;
 int isBlackBoxTopWaitDequeue = 0;
 int isDequeue = 0;
 int isOldFp = 0;
-int isDisableVideoLoop = 0;
+int isVideoLoop = 0;
+int oldisVideoLoop = 0;
+int isThinkNavi = 0;
 int isToDel = 0;
 int isTranscoding = 0;
 int isEmPermit = 0;
@@ -159,7 +161,7 @@ char isBlackBoxRec[PROPERTY_VALUE_MAX];
 char Em_Top_Sec_String[PROPERTY_VALUE_MAX];
 char Em_Bottom_Sec_String[PROPERTY_VALUE_MAX];
 char Wait_Deq_Str[PROPERTY_VALUE_MAX];
-char isDisableVideoLoop_Str[PROPERTY_VALUE_MAX];
+char isVideoLoop_Str[PROPERTY_VALUE_MAX];
 char isTranscoding_Str[PROPERTY_VALUE_MAX];
 char isEmPermit_Str[PROPERTY_VALUE_MAX];
 
@@ -193,6 +195,8 @@ void *iFrameData;
 int iframe_length;
 
 static int iframe_diff_val,iframe_threshold_val;
+struct v4l2_buffer buf0;
+struct v4l2_buffer buf1;
 
 //lidbg("CAMID[%d] :",cam_id);
 #define camdbg(msg...) do{\
@@ -1554,7 +1558,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 			tmp_val = *(unsigned char*)(tempa + 26);
 			if(tmp_val == 0x65) isBeginTopDeq = 1;
 		}
-		if(isDisableVideoLoop <= 0)
+		if(isVideoLoop > 0 && rec_fp != NULL)
 			fwrite(tempa, lengtha, 1, rec_fp);//write data to the output file
 		if(isBlackBoxTopRec) 
 		{
@@ -2185,11 +2189,19 @@ static void switch_scan(void)
 	{
 		property_get("lidbg.uvccam.dvr.recording", startRecording, "0");
 		property_get("lidbg.uvccam.dvr.blackbox", isBlackBoxRec, "0");
+
+		property_get("persist.uvccam.isDVRVideoLoop", isVideoLoop_Str, "0");
+		isVideoLoop = atoi(isVideoLoop_Str);
+		//lidbg("======== isDVRVideoLoop-> %d=======\n",isVideoLoop);
 	}
 	else if(cam_id == REARVIEW_ID)
 	{
 		property_get("lidbg.uvccam.rearview.recording", startRecording, "0");
 		property_get("lidbg.uvccam.rear.blackbox", isBlackBoxRec, "0");
+
+		property_get("persist.uvccam.isRearVideoLoop", isVideoLoop_Str, "0");
+		isVideoLoop = atoi(isVideoLoop_Str);
+		//lidbg("======== isRearVideoLoop-> %d=======\n",isVideoLoop);
 	}
 	property_get("persist.uvccam.empath", Em_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
 	sprintf(Em_Save_Tmp_Dir, "%s/.tmp/", Em_Save_Dir);//Em_Save_Tmp_Dir
@@ -2197,7 +2209,7 @@ static void switch_scan(void)
 	property_get("persist.uvccam.bottom.emtime", Em_Bottom_Sec_String, "10");
 	Emergency_Top_Sec = atoi(Em_Top_Sec_String);
 	Emergency_Bottom_Sec = atoi(Em_Bottom_Sec_String);
-
+	
 	//if(isToDel)
 	//{
 #if 0	
@@ -2409,9 +2421,24 @@ static void get_driver_prop(int camID)
 			lidbg("======== isEmPermit-> %d=======\n",isEmPermit);
 		}
 
+		if(camID == DVR_ID)
+		{
+			property_get("persist.uvccam.isDVRVideoLoop", isVideoLoop_Str, "0");
+			isVideoLoop = atoi(isVideoLoop_Str);
+			lidbg("======== isDVRVideoLoop-> %d=======\n",isVideoLoop);
+		}
+		else if(camID == REARVIEW_ID)
+		{
+			property_get("persist.uvccam.isRearVideoLoop", isVideoLoop_Str, "0");
+			isVideoLoop = atoi(isVideoLoop_Str);
+			lidbg("======== isRearVideoLoop-> %d=======\n",isVideoLoop);
+		}
+		
+#if 0
 		property_get("lidbg.uvccam.isDisableVideoLoop", isDisableVideoLoop_Str, "0");
 		isDisableVideoLoop = atoi(isDisableVideoLoop_Str);
 		lidbg("======== isDisableVideoLoop-> %d=======\n",isDisableVideoLoop);
+#endif
 
 		/*
 		char i = 10;
@@ -2490,9 +2517,10 @@ int main(int argc, char *argv[])
 	FILE *rec_fp3 = NULL;
 	FILE *rec_fp4 = NULL;
 	double fps;
-
+/*
 	struct v4l2_buffer buf0;
 	struct v4l2_buffer buf1;
+*/
 	unsigned int i;
 
 	char do_record 			= 0;	
@@ -3615,6 +3643,7 @@ int main(int argc, char *argv[])
 		ioctl(flycam_fd,_IO(FLYCAM_FRONT_REC_IOC_MAGIC, NR_ISDUALCAM), isDualCam);
 		ioctl(flycam_fd,_IO(FLYCAM_FRONT_REC_IOC_MAGIC, NR_ISCOLDBOOTREC), isColdBootRec);
 		ioctl(flycam_fd,_IO(FLYCAM_FRONT_REC_IOC_MAGIC, NR_ISEMPERMITTED), isEmPermit);
+		ioctl(flycam_fd,_IO(FLYCAM_FRONT_REC_IOC_MAGIC, NR_ISVIDEOLOOP), isVideoLoop);
 		osd_set(DVR_ID);//loop
 		return 0;
 	}
@@ -3625,6 +3654,7 @@ int main(int argc, char *argv[])
 		ioctl(flycam_fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_TIME), Rec_Sec);
 		ioctl(flycam_fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_TOTALSIZE), Rec_File_Size);
 		ioctl(flycam_fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_PATH), Rec_Save_Dir);
+		ioctl(flycam_fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_ISVIDEOLOOP), isVideoLoop);
 		osd_set(REARVIEW_ID);//loop
 		return 0;
 	}
@@ -5002,8 +5032,18 @@ openfd:
 				close(fake_dev);
 			return 1;
 		}
+
+		if(oldisVideoLoop <= 0 && isVideoLoop > 0)
+		{
+			lidbg("======== create new file!=======\n");
+			originRecsec = buf0.timestamp.tv_sec;
+			oldRecsec = 1;
+		}
+		oldisVideoLoop = isVideoLoop;
+		
 		if(i == 0) originRecsec = buf0.timestamp.tv_sec;
 		gettimeofday(&ts, NULL);
+
 
 // cjc +
 		if(multi_stream_enable)
@@ -5274,6 +5314,7 @@ openfd:
 					}
 				}
 
+				//lidbg("****buf0:%d,originRecsec:%d,oldRecsec:%d***\n",buf0.timestamp.tv_sec,originRecsec,oldRecsec);
 				/*
 					preview :
 					not going to change file name.(tmpX.h264)
@@ -5459,7 +5500,7 @@ openfd:
 							sprintf(flyh264_filename, "%sR%s.h264", Rec_Save_Dir, time_buf);
 						
 						lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);		
-						if(isDisableVideoLoop <= 0)
+						if(isVideoLoop > 0)
 						{
 							rec_fp1 = fopen(flyh264_filename, "wb");
 							//if(i > 0) fwrite(iFrameData, iframe_length , 1, rec_fp1);

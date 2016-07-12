@@ -106,7 +106,7 @@ char tm_cmd[100] = {0};
 static int dvr_osd_fail_times,rear_osd_fail_times;
 static char isDVROSDFail,isRearOSDFail;
 
-static int isDisableVideoLoop,isPrevYUV,isEmRecPermitted = 1;
+static int isDVRVideoLoop = 1,isRearVideoLoop = 1,isPrevYUV = 0,isEmRecPermitted = 1,isThinkNavi;
 
 
 #if 0
@@ -179,7 +179,10 @@ static void status_fifo_in(unsigned char status)
 		isOnlineRec = 0;
 	}
 	else if(status == RET_REAR_DISCONNECT || status == RET_REAR_INIT_INSUFFICIENT_SPACE_STOP)
+	{
 		isRearRec = 0;
+		isRearVideoLoop = 0;
+	}
 	lidbg("%s:====fifo in => %d====\n",__func__,status);
 	down(&pfly_UsbCamInfo->sem);
 	//if(kfifo_is_full(&camStatus_data_fifo));
@@ -273,6 +276,7 @@ static int lidbg_flycam_event(struct notifier_block *this,
 			isRearACCRec = isRearRec;
 			if(isDVRRec) dvr_stop_recording();
 			if(isRearRec) rear_stop_recording();
+
 			break;
 		case NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD):
 			lidbg("flycam event:emergency recording %ld\n", event);
@@ -362,6 +366,7 @@ static int thread_stop_rec_func(void *data)
 		}
 		lidbg_shell_cmd("echo 'udisk_unrequest' > /dev/flydev0");
 		isDVRRec = 0;
+		isDVRVideoLoop = 0;
 		isOnlineRec = 0;
 		isRearRec = 0;
 	}
@@ -371,6 +376,7 @@ static int thread_stop_rec_func(void *data)
 /*can not block in ISR function*/
 static int thread_set_par_func(void *data)
 {
+	char temp_cmd[256];	
 	while(1)
 	{
 		wait_for_completion(&set_par_wait);
@@ -396,14 +402,35 @@ static int thread_set_par_func(void *data)
 			else
 			{
 				lidbg("%s:Singal => stop Rear recording\n",__func__);
-				rear_stop_recording();
+				//rear_stop_recording();
 			}
 		}
 		else if(isDualCam && ((pfly_UsbCamInfo->camStatus >> 4)  & FLY_CAM_ISSONIX) && isDVRRec)
 		{
 			lidbg("%s:Dual => start Rear recording\n",__func__);
-			rear_start_recording();
+			//rear_start_recording();
+			stop_rec(REARVIEW_ID,1);
+			msleep(800);
+			start_rec(REARVIEW_ID,1);
 		}
+
+		if(isDualCam)
+		{
+			if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID)	isDVRVideoLoop = 1;
+			else	isDVRVideoLoop = 0;
+			if((pfly_UsbCamInfo->camStatus >> 4) & FLY_CAM_ISVALID)	isRearVideoLoop = 1;
+			else	isRearVideoLoop = 0;
+		}
+		else
+		{
+			if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID)	isDVRVideoLoop = 1;
+			else	isDVRVideoLoop = 0;
+			isRearVideoLoop = 0;
+		}
+		sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", isDVRVideoLoop);
+		lidbg_shell_cmd(temp_cmd);
+		sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
+		lidbg_shell_cmd(temp_cmd);
 	}
 	return 0;
 }
@@ -1188,6 +1215,7 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 static void work_RearView_fixScreenBlurred(struct work_struct *work)
 {
 	char ret = -1;
+	char temp_cmd[256];	
 	lidbg("%s:====E====\n",__func__);
 	if(isRearViewFirstInit)
 	{
@@ -1250,13 +1278,17 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 	    }
 		if(ret != 3)
 		{
+			rear_start_recording();
 			/*for HYUNDAI*/
-			if(isDisableVideoLoop > 0)
+			if(isThinkNavi)
 			{
 				if( !isRearRec)
 				{
 					lidbg("%s:==AUTO start==\n",__func__);
-					rear_start_recording();
+					//rear_start_recording();
+					isRearVideoLoop = 0;
+					sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
+					lidbg_shell_cmd(temp_cmd);
 				}
 			}
 			else
@@ -1264,14 +1296,23 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 				if( isDualCam && !isRearRec)
 				{
 					lidbg("%s:==AUTO start==\n",__func__);
-					rear_start_recording();
+					//rear_start_recording();
+					isRearVideoLoop = 1;
+					sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
+					lidbg_shell_cmd(temp_cmd);
 				}
 			}
 		}
 	}
-	else if(isRearPlugRec && isDualCam && !isOnlineRec)
+	else if(isRearPlugRec && !isOnlineRec)
 	{
 		rear_start_recording();
+		if(isDualCam)
+		{
+			isRearVideoLoop = 1;
+			sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
+			lidbg_shell_cmd(temp_cmd);
+		}
 	}
 	
 	isRearViewFirstInit = 0;
@@ -1667,6 +1708,10 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				lidbg("%s:DVR NR_ISEMPERMITTED\n",__func__);
 				isEmRecPermitted= arg;
 		        break;
+			case NR_ISVIDEOLOOP:
+				lidbg("%s:DVR NR_ISVIDEOLOOP %ld\n",__func__,arg);
+				isDVRVideoLoop= arg;
+				break;
 			case NR_START_REC:
 		        lidbg("%s:DVR NR_START_REC\n",__func__);
 				setDVRProp(DVR_ID);
@@ -1980,6 +2025,10 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				lidbg("%s:Rear NR_REC_TOTALSIZE = [%ld]\n",__func__,arg);
 				r_rec_totalsize= arg;
 		        break;
+			case NR_ISVIDEOLOOP:
+				lidbg("%s:Rear NR_ISVIDEOLOOP %ld\n",__func__,arg);
+				isRearVideoLoop= arg;
+				break;
 			case NR_START_REC:
 		        lidbg("%s:Rear NR_START_REC\n",__func__);
 				setDVRProp(REARVIEW_ID);
@@ -2249,18 +2298,32 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				{
 					case CMD_RECORD:
 						isUIStartRec = ((char*)arg)[1];
-						if(isDualCam)
+						if(isUIStartRec == 1)
 						{
-							if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID) dvrRespond[3] = 1;
-							else dvrRespond[3] = 0;
-							if((pfly_UsbCamInfo->camStatus >> 4) & FLY_CAM_ISVALID) rearRespond[3] = 1;
-							else rearRespond[3] = 0;
+							if(isDualCam)
+							{
+								if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID)	isDVRVideoLoop = 1;
+								else	isDVRVideoLoop = 0;
+								if((pfly_UsbCamInfo->camStatus >> 4) & FLY_CAM_ISVALID)	isRearVideoLoop = 1;
+								else	isRearVideoLoop = 0;
+								dvrRespond[3] = isDVRVideoLoop;
+								rearRespond[3] = isRearVideoLoop;
+							}
+							else
+							{
+								if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID)	isDVRVideoLoop = 1;
+								else	isDVRVideoLoop = 0;
+								isRearVideoLoop = 0;
+								dvrRespond[3] = isDVRVideoLoop;
+								rearRespond[3] = isRearVideoLoop;
+							}
 						}
-						else
+						else if(isUIStartRec == 0)
 						{
-							if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID) dvrRespond[3] = 1;
-							else dvrRespond[3] = 0;
-							rearRespond[3] = 0;
+							isDVRVideoLoop = 0;
+							isRearVideoLoop = 0;
+							dvrRespond[3] = isDVRVideoLoop;
+							rearRespond[3] = isRearVideoLoop;
 						}
 						//dvrRespond[3] = isDVRRec;
 						//rearRespond[3] = isRearRec;
@@ -2272,7 +2335,11 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						{
 							lidbg("%s:copy_to_user ERR\n",__func__);
 						}
-						mod_timer(&ui_start_rec_timer,UI_REC_WAIT_TIME);
+						sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", isDVRVideoLoop);
+						lidbg_shell_cmd(temp_cmd);
+						sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
+						lidbg_shell_cmd(temp_cmd);
+						//mod_timer(&ui_start_rec_timer,UI_REC_WAIT_TIME);
 						break;
 
 					case CMD_CAPTURE:
@@ -2346,8 +2413,8 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						length++;
 						dvrRespond[0] = CMD_RECORD;
 						rearRespond[0] = CMD_RECORD;
-						dvrRespond[3] = isDVRRec;
-						rearRespond[3] = isRearRec;
+						dvrRespond[3] = isDVRVideoLoop;
+						rearRespond[3] = isRearVideoLoop;
 						
 						memcpy(initMsg + length,dvrRespond,4);
 						length += 4;
@@ -2576,8 +2643,8 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						length++;
 						dvrRespond[0] = CMD_RECORD;
 						rearRespond[0] = CMD_RECORD;
-						dvrRespond[3] = isDVRRec;
-						rearRespond[3] = isRearRec;
+						dvrRespond[3] = isDVRVideoLoop;
+						rearRespond[3] = isRearVideoLoop;
 						
 						memcpy(initMsg + length,dvrRespond,4);
 						length += 4;
@@ -3523,18 +3590,25 @@ int thread_flycam_init(void *data)
 		CREATE_KTHREAD(thread_start_rear_rec_func, NULL);
 		register_lidbg_notifier(&lidbg_notifier);/*ACCON/OFF notifier*/
 
-		isDisableVideoLoop = fs_find_string(g_var.pflyhal_config_list, "DisableVideoLoop");
-		lidbg("%s:====isDisableVideoLoop:%d====\n",__func__,isDisableVideoLoop);
-		sprintf(temp_cmd, "setprop lidbg.uvccam.isDisableVideoLoop %d", isDisableVideoLoop);
+		lidbg_shell_cmd("setprop fly.uvccam.coldboot.isRec 1");
+
+		if(fs_find_string(g_var.pflyhal_config_list, "DisableVideoLoop") > 0)
+		{
+			isDVRVideoLoop = 0;
+			isRearVideoLoop = 0;
+			isEmRecPermitted = 1;
+			isThinkNavi = 1;
+		}
+		lidbg("%s:====isDVRVideoLoop:%d====\n",__func__,isDVRVideoLoop);
+		sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", isDVRVideoLoop);
+		lidbg_shell_cmd(temp_cmd);
+		sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
 		lidbg_shell_cmd(temp_cmd);
 
-		if(isDisableVideoLoop > 0)
+		if(fs_find_string(g_var.pflyhal_config_list, "YUV") > 0)
 		{
-			lidbg_shell_cmd("setprop fly.uvccam.coldboot.isRec 1");
-			isEmRecPermitted = 1;
+			isPrevYUV = 1;
 		}
-
-		isPrevYUV = fs_find_string(g_var.pflyhal_config_list, "YUV");
 		lidbg("%s:====isPrevYUV:%d====\n",__func__,isPrevYUV);
 		sprintf(temp_cmd, "setprop lidbg.uvccam.isPrevYUV %d", isPrevYUV);
 		lidbg_shell_cmd(temp_cmd);
