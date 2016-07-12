@@ -2470,6 +2470,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						//{
 							if(!strncmp(f_rec_path, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)))
 							{
+								/*
 								if(isDVRRec)
 								{
 									isBeforeFormatDVRRec = 1;
@@ -2480,6 +2481,10 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 									isBeforeFormatRearRec = 1;
 									rear_stop_recording();
 								}
+								*/
+								isBeforeFormatDVRRec = isDVRRec;
+								isUIStartRec = 0;
+								complete(&ui_start_rec_wait);
 							}
 							if(((char*)arg)[1] == 1) 
 							{
@@ -3365,11 +3370,18 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			lidbg("formatcomplete = %d\n",formatVal);
 			if(formatVal == 1) status_fifo_in(RET_FORMAT_SUCCESS);
 			else status_fifo_in(RET_FORMAT_FAIL);
-			ssleep(5);
+			ssleep(7);
+			/*
 			if(!isDVRRec && !isOnlineRec&&  isBeforeFormatDVRRec)
 				dvr_start_recording();
 			if(!isRearRec &&  isBeforeFormatRearRec)
 				rear_start_recording();
+			*/
+			if(isBeforeFormatDVRRec)
+			{
+				isUIStartRec = 1;
+				mod_timer(&ui_start_rec_timer,UI_REC_WAIT_TIME);
+			}
 			isBeforeFormatDVRRec = 0;
 			isBeforeFormatRearRec = 0;
 		}
