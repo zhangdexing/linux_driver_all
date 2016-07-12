@@ -192,6 +192,8 @@ static unsigned int top_lastFrames ,bottom_lastFrames;
 void *iFrameData;
 int iframe_length;
 
+static int iframe_diff_val,iframe_threshold_val;
+
 //lidbg("CAMID[%d] :",cam_id);
 #define camdbg(msg...) do{\
 	lidbg(msg);\
@@ -4619,17 +4621,22 @@ openfd:
 		{
 			if(XU_H264_Set_BitRate(dev, 12000000) < 0 )
 				lidbg( "XU_H264_Set_BitRate Failed\n");
+			iframe_diff_val = 70000;
+			iframe_threshold_val = 45000;
 		}
 		else if(cam_id == REARVIEW_ID)
 		{
 			if(XU_H264_Set_BitRate(dev, 6000000) < 0 )
 				lidbg( "XU_H264_Set_BitRate Failed\n");
+			iframe_diff_val = 35000;
+			iframe_threshold_val = 22500;
 		}
 		XU_H264_Get_BitRate(dev, &m_BitRate);
 		if(m_BitRate < 0 )
 			lidbg( "SONiX_UVC_TestAP @main : XU_H264_Get_BitRate Failed\n");
 		lidbg("Current bit rate1: %.2f Kbps\n",m_BitRate);
 	}
+ 
 
 	//XU_H264_Set_GOP(dev, 10);
 	property_set("lidbg.uvccam.isdequeue", "0");
@@ -5504,8 +5511,8 @@ openfd:
 					tmp_val = *(unsigned char*)(mem0[buf0.index] + 26);
 					if(tmp_val == 0x65) 
 					{
-						//lidbg("********<%d>=>Frame[%4u] %u bytes %ld.%06ld %ld.%06ld*******\n ",cam_id, i, buf0.bytesused, buf0.timestamp.tv_sec, buf0.timestamp.tv_usec, ts.tv_sec, ts.tv_usec);
-						if(((oldFrameSize > buf0.bytesused) && ((oldFrameSize - buf0.bytesused) > 70000)) || (buf0.bytesused < 45000))
+						//ALOGE("********<%d>=>Frame[%4u] %u bytes %ld.%06ld %ld.%06ld*******\n ",cam_id, i, buf0.bytesused, buf0.timestamp.tv_sec, buf0.timestamp.tv_usec, ts.tv_sec, ts.tv_usec);
+						if(((oldFrameSize > buf0.bytesused) && ((oldFrameSize - buf0.bytesused) > iframe_diff_val)) || (buf0.bytesused < iframe_threshold_val))
 						{
 							//lidbg("=====IFRAME set!Throw!======\n");
 							ALOGE("********<%d>=>Frame[%4u] %u bytes %ld.%06ld %ld.%06ld*******\n ",cam_id, i, buf0.bytesused, buf0.timestamp.tv_sec, buf0.timestamp.tv_usec, ts.tv_sec, ts.tv_usec);
