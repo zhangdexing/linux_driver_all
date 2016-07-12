@@ -5156,8 +5156,8 @@ openfd:
 									}
 						 	 }
 						}
-						if(((totalSize/1000000)%50) == 0) lidbg("total file size = %dMB\n",totalSize/1000000); 
-						if((totalSize) >= Rec_File_Size)	
+						if((totalSize%50) == 0) lidbg("total file size = %dMB\n",totalSize); 
+						if(totalSize >= Rec_File_Size)	
 						{
 							isExceed = 1;
 							send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_EXCEED_UPPER_LIMIT);
@@ -5398,10 +5398,13 @@ openfd:
 							return 0;
 						}
 						lidbg("====== oldest rec file will be del:%s (%d MB).======\n",minRecName,filebuf.st_size/1000000);
+#if 0						
 						sprintf(tmpCMD , "rm -f %s&",filepath);
 						system(tmpCMD);
-						if(((totalSize - filebuf.st_size) /1000000) > Rec_File_Size)
-							lidbg("rec file exceed!still has %d MB .\n",((totalSize - filebuf.st_size) /1000000));
+#endif				
+						remove(filepath);  
+						if((totalSize - filebuf.st_size/1000000) > Rec_File_Size)
+							lidbg("rec file exceed!still has %d MB .\n",(totalSize - filebuf.st_size/1000000));
 					}
 					else
 					{
