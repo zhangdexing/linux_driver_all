@@ -88,6 +88,7 @@ static int thread_powerkey_func(void *data)
 		switch(atomic_read(&status))
 		{
 			case FLY_SCREEN_OFF:
+				g_var.acc_flag = FLY_ACC_OFF;
 				fs_file_write(DEV_NAME, false, SCREEN_OFF, 0, strlen(SCREEN_OFF));
 				mod_timer(&timer,POWER_SUSPEND_TIME1);
 				break;
@@ -108,6 +109,7 @@ static int thread_powerkey_func(void *data)
 				//mod_timer(&timer,POWERKEY_DELAY_TIME);
 				break;
 			case FLY_ANDROID_UP:
+				g_var.acc_flag = FLY_ACC_ON;
 				fs_file_write(DEV_NAME, false, ANDROID_UP, 0, strlen(ANDROID_UP));
 				mod_timer(&timer,POWERKEY_DELAY_TIME);
 				break;
