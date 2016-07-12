@@ -1286,7 +1286,7 @@ static int __init lidbg_pm_init(void)
     CREATE_KTHREAD(thread_gps_handle, NULL);
 #endif
 	
-    lidbg_shell_cmd("echo 8  > /proc/sys/kernel/printk");
+    //lidbg_shell_cmd("echo 8  > /proc/sys/kernel/printk");
     PM_WARN("mediascan.en.0\n");
     lidbg_shell_cmd("setprop persist.lidbg.mediascan.en 1");
 
