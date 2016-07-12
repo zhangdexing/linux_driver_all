@@ -4622,7 +4622,7 @@ openfd:
 		}
 		else if(cam_id == REARVIEW_ID)
 		{
-			if(XU_H264_Set_BitRate(dev, 12000000) < 0 )
+			if(XU_H264_Set_BitRate(dev, 6000000) < 0 )
 				lidbg( "XU_H264_Set_BitRate Failed\n");
 		}
 		XU_H264_Get_BitRate(dev, &m_BitRate);
