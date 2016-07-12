@@ -5167,7 +5167,7 @@ openfd:
 				}
 				
 				/*reserve for storage*/
-				if((i % 30 == 0) && (cam_id == DVR_ID))
+				if(i % 30 == 0)
 				{
 					if(!strncmp(Rec_Save_Dir, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)) )
 					{
@@ -5181,7 +5181,7 @@ openfd:
 						//lidbg(EMMC_MOUNT_POINT0"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
 						if(!isPreview)
 						{
-							if(mbFreedisk < 300 && !isOldFp)
+							if(mbFreedisk < 300 && !isOldFp && (cam_id == DVR_ID))
 							{
 								lidbg("======DVR:EMMC Free space less than 300MB!![%dMB]======\n",mbFreedisk);
 								if(i == 0)
@@ -5194,6 +5194,14 @@ openfd:
 								}
 								isExceed = 1;
 								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INSUFFICIENT_SPACE_CIRC);
+							}
+							if(mbFreedisk < 10 && i > 300)
+							{
+								lidbg("======Recording Protect![%dMB]======\n",mbFreedisk);
+								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
+								close(dev);
+								close(flycam_fd);
+								return 0;
 							}
 						}
 						else
@@ -5220,7 +5228,7 @@ openfd:
 						//lidbg(EMMC_MOUNT_POINT1"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
 						if(!isPreview)
 						{
-							if(mbFreedisk < 1024 && !isOldFp)
+							if(mbFreedisk < 1024 && !isOldFp && (cam_id == DVR_ID))
 							{
 								lidbg("======DVR: Free space less than 1024MB!![%dMB]======\n",mbFreedisk);
 #if 0								
@@ -5235,6 +5243,14 @@ openfd:
 #endif
 								isExceed = 1;
 								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INSUFFICIENT_SPACE_CIRC);
+							}
+							if(mbFreedisk < 10 && i > 300)
+							{
+								lidbg("======Recording Protect![%dMB]======\n",mbFreedisk);
+								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
+								close(dev);
+								close(flycam_fd);
+								return 0;
 							}
 						}
 						else
