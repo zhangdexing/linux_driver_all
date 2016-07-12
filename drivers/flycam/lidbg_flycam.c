@@ -5,6 +5,7 @@ LIDBG_DEFINE;
 
 static void work_DVR_fixScreenBlurred(struct work_struct *work);
 static void work_RearView_fixScreenBlurred(struct work_struct *work);
+static void work_format_done(struct work_struct *work);
 static int start_rec(char cam_id,char isPowerCtl);
 static int stop_rec(char cam_id,char isPowerCtl);
 static int dvr_start_recording(void);
@@ -41,6 +42,7 @@ struct fly_UsbCamInfo
 struct fly_UsbCamInfo *pfly_UsbCamInfo;
 static DECLARE_DELAYED_WORK(work_t_DVR_fixScreenBlurred, work_DVR_fixScreenBlurred);
 static DECLARE_DELAYED_WORK(work_t_RearView_fixScreenBlurred, work_RearView_fixScreenBlurred);
+static DECLARE_DELAYED_WORK(work_t_format_done, work_format_done);
 static DECLARE_COMPLETION (timer_stop_rec_wait);
 static DECLARE_COMPLETION (Rear_fw_get_wait);
 static DECLARE_COMPLETION (DVR_fw_get_wait);
@@ -1302,6 +1304,11 @@ static void work_stopRec(struct work_struct *work)
 #endif
 
 
+static void work_format_done(struct work_struct *work)
+{
+	lidbg_shell_cmd("echo appcmd *158#097 > /dev/lidbg_drivers_dbg0");
+	return;
+}
 
 /******************************************************************************
  * Function: setDVRProp
@@ -2489,7 +2496,8 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 							if(((char*)arg)[1] == 1) 
 							{
 								lidbg("%s:Begin format sdcard!\n",__func__);
-								lidbg_shell_cmd("echo appcmd *158#097 > /dev/lidbg_drivers_dbg0");
+								//lidbg_shell_cmd("echo appcmd *158#097 > /dev/lidbg_drivers_dbg0");
+								schedule_delayed_work(&work_t_format_done, 3*HZ);
 								dvrRespond[1] = 1;
 							}
 							else
