@@ -1558,13 +1558,18 @@ void dequeue_buf(int count , FILE * rec_fp)
 			tmp_val = *(unsigned char*)(tempa + 26);
 			if(tmp_val == 0x65) isBeginTopDeq = 1;
 		}
-		if(isVideoLoop > 0 && rec_fp != NULL)
-			fwrite(tempa, lengtha, 1, rec_fp);//write data to the output file
+		if(isVideoLoop > 0)
+		{
+			if(rec_fp != NULL) fwrite(tempa, lengtha, 1, rec_fp);//write data to the output file
+		}
 		if(isBlackBoxTopRec) 
 		{
-			if(isBeginTopDeq)	fwrite(tempa, lengtha, 1, fp1);
+			if(isBeginTopDeq && fp1 != NULL) fwrite(tempa, lengtha, 1, fp1);
 		}
-		else if(isBlackBoxBottomRec) fwrite(tempa, lengtha, 1, fp2);
+		else if(isBlackBoxBottomRec)
+		{
+			if(fp2 != NULL) fwrite(tempa, lengtha, 1, fp2);
+		}
 		if(tempa != NULL) free(tempa);
 	}
 	if(fp1 != NULL) fclose(fp1);
@@ -5235,9 +5240,14 @@ openfd:
 								{
 									lidbg("======Init Free space less than 300MB!!Force quit![%dMB]======\n",mbFreedisk);
 									send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
+#if 0									
 									close(dev);
 									close(flycam_fd);
 									return 0;
+#else
+									property_set("persist.uvccam.isDVRVideoLoop", "0");
+									property_set("persist.uvccam.isRearVideoLoop", "0");
+#endif
 								}
 								isExceed = 1;
 								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INSUFFICIENT_SPACE_CIRC);
@@ -5246,9 +5256,14 @@ openfd:
 							{
 								lidbg("======Recording Protect![%dMB]======\n",mbFreedisk);
 								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
+#if 0									
 								close(dev);
 								close(flycam_fd);
 								return 0;
+#else
+								property_set("persist.uvccam.isDVRVideoLoop", "0");
+								property_set("persist.uvccam.isRearVideoLoop", "0");
+#endif
 							}
 						}
 						else
@@ -5295,9 +5310,14 @@ openfd:
 							{
 								lidbg("======Recording Protect![%dMB]======\n",mbFreedisk);
 								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
+#if 0									
 								close(dev);
 								close(flycam_fd);
 								return 0;
+#else
+								property_set("persist.uvccam.isDVRVideoLoop", "0");
+								property_set("persist.uvccam.isRearVideoLoop", "0");
+#endif
 							}
 						}
 						else
@@ -5457,9 +5477,14 @@ openfd:
 							rec_fp1 = fopen(flyh264_filename, "wb");
 #endif
 							send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INSUFFICIENT_SPACE_STOP);
+#if 0									
 							close(dev);
 							close(flycam_fd);
 							return 0;
+#else
+							property_set("persist.uvccam.isDVRVideoLoop", "0");
+							property_set("persist.uvccam.isRearVideoLoop", "0");
+#endif
 						}
 						lidbg("====== oldest rec file will be del:%s (%d MB).======\n",minRecName,filebuf.st_size/1000000);
 #if 0						

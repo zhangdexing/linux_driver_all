@@ -3598,12 +3598,12 @@ int thread_flycam_init(void *data)
 			isRearVideoLoop = 0;
 			isEmRecPermitted = 1;
 			isThinkNavi = 1;
+			sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", isDVRVideoLoop);
+			lidbg_shell_cmd(temp_cmd);
+			sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
+			lidbg_shell_cmd(temp_cmd);
 		}
 		lidbg("%s:====isDVRVideoLoop:%d====\n",__func__,isDVRVideoLoop);
-		sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", isDVRVideoLoop);
-		lidbg_shell_cmd(temp_cmd);
-		sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
-		lidbg_shell_cmd(temp_cmd);
 
 		if(fs_find_string(g_var.pflyhal_config_list, "YUV") > 0)
 		{
