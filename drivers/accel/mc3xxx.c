@@ -2233,7 +2233,7 @@ static void mc3xxx_early_resume(struct early_suspend *handler)
 	hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
 }
 #else
-static int mc3xxx_acc_resume(struct device *dev)
+static int mc3xxx_acc_resume(struct mc3xxx_data *mc_data)
 {
 	if(flydata->enabled == 1)
 	{
@@ -2261,7 +2261,7 @@ static int mc3xxx_acc_resume(struct device *dev)
     return 0;
 }
 
-static int mc3xxx_acc_suspend(struct device *dev)
+static int mc3xxx_acc_suspend(struct mc3xxx_data *mc_data)
 {
 	if(flydata->enabled == 1)
 		SOC_IO_ISR_Disable(ACCEL_INT1);
@@ -2300,7 +2300,7 @@ static int fb_notifier_callback(struct notifier_block *self,
 }
 
 #endif
-/*
+
 #ifdef SUSPEND_ONLINE
 
 static int mc3xxx_event(struct notifier_block *this,
@@ -2330,7 +2330,7 @@ static struct notifier_block lidbg_notifier =
     .notifier_call = mc3xxx_event,
 };
 #endif
-*/
+
 
 //=============================================================================
 static struct miscdevice mc3xxx_device =
@@ -2630,8 +2630,8 @@ static int mc3xxx_probe(struct i2c_client *client,
 	}
 
 #ifdef SUSPEND_ONLINE
-	//data->fb_notif = lidbg_notifier;
-	//register_lidbg_notifier(&data->fb_notif);
+	data->fb_notif = lidbg_notifier;
+	register_lidbg_notifier(&data->fb_notif);
 	if(0)
 #endif
 {
@@ -2715,10 +2715,10 @@ static struct of_device_id mc3xxx_acc_match_table[] = {
 	{ },
 };
 
-static const struct dev_pm_ops mc3xxx_pm_ops = {
+/*static const struct dev_pm_ops mc3xxx_pm_ops = {
 	.suspend	= mc3xxx_acc_suspend,
 	.resume 	= mc3xxx_acc_resume,
-};
+};*/
 
 static struct i2c_driver mc3xxx_driver =
 {
@@ -2728,7 +2728,7 @@ static struct i2c_driver mc3xxx_driver =
                   .owner = THIS_MODULE,
                   .name	 = SENSOR_NAME,
         	    .of_match_table = mc3xxx_acc_match_table,
-        	    .pm = &mc3xxx_pm_ops,
+        	    //.pm = &mc3xxx_pm_ops,
               },
 
     .id_table	  = mc3xxx_id,
