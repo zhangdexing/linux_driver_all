@@ -1502,16 +1502,24 @@ void dequeue_buf(int count , FILE * rec_fp)
 	{
 		if(cam_id == DVR_ID)
 		{
+#if 0
 			sprintf(dvr_blackbox_filename, "%s/F%s.h264", Em_Save_Tmp_Dir, deq_time_buf);
 			sprintf(dvr_blackbox_dest_filename, "%s/F%s.mp4", Em_Save_Dir, deq_time_buf);
+#else
+			sprintf(dvr_blackbox_filename, "%s/F%s.h264", Em_Save_Dir, deq_time_buf);
+#endif
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,dvr_blackbox_filename);
 			fp1 = fopen(dvr_blackbox_filename, "ab+");
 			//fwrite(iFrameData, iframe_length , 1, fp1);
 		}
 		else if(cam_id == REARVIEW_ID)
 		{
+#if 0		
 			sprintf(rear_blackbox_filename, "%s/R%s.h264", Em_Save_Tmp_Dir, deq_time_buf);
 			sprintf(rear_blackbox_dest_filename, "%s/R%s.mp4", Em_Save_Dir, deq_time_buf);
+#else
+			sprintf(rear_blackbox_filename, "%s/R%s.h264", Em_Save_Dir, deq_time_buf);
+#endif
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,rear_blackbox_filename);
 			fp1 = fopen(rear_blackbox_filename, "ab+");
 			//fwrite(iFrameData, iframe_length , 1, fp1);
@@ -1552,9 +1560,13 @@ void dequeue_buf(int count , FILE * rec_fp)
 		//lidbg("=====dequeue2===%d===\n",lengtha);
 		if(!isBeginTopDeq && isBlackBoxTopRec)
 		{
+#if 0		
 			unsigned char tmp_val = 0;
 			tmp_val = *(unsigned char*)(tempa + 26);
 			if(tmp_val == 0x65) isBeginTopDeq = 1;
+#else
+			isBeginTopDeq = 1;
+#endif 
 		}
 		if(isVideoLoop > 0)
 		{
@@ -1572,7 +1584,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 	}
 	if(fp1 != NULL) fclose(fp1);
 	if(fp2 != NULL) fclose(fp2);
-	
+#if 0
 	if(isBlackBoxTopRec == 0 && isBlackBoxBottomRec == 1) 
 	{
 		char tmp_cmd[500] = {0};
@@ -1601,6 +1613,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 			//isToDel = 1;
 		}
 	}
+#endif	
 	if(isBlackBoxTopRec == 0) isBlackBoxBottomRec = 0;
 	isBlackBoxTopRec = 0;
 	//system("setprop lidbg.uvccam.isdequeue 0");
