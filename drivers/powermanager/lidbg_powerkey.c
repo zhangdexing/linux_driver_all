@@ -93,6 +93,7 @@ static int thread_powerkey_func(void *data)
 				mod_timer(&timer,POWER_SUSPEND_TIME1);
 				break;
 			case FLY_DEVICE_DOWN:
+				g_var.acc_flag = FLY_ACC_OFF;
 				fs_file_write(DEV_NAME, false, DEVICES_DOWN, 0, strlen(DEVICES_DOWN));
 				mod_timer(&timer,POWER_SUSPEND_TIME2);
 				break;
@@ -101,6 +102,7 @@ static int thread_powerkey_func(void *data)
 				complete(&request_fastboot_wait);
 				break;
 			case FLY_ANDROID_DOWN:
+				g_var.acc_flag = FLY_ACC_OFF;
 				fs_file_write(DEV_NAME, false, ANDROID_DOWN, 0, strlen(ANDROID_DOWN));
 				mod_timer(&timer,AirplanMode_TIME);
 				break;
@@ -114,10 +116,12 @@ static int thread_powerkey_func(void *data)
 				mod_timer(&timer,POWERKEY_DELAY_TIME);
 				break;
 			case FLY_DEVICE_UP:
+				g_var.acc_flag = FLY_ACC_ON;
 				fs_file_write(DEV_NAME, false, DEVICES_ON, 0, strlen(DEVICES_ON));
 				mod_timer(&timer,POWERKEY_DELAY_TIME);
 				break;
 			case FLY_SCREEN_ON:
+				g_var.acc_flag = FLY_ACC_ON;
 				fs_file_write(DEV_NAME, false, SCREEN_ON, 0, strlen(SCREEN_ON));
 				mod_timer(&timer,POWERKEY_DELAY_TIME);
 				break;
