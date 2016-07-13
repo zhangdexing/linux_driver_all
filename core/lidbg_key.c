@@ -3,15 +3,15 @@
 
 struct input_dev *input = NULL;
 
-typedef unsigned char  KEYCODE_T;
-
-static KEYCODE_T lidbg_keycode[] =
+//typedef unsigned char  KEYCODE_T;
+//key 580   APP_SWITCH
+static int lidbg_keycode[] =
 {
     KEY_MENU,   KEY_HOME,  KEY_BACK,
     KEY_DOWN,   KEY_UP,  KEY_RIGHT, KEY_LEFT,
     KEY_VOLUMEDOWN, KEY_VOLUMEUP, KEY_PAUSE, KEY_MUTE,
     KEY_POWER, KEY_SLEEP, KEY_WAKEUP,
-    KEY_ENTER, KEY_END, KEY_HOMEPAGE
+    KEY_ENTER, KEY_END, KEY_HOMEPAGE,580
 };
 
 void lidbg_key_report(u32 key_value, u32 type)
