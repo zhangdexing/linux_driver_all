@@ -195,7 +195,8 @@ int thread_thermal(void *data)
   temp_offset = 0;
 #endif
     //msleep(1000 * 40); //wait boot_freq_ctrl finish
-    lidbg_shell_cmd("cat /proc/freq_ctrl_stop &");
+    if(g_hw.thermal_ctrl_en == 1)
+    	lidbg_shell_cmd("cat /proc/freq_ctrl_stop &");
 
     cur_temp = soc_temp_get(g_hw.mem_sensor_num);
     lidbg("lidbg freq ctrl start,%d,%d\n", cur_temp, get_scaling_max_freq());

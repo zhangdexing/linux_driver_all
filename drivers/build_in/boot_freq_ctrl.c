@@ -81,6 +81,23 @@ char* get_cpu_status(void)
     return cpu_status;
 }
 
+
+void freq_limit_exit(void)
+{
+    int max_freq;
+    lidbg("freq_limit_exit\n");
+    ctrl_max_freq = cpu_thermal[0].limit_freq;
+    cpufreq_update_policy(0);
+    lidbg_readwrite_file(CPU_MAX_NODE, NULL, cpu_thermal[0].limit_freq_string, strlen(cpu_thermal[0].limit_freq_string));
+    msleep(100);
+    max_freq = get_file_int(FREQ_MAX_NODE);
+    lidbg("max_freq=%d,limit_freq=%d\n", max_freq, cpu_thermal[0].limit_freq);
+    ctrl_en = 0;
+
+}
+
+
+
 static int thread_freq_limit(void *data)
 {
     int count = 0;
@@ -135,7 +152,7 @@ static int thread_freq_limit(void *data)
         if(count >= 20 * 4)
             is_recovery_mode = is_file_exist(RECOVERY_MODE_DIR);
 
-        if((count >= 90 * 4) && (temp < 100))
+        if((count >= 90 * 4) && (temp < 85))
         {
             if(is_recovery_mode == 0)
                 is_recovery_mode = is_file_exist(RECOVERY_MODE_DIR);
@@ -144,23 +161,9 @@ static int thread_freq_limit(void *data)
                 msleep(1000);
                 continue;
             }
-#ifdef PLATFORM_MSM8226
-            //lidbg_readwrite_file(FREQ_MAX_NODE, NULL, "1593600", strlen("1593600"));
-            ctrl_max_freq = 300000;
-            cpufreq_update_policy(0);
-#elif defined(PLATFORM_MSM8974)
 
-            //lidbg_readwrite_file(FREQ_MAX_NODE, NULL, "2265600", strlen("2265600"));
+	    freq_limit_exit();
 
-            if(temp > 100)
-                ctrl_max_freq = 300000;
-            else
-                ctrl_max_freq = 2265600;
-            cpufreq_update_policy(0);
-#endif
-
-            ctrl_en = 0;
-            lidbg("thread_freq_limit stoped\n");
             return 1;
         }
         msleep(250);
@@ -179,7 +182,7 @@ static int  cpufreq_callback(struct notifier_block *nfb,
     switch (event)
     {
     case CPUFREQ_NOTIFY:
-        if((ctrl_max_freq != 0) && (ctrl_en))
+        if((ctrl_max_freq != 0) /*&& (ctrl_en)*/)
         {
             policy->max = ctrl_max_freq;
             policy->min = 300000;
