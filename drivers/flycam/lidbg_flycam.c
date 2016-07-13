@@ -2542,6 +2542,8 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #endif							
 						//else
 						//{
+							sprintf(temp_cmd, "setprop lidbg.uvccam.isFormat %d", 1);
+							lidbg_shell_cmd(temp_cmd);
 							if(!strncmp(f_rec_path, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)))
 							{
 								/*
@@ -3440,6 +3442,7 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 		}
 		else if(!strcmp(keyval[0], "formatcomplete") )
 		{
+			char temp_cmd[256];
 			int formatVal;
 			formatVal = simple_strtoul(keyval[1], 0, 0);
 			lidbg("formatcomplete = %d\n",formatVal);
@@ -3459,6 +3462,8 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			}
 			isBeforeFormatDVRRec = 0;
 			isBeforeFormatRearRec = 0;
+			sprintf(temp_cmd, "setprop lidbg.uvccam.isFormat %d", 0);
+			lidbg_shell_cmd(temp_cmd);
 		}
 #if 0
 		else if(!strcmp(keyval[0], "test") )

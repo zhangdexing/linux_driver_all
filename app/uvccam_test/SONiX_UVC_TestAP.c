@@ -1707,12 +1707,21 @@ void *thread_del_tmp_emfile(void *par)
 	int filecnt = 0;
 	char minRecPath[200] = {0};
 	char tmp_cmd[300] = {0};
+	char isFormat_str[PROPERTY_VALUE_MAX];
+	int isFormat = 0;
 	while(1)
 	{
 		sleep(10);
 		filecnt = find_earliest_file(Em_Save_Tmp_Dir,minRecName);
 		if(filecnt < 0) 
 		{
+			property_get("lidbg.uvccam.isFormat", isFormat_str, "0");
+			isFormat = atoi(isFormat_str);
+			if(isFormat)
+			{
+				lidbg("======Fomat process!Stop making dir!======\n");
+				continue;
+			}
 			lidbg("======Em_Save_Tmp_Dir access error!======\n");
 			sprintf(tmp_cmd, "mkdir -p %s&",Em_Save_Tmp_Dir);
 			system(tmp_cmd);
