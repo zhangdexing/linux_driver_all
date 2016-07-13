@@ -1,0 +1,30 @@
+
+################hal select####################
+export CONFIG_HAL_USERVER=y
+export CONFIG_HAL_LOAD=y
+export CONFIG_HAL_ANDROID_SERVER=y
+export CONFIG_HAL_GPSLIB=y
+export CONFIG_HAL_USB_CAMERA=y
+
+
+    case $DBG_PLATFORM_ID in
+    2)
+        export CONFIG_APP_LIDBGPMSERVICE=n;;
+    *)
+        export CONFIG_APP_LIDBGPMSERVICE=y;;
+    esac
+
+    case $DBG_PLATFORM_ID in
+    2)
+        export CONFIG_HAL_VOLD_8x26=y;;
+    3)
+        export CONFIG_HAL_VOLD_8x26=y;;
+    4)
+        export CONFIG_HAL_VOLD_8x26=y;;
+   14)
+        export CONFIG_HAL_VOLD_8x26_6_0=y
+	export CONFIG_HAL_BOOTANIMATION_6=y;;
+    *)
+        export CONFIG_HAL_VOLD_8x26_5_0=y;;
+    esac
+

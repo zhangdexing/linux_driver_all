@@ -1,0 +1,28 @@
+dbg_cfg.sh编译环境变量配置说明：
+
+*DBG_PLATFORM_ID
+2--msm8226
+3--msm8926
+4--msm8974
+
+*BOARD_VERSION
+msm8226
+V1:msm8226
+V2:msm8226
+V3:msm8226
+V4:msm8926
+
+msm8974
+V1:msm8974AB
+V2:msm8974AB
+V3:msm8974AC
+
+
+开机自动运行lidbg_load,
+init.flyaudio.rc:
+on boot 
+service  lidbg_load /flysystem/lib/out/lidbg_load
+	class core
+	user root
+	group root 
+	oneshot
