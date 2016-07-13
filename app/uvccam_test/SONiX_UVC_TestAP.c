@@ -1625,11 +1625,17 @@ void *thread_dequeue(void *par)
 				XU_H264_Set_IFRAME(dev);
 				if(isOldFp) 
 				{
+					//lidbg("****<%d>deq old_rec_fp1****\n",cam_id);
 					dequeue_buf(msize,old_rec_fp1);
-					if(old_rec_fp1 != NULL) fclose(old_rec_fp1);
 				}
 				else dequeue_buf(tmp_count,rec_fp1);
 				isDequeue = 0;
+			}
+
+			if(old_rec_fp1 != NULL)
+			{
+				//lidbg("****<%d>fclose old_rec_fp1****\n",cam_id);
+				fclose(old_rec_fp1);
 			}
 			isNormDequeue = 0;
 			isOldFp = 0;
@@ -5506,6 +5512,7 @@ openfd:
 						//dequeue_buf(msize,rec_fp1);
 						if(rec_fp1 != NULL) 
 						{
+							//lidbg("****<%d>start feeding****\n",cam_id);
 							fclose(rec_fp1);
 							old_rec_fp1 = fopen(flyh264_filename, "ab+");
 							strcpy(old_flyh264_filename, flyh264_filename);
