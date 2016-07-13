@@ -2233,6 +2233,7 @@ static void mc3xxx_early_resume(struct early_suspend *handler)
 	hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
 }
 #else
+#ifdef SUSPEND_ONLINE
 static int mc3xxx_acc_resume(struct mc3xxx_data *mc_data)
 {
 	if(flydata->enabled == 1)
@@ -2278,7 +2279,7 @@ static int mc3xxx_acc_suspend(struct mc3xxx_data *mc_data)
 */
     return 0;
 }
-
+#endif
 static int fb_notifier_callback(struct notifier_block *self,
                                 unsigned long event, void *data)
 {
