@@ -5279,7 +5279,7 @@ openfd:
 				}
 				
 				/*reserve for storage*/
-				if(i % 30 == 0)
+				if(i % 30 == 0 && isVideoLoop)
 				{
 					if(!strncmp(Rec_Save_Dir, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)) )
 					{
@@ -5309,6 +5309,7 @@ openfd:
 									close(flycam_fd);
 									return 0;
 #else
+									isVideoLoop = 0;
 									property_set("persist.uvccam.isDVRVideoLoop", "0");
 									property_set("persist.uvccam.isRearVideoLoop", "0");
 #endif
@@ -5325,6 +5326,7 @@ openfd:
 								close(flycam_fd);
 								return 0;
 #else
+								isVideoLoop = 0;
 								property_set("persist.uvccam.isDVRVideoLoop", "0");
 								property_set("persist.uvccam.isRearVideoLoop", "0");
 #endif
@@ -5383,6 +5385,7 @@ openfd:
 								close(flycam_fd);
 								return 0;
 #else
+								isVideoLoop = 0;
 								property_set("persist.uvccam.isDVRVideoLoop", "0");
 								property_set("persist.uvccam.isRearVideoLoop", "0");
 #endif
@@ -5437,8 +5440,8 @@ openfd:
 					2.total size large than [Rec_File_Size] or sdcard0 less than 300MB.
 					change file name.(current time)
 				*/
-				else if(((buf0.timestamp.tv_sec - originRecsec) % Rec_Sec == 0)
-					&&(oldRecsec != (buf0.timestamp.tv_sec - originRecsec)) || isExceed)
+				else if((((buf0.timestamp.tv_sec - originRecsec) % Rec_Sec == 0)
+					&&(oldRecsec != (buf0.timestamp.tv_sec - originRecsec)) || isExceed) && isVideoLoop)
 				{
 					char minRecName[100] = EMMC_MOUNT_POINT0"/camera_rec/1111.mp4";//error for del
 					unsigned char filecnt = 0;
@@ -5535,7 +5538,7 @@ openfd:
 					    {
 						      lidbg ("Get stat on %s Error?%s\n", filepath, strerror (errno));
 					    }
-						if(strcmp(filepath,flyh264_filename) == 0)
+						if(strcmp(filepath,flyh264_filename) == 0 || filecnt == 0)
 						{
 							lidbg("======Can not del processing file!Stop!======\n");
 #if 0
@@ -5550,6 +5553,7 @@ openfd:
 							close(flycam_fd);
 							return 0;
 #else
+							isVideoLoop = 0;
 							property_set("persist.uvccam.isDVRVideoLoop", "0");
 							property_set("persist.uvccam.isRearVideoLoop", "0");
 #endif
@@ -5569,7 +5573,6 @@ openfd:
 						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize);
 						//pthread_join(thread_capture_id,NULL);
 						
-#if 1
 						//while(isDequeue) usleep(100*1000);
 						//dequeue_buf(msize,rec_fp1);
 						if(rec_fp1 != NULL) 
@@ -5581,7 +5584,6 @@ openfd:
 							isOldFp = 1;
 							isNormDequeue = 1;	
 						}
-#endif
 #if 0
 						isIframe = 1;
 						XU_H264_Set_IFRAME(dev);
@@ -5594,11 +5596,8 @@ openfd:
 							sprintf(flyh264_filename, "%sR%s.h264", Rec_Save_Dir, time_buf);
 						
 						lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);		
-						if(isVideoLoop > 0)
-						{
-							rec_fp1 = fopen(flyh264_filename, "wb");
-							//if(i > 0) fwrite(iFrameData, iframe_length , 1, rec_fp1);
-						}
+						rec_fp1 = fopen(flyh264_filename, "wb");
+						//if(i > 0) fwrite(iFrameData, iframe_length , 1, rec_fp1);
 					}
 					#if 0
 					/*only if within Rec_File_Size,otherwise del oldest file again.*/
