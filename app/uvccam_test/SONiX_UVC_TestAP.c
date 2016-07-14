@@ -2486,6 +2486,17 @@ static void get_driver_prop(int camID)
 		return;
 }
 
+static int get_path_free_space(char* path)
+{
+	struct statfs diskInfo;  
+	statfs(path, &diskInfo);  
+	unsigned long long totalBlocks = diskInfo.f_bsize;  
+	unsigned long long freeDisk = diskInfo.f_bfree*totalBlocks;  
+	size_t mbFreedisk = freeDisk>>20; 
+	return mbFreedisk;
+}
+
+
 int main(int argc, char *argv[])
 {
 	char filename[100] = EMMC_MOUNT_POINT0"/quickcam-0000.jpg";
@@ -4956,31 +4967,65 @@ openfd:
 		{
 			if((isBlackBoxTopRec == 0) && (isBlackBoxBottomRec == 0))
 			{
-				if(msize <= (Emergency_Top_Sec * 30))
+				int isStorageOK = 0;
+				if(!strncmp(Em_Save_Dir, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)) )
 				{
-					lidbg("Waiting for msize restoration!\n");
-#if 0
-					isBlackBoxTopRec = 1;
-					isBlackBoxBottomRec = 1;
-					tmp_count = msize;
-					pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize);
-#endif
-					isBlackBoxTopWaitDequeue = 1;
+					size_t mbFreedisk;
+					mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT0);
+					if(mbFreedisk < 300)
+					{
+						lidbg("[SD0] Emergency recording not enough space!!\n");
+						send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_EM_SD0_INSUFFICIENT_SPACE);
+						isStorageOK = 0;
+					}
+					else isStorageOK = 1;
+				}
+				else if(!strncmp(Em_Save_Dir, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)) )
+				{
+					size_t mbFreedisk;
+					mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT1);
+					if(mbFreedisk < 100)
+					{
+						lidbg("[SD1] Emergency recording not enough space!!\n");
+						send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_EM_SD1_INSUFFICIENT_SPACE);
+						isStorageOK = 0;
+					}
+					else isStorageOK = 1;
 				}
 				else
 				{
+					lidbg("Emergency recording path ERR!! (ex:/storage/sdcard1.....)\n");
+					isStorageOK = 0;
+				}
+				
+				if(isStorageOK)
+				{
+					if(msize <= (Emergency_Top_Sec * 30))
+					{
+						lidbg("Waiting for msize restoration!\n");
 #if 0
-					//tmp_count = msize - 300;
-					//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize - 300);
-					//usleep(20 * 1000);
-					dequeue_buf(msize - 300,rec_fp1);
-					isBlackBoxTopRec = 1;
-					isBlackBoxBottomRec = 1;
-					tmp_count = 300;
-					pthread_create(&thread_dequeue_id,NULL,thread_dequeue,300);
+						isBlackBoxTopRec = 1;
+						isBlackBoxBottomRec = 1;
+						tmp_count = msize;
+						pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize);
 #endif
-					//pthread_create(&thread_dequeue_id,NULL,thread_top_dequeue,NULL);
-					isTopDequeue = 1;
+						isBlackBoxTopWaitDequeue = 1;
+					}
+					else
+					{
+#if 0
+						//tmp_count = msize - 300;
+						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize - 300);
+						//usleep(20 * 1000);
+						dequeue_buf(msize - 300,rec_fp1);
+						isBlackBoxTopRec = 1;
+						isBlackBoxBottomRec = 1;
+						tmp_count = 300;
+						pthread_create(&thread_dequeue_id,NULL,thread_dequeue,300);
+#endif
+						//pthread_create(&thread_dequeue_id,NULL,thread_top_dequeue,NULL);
+						isTopDequeue = 1;
+					}
 				}
 			}
 			//else isBlackBoxTopWaitDequeue = 1;
@@ -5238,6 +5283,7 @@ openfd:
 				{
 					if(!strncmp(Rec_Save_Dir, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)) )
 					{
+#if 0					
 						struct statfs diskInfo;  
 						statfs(EMMC_MOUNT_POINT0, &diskInfo);  
 						unsigned long long totalBlocks = diskInfo.f_bsize;  
@@ -5245,6 +5291,9 @@ openfd:
 						size_t mbTotalsize = stotalSize>>20;  
 						unsigned long long freeDisk = diskInfo.f_bfree*totalBlocks;  
 						size_t mbFreedisk = freeDisk>>20;  
+#endif
+						size_t mbFreedisk;
+						mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT0);
 						//lidbg(EMMC_MOUNT_POINT0"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
 						if(!isPreview)
 						{
@@ -5295,6 +5344,7 @@ openfd:
 					}
 					else if(!strncmp(Rec_Save_Dir, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)) )
 					{
+#if 0					
 						struct statfs diskInfo;  
 						statfs(EMMC_MOUNT_POINT1, &diskInfo);  
 						unsigned long long totalBlocks = diskInfo.f_bsize;  
@@ -5302,6 +5352,9 @@ openfd:
 						size_t mbTotalsize = stotalSize>>20;  
 						unsigned long long freeDisk = diskInfo.f_bfree*totalBlocks;  
 						size_t mbFreedisk = freeDisk>>20;  
+#endif
+						size_t mbFreedisk;
+						mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT1);
 						//lidbg(EMMC_MOUNT_POINT1"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
 						if(!isPreview)
 						{
