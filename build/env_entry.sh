@@ -381,6 +381,7 @@ case "$DBG_PLATFORM_ID" in
 	export TEST_PACKAGE_PATH=//192.168.128.128/share/8909/升级包/测试升级包
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=msm8909-master
+	export RECOVERY_BUILD_BRANCH=msm8909-ota-recovery
         export MAKE_PAKG_NUM=21
 
 	export NON_HLOS_FILE_PATH=$BP_SOURCE_PATH/common/build/bin/asic
@@ -466,6 +467,7 @@ case "$DBG_PLATFORM_ID" in
         export CLASSPATH=$JAVA_HOME/lib:$JRE_HOME/lib:$CLASSPATH
         export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH
         export SYSTEM_BUILD_TYPE=userdebug
+	export BOOTLOADER_BUILD_BRANCH=msm8974-6.0-lk
         export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/bootable/bootloader/lk
 	export DBG_BOOTLOADER_TYPE=LK
         export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
@@ -481,6 +483,7 @@ case "$DBG_PLATFORM_ID" in
         export TEST_PACKAGE_PATH=//192.168.128.128/8974/升级包发布/专项测试包
         export REPOSITORY_WORK_BRANCH=dev-8974-6.0
         export SYSTEM_WORK_BRANCH=msm8974-6.0
+	export RECOVERY_BUILD_BRANCH=msm8974-6.0-recovery
         export MAKE_PAKG_NUM=19
         export NON_HLOS_FILE_PATH=$BP_SOURCE_PATH/common/build/bin/asic
         export RPM_FILE_PATH=$RPM_PATH/ms/bin/AAAAANAAR
