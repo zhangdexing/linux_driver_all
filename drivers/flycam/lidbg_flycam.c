@@ -64,7 +64,7 @@ char f_online_res[100] = "480x272",f_online_path[100] = EMMC_MOUNT_POINT0"/previ
 static int r_rec_bitrate = 8000000,r_rec_time = 300,r_rec_filenum = 5,r_rec_totalsize = 4096;
 char r_rec_res[100] = "1280x720",r_rec_path[100] = EMMC_MOUNT_POINT1"/camera_rec/";
 
-char em_path[100] = EMMC_MOUNT_POINT1"/camera_rec/BlackRec/";
+char em_path[100] = EMMC_MOUNT_POINT1"/camera_rec/BlackBox/";
 static int top_em_time = 5,bottom_em_time = 10;
 
 char capture_path[100] = EMMC_MOUNT_POINT0"/preview_cache/";
@@ -2393,12 +2393,36 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 					case CMD_PATH:
 						lidbg("%s:CMD_PATH\n",__func__);
+						char tmp_path[200] = {0};
 						ret_st = checkSDCardStatus((char*)arg + 1);
 						if(ret_st != 1) 
 							strcpy(f_rec_path,(char*)arg + 1);
 						else
 							lidbg("%s: f_rec_path access wrong! %d", __func__ ,EFAULT);//not happend
 						if(ret_st > 0) dvrRespond[2] = RET_FAIL;
+
+						/*EM path*/
+						sprintf(tmp_path, "%s/BlackBox/", f_rec_path);
+						sprintf(temp_cmd, "mkdir -p %s", tmp_path);
+						lidbg_shell_cmd(temp_cmd);
+						sprintf(temp_cmd, "mkdir -p %s/.tmp", tmp_path);
+						lidbg_shell_cmd(temp_cmd);
+
+						file_path = filp_open(tmp_path, O_RDONLY | O_DIRECTORY, 0);
+						if(IS_ERR(file_path))
+						{
+							lidbg("%s:EM_PATH ERR!!\n",__func__);
+							lidbg_shell_cmd("setprop persist.uvccam.empath "EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
+						}
+						else
+						{
+							lidbg("%s:EMPATH OK!!\n",__func__);
+							strcpy(em_path,tmp_path);
+							sprintf(temp_cmd, "setprop persist.uvccam.empath %s", em_path);
+							lidbg_shell_cmd(temp_cmd);
+						}
+						if(!IS_ERR(file_path)) filp_close(file_path, 0);
+						
 						strcpy(dvrRespond + 3,f_rec_path);
 						length += 100;
 						if(copy_to_user((char*)arg,dvrRespond,length))
@@ -2868,8 +2892,8 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				if(IS_ERR(file_path))
 				{
 					lidbg("%s:EM_PATH ERR!!\n",__func__);
-					lidbg_shell_cmd("setprop persist.uvccam.empath "EMMC_MOUNT_POINT1"/camera_rec/BlackRec/");
-					strcpy(dvrRespond + 2,EMMC_MOUNT_POINT1"/camera_rec/BlackRec/");
+					lidbg_shell_cmd("setprop persist.uvccam.empath "EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
+					strcpy(dvrRespond + 2,EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
 				}
 				else
 				{
