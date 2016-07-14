@@ -1110,6 +1110,7 @@ static void fixScreenBlurred(char cam_id , char isOnline)
 static void work_DVR_fixScreenBlurred(struct work_struct *work)
 {
 	char ret = -1;
+	char temp_cmd[256];	
 	lidbg("%s:====E====\n",__func__);
 	//if(isSuspend) mod_timer(&suspend_stoprec_timer,SUSPEND_STOPREC_ONLINE_TIME);
 	if(isDVRFirstInit)
@@ -1176,6 +1177,7 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 	    }
 		if(ret != 3)
 		{
+#if 0		
 			if(!(isDVRFirstInit && isDualCam && !((pfly_UsbCamInfo->camStatus>>4) & FLY_CAM_ISSONIX)))
 			{
 				if(!isDVRRec)
@@ -1183,6 +1185,25 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 					lidbg("%s:==AUTO start==\n",__func__);
 					dvr_start_recording();
 				}
+			}
+#endif
+			dvr_start_recording();
+			if(!(isDVRFirstInit && isDualCam && !((pfly_UsbCamInfo->camStatus>>4) & FLY_CAM_ISSONIX)))
+			{
+				lidbg("%s:==dual mode:rear cam not exsit,stop dvr recording==\n",__func__);
+				isDVRVideoLoop = 0;
+				sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", isDVRVideoLoop);
+				lidbg_shell_cmd(temp_cmd);
+			}
+
+			/*for HYUNDAI*/
+			if(isThinkNavi)
+			{
+				lidbg("%s:==isThinkNavi:Video Loop disable==\n",__func__);
+				//rear_start_recording();
+				isDVRVideoLoop = 0;
+				sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", isDVRVideoLoop);
+				lidbg_shell_cmd(temp_cmd);
 			}
 		}
 	}
@@ -1282,15 +1303,13 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 			/*for HYUNDAI*/
 			if(isThinkNavi)
 			{
-				if( !isRearRec)
-				{
-					lidbg("%s:==AUTO start==\n",__func__);
-					//rear_start_recording();
-					isRearVideoLoop = 0;
-					sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
-					lidbg_shell_cmd(temp_cmd);
-				}
+				lidbg("%s:==isThinkNavi:Video Loop disable==\n",__func__);
+				//rear_start_recording();
+				isRearVideoLoop = 0;
+				sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
+				lidbg_shell_cmd(temp_cmd);
 			}
+#if 0			
 			else
 			{
 				if( isDualCam && !isRearRec)
@@ -1302,17 +1321,12 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 					lidbg_shell_cmd(temp_cmd);
 				}
 			}
+#endif			
 		}
 	}
 	else if(isRearPlugRec && !isOnlineRec)
 	{
 		rear_start_recording();
-		if(isDualCam)
-		{
-			isRearVideoLoop = 1;
-			sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
-			lidbg_shell_cmd(temp_cmd);
-		}
 	}
 	
 	isRearViewFirstInit = 0;
@@ -2248,6 +2262,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		unsigned char rearRespond[100] = {0};
 		unsigned char returnRespond[200] = {0};
 		unsigned char initMsg[400] = {0};
+		char tmp_path[200] = {0};
 		int length = 0;
 		//struct mounted_volume *sdcard1 = NULL;
 		
@@ -2393,7 +2408,6 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 					case CMD_PATH:
 						lidbg("%s:CMD_PATH\n",__func__);
-						char tmp_path[200] = {0};
 						ret_st = checkSDCardStatus((char*)arg + 1);
 						if(ret_st != 1) 
 							strcpy(f_rec_path,(char*)arg + 1);
