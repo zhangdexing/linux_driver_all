@@ -23,7 +23,7 @@ int __init lidbg_kernel_init(void)
 {
     DUMP_BUILD_TIME;
     printk(KERN_CRIT"===lidbg_kernel_init===\n");
-#if defined(PLATFORM_MSM8226) || defined(PLATFORM_MSM8974) || defined(PLATFORM_MSM8909)
+#if defined(PLATFORM_MSM8226) /*|| defined(PLATFORM_MSM8974) */|| defined(PLATFORM_MSM8909)
     freq_ctrl_start();
 #endif
 
