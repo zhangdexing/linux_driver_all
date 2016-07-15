@@ -60,9 +60,11 @@ static struct mc3xxx_data *flydata = NULL;
 #define NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE	(130)
 #define NOTIFIER_MINOR_EXCEED_THRESHOLD 		(10)
 
-#define TAP_X_Thresh	0x1f	//0~0xff,0xff阀值最大
-#define TAP_Y_Thresh	0x1f
-#define TAP_Z_Thresh	0x1f
+unsigned char g_Tapthresh = (3 << 4); //Level 1
+
+#define TAP_X_Thresh	(g_Tapthresh + 0x0f)	//0~0xff,0xff阀值最大
+#define TAP_Y_Thresh	(g_Tapthresh + 0x0f)
+#define TAP_Z_Thresh	(g_Tapthresh + 0x0f)
 #define IRQ_READ_CNT	10		//中断函数读reg[0x03]，最大的循环次数
 
 //=== CONFIGURATIONS ==========================================================
@@ -2487,22 +2489,35 @@ ssize_t  mc3xxx_read(struct file *filp, char __user *buffer, size_t size, loff_t
 
 ssize_t mc3xxx_write (struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
-    char cmd_buf[2];
-    memset(cmd_buf, '\0', 2);
+    char cmd_buf[4];
+	unsigned char value;
+    memset(cmd_buf, '\0', 4);
 
-    if(copy_from_user(cmd_buf, buf, 1))
+    if(copy_from_user(cmd_buf, buf, 3))
     {
         PM_ERR("copy_from_user ERR\n");
     }
 
-	if (sysfs_streq(cmd_buf, "0"))
+	value = simple_strtoul(cmd_buf, 0, 0);
+
+	if (value == 0)
 		mc3xxx_enable(flydata, 0);
 
-	else if (sysfs_streq(cmd_buf, "1"))
+	else if (value == 1)
 		mc3xxx_enable(flydata, 1);
 
 	else
-		lidbg("%s: invalid value %s\n", __func__, cmd_buf);
+	{
+		lidbg("set Sensitivity level %d -> level %d\n", g_Tapthresh>>4, value>>4);
+		g_Tapthresh = value;
+		mutex_lock(&flydata->lock);
+
+		mc3xxx_chip_init(flydata->client);
+		if(flydata->enabled == 1)
+			mc3xxx_set_mode(flydata->client, MC3XXX_WAKE);
+
+        mutex_unlock(&flydata->lock);
+	}
 
 	return size;
 }

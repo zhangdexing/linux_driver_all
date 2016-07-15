@@ -475,6 +475,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#096--read camera FW version\n");
             fs_mem_log("*158#097--format SDCARD1\n");
             fs_mem_log("*158#098--format udisk\n");
+            fs_mem_log("*158#099--adust Gsensor Sensitivity \n");
 
             show_password_list();
             lidbg_domineering_ack();
@@ -1134,6 +1135,25 @@ void parse_cmd(char *pt)
             lidbg("*158#098--format udisk\n");
             CREATE_KTHREAD(thread_format_udisk, NULL);
             lidbg_domineering_ack();
+        }
+		else if (!strncmp(argv[1], "*158#099", 8))
+        {
+			unsigned char n;
+			char shell_cmd[64] = {0};
+            lidbg("*158#099--adust Gsensor Sensitivity\n");
+ 			
+            if(strlen(argv[1]) != 9)//wrong args
+            {
+                lidbg("Sensitivity value must be 0~9!");
+                return;
+            }
+            n = simple_strtoul((argv[1] + 8), 0, 0);	
+			n = (n << 4) + 0x0f;
+			
+			sprintf(shell_cmd, "echo %d > /dev/mc3xxx_enable0", n);
+
+			//lidbg("%s\n", shell_cmd);
+			lidbg_shell_cmd(shell_cmd);
         }
 
 	
