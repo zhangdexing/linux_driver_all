@@ -30,6 +30,11 @@ function soc_build_recoveryimage()
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/recovery
 	rm -rf $DBG_OUT_PATH/*.apk $DBG_OUT_PATH/ES.ko $DBG_OUT_PATH/ST.ko $DBG_OUT_PATH/mkfs.exfat $DBG_OUT_PATH/GPS.ko $DBG_OUT_PATH/*.so $DBG_OUT_PATH/FlyBootService
         rm -rf $DBG_OUT_PATH/LidbgPmService $DBG_OUT_PATH/SleepTest $DBG_OUT_PATH/build_time.conf $DBG_OUT_PATH/bma2x2.ko $DBG_OUT_PATH/lidbg_rgb_led.ko
+        rm -rf $DBG_OUT_PATH/sslcapture.ko $DBG_OUT_PATH/uvccam.ko $DBG_OUT_PATH/busybox $DBG_OUT_PATH/Firewall.ko $DBG_OUT_PATH/BugReport.ko 
+        rm -rf $DBG_OUT_PATH/CallMessage.ko $DBG_OUT_PATH/vold $DBG_OUT_PATH/camera4hal.ko $DBG_OUT_PATH/mobileTrafficstats.ko $DBG_OUT_PATH/app4haljni.ko 
+        rm -rf $DBG_OUT_PATH/LidbgCommenLogic $DBG_OUT_PATH/mc3xxx.ko $DBG_OUT_PATH/lidbg_flycam.ko $DBG_OUT_PATH/lidbg_spi.ko
+        rm -rf $DBG_OUT_PATH/mount.ntfs $DBG_OUT_PATH/flysemdriver.ko $DBG_OUT_PATH/mkfs.ntfs $DBG_OUT_PATH/bootanimation
+
 	cd $DBG_SYSTEM_DIR
 	git checkout $RECOVERY_BUILD_BRANCH
 	if [ ! -d "$DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/.git/" ]; then
