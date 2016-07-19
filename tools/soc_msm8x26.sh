@@ -210,7 +210,7 @@ function soc_build_bootloader()
 {
 	echo $FUNCNAME
         cd $DBG_SYSTEM_DIR
-	git checkout origin/$BOOTLOADER_BUILD_BRANCH
+	git checkout $BOOTLOADER_BUILD_BRANCH
 	if [ ! -d "$DBG_BOOTLOADER_DIR/flyaudio" ]; then
 		mkdir "$DBG_BOOTLOADER_DIR/flyaudio"
 	else
