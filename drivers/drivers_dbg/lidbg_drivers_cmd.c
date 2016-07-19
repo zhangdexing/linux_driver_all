@@ -1138,19 +1138,17 @@ void parse_cmd(char *pt)
         }
 		else if (!strncmp(argv[1], "*158#099", 8))
         {
-			unsigned char n;
+			//unsigned char n;
 			char shell_cmd[64] = {0};
             lidbg("*158#099--adust Gsensor Sensitivity\n");
  			
-            if(strlen(argv[1]) != 9)//wrong args
+            if(strlen(argv[1]) != 10)//wrong args
             {
-                lidbg("Sensitivity value must be 0~9!");
+                lidbg("Sensitivity value must be 00~99!\n");
                 return;
             }
-            n = simple_strtoul((argv[1] + 8), 0, 0);	
-			n = (n << 4) + 0x0f;
 			
-			sprintf(shell_cmd, "echo %d > /dev/mc3xxx_enable0", n);
+			sprintf(shell_cmd, "echo %s > /dev/mc3xxx_enable0", (argv[1] + 8));
 
 			//lidbg("%s\n", shell_cmd);
 			lidbg_shell_cmd(shell_cmd);
