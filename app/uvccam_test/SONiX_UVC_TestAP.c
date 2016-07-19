@@ -5642,6 +5642,8 @@ openfd:
 					if(tmp_val == 0x65)
 						lidbg("=====****IFRAME detect!!***%dBytes======\n",buf0.bytesused);
 #endif
+
+#if 0
 					tmp_val = *(unsigned char*)(mem0[buf0.index] + 26);
 					if(tmp_val == 0x65) 
 					{
@@ -5667,6 +5669,9 @@ openfd:
 							enqueue(mem0[buf0.index], buf0.bytesused);
 					}
 					//else lidbg("=====other throw!======\n");
+#endif					
+					if(msize <=  (Emergency_Top_Sec * 30 *2) + 1000)
+							enqueue(mem0[buf0.index], buf0.bytesused);
 						
 					
 					if(isBlackBoxBottomRec && (msize > (Emergency_Bottom_Sec*30)) && (isBlackBoxTopRec == 0))
