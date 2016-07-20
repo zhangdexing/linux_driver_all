@@ -60,7 +60,7 @@ static struct mc3xxx_data *flydata = NULL;
 #define NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE	(130)
 #define NOTIFIER_MINOR_EXCEED_THRESHOLD 		(10)
 
-#define THRESH_VALUE	(0x1f) //init
+#define THRESH_VALUE	((25 << 1) + 1)//Level 25
 
 unsigned char g_Tapthresh = THRESH_VALUE;
 
