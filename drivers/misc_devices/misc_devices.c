@@ -225,6 +225,13 @@ static int thread_usb_disk_disable_delay(void *data)
 		lidbg("Usb still being used, don't disable it actually...\n");
 	else{
 		lidbg("Usb be not used,disable it...\n");
+		if(g_var.platformid==ID14_MSM8974_600)
+		{
+			lidbg("umount udisk\n");
+			lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 2");
+			msleep(2000);
+		}
+
 		usb_disk_enable(false);
 		if( g_var.usb_request == 1)
 		{

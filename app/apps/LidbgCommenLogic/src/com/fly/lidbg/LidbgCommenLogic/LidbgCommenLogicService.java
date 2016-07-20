@@ -21,6 +21,13 @@ import android.content.IntentFilter;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.os.SystemProperties;
+import android.os.storage.StorageManager;
+import android.os.storage.StorageVolume;
+import android.os.storage.StorageEventListener;
+import android.content.ComponentName;
+import android.os.Build;
+import android.os.Environment;
+
 
 public class LidbgCommenLogicService extends Service
 {
@@ -46,8 +53,18 @@ public class LidbgCommenLogicService extends Service
 		filter.addAction(Intent.ACTION_SCREEN_ON);
 		filter.setPriority(Integer.MAX_VALUE);
 		mLidbgCommenLogicService.registerReceiver(myReceiver, filter);
+		StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
+		mStorageManager.registerListener(mStorageEventListener);
 	}
-
+    private final StorageEventListener mStorageEventListener = new StorageEventListener() {
+        @Override
+        public void onStorageStateChanged(String path, String oldState, String newState) {
+                printKernelMsg("onStorageStateChanged :" + path + " " + oldState + " -> " + newState+"\n");
+                if (Environment.MEDIA_MOUNTED.equals(newState)) {
+                } else if (Environment.MEDIA_MOUNTED.equals(oldState)) {
+                }
+        }
+    };
 	protected void msleep(int i)
 	{
 		// TODO Auto-generated method stub
@@ -61,6 +78,59 @@ public class LidbgCommenLogicService extends Service
 		}
 	}
 
+	protected void formatSdcard1Below6_0()
+	{
+	    if(Build.VERSION.SDK_INT >=23)
+	    {
+		printKernelMsg("Build.VERSION.SDK_INT >=23.return" );
+		return;
+	    }
+
+	    StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
+	    final StorageVolume[] volumes = mStorageManager.getVolumeList();
+	for (StorageVolume volume : volumes)
+	    {
+	        if ( volume.getPath().toUpperCase().contains("SDCARD1"))
+	        {
+	            printKernelMsg("formatSdcard1Below6_0.find it->"+volume.getPath());
+	            Intent intent = new Intent("com.android.internal.os.storage.FORMAT_ONLY");
+	            intent.setComponent(new ComponentName("android", "com.android.internal.os.storage.ExternalStorageFormatter"));
+	            intent.putExtra(StorageVolume.EXTRA_STORAGE_VOLUME, volume);
+	            startService(intent);
+	        }
+	        else
+	        {
+	            printKernelMsg("formatSdcard1Below6_0.not find->"+volume.getPath());
+	        }
+	    }
+	}
+
+	protected void mountUmountUdiskUp6_0(boolean mount)
+	{
+	if(Build.VERSION.SDK_INT <23)
+	{
+		printKernelMsg("Build.VERSION.SDK_INT <23.return" );
+		return;
+        }
+	StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
+	final StorageVolume[] volumes = mStorageManager.getVolumeList();
+	for (StorageVolume volume : volumes)
+	    {
+	        if ( !volume.getPath().contains("emulated")&&!volume.getPath().toUpperCase().contains("SDCARD"))
+	        {
+	            //printKernelMsg(mount+"/mountUmountUdiskUp6_0.find it->" + volume.getPath()+"/getId:"+volume.getId());
+	           // if(mount)
+	                //mStorageManager.mount(volume.getId());
+	           // else
+	               // mStorageManager.unmount(volume.getId());
+	        }
+	        else
+	        {
+	            //printKernelMsg(mount+"/mountUmountUdiskUp6_0.not find->" + volume.getPath()+"/getId:"+volume.getId());
+	        }
+	    }
+	}
+	
 	protected void wakeUpSystem()
 	{
 		PowerManager fbPm = (PowerManager) getSystemService(Context.POWER_SERVICE);
@@ -130,6 +200,18 @@ public class LidbgCommenLogicService extends Service
 			printKernelMsg("action:" + action + "\n");
 			switch (action)
 			{
+			case 0:
+				printKernelMsg("formatSdcard1Below6_0\n");
+				formatSdcard1Below6_0();
+				break;
+			case 1:
+				printKernelMsg("mountUmountUdiskUp6_0.mount\n");
+				mountUmountUdiskUp6_0(true);
+				break;
+			case 2:
+				printKernelMsg("mountUmountUdiskUp6_0.unmount\n");
+				mountUmountUdiskUp6_0(false);
+				break;
 			case 3:
 				printKernelMsg("wakeUpSystem\n");
 				wakeUpSystem();
