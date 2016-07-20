@@ -198,6 +198,15 @@ static int thread_usb_disk_enable_delay(void *data)
 #ifndef FLY_USB_CAMERA_SUPPORT
     msleep(5000);
 #endif
+
+#if ANDROID_VERSION >= 600
+   while(0==g_var.android_boot_completed)
+    {
+        ssleep(1);
+	 lidbg("thread_usb_disk_enable_delay wait for android_boot_completed.\n");
+    }
+  #endif
+  
     usb_disk_enable(true);
     SET_USB_ID_SUSPEND;
     return 1;
