@@ -2899,8 +2899,10 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #endif
 				sprintf(temp_cmd, "mkdir -p %s", (char*)arg);
 				lidbg_shell_cmd(temp_cmd);
+#if 0				
 				sprintf(temp_cmd, "mkdir -p %s/.tmp", (char*)arg);
 				lidbg_shell_cmd(temp_cmd);
+#endif				
 
 				file_path = filp_open((char*)arg, O_RDONLY | O_DIRECTORY, 0);
 				if(IS_ERR(file_path))

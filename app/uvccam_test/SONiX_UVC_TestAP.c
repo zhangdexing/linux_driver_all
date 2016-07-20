@@ -1577,7 +1577,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 	
 	if(isBlackBoxTopRec == 0 && isBlackBoxBottomRec == 1) 
 	{
-		char tmp_cmd[300] = {0};
+		char tmp_cmd[500] = {0};
 		//trans_enqueue("/storage/sdcard0/em_test/trans.h264",dvr_blackbox_filename);
 		if(cam_id == DVR_ID) 
 		{
@@ -1723,8 +1723,7 @@ void *thread_del_tmp_emfile(void *par)
 				continue;
 			}
 			lidbg("======Em_Save_Tmp_Dir access error!======\n");
-			sprintf(tmp_cmd, "mkdir -p %s&",Em_Save_Tmp_Dir);
-			system(tmp_cmd);
+			mkdir(Em_Save_Tmp_Dir,S_IRWXU|S_IRWXG|S_IRWXO);
 			continue;
 		}
 		sprintf(minRecPath, "%s/%s",Em_Save_Tmp_Dir,minRecName);//minRecPath
@@ -2224,7 +2223,7 @@ static void switch_scan(void)
 		//lidbg("======== isRearVideoLoop-> %d=======\n",isVideoLoop);
 	}
 	property_get("persist.uvccam.empath", Em_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
-	sprintf(Em_Save_Tmp_Dir, "%s/.tmp/", Em_Save_Dir);//Em_Save_Tmp_Dir
+	sprintf(Em_Save_Tmp_Dir, EMMC_MOUNT_POINT0"/camera_rec/BlackBox/.tmp/");//Em_Save_Tmp_Dir
 	property_get("persist.uvccam.top.emtime", Em_Top_Sec_String, "5");
 	property_get("persist.uvccam.bottom.emtime", Em_Bottom_Sec_String, "10");
 	Emergency_Top_Sec = atoi(Em_Top_Sec_String);
@@ -4968,7 +4967,16 @@ openfd:
 			if((isBlackBoxTopRec == 0) && (isBlackBoxBottomRec == 0))
 			{
 				int isStorageOK = 0;
-				if(!strncmp(Em_Save_Dir, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)) )
+
+				if(access(Em_Save_Dir, R_OK) != 0)
+					mkdir(Em_Save_Dir,S_IRWXU|S_IRWXG|S_IRWXO);
+
+				if(access(Em_Save_Dir, R_OK) != 0)
+				{
+					lidbg("Em_Save_Dir still not OK!\n");
+					isStorageOK = 0;
+				}
+				else if(!strncmp(Em_Save_Dir, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)) )
 				{
 					size_t mbFreedisk;
 					mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT0);
