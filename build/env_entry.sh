@@ -483,7 +483,7 @@ case "$DBG_PLATFORM_ID" in
         export TEST_PACKAGE_PATH=//192.168.128.128/8974/升级包发布/专项测试包
         export REPOSITORY_WORK_BRANCH=dev-8974-6.0
         export SYSTEM_WORK_BRANCH=msm8974-6.0
-	export RECOVERY_BUILD_BRANCH=msm8974-6.0-recovery
+	export RECOVERY_BUILD_BRANCH=msm8974-6.0
         export MAKE_PAKG_NUM=19
         export NON_HLOS_FILE_PATH=$BP_SOURCE_PATH/common/build/bin/asic
         export RPM_FILE_PATH=$RPM_PATH/ms/bin/AAAAANAAR
