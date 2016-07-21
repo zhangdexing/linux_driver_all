@@ -259,6 +259,17 @@ status_t Disk::readPartitions() {
 
     std::vector<std::string> output;
     status_t res = ForkExecvp(cmd, output);
+
+	std::string strck = output[1];	//PART 1 4f
+	if( strck[7] == '4' && strck[8] == 'f') {
+		output.clear();
+		output.push_back("PART 1 7");
+	}
+	if ( strck[7] == '7' && strck[8] == '2') {
+		output.clear();
+		output.push_back("PART 1 b");
+	}
+
     if (res != OK) {
         LOG(WARNING) << "sgdisk failed to scan " << mDevPath;
         notifyEvent(ResponseCode::DiskScanned);
