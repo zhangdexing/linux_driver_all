@@ -1122,7 +1122,9 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 		if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX))
 		{
 			lidbg("%s:====None camera found!====\n",__func__);
-			lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 0&");
+			if((pfly_UsbCamInfo->camStatus)  & FLY_CAM_ISVALID) 
+				lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 1&");
+			else lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 0&");
 			isDVRFirstInit = 0;/*no matter what,let the next work continue*/
 			isDVRAfterFix = 1;
 			return;
@@ -1246,7 +1248,9 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 		if(!((pfly_UsbCamInfo->camStatus>>4) & FLY_CAM_ISSONIX))
 		{
 			lidbg("%s:====None camera found!====\n",__func__);
-			lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 0&");
+			if((pfly_UsbCamInfo->camStatus>>4)  & FLY_CAM_ISVALID) 
+				lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 1&");
+			else lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 0&");
 			isRearViewFirstInit = 0;/*no matter what,let the next work continue*/
 			isRearViewAfterFix = 1;
 			return;
