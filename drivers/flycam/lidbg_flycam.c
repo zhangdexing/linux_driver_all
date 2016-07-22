@@ -858,6 +858,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 				}
 				else if(!((oldCamStatus>>4) & FLY_CAM_ISVALID) && !((pfly_UsbCamInfo->camStatus>>4)  & FLY_CAM_ISSONIX) &&((pfly_UsbCamInfo->camStatus>>4)  & FLY_CAM_ISVALID) )
 				{
+					lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 1&");
 					status_fifo_in(RET_REAR_NOT_SONIX);
 				}
@@ -907,6 +908,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 				}
 				else if(!(oldCamStatus & FLY_CAM_ISVALID) && !(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX) &&(pfly_UsbCamInfo->camStatus & FLY_CAM_ISVALID) )
 				{
+					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 1&");
 					status_fifo_in(RET_DVR_NOT_SONIX);
 					notify_online(RET_ONLINE_FOUND_NOTSONIX);

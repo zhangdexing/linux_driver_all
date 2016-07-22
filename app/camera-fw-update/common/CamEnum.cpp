@@ -68,6 +68,17 @@ void CCamEnum::bus_find_cam(struct usb_device *pDev, int level)
 	if(atoi(pDev->filename) == atoi(devnum))
 		return;
 
+	sprintf(hub_path, "/sys/bus/usb/drivers/usb/%s/devnum", BACK_NODE);
+	fp = fopen(hub_path, "r");
+	if(fp)
+	{
+		fread(devnum, sizeof(char), 10, fp);
+		fclose(fp);
+	}
+
+	if(atoi(pDev->filename) == atoi(devnum))
+		return;
+
 	//LIDBG_PRINT("devnum = %d, filename = %d\n",atoi(devnum), atoi(pDev->filename));
 
 	if (is_valid_id(pDev))
