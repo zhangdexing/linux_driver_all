@@ -2,6 +2,10 @@
 KERNELDIR = $(DBG_KERNEL_SRC_DIR)
 INSTALLDIR = $(DBG_COPY_DIR)
 
+ifneq ($(SOC_ARCH), arm64)
+SOC_ARCH = arm
+endif
+
 PWD := $(shell pwd)
 
 CROSS_COMPILE = $(DBG_CROSS_COMPILE)
@@ -18,7 +22,7 @@ KBUILD_EXTRA_SYMBOLS := $(DBG_SOC_PATH)/$(DBG_SOC)/Module.symvers $(DBG_CORE_PAT
 EXTRA_CFLAGS  += -I$(DBG_DRIVERS_PATH)/inc
 
 modules:
-	$(MAKE) -C $(DBG_KERNEL_OBJ_DIR) M=$(PWD) ARCH=arm  CROSS_COMPILE=$(DBG_CROSS_COMPILE) modules
+	$(MAKE) -C $(DBG_KERNEL_OBJ_DIR) M=$(PWD) ARCH=$(SOC_ARCH)  CROSS_COMPILE=$(DBG_CROSS_COMPILE) modules
  
 modules_install:
 	cp *.ko $(INSTALLDIR)

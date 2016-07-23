@@ -358,7 +358,7 @@ int is_dsi83_exist(void)
 }
 
 
-int dsi83_rst_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
+ssize_t dsi83_rst_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
 {
     PROC_READ_CHECK;
     is_dsi83_inited = false;
@@ -367,7 +367,7 @@ int dsi83_rst_proc(struct file *file, char __user *buf, size_t size, loff_t *ppo
     dsi83_resume();
     return 1;
 }
-int dsi83_dump_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
+ssize_t dsi83_dump_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
 {
     PROC_READ_CHECK;
     lidbg("%s:enter\n", __func__);
@@ -376,7 +376,7 @@ int dsi83_dump_proc(struct file *file, char __user *buf, size_t size, loff_t *pp
 }
 
 
-int dsi83_set_normal_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
+ssize_t dsi83_set_normal_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
 {
     PROC_READ_CHECK;
     lidbg("%s:enter\n", __func__);
@@ -387,7 +387,7 @@ int dsi83_set_normal_proc(struct file *file, char __user *buf, size_t size, loff
 }
 
 
-int dsi83_set_pattern_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
+ssize_t dsi83_set_pattern_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
 {
     PROC_READ_CHECK;
     lidbg("%s:enter\n", __func__);

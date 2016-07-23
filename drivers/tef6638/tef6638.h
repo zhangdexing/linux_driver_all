@@ -4,7 +4,7 @@
 #include <asm/uaccess.h>
 #include <linux/file.h>
 #include <linux/syscalls.h>
-#include <asm/system.h>
+//#include <asm/system.h>
 
 #include <linux/workqueue.h>
 
@@ -116,7 +116,7 @@ enum audio_source {Init = 0, MediaCD, CDC, RADIO, AUX, IPOD, TV, MediaMP3, SRADI
 #define NOTUSED_CASE		254	//or -1(suppress warning)
 
 
-#if (defined SOC_rk3x88) || (defined SOC_imx6q)
+#if (defined SOC_rk3x88) || (defined SOC_imx6q) || (defined SOC_mt35x)
 #define INIT_INPUT_ADDR		I2S1_SUBADDR
 #define IIS1_INPUT_CASE		case IPOD:\
 							case TV:\

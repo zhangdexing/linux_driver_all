@@ -1,5 +1,5 @@
-#ifndef _LIGDBG_MSM8226__
-#define _LIGDBG_MSM8226__
+#ifndef _LIGDBG_MT3561__
+#define _LIGDBG_MT3561__
 
 
 #include <linux/init.h>
@@ -10,10 +10,10 @@
 #include <linux/platform_device.h>
 #include <linux/debugfs.h>
 #include <linux/fb.h>
-#include <mach/gpiomux.h>
+//#include <mach/gpiomux.h>
 
-#include "mach/hardware.h"
-#include "mach/irqs.h"
+//#include "mach/hardware.h"
+//#include "mach/irqs.h"
 
 
 
@@ -23,7 +23,7 @@
 #include <linux/interrupt.h>
 #include <linux/irq.h>
 #include <linux/i2c.h>
-#include <linux/i2c/pca953x.h>
+//#include <linux/i2c/pca953x.h>
 #include <linux/slab.h>
 #include <linux/of_platform.h>
 #include <linux/of_gpio.h>
@@ -33,67 +33,99 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/gpio_event.h>
-#include <linux/usb/android.h>
+//#include <linux/usb/android.h>
 #include <linux/platform_device.h>
 #include <linux/io.h>
 #include <linux/gpio.h>
 #include <linux/mtd/nand.h>
 #include <linux/mtd/partitions.h>
 #include <linux/i2c.h>
-#include <linux/android_pmem.h>
+//#include <linux/android_pmem.h>
 #include <linux/bootmem.h>
 #include <linux/regulator/consumer.h>
 #include <linux/memblock.h>
-#include <mach/board.h>
-#include <mach/msm_iomap.h>
-#include <mach/msm_memtypes.h>
-#include <mach/vreg.h>
-#include <mach/irqs.h>
-#include <linux/qpnp/qpnp-adc.h>
+//#include <mach/board.h>
+//#include <mach/msm_iomap.h>
+//#include <mach/msm_memtypes.h>
+//#include <mach/vreg.h>
+//#include <mach/irqs.h>
+//#include <linux/qpnp/qpnp-adc.h>
 #include <linux/spmi.h>
-#include <linux/msm_tsens.h>
+//#include <linux/msm_tsens.h>
 
-#ifdef PLATFORM_msm8909
-#define SUSPEND_ONLINE
-#define MUC_CONTROL_DSP
-#define USB_HUB_SUPPORT
 
-#endif
-
-#ifdef PLATFORM_msm8909
-#define FLY_USB_CAMERA_SUPPORT
-#endif
-
-#ifdef PLATFORM_msm8974
-#ifdef PLATFORM_ID_14
-//#define SUSPEND_ONLINE
-//#define FLY_USB_CAMERA_SUPPORT
-#endif
-#endif
-
-#ifdef PLATFORM_msm8909
-#include <soc/qcom/smem.h>
-
-#else
-
-#include <linux/mfd/marimba.h>
-#include <mach/msm_hsusb.h>
-#include <mach/rpc_hsusb.h>
-#include <mach/rpc_pmapp.h>
-#include <mach/usbdiag.h>
-#include <mach/msm_serial_hs.h>
+//#include <linux/mfd/marimba.h>
+//#include <mach/msm_hsusb.h>
+//#include <mach/rpc_hsusb.h>
+//#include <mach/rpc_pmapp.h>
+//#include <mach/usbdiag.h>
+//#include <mach/msm_serial_hs.h>
 //#include <mach/pmic.h>
-#include <mach/socinfo.h>
-#include <mach/rpc_pmapp.h>
+//#include <mach/socinfo.h>
+//#include <mach/rpc_pmapp.h>
 //#include <mach/msm_battery.h>
-#include <mach/rpc_server_handset.h>
-#include <mach/socinfo.h>
-#include <mach/msm_smsm.h>
-#include <mach/msm_rpcrouter.h>
-#include <mach/msm_smsm.h>
+//#include <mach/rpc_server_handset.h>
+//#include <mach/socinfo.h>
+//#include <mach/msm_smsm.h>
+//#include <mach/msm_rpcrouter.h>
+//#include <mach/msm_smsm.h>
 
-#endif
-#if 0
+#if 1
+
+enum msm_gpiomux_setting {
+	GPIOMUX_ACTIVE = 0,
+	GPIOMUX_SUSPENDED,
+	GPIOMUX_NSETTINGS
+};
+
+enum gpiomux_drv {
+	GPIOMUX_DRV_2MA = 0,
+	GPIOMUX_DRV_4MA,
+	GPIOMUX_DRV_6MA,
+	GPIOMUX_DRV_8MA,
+	GPIOMUX_DRV_10MA,
+	GPIOMUX_DRV_12MA,
+	GPIOMUX_DRV_14MA,
+	GPIOMUX_DRV_16MA,
+};
+
+enum gpiomux_func {
+	GPIOMUX_FUNC_GPIO = 0,
+	GPIOMUX_FUNC_1,
+	GPIOMUX_FUNC_2,
+	GPIOMUX_FUNC_3,
+	GPIOMUX_FUNC_4,
+	GPIOMUX_FUNC_5,
+	GPIOMUX_FUNC_6,
+	GPIOMUX_FUNC_7,
+	GPIOMUX_FUNC_8,
+	GPIOMUX_FUNC_9,
+	GPIOMUX_FUNC_A,
+	GPIOMUX_FUNC_B,
+	GPIOMUX_FUNC_C,
+	GPIOMUX_FUNC_D,
+	GPIOMUX_FUNC_E,
+	GPIOMUX_FUNC_F,
+};
+
+enum gpiomux_pull {
+	GPIOMUX_PULL_NONE = 0,
+	GPIOMUX_PULL_DOWN,
+	GPIOMUX_PULL_KEEPER,
+	GPIOMUX_PULL_UP,
+};
+
+/* Direction settings are only meaningful when GPIOMUX_FUNC_GPIO is selected.
+ * This element is ignored for all other FUNC selections, as the output-
+ * enable pin is not under software control in those cases.  See the SWI
+ * for your target for more details.
+ */
+enum gpiomux_dir {
+	GPIOMUX_IN = 0,
+	GPIOMUX_OUT_HIGH,
+	GPIOMUX_OUT_LOW,
+};
+
 enum
 {
     GPIO_CFG_INPUT,
@@ -104,9 +136,8 @@ enum
 enum
 {
     GPIO_CFG_NO_PULL,
-    GPIO_CFG_PULL_DOWN,
-    GPIO_CFG_KEEPER,
     GPIO_CFG_PULL_UP,
+    GPIO_CFG_PULL_DOWN,
 };
 
 /* GPIO TLMM: Drive Strength */
@@ -128,6 +159,13 @@ enum
     GPIO_CFG_DISABLE,
 };
 
+struct gpiomux_setting {
+	enum gpiomux_func func;
+	enum gpiomux_drv  drv;
+	enum gpiomux_pull pull;
+	enum gpiomux_dir  dir;
+};
+
 #define GPIO_CFG(gpio, func, dir, pull, drvstr) \
 	((((gpio) & 0x3FF) << 4)        |	\
 	((func) & 0xf)                  |	\
@@ -138,7 +176,7 @@ enum
 
 #endif
 
-#define SOC_KO  "lidbg_ad_msm8x26.ko","lidbg_soc_msm8x26.ko"
+#define SOC_KO  "lidbg_ad_mt35x.ko","lidbg_soc_mt35x.ko"
 #define INTERFACE_KO  "lidbg_interface.ko"
 #define USB_MOUNT_POINT  "/storage/udisk"
 #define RECOVERY_USB_MOUNT_POINT "/usb"
@@ -182,14 +220,8 @@ struct io_int_config
 
 #define LIDBG_GPIO_PULLUP  GPIO_CFG_PULL_UP
 
-#ifdef PLATFORM_msm8226
-#define SOC_TARGET_PATH "../../soc/msm8x26/lidbg_target_msm8226.c"
-#elif defined(PLATFORM_msm8974)
-#define SOC_TARGET_PATH "../../soc/msm8x26/lidbg_target_msm8974.c"
-#elif defined(PLATFORM_msm8909)
-#define SOC_TARGET_PATH "../../soc/msm8x26/lidbg_target_msm8909.c"
-#endif
-#define SOC_TARGET_DEFINE_PATH "lidbg_target_qcom.h"
+#define SOC_TARGET_PATH "../../soc/mt35x/lidbg_target_mt3561.c"
+#define SOC_TARGET_DEFINE_PATH "lidbg_target_mt35x.h"
 
 //#define LIDBG_GPIO_PULLDOWN  GPIO_PULLDOWN
 

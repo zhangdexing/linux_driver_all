@@ -396,8 +396,8 @@ struct lidbg_interface
 	 while(1){\
 	 	printk("lidbg: %s:%s try open lidbg_interface!\n",__FILE__,__FUNCTION__);\
 	 	fd = filp_open("/dev/lidbg_interface", O_RDWR, 0);\
-	 	printk("lidbg:get fd=%x\n",(int)fd);\
-	    if((fd == NULL)||((int)fd == 0xfffffffe)){printk("lidbg:get fd fail!\n");msleep(500);}\
+	 	printk("lidbg:get fd=%p\n",(void *)fd);\
+	    if((fd == NULL)||((ssize_t)fd == 0xfffffffe)){printk("lidbg:get fd fail!\n");msleep(500);}\
 	    else break;\
 	 }\
 	 BEGIN_KMEM;\

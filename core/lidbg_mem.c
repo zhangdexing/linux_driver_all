@@ -157,7 +157,7 @@ void write_phy_addr(u32 phy_addr, u32 value)
 void write_virt_addr(u32 phy_addr, u32 value)
 {
 
-    *(U32 *)phy_addr = value;
+    *(size_t *)(phy_addr + (size_t)0) = value;
 
 }
 
@@ -202,7 +202,7 @@ u32 read_phy_addr(u32 phy_addr)
 
 u32 read_virt_addr(u32 phy_addr)
 {
-    return *(U32 *)phy_addr;
+    return *((size_t *)(phy_addr + (size_t)0));
 
 }
 

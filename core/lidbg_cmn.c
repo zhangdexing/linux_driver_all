@@ -88,7 +88,7 @@ void set_cpu_governor(int state)
 }
 
 
-int read_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
+ssize_t read_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
 {
 
     int len = 0;
@@ -161,8 +161,9 @@ u32 lidbg_get_ns_count(void)
 u32 get_tick_count(void)
 {
     struct timespec t_now;
-    do_posix_clock_monotonic_gettime(&t_now);
-    monotonic_to_bootbased(&t_now);
+    //do_posix_clock_monotonic_gettime(&t_now);
+    //monotonic_to_bootbased(&t_now);
+	get_monotonic_boottime(&t_now);
     return t_now.tv_sec * 1000 + t_now.tv_nsec / 1000000;
 }
 

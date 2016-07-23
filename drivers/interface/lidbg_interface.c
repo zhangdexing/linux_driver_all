@@ -390,7 +390,7 @@ ssize_t interface_read(struct file *filp, char __user *buf, size_t size, loff_t 
     unsigned int count = 4;
     int ret = 0;
     u32 read_value = 0;
-    read_value = (u32)plidbg_dev;
+    read_value = (size_t)plidbg_dev;
 
     lidbg("interface_read:read_value=%x,read_count=%d\n", (u32)read_value, count);
     if (copy_to_user(buf, &read_value, count))
@@ -449,7 +449,7 @@ static struct miscdevice misc =
 int fly_interface_init(void)
 {
     int ret;
-    int p ;
+    ssize_t p ;
     DUMP_BUILD_TIME;
     ret = misc_register(&misc);
     plidbg_dev = kmalloc(sizeof(struct lidbg_interface), GFP_KERNEL);
@@ -461,16 +461,16 @@ int fly_interface_init(void)
         return 0;
     }
 
-    p = (int) & (plidbg_dev->soc_func_tbl);
+    p = (ssize_t) & (plidbg_dev->soc_func_tbl);
     {
         int i;
         for(i = 0; i < sizeof(plidbg_dev->soc_func_tbl) / 4; i++)
         {
             // (((int *) & (plidbg_dev->soc_func_tbl))[i]) = interface_func_tbl_default;
-            *((int *)(p + i * 4)) = (int)interface_func_tbl_default;
+            *((ssize_t *)(p + i * 4)) = (ssize_t)interface_func_tbl_default;
         }
     }
-    memset(&(plidbg_dev->soc_pvar_tbl), (int)NULL, sizeof(struct lidbg_pvar_t));
+    memset(&(plidbg_dev->soc_pvar_tbl), (ssize_t)NULL, sizeof(struct lidbg_pvar_t));
 
     set_func_tbl();
 

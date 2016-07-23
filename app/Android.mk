@@ -5,7 +5,6 @@ SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,halAndJni/inc)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,apps)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,lidbg_umount)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,apk)
-SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,uvccam_test)
 
 
 ifeq ($(CONFIG_HAL_GPSLIB),y)
@@ -61,6 +60,7 @@ SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,lidbg_android_server)
 endif
 
 ifeq ($(CONFIG_HAL_USB_CAMERA),y)
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,uvccam_test)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,hal_camera_usb)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,hal_camera_study_v4l2)
 endif

@@ -1480,7 +1480,7 @@ static int checkSDCardStatus(char *path)
 {
 	char temp_cmd[256];	
 	int ret = 0;
-	struct file *storage_path, *file_path;
+	struct file *storage_path = NULL, *file_path = NULL;
 	if(!strncmp(path, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)))
 	{
 		storage_path = filp_open(EMMC_MOUNT_POINT0, O_RDONLY | O_DIRECTORY, 0);

@@ -337,7 +337,7 @@ int update_list(const char *filename, struct list_head *client_list)
                             }
                             else if (pos->yourvalue && value && strcmp(pos->yourvalue, value))
                             {
-                                FS_ALWAYS("<--call.string:%s=%s,%s,%d,%d,%d>\n", key, value, pos->yourvalue, strlen(value), strlen(pos->yourvalue), strcmp(pos->yourvalue, value));
+                                FS_ALWAYS("<--call.string:%s=%s,%s,%zd,%zd,%d>\n", key, value, pos->yourvalue, strlen(value), strlen(pos->yourvalue), strcmp(pos->yourvalue, value));
                                 strncpy(pos->yourvalue, value, strlen(pos->yourvalue));
                                 if (pos->callback)
                                     pos->callback(key, value);

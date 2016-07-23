@@ -204,7 +204,7 @@ int thread_fix_fly_update_info(void *data)
     return 1;
 }
 
-static bool get_cmdline(void)
+static bool fly_get_cmdline(void)
 {
     char cmdline[512];
     fs_file_read("/proc/cmdline", cmdline, 0, sizeof(cmdline));
@@ -231,7 +231,7 @@ int lidbg_fly_hw_info_init(void)
 
     if(g_var.recovery_mode)
     {
-        if(get_cmdline())
+        if(fly_get_cmdline())
         {
             g_fly_hw_data->flag_need_update = FLAG_HW_INFO_VALID;
             fly_hw_info_save(g_fly_hw_data);
@@ -281,7 +281,7 @@ ssize_t  fly_upate_info_read(struct file *filp, char __user *buffer, size_t size
     {
         lidbg("copy_to_user ERR\n");
     }
-    lidbg("update_info = %d,read size =%d\n\n", update_info, size);
+    lidbg("update_info = %d,read size =%zd\n\n", update_info, size);
     return size;
 
 }

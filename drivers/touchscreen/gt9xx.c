@@ -2564,7 +2564,7 @@ ssize_t ts_nod_write (struct file *filp, const char __user *buf, size_t count, l
         lidbg("copy_from_user ERR\n");
     }
     data_rec[count] =  '\0';
-    lidbg("gt910-ts_nod_write:==%d====[%s]\n", count, data_rec);
+    lidbg("gt910-ts_nod_write:==%zd====[%s]\n", count, data_rec);
     // processing data
     if(!(strnicmp(data_rec, "TSMODE_XYREVERT", count - 1)))
     {

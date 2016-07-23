@@ -1,5 +1,5 @@
-#ifndef  __TARGET_MSM8x26__DEFINE_
-#define __TARGET_MSM8x26__DEFINE_
+#ifndef  __TARGET_MT35X__DEFINE_
+#define __TARGET_MT35X___DEFINE_
 
 #define  SOC_IO_SUSPEND  do{soc_io_suspend();}while(0)
 #define  SOC_IO_RESUME  do{soc_io_resume();}while(0)
@@ -18,65 +18,7 @@
 #define  MCU_SET_APP_GPIO_SUSPEND  do{check_gpio(g_hw.gpio_mcu_app);SOC_IO_Suspend_Config(g_hw.gpio_mcu_app,GPIOMUX_OUT_LOW,GPIO_CFG_NO_PULL,GPIOMUX_DRV_2MA);}while(0)
 #endif
 //gps
-#ifdef PLATFORM_msm8226
 
-#define GPS_POWER_ON do{\
-	lidbg("MSM_GPS_POWER_ON\n");\
-	lidbg_shell_cmd("echo 1 > /sys/kernel/debug/regulator/8226_l18/enable");\
-}while(0)
-
-#define GPS_POWER_OFF do{\
-	lidbg("MSM_GPS_POWER_OFF");\
-	lidbg_shell_cmd("echo 0 > /sys/kernel/debug/regulator/8226_l18/enable");\
-}while(0)
-
-#define MSM_DSI83_POWER_ON do{\
-	lidbg("MSM_DSI83_POWER_ON\n");\
-	lidbg_shell_cmd("echo 1 > /sys/kernel/debug/regulator/8226_l27/enable");\
-}while(0)
-
-#define MSM_DSI83_POWER_OFF do{\
-	lidbg("MSM_DSI83_POWER_OFF");\
-	lidbg_shell_cmd("echo 0 > /sys/kernel/debug/regulator/8226_l27/enable");\
-}while(0)
-
-#define MSM_ACCEL_POWER_ON do{\
-}while(0)
-
-#define MSM_ACCEL_POWER_OFF do{\
-}while(0)
-
-#elif defined(PLATFORM_msm8974)
-#define GPS_POWER_ON do{\
-	lidbg("MSM_GPS_POWER_ON\n");\
-	lidbg_shell_cmd("echo 1 > /sys/kernel/debug/regulator/8941_l23/enable");\
-}while(0)
-
-#define GPS_POWER_OFF do{\
-	lidbg("MSM_GPS_POWER_OFF");\
-	lidbg_shell_cmd("echo 0 > /sys/kernel/debug/regulator/8941_l23/enable");\
-}while(0)
-
-#define MSM_DSI83_POWER_ON do{\
-	lidbg("MSM_DSI83_POWER_ON\n");\
-	lidbg_shell_cmd("echo 1 > /sys/kernel/debug/regulator/8941_l23/enable");\
-}while(0)
-
-#define MSM_DSI83_POWER_OFF do{\
-	lidbg("MSM_DSI83_POWER_OFF");\
-	lidbg_shell_cmd("echo 0 > /sys/kernel/debug/regulator/8941_l23/enable");\
-}while(0)
-
-#define MSM_ACCEL_POWER_ON do{\
-	lidbg("MSM_ACCEL_POWER_ON");\
-	lidbg_shell_cmd("echo 1 > /sys/kernel/debug/regulator/8941_l18/enable");\
-}while(0)
-
-#define MSM_ACCEL_POWER_OFF do{\
-	lidbg("MSM_ACCEL_POWER_OFF");\
-	lidbg_shell_cmd("echo 0 > /sys/kernel/debug/regulator/8941_l18/enable");\
-}while(0)
-#else
 #define GPS_POWER_ON do{check_gpio(g_hw.gpio_gps_en);SOC_IO_Output(0, g_hw.gpio_gps_en, 1);}while(0)
 #define GPS_POWER_OFF do{check_gpio(g_hw.gpio_gps_en);SOC_IO_Output(0, g_hw.gpio_gps_en, 0);}while(0)
 #define MSM_DSI83_POWER_ON do{}while(0)
@@ -84,7 +26,6 @@
 #define MSM_ACCEL_POWER_ON do{}while(0)
 #define MSM_ACCEL_POWER_OFF do{}while(0)
 
-#endif
 
 
 //lcd
@@ -148,142 +89,23 @@
 				SOC_IO_Suspend_Config(g_hw.gpio_usb_id,GPIOMUX_OUT_HIGH,GPIO_CFG_NO_PULL,GPIOMUX_DRV_2MA);\
 		}while(0)
 
-#ifdef PLATFORM_msm8909
-#define USB_POWER_FRONT_ENABLE do{\
-			lidbg("gpio_usb_front_en\n");\
-			check_gpio(g_hw.gpio_usb_front_en);\
-			SOC_IO_Output(0, g_hw.gpio_usb_front_en, 1);\
-	}while(0)
-#define USB_POWER_FRONT_DISABLE do{\
-			check_gpio(g_hw.gpio_usb_front_en);\
-			SOC_IO_Output(0, g_hw.gpio_usb_front_en, 0);\
-	}while(0)
 
-#define USB_POWER_BACK_ENABLE do{\
-			lidbg("gpio_usb_backcam_en\n");\
-			check_gpio(g_hw.gpio_usb_backcam_en);\
-			SOC_IO_Output(0, g_hw.gpio_usb_backcam_en, 1);\
-	}while(0)
-#define USB_POWER_BACK_DISABLE do{\
-			check_gpio(g_hw.gpio_usb_backcam_en);\
-			SOC_IO_Output(0, g_hw.gpio_usb_backcam_en, 0);\
-	}while(0)
-
-#define USB_POWER_UDISK_ENABLE do{\
-			lidbg("gpio_usb_udisk_en\n");\
-			check_gpio(g_hw.gpio_usb_udisk_en);\
-			SOC_IO_Output(0, g_hw.gpio_usb_udisk_en, 1);\
-	}while(0)
-#define USB_POWER_UDISK_DISABLE do{\
-			check_gpio(g_hw.gpio_usb_udisk_en);\
-			SOC_IO_Output(0, g_hw.gpio_usb_udisk_en, 0);\
-	}while(0)
-#else
 #define USB_POWER_FRONT_ENABLE
 #define USB_POWER_FRONT_DISABLE
 #define USB_POWER_BACK_ENABLE
 #define USB_POWER_BACK_DISABLE
 #define USB_POWER_UDISK_ENABLE
 #define USB_POWER_UDISK_DISABLE
-#endif
 
-#ifdef PLATFORM_msm8974
-#ifdef PLATFORM_ID_14
-#define USB_WORK_ENABLE do{\
-				lidbg("USB_WORK_ENABLE\n");\
-				USB_ID_HIGH_DEV;\
-				msleep(200);\
-				USB_SWITCH_CONNECT;\
-				USB_POWER_ENABLE;\
-				USB_ID_LOW_HOST;\
-				}while(0)
-#endif
-#ifdef PLATFORM_ID_7
-#define USB_WORK_ENABLE do{\
-				lidbg("USB_WORK_ENABLE\n");\
-				USB_ID_HIGH_DEV;\
-				msleep(200);\
-				USB_SWITCH_CONNECT;\
-	    			USB_POWER_ENABLE;\
-	    			USB_ID_LOW_HOST;\
-				}while(0)
-#endif
-#ifdef PLATFORM_ID_4
-#define USB_WORK_ENABLE do{\
-					lidbg("USB_WORK_ENABLE\n");\
-					USB_SWITCH_CONNECT;\
-	    			USB_POWER_ENABLE;\
-	    			USB_ID_LOW_HOST;\
-				}while(0)
-#endif
-#define USB_WORK_DISENABLE  do{\
-			lidbg("USB_WORK_DISENABLE\n");\
-			USB_ID_HIGH_DEV;\
-			msleep(200);\
-			USB_SWITCH_DISCONNECT;\
-			USB_POWER_DISABLE;\
-			}while(0)
-#elif defined(PLATFORM_msm8909)
-#define USB_WORK_ENABLE do{\
-				lidbg("USB_WORK_ENABLE\n");\
-				USB_ID_LOW_HOST;\
-    				USB_POWER_ENABLE;\
-    				USB_POWER_BACK_ENABLE;\
-    				msleep(3000);\
-    				USB_POWER_FRONT_ENABLE;\
-    				msleep(1000);\
-				USB_POWER_UDISK_ENABLE;\
-			}while(0)
+#define USB_WORK_ENABLE
+#define USB_WORK_DISENABLE
 
-#define USB_WORK_DISENABLE  do{\
-			lidbg("USB_WORK_DISENABLE\n");\
-			USB_POWER_DISABLE;\
-			USB_POWER_UDISK_DISABLE;\
-			USB_POWER_FRONT_DISABLE;\
-			USB_POWER_BACK_DISABLE;\
-			msleep(500);\
-			USB_ID_HIGH_DEV;\
-			}while(0)
-#else  //msm8228
-#define USB_WORK_ENABLE do{\
-				lidbg("USB_WORK_ENABLE\n");\
-				USB_SWITCH_CONNECT;\
-    			USB_POWER_ENABLE;\
-    			USB_ID_LOW_HOST;\
-			}while(0)
+#define USB_FRONT_WORK_ENABLE
 
-#define USB_WORK_DISENABLE  do{\
-			lidbg("USB_WORK_DISENABLE\n");\
-			USB_POWER_DISABLE;\
-			msleep(500);\
-			USB_SWITCH_DISCONNECT;\
-			USB_ID_HIGH_DEV;\
-			}while(0)
-#endif
+#define MSM_DSI83_DISABLE
 
+#define FLY_GPS_SO  "gps.mt3561.so"
 
-#define USB_FRONT_WORK_ENABLE  do{\
-				lidbg("USB_FRONT_WORK_ENABLE\n");\
-				USB_ID_LOW_HOST;\
-    				USB_POWER_ENABLE;\
-    				USB_POWER_FRONT_ENABLE;\
-			}while(0)
-
-
-
-#define MSM_DSI83_DISABLE do{\
-		check_gpio(DSI83_GPIO_EN);\
-		lidbg("MSM_DSI83_DISABLE\n");\
-		SOC_IO_Output(0, DSI83_GPIO_EN, 0);\
-	}while(0)
-
-#ifdef PLATFORM_msm8226
-#define FLY_GPS_SO  "gps.msm8226.so"
-#elif defined(PLATFORM_msm8974)
-#define FLY_GPS_SO  "gps.msm8974.so"
-#elif defined(PLATFORM_msm8909)
-#define FLY_GPS_SO  "gps.msm8909.so"
-#endif
 
 #define WAKEUP_MCU_BEGIN  do{check_gpio(g_hw.gpio_mcu_i2c_wakeup);SOC_IO_Output(0, g_hw.gpio_mcu_i2c_wakeup, 1); }while(0)
 #define WAKEUP_MCU_END  do{check_gpio(g_hw.gpio_mcu_i2c_wakeup);SOC_IO_Output(0, g_hw.gpio_mcu_i2c_wakeup, 0); }while(0)

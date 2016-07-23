@@ -5,6 +5,8 @@ clear
 cd ../build && source env_entry.sh && ./build_cfg.sh  $DBG_SOC $BOARD_VERSION $DBG_PLATFORM $DBG_VENDOR
 if [ $DBG_PLATFORM = mt3360 ];then
 cd $DBG_SYSTEM_DIR/&&source ./selfenv&&lunch 5  && mmm $DBG_HAL_PATH -B
+elif [ $DBG_PLATFORM = cust3561_64_common ];then
+cd $DBG_SYSTEM_DIR/&&source build/envsetup.sh&&choosecombo release full_$DBG_PLATFORM $SYSTEM_BUILD_TYPE && mmm $DBG_HAL_PATH -B
 else
 cd $DBG_SYSTEM_DIR/&&source build/envsetup.sh&&choosecombo release $DBG_PLATFORM $SYSTEM_BUILD_TYPE && mmm $DBG_HAL_PATH -B
 if [ $? = 0 ]; then

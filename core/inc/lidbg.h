@@ -38,7 +38,7 @@
 #include <linux/version.h>
 #include <linux/platform_device.h>
 #include <linux/syscalls.h>
-#include <asm/system.h>
+//#include <asm/system.h>
 #include <linux/time.h>
 #ifdef SOC_mt3360
 #else

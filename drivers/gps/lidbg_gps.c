@@ -325,7 +325,7 @@ do_nothing:
 }
 
 
-int read_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
+ssize_t read_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
 {
     PROC_READ_CHECK;
     lidbg("enable ublox print\n");

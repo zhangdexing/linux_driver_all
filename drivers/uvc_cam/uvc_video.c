@@ -1490,7 +1490,7 @@ static void uvc_video_decode_isoc(struct urb *urb, struct uvc_streaming *stream,
 								mem++;
 							if((mem[0] == 0xFF) && (mem[1] == 0xC4))
 							{
-								memcpy(Next_Marker,  mem, buf->bytesused - ((u32)mem - (u32)buf->mem)  );
+								memcpy(Next_Marker,  mem, buf->bytesused - ((size_t)mem - (size_t)buf->mem)  );
 								buf->bytesused -= (mem - Next_Marker);
 							}
 						}

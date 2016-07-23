@@ -83,7 +83,7 @@ function set_env()
 	echo $FUNCNAME $TARGET_PRODUCT $DBG_PLATFORM $SYSTEM_BUILD_TYPE
 #	if [[ $TARGET_PRODUCT != $DBG_PLATFOR ]];then
 		echo "do source/choosecombo"
-		source build/envsetup.sh&&choosecombo release $DBG_PLATFORM $SYSTEM_BUILD_TYPE
+		source build/envsetup.sh&&choosecombo release full_$DBG_PLATFORM $SYSTEM_BUILD_TYPE
 #	fi
 }
 
@@ -146,7 +146,7 @@ function soc_make_otapackage()
 	fi
 
 	if [[ $TARGET_PRODUCT = "" ]];then
-		source build/envsetup.sh&&choosecombo release $DBG_PLATFORM $SYSTEM_BUILD_TYPE
+		source build/envsetup.sh&&choosecombo release full_$DBG_PLATFORM $SYSTEM_BUILD_TYPE
 	fi
 
 	make otapackage -j16
