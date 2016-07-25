@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <signal.h>       
 #include <sys/klog.h>
+#include <ftw.h>
 #include "lidbg_servicer.h"
 
 /***********************宏定义******************************************/
