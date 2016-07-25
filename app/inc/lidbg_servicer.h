@@ -23,6 +23,8 @@
 //#undef printf
 #define lidbg  LIDBG_PRINT
 #define DUMP_BUILD_TIME    do{ lidbg( "Build Time: %s, %s, %s \n", __FUNCTION__, __DATE__, __TIME__);}while(0)
+#define DUMP_POS     do{lidbg( "come to %s,%s,line %d\n", __FILE__,__FUNCTION__,__LINE__);}while(0)
+
 
 #ifdef SOC_imx6q
 #define DUMP_BUILD_TIME_FILE do{\

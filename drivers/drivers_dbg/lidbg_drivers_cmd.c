@@ -519,6 +519,13 @@ void parse_cmd(char *pt)
 #else
             CREATE_KTHREAD(thread_enable_dmesg, NULL);
 #endif
+	    if(g_var.is_fly)
+           	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE&");
+           else
+               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
+
+		 lidbg_shell_cmd("chmod 777 /data/lidbg/reckmsg/* ");
+
             lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#073"))
@@ -633,6 +640,13 @@ void parse_cmd(char *pt)
             lidbg_fifo_get(glidbg_msg_fifo, LIDBG_LOG_DIR"lidbg_mem_log.txt", 0);
             CREATE_KTHREAD(thread_kmsg_fifo_save, NULL);
 	     lidbg_shell_cmd("chmod 777 /data/lidbg/*");
+	    if(g_var.is_fly)
+           	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE&");
+           else
+               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
+		 
+	     lidbg_shell_cmd("chmod 777 /data/lidbg/reckmsg/* ");
+
             lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#022"))
