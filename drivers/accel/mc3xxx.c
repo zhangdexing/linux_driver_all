@@ -56,6 +56,7 @@ static int cnt_crash_detected = 0;
 static struct wake_lock irq_wakelock;
 
 static struct mc3xxx_data *flydata = NULL;
+static bool irq_func_ignore = false;
 
 #define NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE	(130)
 #define NOTIFIER_MINOR_EXCEED_THRESHOLD 		(10)
@@ -1914,6 +1915,13 @@ static irqreturn_t mc3xxx_irq_func(int irq, void *handle)
 {
     struct mc3xxx_data *data = handle;
 
+	if( irq_func_ignore == true) {
+
+		printk(KERN_ERR"mc3xxx irq_func_ignore! \n");
+		irq_func_ignore = false;
+		return IRQ_HANDLED;
+	}
+
 	wake_lock(&irq_wakelock);
 	cnt_crash_detected++;
 	printk(KERN_ERR"Tap Event Detected! \n");
@@ -1945,9 +1953,9 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
         mutex_lock(&data->lock);
 		mc3xxx_chip_init(data->client);
 
+		mc3xxx_set_mode(data->client, MC3XXX_WAKE);
 		SOC_IO_ISR_Enable(ACCEL_INT1);
 		//enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
-		mc3xxx_set_mode(data->client, MC3XXX_WAKE);
 
         mutex_unlock(&data->lock);
 		//hrtimer_start(&data->timer, ktime_set(0, sensor_duration * 1000000), HRTIMER_MODE_REL);
@@ -2245,10 +2253,13 @@ static int mc3xxx_acc_resume(struct mc3xxx_data *mc_data)
         mutex_lock(&flydata->lock);
 		mc3xxx_chip_init(flydata->client);
 
-		SOC_IO_ISR_Enable(ACCEL_INT1);
-		//enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
 		mc3xxx_set_mode(flydata->client, MC3XXX_WAKE);
 
+		irq_func_ignore = true;
+		SOC_IO_ISR_Enable(ACCEL_INT1);
+		//enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
+		msleep(50);
+		irq_func_ignore = false;
         mutex_unlock(&flydata->lock);
 	}
 /*
@@ -2268,8 +2279,12 @@ static int mc3xxx_acc_resume(struct mc3xxx_data *mc_data)
 
 static int mc3xxx_acc_suspend(struct mc3xxx_data *mc_data)
 {
-	if(flydata->enabled == 1)
+	if(flydata->enabled == 1) {
+
+		mc3xxx_set_mode(mc_data->client, MC3XXX_STANDBY);
 		SOC_IO_ISR_Disable(ACCEL_INT1);
+		irq_func_ignore = false;
+	}
 /*
 	//char buf[1] = {0};
 	MSM_ACCEL_POWER_OFF;
