@@ -416,7 +416,7 @@ static int thread_set_par_func(void *data)
 			msleep(800);
 			start_rec(REARVIEW_ID,1);
 		}
-
+#if 0
 		if(isDualCam)
 		{
 			if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID)	isDVRVideoLoop = 1;
@@ -434,6 +434,7 @@ static int thread_set_par_func(void *data)
 		lidbg_shell_cmd(temp_cmd);
 		sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
 		lidbg_shell_cmd(temp_cmd);
+#endif		
 	}
 	return 0;
 }
