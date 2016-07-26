@@ -538,7 +538,7 @@ int main(int argc,char* argv[])
                     strcat(buf,tbuf);
                     memset(tbuf,0,kmsg_buffer_len+1);
                     iswriten = 0;
-                    if(debug) lidbg("record_klogctl:<1M\t");
+                    if(debug) lidbg("record_klogctl:<%dKB\t",BUFSIZE/1024);
                }
                else
                {
@@ -561,7 +561,7 @@ int main(int argc,char* argv[])
 
         }/*end of if(kmsg_buffer_len > 0)*/
 
-        sleep(1);//休眠3秒后进行下一次读写
+        sleep(5);//休眠3秒后进行下一次读写
     }/*end of while(1)*/
 
     /*没读满1M情况，上面执行不会写入文件，在退出之前将缓冲区的内容写入文件*/

@@ -134,7 +134,7 @@ void set_system_performance(int type)
     else if(type == 1)//low performance
     {
 #ifdef PLATFORM_msm8974
-        lidbg_readwrite_file(FREQ_MAX_NODE, NULL, "2265600", strlen("2265600"));
+     //   lidbg_readwrite_file(FREQ_MAX_NODE, NULL, "2265600", strlen("2265600"));
 #endif
         set_cpu_governor(0);
         temp_offset = -normal_temp_offset;
