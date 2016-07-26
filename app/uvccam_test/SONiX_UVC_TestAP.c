@@ -1506,7 +1506,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 			sprintf(dvr_blackbox_filename, "%s/F%s.h264", Em_Save_Tmp_Dir, deq_time_buf);
 			sprintf(dvr_blackbox_dest_filename, "%s/F%s.mp4", Em_Save_Dir, deq_time_buf);
 #else
-			sprintf(dvr_blackbox_filename, "%s/F%s.h264", Em_Save_Dir, deq_time_buf);
+			sprintf(dvr_blackbox_filename, "%s/EF%s.h264", Rec_Save_Dir, deq_time_buf);
 #endif
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,dvr_blackbox_filename);
 			fp1 = fopen(dvr_blackbox_filename, "ab+");
@@ -1518,7 +1518,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 			sprintf(rear_blackbox_filename, "%s/R%s.h264", Em_Save_Tmp_Dir, deq_time_buf);
 			sprintf(rear_blackbox_dest_filename, "%s/R%s.mp4", Em_Save_Dir, deq_time_buf);
 #else
-			sprintf(rear_blackbox_filename, "%s/R%s.h264", Em_Save_Dir, deq_time_buf);
+			sprintf(rear_blackbox_filename, "%s/ER%s.h264", Rec_Save_Dir, deq_time_buf);
 #endif
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,rear_blackbox_filename);
 			fp1 = fopen(rear_blackbox_filename, "ab+");
@@ -1570,7 +1570,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 		}
 		if(isVideoLoop > 0)
 		{
-			if(rec_fp != NULL) fwrite(tempa, lengtha, 1, rec_fp);//write data to the output file
+			if(rec_fp != NULL) fwrite(tempa, lengtha, 1, rec_fp);//write data to the output files
 		}
 		if(isBlackBoxTopRec) 
 		{
@@ -1629,7 +1629,7 @@ void *thread_dequeue(void *par)
 	{
 		if(isNormDequeue)
 		{
-			//lidbg("%s: count = %d ,isDequeue:%d\n", __func__,tmp_count,isDequeue);
+			lidbg("[%d]%s: count = %d ,isDequeue:%d\n", cam_id,__func__,tmp_count,isDequeue);
 			if(!isDequeue)
 			{
 				isDequeue = 1;
@@ -2305,6 +2305,9 @@ int find_earliest_file(char* Dir,char* minRecName)
 	                        continue;  
 					//if((!strncmp(ent->d_name, "F", 1) && (cam_id == DVR_ID)) ||(!strncmp(ent->d_name, "R", 1) && (cam_id == REARVIEW_ID)) )
 					//{
+					if(strncmp(ent->d_name, "F", 1) && strncmp(ent->d_name, "R", 1))
+							continue;
+						
 						filecnt++;
 		                //lidbg("ent->d_name:%s====ent->d_reclen:%d=====\n", ent->d_name,ent->d_reclen); 
 
@@ -4975,78 +4978,119 @@ openfd:
 
 		if(!strncmp(isBlackBoxRec, "1", 1))
 		{
-			if((isBlackBoxTopRec == 0) && (isBlackBoxBottomRec == 0))
+			if(isVideoLoop)
 			{
-				int isStorageOK = 0;
+				char new_flyh264_filename[100] = {0};
+				char tmp_cmd[200] = {0};
+#if 0				
+				while(1)
+				{
+					if(!isDequeue) break;
+				}
+#endif				
 
-				if(access(Em_Save_Dir, R_OK) != 0)
+				if(cam_id == DVR_ID)
+					sprintf(new_flyh264_filename, "%sEF%s.h264", Rec_Save_Dir, time_buf);
+				else if(cam_id == REARVIEW_ID)
+					sprintf(new_flyh264_filename, "%sER%s.h264", Rec_Save_Dir, time_buf);
+				
+				lidbg("======== new_flyh264_filename:%s=======\n",new_flyh264_filename);	
+				if(rec_fp1 != NULL) fclose(rec_fp1);
+#if 1
+				if(rename(flyh264_filename, new_flyh264_filename) < 0)
+					lidbg("========rename fail=======\n");			
+#endif
+				strcpy(flyh264_filename, new_flyh264_filename);
+				rec_fp1 = fopen(flyh264_filename, "a+b");
+				//if(rec_fp1 == NULL) lidbg("======== rec_fp1 null!=======\n");
+				//lidbg("======== flyh264_filename 1111  %s=======\n",flyh264_filename);
+
+				if((buf0.timestamp.tv_sec - originRecsec) % Rec_Sec > (Rec_Sec - 60)	)
+				{
+					int diffsec = (buf0.timestamp.tv_sec - originRecsec) % Rec_Sec - (Rec_Sec - 60);
+
+					lidbg("======== diffsec:%d=======\n",diffsec);
+					//lidbg("======== old originRecsec:%d=======\n",originRecsec);
+					originRecsec += diffsec;
+					//lidbg("======== new originRecsec:%d=======\n",originRecsec);
+				}
+				else lidbg("======== keep recording!=======\n");
+			}
+			else
+			{
+				if((isBlackBoxTopRec == 0) && (isBlackBoxBottomRec == 0))
+				{
+					int isStorageOK = 0;
+					if(access(Em_Save_Dir, R_OK) != 0)
 					mkdir(Em_Save_Dir,S_IRWXU|S_IRWXG|S_IRWXO);
 
-				if(access(Em_Save_Dir, R_OK) != 0)
-				{
-					lidbg("Em_Save_Dir still not OK!\n");
-					isStorageOK = 0;
-				}
-				else if(!strncmp(Em_Save_Dir, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)) )
-				{
-					size_t mbFreedisk;
-					mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT0);
-					if(mbFreedisk < 300)
+					if(access(Em_Save_Dir, R_OK) != 0)
 					{
-						lidbg("[SD0] Emergency recording not enough space!!\n");
-						send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_EM_SD0_INSUFFICIENT_SPACE);
+						lidbg("Em_Save_Dir still not OK!\n");
 						isStorageOK = 0;
 					}
-					else isStorageOK = 1;
-				}
-				else if(!strncmp(Em_Save_Dir, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)) )
-				{
-					size_t mbFreedisk;
-					mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT1);
-					if(mbFreedisk < 100)
+					else if(!strncmp(Em_Save_Dir, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)) )
 					{
-						lidbg("[SD1] Emergency recording not enough space!!\n");
-						send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_EM_SD1_INSUFFICIENT_SPACE);
-						isStorageOK = 0;
+						size_t mbFreedisk;
+						mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT0);
+						if(mbFreedisk < 300)
+						{
+							lidbg("[SD0] Emergency recording not enough space!!\n");
+							send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_EM_SD0_INSUFFICIENT_SPACE);
+							isStorageOK = 0;
+						}
+						else isStorageOK = 1;
 					}
-					else isStorageOK = 1;
-				}
-				else
-				{
-					lidbg("Emergency recording path ERR!! (ex:/storage/sdcard1.....)\n");
-					isStorageOK = 0;
-				}
-				
-				if(isStorageOK)
-				{
-					if(msize <= (Emergency_Top_Sec * 30))
+					else if(!strncmp(Em_Save_Dir, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)) )
 					{
-						lidbg("Waiting for msize restoration!\n");
-#if 0
-						isBlackBoxTopRec = 1;
-						isBlackBoxBottomRec = 1;
-						tmp_count = msize;
-						pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize);
-#endif
-						isBlackBoxTopWaitDequeue = 1;
+						size_t mbFreedisk;
+						mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT1);
+						if(mbFreedisk < 100)
+						{
+							lidbg("[SD1] Emergency recording not enough space!!\n");
+							send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_EM_SD1_INSUFFICIENT_SPACE);
+							isStorageOK = 0;
+						}
+						else isStorageOK = 1;
 					}
 					else
 					{
-#if 0
-						//tmp_count = msize - 300;
-						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize - 300);
-						//usleep(20 * 1000);
-						dequeue_buf(msize - 300,rec_fp1);
-						isBlackBoxTopRec = 1;
-						isBlackBoxBottomRec = 1;
-						tmp_count = 300;
-						pthread_create(&thread_dequeue_id,NULL,thread_dequeue,300);
-#endif
-						//pthread_create(&thread_dequeue_id,NULL,thread_top_dequeue,NULL);
-						isTopDequeue = 1;
+						lidbg("Emergency recording path ERR!! (ex:/storage/sdcard1.....)\n");
+						isStorageOK = 0;
 					}
-				}
+					
+					if(isStorageOK)
+					{
+						if(msize <= (Emergency_Top_Sec * 30))
+						{
+							lidbg("Waiting for msize restoration!\n");
+#if 0
+							isBlackBoxTopRec = 1;
+							isBlackBoxBottomRec = 1;
+							tmp_count = msize;
+							pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize);
+#endif
+							isBlackBoxTopWaitDequeue = 1;
+						}
+						else
+						{
+#if 0
+							//tmp_count = msize - 300;
+							//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize - 300);
+							//usleep(20 * 1000);
+							dequeue_buf(msize - 300,rec_fp1);
+							isBlackBoxTopRec = 1;
+							isBlackBoxBottomRec = 1;
+							tmp_count = 300;
+							pthread_create(&thread_dequeue_id,NULL,thread_dequeue,300);
+#endif
+							//pthread_create(&thread_dequeue_id,NULL,thread_top_dequeue,NULL);
+							isTopDequeue = 1;
+						}
+					}
 			}
+			}
+			
 			//else isBlackBoxTopWaitDequeue = 1;
 			
 			if(cam_id == DVR_ID)
@@ -5594,6 +5638,7 @@ openfd:
 						
 						//while(isDequeue) usleep(100*1000);
 						//dequeue_buf(msize,rec_fp1);
+#if 0
 						if(rec_fp1 != NULL) 
 						{
 							//lidbg("****<%d>start feeding****\n",cam_id);
@@ -5603,6 +5648,9 @@ openfd:
 							isOldFp = 1;
 							isNormDequeue = 1;	
 						}
+#else
+						if(rec_fp1 != NULL) fclose(rec_fp1);
+#endif
 #if 0
 						isIframe = 1;
 						XU_H264_Set_IFRAME(dev);
