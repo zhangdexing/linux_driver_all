@@ -379,7 +379,7 @@ static int thread_stop_rec_func(void *data)
 /*can not block in ISR function*/
 static int thread_set_par_func(void *data)
 {
-	char temp_cmd[256];	
+	//char temp_cmd[256];	
 	while(1)
 	{
 		wait_for_completion(&set_par_wait);
@@ -1073,6 +1073,7 @@ static void fixScreenBlurred(char cam_id , char isOnline)
 		msleep(100);
 
 		lidbg_shell_cmd("rm -f "EMMC_MOUNT_POINT0"/camera_rec/tmp*.h264&");
+		lidbg_shell_cmd("rm -f "EMMC_MOUNT_POINT1"/camera_rec/tmp*.h264&");
 		if(!isDVRFirstResume) isDVRCheck = 1;
 	}
 	else if((cam_id == REARVIEW_ID) ||  (cam_id == REAR_BLOCK_ID_MODE))
@@ -1101,6 +1102,7 @@ static void fixScreenBlurred(char cam_id , char isOnline)
 		msleep(100);
 
 		lidbg_shell_cmd("rm -f "EMMC_MOUNT_POINT0"/tmp*.h264&");
+		lidbg_shell_cmd("rm -f "EMMC_MOUNT_POINT1"/tmp*.h264&");
 		if(!isRearFirstResume) isRearCheck = 1;
 	}
 	return;

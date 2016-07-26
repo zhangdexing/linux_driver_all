@@ -1609,7 +1609,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 		if(isVideoLoop > 0)
 		{
 			if(isBeginTopDeq && rec_fp != NULL) fwrite(tempa, lengtha, 1, rec_fp);//write data to the output files
-			else lidbg("****[%d]throw*****\n",cam_id);
+			//else lidbg("****[%d]throw*****\n",cam_id);
 		}
 		if(isBlackBoxTopRec) 
 		{
@@ -1676,7 +1676,7 @@ void *thread_dequeue(void *par)
 	{
 		if(isNormDequeue)
 		{
-			lidbg("[%d]%s: count = %d ,isDequeue:%d\n", cam_id,__func__,tmp_count,isDequeue);
+			//lidbg("[%d]%s: count = %d ,isDequeue:%d\n", cam_id,__func__,tmp_count,isDequeue);
 			
 			if(isOldFp && old_rec_fp1 != NULL)
 			{
@@ -1692,7 +1692,7 @@ void *thread_dequeue(void *par)
 				XU_H264_Set_IFRAME(dev);
 				if(isOldFp) 
 				{
-					lidbg("****<%d>deq old_rec_fp1****\n",cam_id);
+					//lidbg("****<%d>deq old_rec_fp1****\n",cam_id);
 					dequeue_buf(msize,old_rec_fp1);
 				}
 				else dequeue_buf(tmp_count,rec_fp1);
@@ -1701,12 +1701,12 @@ void *thread_dequeue(void *par)
 #if 1
 			if(isOldFp && old_rec_fp1 != NULL)
 			{
-				lidbg("****<%d>fclose old_rec_fp1****\n",cam_id);
+				//lidbg("****<%d>fclose old_rec_fp1****\n",cam_id);
 				fclose(old_rec_fp1);
+				isOldFp = 0;
 			}
 #endif			
 			isNormDequeue = 0;
-			isOldFp = 0;
 		}
 		usleep(10*1000);
 	}
@@ -5784,7 +5784,7 @@ openfd:
 #if 1
 						if(rec_fp1 != NULL) 
 						{
-							lidbg("****<%d>start feeding  %s****\n",cam_id,flyh264_filename);
+							//lidbg("****<%d>start feeding  %s****\n",cam_id,flyh264_filename);
 							fclose(rec_fp1);
 							strcpy(old_flyh264_filename, flyh264_filename);
 							old_rec_fp1 = fopen(old_flyh264_filename, "ab+");
@@ -5901,7 +5901,13 @@ openfd:
 					{
 						tmp_count = Emergency_Top_Sec * 30;
 						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
-						isNormDequeue = 1;
+						if(isVideoLoop)
+						{
+							/*left 5s*/
+							if((buf0.timestamp.tv_sec - originRecsec) % Rec_Sec < (Rec_Sec - 5))
+								isNormDequeue = 1;
+						}
+						else isNormDequeue = 1;
 					}
 				}
 				isExceed = 0;
