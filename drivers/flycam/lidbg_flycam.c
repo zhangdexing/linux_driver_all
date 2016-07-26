@@ -2662,6 +2662,10 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					case CMD_EM_SAVE_DAYS:
 						lidbg("%s:CMD_EM_SAVE_DAYS [%d]\n",__func__,((char*)arg)[1]);
 						if(((char*)arg)[1] > 0)  delDays= ((char*)arg)[1];
+						
+						sprintf(temp_cmd, "setprop persist.uvccam.delDays %d",delDays);
+						lidbg_shell_cmd(temp_cmd);
+						
 						dvrRespond[1] = delDays;
 						length += 2;
 						if(copy_to_user((char*)arg,dvrRespond,length))

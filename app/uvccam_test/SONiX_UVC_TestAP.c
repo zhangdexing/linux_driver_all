@@ -145,6 +145,8 @@ int isToDel = 0;
 int isTranscoding = 0;
 int isEmPermit = 0;
 int isBrokenIFrame = 0;
+
+
 // chris -
 
 struct H264Format *gH264fmt = NULL;
@@ -189,7 +191,8 @@ unsigned int tmp_count = 0;
 char isNormDequeue = 0;
 char isTopDequeue = 0;
 
-static unsigned int Emergency_Top_Sec = 10,Emergency_Bottom_Sec = 10;
+static unsigned int Emergency_Top_Sec = 5,Emergency_Bottom_Sec = 60;
+int BlackBoxBottomCnt = 0;
 
 static unsigned int top_totalFrames ,bottom_totalFrames;
 static unsigned int top_lastFrames ,bottom_lastFrames;
@@ -1489,6 +1492,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 	FILE *fp1 = NULL;
 	FILE *fp2 = NULL;
 	int isBeginTopDeq = 0;
+	if(isBlackBoxBottomRec) lidbg("***BlackBoxBottomCnt:%d****\n",BlackBoxBottomCnt);
 #if 1
 	while(1)
 	{
@@ -1617,7 +1621,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 		}
 	}
 #endif	
-	if(isBlackBoxTopRec == 0) isBlackBoxBottomRec = 0;
+	if(isBlackBoxTopRec == 0 && !(BlackBoxBottomCnt--)) isBlackBoxBottomRec = 0;
 	isBlackBoxTopRec = 0;
 	//system("setprop lidbg.uvccam.isdequeue 0");
 	property_set("lidbg.uvccam.isdequeue", "0");
@@ -1639,18 +1643,19 @@ void *thread_dequeue(void *par)
 				XU_H264_Set_IFRAME(dev);
 				if(isOldFp) 
 				{
-					//lidbg("****<%d>deq old_rec_fp1****\n",cam_id);
+					lidbg("****<%d>deq old_rec_fp1****\n",cam_id);
 					dequeue_buf(msize,old_rec_fp1);
 				}
 				else dequeue_buf(tmp_count,rec_fp1);
 				isDequeue = 0;
 			}
-
-			if(old_rec_fp1 != NULL)
+#if 1
+			if(isOldFp && old_rec_fp1 != NULL)
 			{
-				//lidbg("****<%d>fclose old_rec_fp1****\n",cam_id);
+				lidbg("****<%d>fclose old_rec_fp1****\n",cam_id);
 				fclose(old_rec_fp1);
 			}
+#endif			
 			isNormDequeue = 0;
 			isOldFp = 0;
 		}
@@ -2241,7 +2246,8 @@ static void switch_scan(void)
 	property_get("persist.uvccam.top.emtime", Em_Top_Sec_String, "5");
 	property_get("persist.uvccam.bottom.emtime", Em_Bottom_Sec_String, "10");
 	Emergency_Top_Sec = atoi(Em_Top_Sec_String);
-	Emergency_Bottom_Sec = atoi(Em_Bottom_Sec_String);
+	//Emergency_Bottom_Sec = atoi(Em_Bottom_Sec_String);
+	Emergency_Bottom_Sec = 60;
 	
 	//if(isToDel)
 	//{
@@ -2415,9 +2421,9 @@ static void get_driver_prop(int camID)
 {
 		/*set each file recording time*/
 		if(camID == DVR_ID)
-			property_get("fly.uvccam.dvr.rectime", Rec_Sec_String, "300");
+			property_get("fly.uvccam.dvr.rectime", Rec_Sec_String, "120");
 		else if(camID == REARVIEW_ID)
-			property_get("fly.uvccam.rearview.rectime", Rec_Sec_String, "300");
+			property_get("fly.uvccam.rearview.rectime", Rec_Sec_String, "120");
 		Rec_Sec = atoi(Rec_Sec_String);
 		lidbg("========set each file recording time-> %d s=======\n",Rec_Sec);
 		if(Rec_Sec == 0) 
@@ -5144,6 +5150,7 @@ openfd:
 					
 					if(isStorageOK)
 					{
+						BlackBoxBottomCnt = Emergency_Bottom_Sec / Emergency_Top_Sec;
 						if(msize <= (Emergency_Top_Sec * 30))
 						{
 							lidbg("Waiting for msize restoration!\n");
@@ -5721,13 +5728,13 @@ openfd:
 						
 						//while(isDequeue) usleep(100*1000);
 						//dequeue_buf(msize,rec_fp1);
-#if 0
+#if 1
 						if(rec_fp1 != NULL) 
 						{
-							//lidbg("****<%d>start feeding****\n",cam_id);
+							lidbg("****<%d>start feeding  %s****\n",cam_id,flyh264_filename);
 							fclose(rec_fp1);
-							old_rec_fp1 = fopen(flyh264_filename, "ab+");
 							strcpy(old_flyh264_filename, flyh264_filename);
+							old_rec_fp1 = fopen(old_flyh264_filename, "ab+");
 							isOldFp = 1;
 							isNormDequeue = 1;	
 						}
@@ -5825,12 +5832,12 @@ openfd:
 #endif
 						
 					
-					if(isBlackBoxBottomRec && (msize > (Emergency_Bottom_Sec*30)) && (isBlackBoxTopRec == 0))
+					if(isBlackBoxBottomRec && (msize > (Emergency_Top_Sec*30)) && (isBlackBoxTopRec == 0))
 					{
 						//lidbg("======Bottom write===lastFrames:%d,Bottom_Sec:%d======\n",bottom_lastFrames,Emergency_Bottom_Sec);
-						if(bottom_lastFrames < (Emergency_Bottom_Sec*30 - 150)) tmp_count = Emergency_Bottom_Sec*30 - 150;
-						else if(bottom_lastFrames > (Emergency_Bottom_Sec*30 + 30)) tmp_count = Emergency_Bottom_Sec*30 + 30;
-						else tmp_count = (bottom_lastFrames/10)*10 + 10;
+						if(top_lastFrames < (Emergency_Top_Sec*30 - 150)) tmp_count = Emergency_Top_Sec*30 - 150;
+						else if(top_lastFrames > (Emergency_Top_Sec*30 + 30)) tmp_count = Emergency_Top_Sec*30 + 30;
+						else tmp_count = (top_lastFrames/10)*10 + 10;
 						//tmp_count = 300;
 						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
 						isNormDequeue = 1;
