@@ -2268,7 +2268,8 @@ static void switch_scan(void)
 		isVideoLoop = atoi(isVideoLoop_Str);
 		//lidbg("======== isRearVideoLoop-> %d=======\n",isVideoLoop);
 	}
-	property_get("persist.uvccam.empath", Em_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
+	//property_get("persist.uvccam.empath", Em_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
+	sprintf(Em_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
 	sprintf(Em_Save_Tmp_Dir, EMMC_MOUNT_POINT0"/camera_rec/BlackBox/.tmp/");//Em_Save_Tmp_Dir
 	property_get("persist.uvccam.top.emtime", Em_Top_Sec_String, "5");
 	property_get("persist.uvccam.bottom.emtime", Em_Bottom_Sec_String, "10");
@@ -2475,6 +2476,7 @@ static void get_driver_prop(int camID)
 			property_get("fly.uvccam.dvr.recpath", Rec_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/");
 		else if(camID == REARVIEW_ID)
 			property_get("fly.uvccam.rearview.recpath", Rec_Save_Dir, EMMC_MOUNT_POINT0"/");
+		sprintf(Rec_Save_Dir, EMMC_MOUNT_POINT1"/camera_rec/");
 		lidbg("==========recording dir -> %s===========\n",Rec_Save_Dir);
 		if(!strncmp(Rec_Save_Dir, "/storage/udisk", 14) )
 		{
