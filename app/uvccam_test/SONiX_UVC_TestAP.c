@@ -141,6 +141,8 @@ int isDelDaysFile = 0;
 int delDays = 6;
 int oldisVideoLoop = 0;
 int isThinkNavi = 0;
+int isDisableVideoLoop = 0;
+int isNewFile = 0;
 int isToDel = 0;
 int isTranscoding = 0;
 int isEmPermit = 0;
@@ -1565,19 +1567,44 @@ void dequeue_buf(int count , FILE * rec_fp)
 		tempa = malloc(lengtha);
 		lengtha = dequeue(tempa);
 		//lidbg("=====dequeue2===%d===\n",lengtha);
-		if(!isBeginTopDeq && isBlackBoxTopRec)
+		if( (isBlackBoxTopRec || isNewFile) && !isOldFp)
 		{
-#if 0		
-			unsigned char tmp_val = 0;
-			tmp_val = *(unsigned char*)(tempa + 26);
-			if(tmp_val == 0x65) isBeginTopDeq = 1;
+			if(!isBeginTopDeq)
+			{
+#if 1		
+				unsigned char tmp_val = 0;
+				//lidbg("****[%d]isNewFile*****\n",cam_id);
+				tmp_val = *(unsigned char*)(tempa + 18);
+				if(tmp_val == 0x68) 
+				{
+
+					/*1280x720*/
+					tmp_val = *(unsigned char*)(tempa + 26);
+					if(tmp_val == 0x65) 
+					{
+						isBeginTopDeq = 1;
+						isNewFile = 0;
+					}
+
+					/*640x360*/
+					tmp_val = *(unsigned char*)(tempa + 27);
+					if(tmp_val == 0x65)
+					{
+						isBeginTopDeq = 1;
+						isNewFile = 0;
+					}
+				}
 #else
-			isBeginTopDeq = 1;
-#endif 
+				isBeginTopDeq = 1;
+#endif
+			}
 		}
+		else isBeginTopDeq = 1;
+		
 		if(isVideoLoop > 0)
 		{
-			if(rec_fp != NULL) fwrite(tempa, lengtha, 1, rec_fp);//write data to the output files
+			if(isBeginTopDeq && rec_fp != NULL) fwrite(tempa, lengtha, 1, rec_fp);//write data to the output files
+			else lidbg("****[%d]throw*****\n",cam_id);
 		}
 		if(isBlackBoxTopRec) 
 		{
@@ -5424,8 +5451,8 @@ openfd:
 						if((totalSize%50) == 0) lidbg("total file size = %dMB\n",totalSize); 
 						if(totalSize >= Rec_File_Size)	
 						{
-							isExceed = 1;
-							send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_EXCEED_UPPER_LIMIT);
+							//isExceed = 1;
+							//send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_EXCEED_UPPER_LIMIT);
 						}
 						closedir(pDir);
 					}
@@ -5745,6 +5772,8 @@ openfd:
 						isIframe = 1;
 						XU_H264_Set_IFRAME(dev);
 #endif
+						isNewFile = 1;
+
 						lidbg_get_current_time(0 , time_buf, NULL);
 
 						if(cam_id == DVR_ID)
