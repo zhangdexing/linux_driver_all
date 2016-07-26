@@ -1073,7 +1073,6 @@ static void fixScreenBlurred(char cam_id , char isOnline)
 		msleep(100);
 
 		lidbg_shell_cmd("rm -f "EMMC_MOUNT_POINT0"/camera_rec/tmp*.h264&");
-		lidbg_shell_cmd("rm -f "EMMC_MOUNT_POINT1"/camera_rec/tmp*.h264&");
 		if(!isDVRFirstResume) isDVRCheck = 1;
 	}
 	else if((cam_id == REARVIEW_ID) ||  (cam_id == REAR_BLOCK_ID_MODE))
@@ -1102,7 +1101,6 @@ static void fixScreenBlurred(char cam_id , char isOnline)
 		msleep(100);
 
 		lidbg_shell_cmd("rm -f "EMMC_MOUNT_POINT0"/tmp*.h264&");
-		lidbg_shell_cmd("rm -f "EMMC_MOUNT_POINT1"/tmp*.h264&");
 		if(!isRearFirstResume) isRearCheck = 1;
 	}
 	return;
@@ -1705,12 +1703,14 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		        break;
 			case NR_PATH:
 				lidbg("%s:DVR NR_REC_PATH  = [%s]\n",__func__,(char*)arg);
+#if 0				
 				ret_st = checkSDCardStatus((char*)arg);
 				if(ret_st != 1) 
 					strcpy(f_rec_path,(char*)arg);
 				else
 					lidbg("%s: f_rec_path access wrong! %d", __func__ ,EFAULT);//not happend
 				if(ret_st > 0) ret = RET_FAIL;
+#endif				
 		        break;
 			case NR_TIME:
 				lidbg("%s:DVR NR_REC_TIME = [%ld]\n",__func__,arg);
@@ -2038,12 +2038,14 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		        break;
 			case NR_PATH:
 				lidbg("%s:Rear NR_REC_PATH  = [%s]\n",__func__,(char*)arg);
+#if 0				
 				ret_st = checkSDCardStatus((char*)arg);
 				if(ret_st != 1) 
 					strcpy(r_rec_path,(char*)arg);
 				else
 					lidbg("%s: r_rec_path access wrong! %d", __func__ ,EFAULT);//not happend
 				if(ret_st > 0) ret = RET_FAIL;
+#endif				
 		        break;
 			case NR_TIME:
 				lidbg("%s:Rear NR_REC_TIME = [%ld]\n",__func__,arg);
@@ -2426,9 +2428,9 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 					case CMD_PATH:
 						lidbg("%s:CMD_PATH\n",__func__);
-						ret_st = checkSDCardStatus((char*)arg + 1);
+						ret_st = checkSDCardStatus(EMMC_MOUNT_POINT1"/camera_rec/");
 						if(ret_st != 1) 
-							strcpy(f_rec_path,(char*)arg + 1);
+							strcpy(f_rec_path,EMMC_MOUNT_POINT1"/camera_rec/");
 						else
 							lidbg("%s: f_rec_path access wrong! %d", __func__ ,EFAULT);//not happend
 						if(ret_st > 0) dvrRespond[2] = RET_FAIL;
