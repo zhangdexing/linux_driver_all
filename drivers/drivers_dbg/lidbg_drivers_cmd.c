@@ -93,6 +93,15 @@ int thread_format_udisk(void *data)
     return 0;
 }
 
+int thread_trigge_udisk_uevent(void *data)
+{
+    lidbg_shell_cmd("echo remove > /sys/block/sda/uevent");
+    ssleep(6);
+    lidbg_shell_cmd("echo add > /sys/block/sda/uevent");
+    LIDBG_WARN(".out");
+    return 0;
+}
+
 int thread_antutu_test(void *data)
 {
     int cnt = 0;
@@ -478,6 +487,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#097--format SDCARD1\n");
             fs_mem_log("*158#098--format udisk\n");
             fs_mem_log("*158#099--adust Gsensor Sensitivity \n");
+            fs_mem_log("*158#100--trigge udisk remount uevent  to vold\n");
 
             show_password_list();
             lidbg_domineering_ack();
@@ -1152,22 +1162,23 @@ void parse_cmd(char *pt)
             CREATE_KTHREAD(thread_format_udisk, NULL);
             lidbg_domineering_ack();
         }
-		else if (!strncmp(argv[1], "*158#099", 8))
+        else if (!strncmp(argv[1], "*158#099", 8))
         {
-			//unsigned char n;
-			char shell_cmd[64] = {0};
+            char shell_cmd[64] = {0};
             lidbg("*158#099--adust Gsensor Sensitivity\n");
- 			
             if(strlen(argv[1]) != 10)//wrong args
             {
                 lidbg("Sensitivity value must be 00~99!\n");
                 return;
             }
-			
-			sprintf(shell_cmd, "echo %s > /dev/mc3xxx_enable0", (argv[1] + 8));
-
-			//lidbg("%s\n", shell_cmd);
-			lidbg_shell_cmd(shell_cmd);
+            sprintf(shell_cmd, "echo %s > /dev/mc3xxx_enable0", (argv[1] + 8));
+            lidbg_shell_cmd(shell_cmd);
+        }
+        else if (!strcmp(argv[1], "*158#100"))
+        {
+            lidbg("*158#100--trigge udisk remount uevent  to vold\n");
+            CREATE_KTHREAD(thread_trigge_udisk_uevent, NULL);
+            lidbg_domineering_ack();
         }
 
 	

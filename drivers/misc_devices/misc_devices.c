@@ -209,6 +209,15 @@ static int thread_usb_disk_enable_delay(void *data)
   
     usb_disk_enable(true);
     SET_USB_ID_SUSPEND;
+
+    if(g_var.platformid==ID14_MSM8974_600)
+    {
+        ssleep(10);
+        lidbg("usb : trigge udisk remount uevent  to vold.after sleep 10S \n");
+        lidbg_shell_cmd("echo add > /sys/block/sda/uevent");
+    }
+
+
     return 1;
 }
 
