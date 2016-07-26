@@ -34,6 +34,7 @@ typedef enum {
   NR_ISCOLDBOOTREC,
   NR_ISEMPERMITTED,
   NR_ISVIDEOLOOP,
+  NR_DELDAYS,
 }cam_ctrl_t;
 
 typedef enum {
@@ -79,6 +80,7 @@ typedef enum {
   CMD_DUAL_CAM,
   CMD_EM_EVENT_SWITCH,
   CMD_FORMAT_SDCARD,
+  CMD_EM_SAVE_DAYS,
 }rec_cmd_t;
 
 #define FLYCAM_FRONT_REC_IOC_MAGIC  'F'

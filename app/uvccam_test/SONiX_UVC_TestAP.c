@@ -137,6 +137,8 @@ int isBlackBoxTopWaitDequeue = 0;
 int isDequeue = 0;
 int isOldFp = 0;
 int isVideoLoop = 0;
+int isDelDaysFile = 0;
+int delDays = 6;
 int oldisVideoLoop = 0;
 int isThinkNavi = 0;
 int isToDel = 0;
@@ -164,7 +166,8 @@ char Wait_Deq_Str[PROPERTY_VALUE_MAX];
 char isVideoLoop_Str[PROPERTY_VALUE_MAX];
 char isTranscoding_Str[PROPERTY_VALUE_MAX];
 char isEmPermit_Str[PROPERTY_VALUE_MAX];
-
+char isDelDaysFile_Str[PROPERTY_VALUE_MAX];
+char delDays_Str[PROPERTY_VALUE_MAX];
 char startNight[PROPERTY_VALUE_MAX];
 //char startCapture[PROPERTY_VALUE_MAX];
 
@@ -2277,6 +2280,69 @@ static void send_driver_msg(char magic ,char nr,unsigned long arg)
 	return;
 }
 
+/*EF or ER*/
+int lidbg_del_days_file(char* Dir,int days)
+{
+	char filepath[200] = {0};
+	DIR *pDir ;
+	struct dirent *ent; 
+	unsigned char filecnt = 0;
+	int ret;
+	char *date_time_key[5] = {NULL};
+	char *date_key[3] = {NULL};
+	char *time_key[3] = {NULL};
+	int cur_date[3] = {0,0,0};
+	int cur_time[3] = {0,0,0};
+	int min_date[3] = {5000,13,50};
+	int min_time[3] = {13,100,100};
+	char tmpDName[100] = {0};
+	struct tm prevTm,curTm;
+	time_t prevtimep = 0,curtimep,currentTime;
+	int diffval;
+
+	lidbg("************del_days_file -> %d************\n",days);
+	time( &currentTime ); 
+	
+	pDir=opendir(Dir);  
+	if(pDir == NULL) return -1;
+	while((ent=readdir(pDir))!=NULL)  
+	{  
+	        if(!(ent->d_type & DT_DIR))  
+	        {  
+	                if((strcmp(ent->d_name,".") == 0) || (strcmp(ent->d_name,"..") == 0) || (ent->d_reclen != 48) ) 
+	                        continue;  
+					if(strncmp(ent->d_name, "E", 1))
+							continue;
+						
+						filecnt++; 
+						strcpy(tmpDName, ent->d_name + 2);
+						lidbg_token_string(tmpDName, "__", date_time_key);
+						lidbg_token_string(date_time_key[0], "-", date_key);
+						lidbg_token_string(date_time_key[2], ".", time_key);
+					
+						curTm.tm_year = atoi(date_key[0]) -1900;
+						curTm.tm_mon = atoi(date_key[1]) -1;
+						curTm.tm_mday = atoi(date_key[2]);
+						curTm.tm_hour = atoi(time_key[0]);
+						curTm.tm_min = atoi(time_key[1]);
+						curTm.tm_sec	 = atoi(time_key[2]);	
+						curtimep = mktime(&curTm);
+
+    					diffval =  (currentTime - curtimep) /(24*60*60);
+						//lidbg("====== diff days:%d.======\n",diffval);
+						if(diffval > days)
+						{
+							sprintf(filepath , "%s/%s",Dir,ent->d_name);
+							lidbg("====== oldest EM file will be del:%s.======\n",filepath);
+							remove(filepath);  
+						}
+	        }  
+	}
+	closedir(pDir);
+	return filecnt;
+
+}
+
 int find_earliest_file(char* Dir,char* minRecName)
 {
 	DIR *pDir ;
@@ -2465,6 +2531,17 @@ static void get_driver_prop(int camID)
 			property_get("persist.uvccam.isRearVideoLoop", isVideoLoop_Str, "0");
 			isVideoLoop = atoi(isVideoLoop_Str);
 			lidbg("======== isRearVideoLoop-> %d=======\n",isVideoLoop);
+		}
+
+		if(camID == DVR_ID)
+		{
+			property_get("lidbg.uvccam.isDelDaysFile", isDelDaysFile_Str, "0");
+			isDelDaysFile = atoi(isDelDaysFile_Str);
+			lidbg("======== isDelDaysFile-> %d=======\n",isDelDaysFile);
+
+			property_get("persist.uvccam.delDays", delDays_Str, "6");
+			delDays = atoi(delDays_Str);
+			lidbg("======== delDays-> %d=======\n",delDays);
 		}
 		
 #if 0
@@ -3688,6 +3765,7 @@ int main(int argc, char *argv[])
 		ioctl(flycam_fd,_IO(FLYCAM_FRONT_REC_IOC_MAGIC, NR_ISCOLDBOOTREC), isColdBootRec);
 		ioctl(flycam_fd,_IO(FLYCAM_FRONT_REC_IOC_MAGIC, NR_ISEMPERMITTED), isEmPermit);
 		ioctl(flycam_fd,_IO(FLYCAM_FRONT_REC_IOC_MAGIC, NR_ISVIDEOLOOP), isVideoLoop);
+		ioctl(flycam_fd,_IO(FLYCAM_FRONT_REC_IOC_MAGIC, NR_DELDAYS), delDays);
 		osd_set(DVR_ID);//loop
 		return 0;
 	}
@@ -4697,6 +4775,11 @@ openfd:
 				lidbg( "XU_H264_Set_BitRate Failed\n");
 			iframe_diff_val = 70000;
 			iframe_threshold_val = 45000;
+			if(isDelDaysFile)
+			{
+				lidbg_del_days_file(Rec_Save_Dir, 1);
+				property_set("lidbg.uvccam.isDelDaysFile", "0");
+			}
 		}
 		else if(cam_id == REARVIEW_ID)
 		{
@@ -5591,7 +5674,7 @@ openfd:
 						2.time exceed process:write a new file.
 					*/
 					struct stat filebuf; 
-					char filepath[100] = {0};
+					char filepath[200] = {0};
 					lidbg("====== totally %d files.======\n",filecnt);
 					if(isExceed)
 					{

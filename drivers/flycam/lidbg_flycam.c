@@ -107,7 +107,7 @@ static int dvr_osd_fail_times,rear_osd_fail_times;
 static char isDVROSDFail,isRearOSDFail;
 
 static int isDVRVideoLoop = 1,isRearVideoLoop = 1,isPrevYUV = 0,isEmRecPermitted = 1,isThinkNavi;
-
+static int delDays = 6;
 
 #if 0
 //ioctl
@@ -263,6 +263,9 @@ static int lidbg_flycam_event(struct notifier_block *this,
 			lidbg("flycam event:suspend %ld\n", event);
 			isSuspend = 1;
 			mod_timer(&suspend_stoprec_timer,SUSPEND_STOPREC_ACCOFF_TIME);		
+			break;
+		case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_UP):
+			lidbg_shell_cmd("setprop lidbg.uvccam.isDelDaysFile 1");
 			break;
 		case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_DOWN):
 			lidbg("flycam event:device_down %ld\n", event);
@@ -1194,7 +1197,7 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 			}
 #endif
 			dvr_start_recording();
-			if(!(isDVRFirstInit && isDualCam && !((pfly_UsbCamInfo->camStatus>>4) & FLY_CAM_ISSONIX)))
+			if(isDVRFirstInit && isDualCam && !((pfly_UsbCamInfo->camStatus>>4) & FLY_CAM_ISSONIX))
 			{
 				lidbg("%s:==dual mode:rear cam not exsit,stop dvr recording==\n",__func__);
 				isDVRVideoLoop = 0;
@@ -1733,6 +1736,10 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			case NR_ISVIDEOLOOP:
 				lidbg("%s:DVR NR_ISVIDEOLOOP %ld\n",__func__,arg);
 				isDVRVideoLoop= arg;
+				break;
+			case NR_DELDAYS:
+				lidbg("%s:DVR NR_DELDAYS %ld\n",__func__,arg);
+				delDays= arg;
 				break;
 			case NR_START_REC:
 		        lidbg("%s:DVR NR_START_REC\n",__func__);
@@ -2652,6 +2659,16 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 							lidbg("%s:copy_to_user ERR\n",__func__);
 						}
 						break;
+					case CMD_EM_SAVE_DAYS:
+						lidbg("%s:CMD_EM_SAVE_DAYS [%d]\n",__func__,((char*)arg)[1]);
+						if(((char*)arg)[1] > 0)  delDays= ((char*)arg)[1];
+						dvrRespond[1] = delDays;
+						length += 2;
+						if(copy_to_user((char*)arg,dvrRespond,length))
+						{
+							lidbg("%s:copy_to_user ERR\n",__func__);
+						}
+						break;
 					case CMD_AUTO_DETECT:
 						lidbg("%s:CMD_AUTO_DETECT\n",__func__);
 						//if(isDVRFirstResume)	msleep(1500);
@@ -2811,6 +2828,14 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						initMsg[length] = CMD_EM_EVENT_SWITCH;
 						length++;
 						initMsg[length] = !isEmRecPermitted;
+						length++;
+						/*------msgTAIL------*/
+						initMsg[length] = ';';
+						length++;
+
+						initMsg[length] = CMD_EM_SAVE_DAYS;
+						length++;
+						initMsg[length] = delDays;
 						length++;
 						/*------msgTAIL------*/
 						initMsg[length] = ';';
