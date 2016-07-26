@@ -487,7 +487,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#097--format SDCARD1\n");
             fs_mem_log("*158#098--format udisk\n");
             fs_mem_log("*158#099--adust Gsensor Sensitivity \n");
-            fs_mem_log("*158#100--trigge udisk remount uevent  to vold\n");
+            fs_mem_log("*158#100--app group used \n");
+            fs_mem_log("*158#101--trigge udisk remount uevent  to vold\n");
 
             show_password_list();
             lidbg_domineering_ack();
@@ -1174,9 +1175,9 @@ void parse_cmd(char *pt)
             sprintf(shell_cmd, "echo %s > /dev/mc3xxx_enable0", (argv[1] + 8));
             lidbg_shell_cmd(shell_cmd);
         }
-        else if (!strcmp(argv[1], "*158#100"))
+        else if (!strcmp(argv[1], "*158#101"))
         {
-            lidbg("*158#100--trigge udisk remount uevent  to vold\n");
+            lidbg("*158#101--trigge udisk remount uevent  to vold\n");
             CREATE_KTHREAD(thread_trigge_udisk_uevent, NULL);
             lidbg_domineering_ack();
         }
