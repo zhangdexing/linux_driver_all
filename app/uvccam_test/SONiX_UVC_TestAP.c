@@ -5142,9 +5142,7 @@ openfd:
 #endif
 				strcpy(flyh264_filename, new_flyh264_filename);
 				rec_fp1 = fopen(flyh264_filename, "a+b");
-				fflush(rec_fp1);
-				fclose(rec_fp1);
-				rec_fp1 = fopen(flyh264_filename, "a+b");
+				system("sync&");
 				
 				//if(rec_fp1 == NULL) lidbg("======== rec_fp1 null!=======\n");
 				//lidbg("======== flyh264_filename 1111  %s=======\n",flyh264_filename);
