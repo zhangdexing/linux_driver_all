@@ -1585,7 +1585,11 @@ void dequeue_buf(int count , FILE * rec_fp)
 						isBeginTopDeq = 1;
 						isNewFile = 0;
 					}
+				}
 
+				tmp_val = *(unsigned char*)(tempa + 19);
+				if(tmp_val == 0x68) 
+				{
 					/*640x360*/
 					tmp_val = *(unsigned char*)(tempa + 27);
 					if(tmp_val == 0x65)
@@ -1594,6 +1598,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 						isNewFile = 0;
 					}
 				}
+				
 #else
 				isBeginTopDeq = 1;
 #endif
@@ -1616,8 +1621,16 @@ void dequeue_buf(int count , FILE * rec_fp)
 		}
 		if(tempa != NULL) free(tempa);
 	}
-	if(fp1 != NULL) fclose(fp1);
-	if(fp2 != NULL) fclose(fp2);
+	if(fp1 != NULL) 
+	{
+		fflush(fp1);
+		fclose(fp1);
+	}
+	if(fp2 != NULL)
+	{
+		fflush(fp2);
+		fclose(fp2);
+	}
 #if 0
 	if(isBlackBoxTopRec == 0 && isBlackBoxBottomRec == 1) 
 	{
@@ -1664,6 +1677,15 @@ void *thread_dequeue(void *par)
 		if(isNormDequeue)
 		{
 			lidbg("[%d]%s: count = %d ,isDequeue:%d\n", cam_id,__func__,tmp_count,isDequeue);
+			
+			if(isOldFp && old_rec_fp1 != NULL)
+			{
+				while(1)
+				{
+					if(!isDequeue) break;
+				}
+			}
+			
 			if(!isDequeue)
 			{
 				isDequeue = 1;
@@ -5120,6 +5142,10 @@ openfd:
 #endif
 				strcpy(flyh264_filename, new_flyh264_filename);
 				rec_fp1 = fopen(flyh264_filename, "a+b");
+				fflush(rec_fp1);
+				fclose(rec_fp1);
+				rec_fp1 = fopen(flyh264_filename, "a+b");
+				
 				//if(rec_fp1 == NULL) lidbg("======== rec_fp1 null!=======\n");
 				//lidbg("======== flyh264_filename 1111  %s=======\n",flyh264_filename);
 
