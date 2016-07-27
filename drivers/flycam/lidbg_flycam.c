@@ -106,7 +106,7 @@ char tm_cmd[100] = {0};
 static int dvr_osd_fail_times,rear_osd_fail_times;
 static char isDVROSDFail,isRearOSDFail;
 
-static int isDVRVideoLoop = 1,isRearVideoLoop = 1,isPrevYUV = 0,isEmRecPermitted = 1,isThinkNavi;
+static int isDVRVideoLoop = 1,isRearVideoLoop = 1,isPrevYUV = 0,isEmRecPermitted = 1,isThinkNavi,isConvertMP4 = 0;
 static int delDays = 6;
 
 #if 0
@@ -3695,10 +3695,17 @@ int thread_flycam_init(void *data)
 		if(fs_find_string(g_var.pflyhal_config_list, "YUV") > 0)
 		{
 			isPrevYUV = 1;
+			sprintf(temp_cmd, "setprop lidbg.uvccam.isPrevYUV %d", isPrevYUV);
+			lidbg_shell_cmd(temp_cmd);
 		}
 		lidbg("%s:====isPrevYUV:%d====\n",__func__,isPrevYUV);
-		sprintf(temp_cmd, "setprop lidbg.uvccam.isPrevYUV %d", isPrevYUV);
-		lidbg_shell_cmd(temp_cmd);
+
+		if(fs_find_string(g_var.pflyhal_config_list, "ConvertMP4") > 0)
+		{
+			sprintf(temp_cmd, "setprop lidbg.uvccam.isConvertMP4 %d", isConvertMP4);
+			lidbg_shell_cmd(temp_cmd);
+		}
+		lidbg("%s:====isConvertMP4:%d====\n",__func__,isConvertMP4);
 		
 		/*Stop recording timer(in ACCOFF scene)*/
 		init_timer(&suspend_stoprec_timer);

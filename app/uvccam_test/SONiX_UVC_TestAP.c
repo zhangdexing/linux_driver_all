@@ -147,6 +147,7 @@ int isToDel = 0;
 int isTranscoding = 0;
 int isEmPermit = 0;
 int isBrokenIFrame = 0;
+int isConvertMP4 = 0;
 
 
 // chris -
@@ -173,6 +174,7 @@ char isEmPermit_Str[PROPERTY_VALUE_MAX];
 char isDelDaysFile_Str[PROPERTY_VALUE_MAX];
 char delDays_Str[PROPERTY_VALUE_MAX];
 char startNight[PROPERTY_VALUE_MAX];
+char isConvertMP4_Str[PROPERTY_VALUE_MAX];
 //char startCapture[PROPERTY_VALUE_MAX];
 
 unsigned char isPreview = 0;
@@ -1511,24 +1513,30 @@ void dequeue_buf(int count , FILE * rec_fp)
 	{
 		if(cam_id == DVR_ID)
 		{
-#if 0
-			sprintf(dvr_blackbox_filename, "%s/F%s.h264", Em_Save_Tmp_Dir, deq_time_buf);
-			sprintf(dvr_blackbox_dest_filename, "%s/F%s.mp4", Em_Save_Dir, deq_time_buf);
-#else
-			sprintf(dvr_blackbox_filename, "%s/EF%s.h264", Rec_Save_Dir, deq_time_buf);
-#endif
+			if(isConvertMP4)
+			{
+				sprintf(dvr_blackbox_filename, "%s/F%s.h264", Em_Save_Tmp_Dir, deq_time_buf);
+				sprintf(dvr_blackbox_dest_filename, "%s/F%s.mp4", Em_Save_Dir, deq_time_buf);
+			}
+			else
+			{
+				sprintf(dvr_blackbox_filename, "%s/EF%s.h264", Rec_Save_Dir, deq_time_buf);
+			}
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,dvr_blackbox_filename);
 			fp1 = fopen(dvr_blackbox_filename, "ab+");
 			//fwrite(iFrameData, iframe_length , 1, fp1);
 		}
 		else if(cam_id == REARVIEW_ID)
 		{
-#if 0		
-			sprintf(rear_blackbox_filename, "%s/R%s.h264", Em_Save_Tmp_Dir, deq_time_buf);
-			sprintf(rear_blackbox_dest_filename, "%s/R%s.mp4", Em_Save_Dir, deq_time_buf);
-#else
-			sprintf(rear_blackbox_filename, "%s/ER%s.h264", Rec_Save_Dir, deq_time_buf);
-#endif
+			if(isConvertMP4)
+			{
+				sprintf(rear_blackbox_filename, "%s/R%s.h264", Em_Save_Tmp_Dir, deq_time_buf);
+				sprintf(rear_blackbox_dest_filename, "%s/R%s.mp4", Em_Save_Dir, deq_time_buf);
+			}
+			else
+			{
+				sprintf(rear_blackbox_filename, "%s/ER%s.h264", Rec_Save_Dir, deq_time_buf);
+			}
 			lidbg("=========[%d]:BlackBoxTopRec : %s===========\n", cam_id,rear_blackbox_filename);
 			fp1 = fopen(rear_blackbox_filename, "ab+");
 			//fwrite(iFrameData, iframe_length , 1, fp1);
@@ -1631,36 +1639,37 @@ void dequeue_buf(int count , FILE * rec_fp)
 		fflush(fp2);
 		fclose(fp2);
 	}
-#if 0
-	if(isBlackBoxTopRec == 0 && isBlackBoxBottomRec == 1) 
+	if(isConvertMP4 && !BlackBoxBottomCnt)
 	{
-		char tmp_cmd[500] = {0};
-		//trans_enqueue("/storage/sdcard0/em_test/trans.h264",dvr_blackbox_filename);
-		if(cam_id == DVR_ID) 
+		if(isBlackBoxTopRec == 0 && isBlackBoxBottomRec == 1) 
 		{
+			char tmp_cmd[500] = {0};
+			//trans_enqueue("/storage/sdcard0/em_test/trans.h264",dvr_blackbox_filename);
+			if(cam_id == DVR_ID) 
+			{
 #if 0		
-			int length;
-			length = strlen(dvr_blackbox_filename);
-			dvr_blackbox_filename[length - 5] = '\0';
+				int length;
+				length = strlen(dvr_blackbox_filename);
+				dvr_blackbox_filename[length - 5] = '\0';
 #endif			
-			sprintf(tmp_cmd, "am broadcast -a com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service --ei action 0 --es src %s --es dec %s&",dvr_blackbox_filename,dvr_blackbox_dest_filename);
-			system(tmp_cmd);
-			//isToDel = 1;
-			send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_ONLINE_INVOKE_NOTIFY, RET_EM_ISREC_OFF);
-		}
-		else if(cam_id == REARVIEW_ID) 
-		{
+				sprintf(tmp_cmd, "am broadcast -a com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service --ei action 0 --es src %s --es dec %s&",dvr_blackbox_filename,dvr_blackbox_dest_filename);
+				system(tmp_cmd);
+				//isToDel = 1;
+				send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_ONLINE_INVOKE_NOTIFY, RET_EM_ISREC_OFF);
+			}
+			else if(cam_id == REARVIEW_ID) 
+			{
 #if 0				
-			int length;
-			length = strlen(rear_blackbox_filename);
-			rear_blackbox_filename[length - 5] = '\0';
+				int length;
+				length = strlen(rear_blackbox_filename);
+				rear_blackbox_filename[length - 5] = '\0';
 #endif			
-			sprintf(tmp_cmd, "am broadcast -a com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service --ei action 0 --es src %s --es dec %s&",rear_blackbox_filename,rear_blackbox_dest_filename);
-			system(tmp_cmd);
-			//isToDel = 1;
+				sprintf(tmp_cmd, "am broadcast -a com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service --ei action 0 --es src %s --es dec %s&",rear_blackbox_filename,rear_blackbox_dest_filename);
+				system(tmp_cmd);
+				//isToDel = 1;
+			}
 		}
 	}
-#endif	
 	if(isBlackBoxTopRec == 0 && !(BlackBoxBottomCnt--)) isBlackBoxBottomRec = 0;
 	isBlackBoxTopRec = 0;
 	//system("setprop lidbg.uvccam.isdequeue 0");
@@ -2295,8 +2304,9 @@ static void switch_scan(void)
 	property_get("persist.uvccam.top.emtime", Em_Top_Sec_String, "5");
 	property_get("persist.uvccam.bottom.emtime", Em_Bottom_Sec_String, "10");
 	Emergency_Top_Sec = atoi(Em_Top_Sec_String);
-	//Emergency_Bottom_Sec = atoi(Em_Bottom_Sec_String);
-	Emergency_Bottom_Sec = 60;
+	Emergency_Bottom_Sec = atoi(Em_Bottom_Sec_String);
+	/*Force to 60s bottom*/
+	if(!isConvertMP4) Emergency_Bottom_Sec = 60;
 	
 	//if(isToDel)
 	//{
@@ -2598,6 +2608,11 @@ static void get_driver_prop(int camID)
 			delDays = atoi(delDays_Str);
 			lidbg("======== delDays-> %d=======\n",delDays);
 		}
+
+		property_get("lidbg.uvccam.isConvertMP4", isConvertMP4_Str, "0");
+		isConvertMP4 = atoi(isConvertMP4_Str);
+		if(isConvertMP4 > 0) 
+			lidbg("======== ConvertMP4!=======\n");
 		
 #if 0
 		property_get("lidbg.uvccam.isDisableVideoLoop", isDisableVideoLoop_Str, "0");
