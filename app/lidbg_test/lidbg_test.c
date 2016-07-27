@@ -7,9 +7,9 @@ void *thrd_monitor_app(void *arg)
 
     while(1)
     {
-        system("ps | grep ftf >  /dev/log/watchdog_app.txt");
+        system("ps | grep ftf >  /dev/watchdog_app.txt");
         sleep(1);
-        if(get_file_size("/dev/log/watchdog_app.txt") == 0)
+        if(get_file_size("/dev/watchdog_app.txt") == 0)
         {
             system("am broadcast -a com.mypftf.mobile.alive");
             printf("am broadcast -a com.mypftf.mobile.alive\n");
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     system("chmod 777 /sys/power/wake_lock");
     system("chmod 777 /sys/power/wake_unlock");
     system("chmod 777 /dev");
-    system("chmod 777 /dev/log");
+    system("chmod 777 /dev");
 
 
     printf("build time: %s\n", __TIME__);

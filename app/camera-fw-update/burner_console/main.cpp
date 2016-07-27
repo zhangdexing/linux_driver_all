@@ -485,7 +485,7 @@ int main(int argc, char *argv[])
 	}
 	
 	DEBUG_INIT();
-	system("rm -f /dev/log/FWUpdate*.txt");
+	system("rm -f /dev/FWUpdate*.txt");
 	
 	LIDBG_PRINT("\n%s\n%s\n%s\n\n", STR_INTRO, STR_VERSION, STR_DATE);
 	LIDBG_PRINT("Prepare : enumerate webcam ...\n");

@@ -41,7 +41,7 @@ struct fs_filename_item
 #if defined(SOC_imx6q) || defined(SOC_mt35x)
 #define LIDBG_MEM_DIR "/dev/"
 #else
-#define LIDBG_MEM_DIR "/dev/log/"
+#define LIDBG_MEM_DIR "/dev/"
 #endif
 #define LIDBG_OSD_DIR LIDBG_LOG_DIR"lidbg_osd/"
 

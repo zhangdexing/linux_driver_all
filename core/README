@@ -74,7 +74,7 @@ state.conf
 接口描述:
     fs_regist_state("cpu_temp", &(g_var.temp));
 接口功能:
-间隔一秒(可调)将表示CPU温度的变量的值写到/dev/log/state.txt文件.
+间隔一秒(可调)将表示CPU温度的变量的值写到/dev/state.txt文件.
 
 
 update:
