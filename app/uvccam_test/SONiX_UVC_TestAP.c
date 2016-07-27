@@ -136,6 +136,7 @@ int isBlackBoxBottomRec = 0;
 int isBlackBoxTopWaitDequeue = 0;
 int isDequeue = 0;
 int isOldFp = 0;
+int isRemainOldFp = 0;
 int isVideoLoop = 0;
 int isDelDaysFile = 0;
 int delDays = 6;
@@ -1702,19 +1703,32 @@ void *thread_dequeue(void *par)
 				if(isOldFp) 
 				{
 					//lidbg("****<%d>deq old_rec_fp1****\n",cam_id);
-					dequeue_buf(msize,old_rec_fp1);
+					if(msize > Emergency_Top_Sec * 30)
+					{
+						isRemainOldFp = 1;
+						dequeue_buf(msize -Emergency_Top_Sec * 30 ,old_rec_fp1);
+					}
+					else dequeue_buf(msize,old_rec_fp1);
+				}
+				else if(isRemainOldFp)
+				{
+					dequeue_buf(Emergency_Top_Sec * 30 ,old_rec_fp1);
+					if(old_rec_fp1 != NULL) fclose(old_rec_fp1);
+					isRemainOldFp = 0;
 				}
 				else dequeue_buf(tmp_count,rec_fp1);
 				isDequeue = 0;
 			}
-#if 1
+#if 0
 			if(isOldFp && old_rec_fp1 != NULL)
 			{
 				//lidbg("****<%d>fclose old_rec_fp1****\n",cam_id);
 				fclose(old_rec_fp1);
 				isOldFp = 0;
 			}
-#endif			
+#else
+			isOldFp = 0;
+#endif
 			isNormDequeue = 0;
 		}
 		usleep(10*1000);
@@ -5155,6 +5169,15 @@ openfd:
 #endif
 				strcpy(flyh264_filename, new_flyh264_filename);
 				rec_fp1 = fopen(flyh264_filename, "a+b");
+
+				if(isRemainOldFp)
+				{
+					//lidbg("****<%d>new file isRemainOldFp****\n",cam_id);
+					dequeue_buf(Emergency_Top_Sec * 30 ,rec_fp1);
+					if(old_rec_fp1 != NULL) fclose(old_rec_fp1);
+					isRemainOldFp = 0;
+				}
+				
 				system("sync&");
 				
 				//if(rec_fp1 == NULL) lidbg("======== rec_fp1 null!=======\n");
