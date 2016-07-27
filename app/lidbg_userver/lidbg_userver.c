@@ -164,7 +164,7 @@ static void lidbg_uevent_poll(bool (*uevent_callback)(int fd))
     if (fd >= 0)
     {
         lidbg( "suc,uevent_open_socket\n");
-#ifdef SOC_imx6q
+#if defined(SOC_imx6q) || defined(SOC_mt35x)
         system("echo 1 > /dev/userver_ok.txt");
         system("chmod 777 /dev/userver_ok.txt");
 #else
@@ -252,7 +252,7 @@ int main(int argc, char **argv)
 	 {
 		lidbg("open /dev/lidbg_uevent err\n");
 	 }
-#ifdef SOC_imx6q
+#if defined(SOC_imx6q) || defined(SOC_mt35x)
         system("echo 1 > /dev/userver_ok.txt");
         system("chmod 777 /dev/userver_ok.txt");
 #else

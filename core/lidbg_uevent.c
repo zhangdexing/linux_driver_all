@@ -100,7 +100,7 @@ ssize_t  lidbg_uevent_read(struct file *filp, char __user *buf, size_t count, lo
     if(kfifo_is_empty(&cmd_fifo))
        return 0;
     mutex_lock(&fifo_lock);
-    len = kfifo_out(&cmd_fifo, &cmd, 4);
+    len = kfifo_out(&cmd_fifo, &cmd, sizeof(char *));
     mutex_unlock(&fifo_lock);
     //LIDBG_WARN("lidbg_uevent_read:%s\n",cmd);
     if(copy_to_user(buf, cmd, strlen(cmd)))
@@ -195,7 +195,7 @@ void lidbg_uevent_shell(char *shell_cmd)
          }
         cmd = kstrdup(shell_cmd,GFP_KERNEL);
         mutex_lock(&fifo_lock);
-	kfifo_in(&cmd_fifo, &cmd, 4);
+	kfifo_in(&cmd_fifo, &cmd, sizeof(char *));
         mutex_unlock(&fifo_lock);
         //complete(&cmd_ready);
 	wake_up_interruptible(&wait_queue);

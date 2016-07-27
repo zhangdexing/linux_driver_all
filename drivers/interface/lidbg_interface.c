@@ -387,12 +387,12 @@ int interface_release(struct inode *inode, struct file *filp)
 }
 ssize_t interface_read(struct file *filp, char __user *buf, size_t size, loff_t *ppos)
 {
-    unsigned int count = 4;
     int ret = 0;
-    u32 read_value = 0;
+    size_t read_value = 0;
+	unsigned int count = sizeof(size_t);
     read_value = (size_t)plidbg_dev;
 
-    lidbg("interface_read:read_value=%x,read_count=%d\n", (u32)read_value, count);
+    lidbg("interface_read:read_value=%zx,read_count=%d\n", (size_t)read_value, count);
     if (copy_to_user(buf, &read_value, count))
     {
         ret =  - EFAULT;

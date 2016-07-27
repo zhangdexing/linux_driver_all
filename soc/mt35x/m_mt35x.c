@@ -2,6 +2,8 @@
 ======================================================================*/
 #include "lidbg.h"
 
+struct fly_smem *p_fly_smem = NULL;
+
 int soc_temp_get(int num)
 {
     return 0;
@@ -140,6 +142,7 @@ void mt35x_exit(void)
 
 
 EXPORT_SYMBOL(lidbg_soc_main);
+EXPORT_SYMBOL(p_fly_smem);
 EXPORT_SYMBOL(soc_temp_get);
 
 MODULE_AUTHOR("Lsw");

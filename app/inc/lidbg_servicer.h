@@ -26,7 +26,7 @@
 #define DUMP_POS     do{lidbg( "come to %s,%s,line %d\n", __FILE__,__FUNCTION__,__LINE__);}while(0)
 
 
-#ifdef SOC_imx6q
+#if defined(SOC_imx6q) || defined(SOC_mt35x)
 #define DUMP_BUILD_TIME_FILE do{\
 	char string[256];\
 	sprintf(string, "echo %s build time:%s,%s >> /dev/lidbg_log.txt", __FILE__,__DATE__,__TIME__);\
