@@ -27,7 +27,10 @@ import android.os.storage.StorageEventListener;
 import android.content.ComponentName;
 import android.os.Build;
 import android.os.Environment;
-
+import android.os.storage.IMountService;
+import android.os.ServiceManager;
+import android.os.IBinder;
+import android.os.RemoteException;
 
 public class LidbgCommenLogicService extends Service
 {
@@ -37,6 +40,7 @@ public class LidbgCommenLogicService extends Service
     private PendingIntent peration;
     protected int loopCount = 0;
     private Context mContext;
+    private IMountService mMountService;
 
     @Override
     public void onCreate()
@@ -62,10 +66,10 @@ public class LidbgCommenLogicService extends Service
         public void onStorageStateChanged(String path, String oldState, String newState)
         {
             printKernelMsg("onStorageStateChanged :" + path + " " + oldState + " -> " + newState + "\n");
-            if(Build.VERSION.SDK_INT >= 23&&Environment.MEDIA_MOUNTED.equals(newState)&&!path.contains("emulated") && !path.contains("sdcard") && !path.contains("udisk"))
+            if(Build.VERSION.SDK_INT >= 23 && Environment.MEDIA_MOUNTED.equals(newState) && !path.contains("emulated") && !path.contains("sdcard") && !path.contains("udisk"))
             {
-		printKernelMsg("ln:" + path + " " + oldState + " -> " + newState + "\n");
-		FileWrite("/dev/lidbg_misc0", false, false,"flyaudio:ln -s "+path+" /storage/udisk &");
+                printKernelMsg("ln:" + path + " " + oldState + " -> " + newState + "\n");
+                FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:ln -s " + path + " /storage/udisk &");
             }
             if (Environment.MEDIA_MOUNTED.equals(newState))
             {
@@ -89,6 +93,7 @@ public class LidbgCommenLogicService extends Service
         }
     }
 
+
     protected void formatSdcard1Below6_0()
     {
         if(Build.VERSION.SDK_INT >= 23)
@@ -96,25 +101,99 @@ public class LidbgCommenLogicService extends Service
             printKernelMsg("Build.VERSION.SDK_INT >=23.return" );
             return;
         }
+        StorageVolume mStorageVolume = getVolume("sdcard1");
+        if(mStorageVolume != null)
+        {
+            printKernelMsg("formatSdcard1Below6_0.find it->" + mStorageVolume.getPath());
+            Intent intent = new Intent("com.android.internal.os.storage.FORMAT_ONLY");
+            intent.setComponent(new ComponentName("android", "com.android.internal.os.storage.ExternalStorageFormatter"));
+            intent.putExtra(StorageVolume.EXTRA_STORAGE_VOLUME, mStorageVolume);
+            startService(intent);
+        }
+        else
+        {
+            printKernelMsg("formatSdcard1Below6_0.not find it");
+        }
+    }
 
+    protected StorageVolume getVolume(String info)
+    {
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
         final StorageVolume[] volumes = mStorageManager.getVolumeList();
-for (StorageVolume volume : volumes)
+        for (StorageVolume volume : volumes)
         {
-            if ( volume.getPath().toUpperCase().contains("SDCARD1"))
+            if ( volume.getPath().contains(info))
             {
-                printKernelMsg("formatSdcard1Below6_0.find it->" + volume.getPath());
-                Intent intent = new Intent("com.android.internal.os.storage.FORMAT_ONLY");
-                intent.setComponent(new ComponentName("android", "com.android.internal.os.storage.ExternalStorageFormatter"));
-                intent.putExtra(StorageVolume.EXTRA_STORAGE_VOLUME, volume);
-                startService(intent);
+                printKernelMsg("getVolume.find it->" + volume.getPath());
+                return volume;
             }
             else
             {
-                printKernelMsg("formatSdcard1Below6_0.not find->" + volume.getPath());
+                printKernelMsg("getVolume.not find->" + volume.getPath());
             }
         }
+        return null;
     }
+
+
+    private synchronized IMountService getMountService()
+    {
+        if (mMountService == null)
+        {
+            IBinder service = ServiceManager.getService("mount");
+            if (service != null)
+            {
+                mMountService = IMountService.Stub.asInterface(service);
+            }
+            else
+            {
+                printKernelMsg("Can't get mount service");
+            }
+        }
+        return mMountService;
+    }
+
+    protected void mountUmountSdcard1Below6_0(boolean mount)
+    {
+        if(Build.VERSION.SDK_INT >= 23)
+        {
+            printKernelMsg("Build.VERSION.SDK_INT >=23.return" );
+            return;
+        }
+        IMountService mountService = getMountService();
+        StorageVolume mStorageVolume = getVolume("sdcard1");
+        if(mStorageVolume != null && mountService != null)
+        {
+            printKernelMsg("mountUmountSdcard1Below6_0.find it->" + mStorageVolume.getPath() + "/mount:" + mount);
+            if(mount)
+            {
+                try
+                {
+                    mountService.mountVolume(mStorageVolume.getPath());
+                }
+                catch (RemoteException e)
+                {
+                    printKernelMsg("mountVolume.error:" + e.getMessage());
+                }
+            }
+            else
+            {
+                try
+                {
+                    mountService.unmountVolume(mStorageVolume.getPath(), true, false);
+                }
+                catch (RemoteException e)
+                {
+                    printKernelMsg("unmountVolume.error:" + e.getMessage());
+                }
+            }
+        }
+        else
+        {
+            printKernelMsg("mountUmountSdcard1Below6_0:mStorageVolume/mountService:" + (mStorageVolume == null) + "|" + (mountService == null));
+        }
+    }
+
 
     protected void mountUmountUdiskUp6_0(boolean mount)
     {
@@ -125,7 +204,7 @@ for (StorageVolume volume : volumes)
         }
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
         final StorageVolume[] volumes = mStorageManager.getVolumeList();
-for (StorageVolume volume : volumes)
+        for (StorageVolume volume : volumes)
         {
             if ( !volume.getPath().contains("emulated") && !volume.getPath().toUpperCase().contains("SDCARD"))
             {
@@ -233,6 +312,15 @@ for (StorageVolume volume : volumes)
                 printKernelMsg("goToSleep\n");
                 goToSleep();
                 break;
+            case 5:
+                printKernelMsg("mountUmountSdcard1Below6_0.mount\n");
+                mountUmountSdcard1Below6_0(true);
+                break;
+            case 6:
+                printKernelMsg("mountUmountSdcard1Below6_0.unmount\n");
+                mountUmountSdcard1Below6_0(false);
+                break;
+				
             case 7:
                 if (intent.hasExtra("paraString"))
                 {
