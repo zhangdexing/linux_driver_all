@@ -1666,17 +1666,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	char ret = 0;
 	unsigned char ret_st = 0;
 	char temp_cmd[256];
-	unsigned char* dvrRespond;
-	unsigned char* rearRespond;
-	unsigned char* returnRespond;
-	unsigned char* initMsg;
 	struct file *file_path;
-
-	dvrRespond = (u8 *)kmalloc(100 , GFP_KERNEL);
-	rearRespond = (u8 *)kmalloc(100 , GFP_KERNEL);
-	returnRespond = (u8 *)kmalloc(200 , GFP_KERNEL);
-	initMsg = (u8 *)kmalloc(400 , GFP_KERNEL);
-	
 	//lidbg("=====camStatus => %d======\n",pfly_UsbCamInfo->camStatus);
 	if(_IOC_TYPE(cmd) == FLYCAM_FRONT_REC_IOC_MAGIC)//front cam recording mode
 	{
@@ -1854,6 +1844,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	}
 	else if(_IOC_TYPE(cmd) == FLYCAM_FRONT_ONLINE_IOC_MAGIC)//front cam online mode
 	{
+		char temp_cmd[256];
 		if(isSuspend && ((_IOC_NR(cmd) == NR_START_REC) ||(_IOC_NR(cmd) == NR_CAPTURE)))
 		{
 			lidbg("%s:====udisk_request==suspend online==\n",__func__);
@@ -2287,6 +2278,10 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	else if(_IOC_TYPE(cmd) == FLYCAM_REC_MAGIC)//front cam online mode
 	{
 		//int rc = -1;
+		unsigned char dvrRespond[100] = {0};
+		unsigned char rearRespond[100] = {0};
+		unsigned char returnRespond[200] = {0};
+		unsigned char initMsg[400] = {0};
 		char tmp_path[200] = {0};
 		int length = 0;
 		//struct mounted_volume *sdcard1 = NULL;
@@ -3128,10 +3123,6 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		#endif
 	}
 	//else return -EINVAL;
-	if(dvrRespond != NULL) kfree(dvrRespond);
-	if(rearRespond != NULL) kfree(rearRespond);
-	if(returnRespond != NULL) kfree(returnRespond);
-	if(initMsg != NULL) kfree(initMsg);
     return ret;
 
 dvrfailproc:
