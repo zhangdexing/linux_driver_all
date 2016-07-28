@@ -107,7 +107,7 @@ int thread_loader(void *data)
 #if defined(SOC_imx6q) || defined(SOC_mt35x)
     while(!is_file_exist("/dev/userver_ok.txt"))
 #else
-    while(!is_file_exist("/dev/userver_ok.txt"))
+    while(!is_file_exist("/dev/log/userver_ok.txt"))
 #endif
         ssleep(1);
 #endif

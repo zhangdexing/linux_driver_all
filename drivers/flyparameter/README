@@ -12,7 +12,7 @@ NOTE:
 (1):一次设置全部硬件
 如下，已建立adb shell指令快速设置硬件信息。
 echo flyparameter 0 0 0 0 1 1 1 > /dev/lidbg_drivers_dbg0
-设置前需要先查看当前机器的硬件信息，在/dev/lidbg_log.txt
+设置前需要先查看当前机器的硬件信息，在/dev/log/lidbg_log.txt
 里面查看flyparameter=*****.
 
 (2):单独更改某一个位置的硬件信息

@@ -463,7 +463,7 @@ failproc:
 	//*devname = '\0';
 	ALOGD("%s: Probing fail:%s , run normal proc", __func__, devname);
 #if NONE_HUB_SUPPORT
-	system("echo flyaudio:touch /dev/CameraScan1.txt > /dev/lidbg_misc0");
+	system("echo flyaudio:touch /dev/log/CameraScan1.txt > /dev/lidbg_misc0");
 	return get_uvc_device(id , devname);
 #else
 	return -1;

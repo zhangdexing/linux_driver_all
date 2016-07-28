@@ -191,7 +191,7 @@ void cb_password_gui_state(char *password )
 #if defined(SOC_imx6q) || defined(SOC_mt35x)
     if(lidbg_exe("/flysystem/lib/out/lidbg_gui", "/dev/state.txt", "1", NULL, NULL, NULL, NULL) < 0)
 #else
-    if(lidbg_exe("/flysystem/lib/out/lidbg_gui", "/dev/state.txt", "1", NULL, NULL, NULL, NULL) < 0)
+    if(lidbg_exe("/flysystem/lib/out/lidbg_gui", "/dev/log/state.txt", "1", NULL, NULL, NULL, NULL) < 0)
 #endif
         LIDBG_ERR("Exe status failed !\n");
 }
@@ -222,9 +222,9 @@ void unhandled_monitor(char *key_word, void *data)
     {
         lidbg_fs_log("/dev/no_reboot", "unhandled find");
 #else
-    if( !fs_is_file_exist("/dev/no_reboot"))
+    if( !fs_is_file_exist("/dev/log/no_reboot"))
     {
-        lidbg_fs_log("/dev/no_reboot", "unhandled find");
+        lidbg_fs_log("/dev/log/no_reboot", "unhandled find");
 #endif
         lidbg_chmod("/data");
         CREATE_KTHREAD(thread_kmsg_fifo_save, NULL);
@@ -318,7 +318,7 @@ int thread_reboot(void *data)
 #if defined(SOC_imx6q) || defined(SOC_mt35x)
         if( !fs_is_file_exist("/dev/no_reboot"))
 #else
-        if( !fs_is_file_exist("/dev/no_reboot"))
+        if( !fs_is_file_exist("/dev/log/no_reboot"))
 #endif
         {
             lidbg("<lidbg:thread_reboot,call reboot>\n");

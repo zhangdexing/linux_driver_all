@@ -168,8 +168,8 @@ static void lidbg_uevent_poll(bool (*uevent_callback)(int fd))
         system("echo 1 > /dev/userver_ok.txt");
         system("chmod 777 /dev/userver_ok.txt");
 #else
-        system("echo 1 > /dev/userver_ok.txt");
-        system("chmod 777 /dev/userver_ok.txt");
+        system("echo 1 > /dev/log/userver_ok.txt");
+        system("chmod 777 /dev/log/userver_ok.txt");
 #endif
         fcntl(fd, F_SETFL, O_NONBLOCK);
         ufd.events = POLLIN;
@@ -256,8 +256,8 @@ int main(int argc, char **argv)
         system("echo 1 > /dev/userver_ok.txt");
         system("chmod 777 /dev/userver_ok.txt");
 #else
-        system("echo 1 > /dev/userver_ok.txt");
-        system("chmod 777 /dev/userver_ok.txt");
+        system("echo 1 > /dev/log/userver_ok.txt");
+        system("chmod 777 /dev/log/userver_ok.txt");
 #endif
 
 #if 0

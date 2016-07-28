@@ -57,7 +57,7 @@ void send_file_to_server(char *dir_name, char *file_name)
     if (sockfd < 0)
     {
         LIDBG_PRINT("ERROR opening socket\n");
-        system("echo ERROR opening socket > /dev/mobile.txt");
+        system("echo ERROR opening socket > /dev/log/mobile.txt");
         error("ERROR opening socket\n");
     }
 
@@ -75,7 +75,7 @@ void send_file_to_server(char *dir_name, char *file_name)
     if (connect(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
     {
         LIDBG_PRINT("ERROR connecting\n");
-        system("echo ERROR connecting > /dev/mobile.txt");
+        system("echo ERROR connecting > /dev/log/mobile.txt");
         error("ERROR connecting\n");
     }
 
@@ -118,7 +118,7 @@ void send_file_to_server(char *dir_name, char *file_name)
             fclose(fp);
             fp = NULL;
             LIDBG_PRINT("%d,Transfer Finished:File:%s\n", send_count, filepath);
-            system("echo success > /dev/mobile.txt");
+            system("echo success > /dev/log/mobile.txt");
         }
 
     }//end
