@@ -43,10 +43,9 @@ int thread_format_sdcard1(void *data)
     lidbg_shell_cmd("echo ==thread_format_sdcard1.start==== > /dev/lidbg_msg");
     if(fs_is_file_exist(pdevices))
     {
+        char shell_cmd[128] = {0};
         LIDBG_WARN("sdcard1.device:%s\n", pdevices);
         lidbg_shell_cmd("sync");
-#if 0	
-		char shell_cmd[128] = {0};
         lidbg_shell_cmd("rm -rf /storage/sdcard1/*");
 		 lidbg_shell_cmd("echo ==thread_format_sdcard1.remove complete==== > /dev/lidbg_msg");
         sprintf(shell_cmd, "/flysystem/lib/out/busybox fdisk %s < /flysystem/lib/out/fdiskcmd.txt",  pdevices);
@@ -55,7 +54,6 @@ int thread_format_sdcard1(void *data)
         sprintf(shell_cmd, "/flysystem/lib/out/busybox mkfs.vfat %s",  pdevices);
         lidbg_shell_cmd(shell_cmd);
         lidbg_shell_cmd("echo ==thread_format_sdcard1.mkfs.vfat complete==== > /dev/lidbg_msg");
-#endif				
         lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 0");
         lidbg_shell_cmd("echo ==thread_format_sdcard1.system format.20S==== > /dev/lidbg_msg");
         ssleep(20);
