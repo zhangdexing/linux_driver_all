@@ -489,7 +489,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#097--format SDCARD1\n");
             fs_mem_log("*158#098--format udisk\n");
             fs_mem_log("*158#099--adust Gsensor Sensitivity \n");
-            fs_mem_log("*158#100--app group used \n");
+            fs_mem_log("*158#100--dump log for app upload\n");
             fs_mem_log("*158#101--trigge udisk remount uevent  to vold\n");
 
             show_password_list();
@@ -660,7 +660,7 @@ void parse_cmd(char *pt)
 		 
 	     lidbg_shell_cmd("chmod 777 /data/lidbg/reckmsg/* ");
 
-            lidbg_domineering_ack();
+           // lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#022"))
         {
@@ -1176,6 +1176,16 @@ void parse_cmd(char *pt)
             }
             sprintf(shell_cmd, "echo %s > /dev/mc3xxx_enable0", (argv[1] + 8));
             lidbg_shell_cmd(shell_cmd);
+        }
+        else if (!strcmp(argv[1], "*158#100"))
+        {
+            lidbg("dump log for app upload\n");
+  	     lidbg_shell_cmd("echo appcmd *158#021 > /dev/lidbg_drivers_dbg0");
+	     ssleep(3);
+	     lidbg_shell_cmd("chmod 777  /sdcard/FlyLog/DriBugReport");	
+	     lidbg_shell_cmd("mkdir  /sdcard/FlyLog/DriBugReport/drivers");	     
+	     lidbg_shell_cmd("cp -rf /data/lidbg /sdcard/FlyLog/DriBugReport/drivers/");
+
         }
         else if (!strcmp(argv[1], "*158#101"))
         {

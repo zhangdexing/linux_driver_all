@@ -148,16 +148,17 @@ int thread_thermal(void *data)
     int cur_temp, i, max_freq,maxcpu,mincpu,cpu_temp;
     DUMP_FUN;
     lidbg_shell_cmd("chmod 444 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq &");
-    set_cpu_governor(0);
+    //set_cpu_governor(0);
 
     if(g_var.recovery_mode == 1)
     {
         while(1)
         {
-            set_cpu_governor(1);
+            //set_cpu_governor(1);
+            max_freq = get_scaling_max_freq();
             cur_temp = soc_temp_get(g_hw.cpu_sensor_num);
-            lidbg("cpu_temp=%d,freq=%d,%s\n", cur_temp, cpufreq_get(0),get_cpu_status());
-            ssleep(5);
+            lidbg("cpu_temp=%d,freq=%d,maxfreq=%d,%s\n", cur_temp, cpufreq_get(0),max_freq,get_cpu_status());
+            ssleep(2);
         }
     }
 

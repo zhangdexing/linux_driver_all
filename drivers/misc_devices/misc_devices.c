@@ -196,21 +196,26 @@ void usb_disk_enable(bool enable)
 static int thread_usb_disk_enable_delay(void *data)
 {
 #ifndef FLY_USB_CAMERA_SUPPORT
-    msleep(5000);
+    if(g_var.recovery_mode == 0)
+        msleep(5000);
 #endif
 
 #if ANDROID_VERSION >= 600
-   while(0==g_var.android_boot_completed)
-    {
-        ssleep(1);
-	 lidbg("thread_usb_disk_enable_delay wait for android_boot_completed.\n");
-    }
+	 if(g_var.recovery_mode == 0)
+	 {
+	   while(0==g_var.android_boot_completed)
+	    {
+	        ssleep(1);
+		 lidbg("thread_usb_disk_enable_delay wait for android_boot_completed.\n");
+	    }
+	     ssleep(10);
+	 }
   #endif
   
     usb_disk_enable(true);
     SET_USB_ID_SUSPEND;
 
-    if(g_var.platformid==ID14_MSM8974_600)
+    if(0)
     {
         ssleep(10);
         lidbg("usb : trigge udisk remount uevent  to vold.after sleep 10S \n");

@@ -13,7 +13,7 @@
 
 /***********************宏定义******************************************/
 #define BUFSIZE 1024*512+1        //读取缓冲区大小
-#define MAXSIZE 1024*1024*10       //存储目录容量最大10M
+#define MAXSIZE 1024*1024*5       //存储目录容量最大10M
 #define ERROR_FILE_MAXSIZE 1024*1024 //记录错误信息的文件最大1M
 #define DESTDIR "/data/lidbg/reckmsg"          //读取信息存储路径
 #define CONFIGFILE DESTDIR"/.filename"     //记录下次写入的文件以及当前存储文件数目
