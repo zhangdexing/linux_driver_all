@@ -673,13 +673,26 @@ char *dbg_msg_en(const char *system_cmd, int dbg_msg_en)
 			dprintf(INFO, " malloc space for cmdline failed, use system cmdline \n");
 			return system_cmd;
 		}
-
-		cmdline = DBG_UART_PORT;
+		sprintf(cmdline, "%s", DBG_UART_PORT);
 		strcat(cmdline, system_cmd);
 	}else{
 		dprintf(INFO,"System print is disabled !\n");
 		cmdline = system_cmd;
 	}
 
+#ifdef BOOTLOADER_ID_14
+{
+        char *cmdline2;
+	cmd_size = strlen("lk_id=14 ") + strlen(cmdline);
+	cmdline2 = malloc(cmd_size);
+	if(!cmdline2){
+		dprintf(INFO, " malloc space for cmdline failed, use system cmdline \n");
+		return system_cmd;
+	}
+	sprintf(cmdline2, "%s", "lk_id=14 ");
+	strcat(cmdline2, cmdline);
+        return cmdline2;
+}
+#endif
 	return cmdline;
 }

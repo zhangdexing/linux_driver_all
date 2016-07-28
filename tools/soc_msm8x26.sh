@@ -225,7 +225,7 @@ function soc_build_bootloader()
 	echo DEFINES += $(echo BOOTLOADER_$DBG_PLATFORM | tr '[a-z]' '[A-Z]') >> $DBG_BOOTLOADER_DIR/flyaudio/common/build_cfg.mk
 	echo DEFINES += $(echo BOOTLOADER_$DBG_VENDOR | tr '[a-z]' '[A-Z]') >> $DBG_BOOTLOADER_DIR/flyaudio/common/build_cfg.mk
 	echo DEFINES += $(echo BOOTLOADER_TYPE_$DBG_BOOTLOADER_TYPE | tr '[a-z]' '[A-Z]') >> $DBG_BOOTLOADER_DIR/flyaudio/common/build_cfg.mk
-
+	echo DEFINES += $(echo BOOTLOADER_ID_$DBG_PLATFORM_ID | tr '[a-z]' '[A-Z]') >> $DBG_BOOTLOADER_DIR/flyaudio/common/build_cfg.mk
 	set_env
 	make aboot -j16
 	#git checkout $SYSTEM_WORK_BRANCH
