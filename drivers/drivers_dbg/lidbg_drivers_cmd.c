@@ -54,9 +54,13 @@ int thread_format_sdcard1(void *data)
         sprintf(shell_cmd, "/flysystem/lib/out/busybox mkfs.vfat %s",  pdevices);
         lidbg_shell_cmd(shell_cmd);
         lidbg_shell_cmd("echo ==thread_format_sdcard1.mkfs.vfat complete==== > /dev/lidbg_msg");
+        ssleep(3);
         lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 0");
         lidbg_shell_cmd("echo ==thread_format_sdcard1.system format.20S==== > /dev/lidbg_msg");
-        ssleep(20);
+        ssleep(22);
+        lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 5");
+        lidbg_shell_cmd("echo ==thread_format_sdcard1.system mount sdcard1.5S==== > /dev/lidbg_msg");
+        ssleep(5);
         lidbg_shell_cmd("echo \"formatcomplete=1\" > /dev/lidbg_flycam0");
     }
     else
