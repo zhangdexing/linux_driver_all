@@ -13,10 +13,11 @@ int main(int argc, char **argv)
     system("setenforce 0");
 
     system("chmod 777 /dev/dbg_msg");
-
+    
     DUMP_BUILD_TIME_FILE;
     lidbg("lidbg_iserver: iserver start\n");
-
+    system("mkdir /dev/log");
+    system("chmod 777 /dev/log");
 #if 0
     //wait flysystem mount
     while(is_file_exist("/flysystem/lib") == 0)
