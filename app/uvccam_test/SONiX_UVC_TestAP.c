@@ -660,9 +660,9 @@ static int video_set_framerate(int dev, int framerate, unsigned int *MaxPayloadT
 		return ret;
 	}
 
-	TestAp_Printf(TESTAP_DBG_FLOW, "Frame rate set: %u/%u\n",
+	lidbg( "Frame rate set: %u/%u,MaxPayloadTransferSize:%d\n",
 		parm.parm.capture.timeperframe.numerator,
-		parm.parm.capture.timeperframe.denominator);
+		parm.parm.capture.timeperframe.denominator,parm.parm.capture.reserved[0]);
 	return 0;
 }
 
@@ -4861,7 +4861,7 @@ openfd:
 			iframe_threshold_val = 45000;
 			if(isDelDaysFile)
 			{
-				lidbg_del_days_file(Rec_Save_Dir, 1);
+				lidbg_del_days_file(Rec_Save_Dir, delDays);
 				property_set("lidbg.uvccam.isDelDaysFile", "0");
 			}
 		}
