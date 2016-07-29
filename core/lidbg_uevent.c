@@ -102,7 +102,8 @@ ssize_t  lidbg_uevent_read(struct file *filp, char __user *buf, size_t count, lo
     mutex_lock(&fifo_lock);
     len = kfifo_out(&cmd_fifo, &cmd, sizeof(char *));
     mutex_unlock(&fifo_lock);
-    //LIDBG_WARN("lidbg_uevent_read:%s\n",cmd);
+    if(uevent_dbg)
+        LIDBG_WARN("%s\n",cmd);
     if(copy_to_user(buf, cmd, strlen(cmd)))
     {
         return -1;
@@ -204,7 +205,6 @@ void lidbg_uevent_shell(char *shell_cmd)
 
 void lidbg_uevent_main(int argc, char **argv)
 {
-    LIDBG_WARN("lidbg_uevent_main:%d,%s\n", uevent_dbg, argv[0]);
     if(!strcmp(argv[0], "dbg"))
     {
         uevent_dbg = !uevent_dbg;
@@ -213,6 +213,7 @@ void lidbg_uevent_main(int argc, char **argv)
     {
         lidbg_uevent_shell(argv[1]);
     }
+    LIDBG_WARN("lidbg_uevent_main:%d,%s\n", uevent_dbg, argv[0]);
 }
 
 EXPORT_SYMBOL(lidbg_uevent_focus);
