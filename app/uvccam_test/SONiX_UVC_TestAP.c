@@ -1576,7 +1576,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 		tempa = malloc(lengtha);
 		lengtha = dequeue(tempa);
 		//lidbg("=====dequeue2===%d===\n",lengtha);
-		if( (isBlackBoxTopRec || isNewFile) && !isOldFp)
+		if( (isBlackBoxTopRec || isNewFile) && !isOldFp && !isRemainOldFp)
 		{
 			if(!isBeginTopDeq)
 			{
