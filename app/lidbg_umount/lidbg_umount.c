@@ -20,7 +20,6 @@
 
 
 bool mDebug = true;
-bool force = true;
 int checkFileMaps(int pid, const char *mountPoint, char *openFilename, size_t max);
 int checkSymLink(int pid, const char *mountPoint, const char *name);
 
@@ -126,6 +125,7 @@ int getPid(const char *s)
 }
 void killProcessesWithOpenFiles(const char *path, int action)
 {
+    int loop = 0;
     DIR    *dir;
     struct dirent *de;
 
@@ -149,23 +149,23 @@ void killProcessesWithOpenFiles(const char *path, int action)
 
         if (checkFileDescriptorSymLinks(pid, path, openfile, sizeof(openfile)))
         {
-            lidbg("Process %s (%d) has open file %s", name, pid, openfile);
+            lidbg("Process %s (%d) has open file %s\n", name, pid, openfile);
         }
         else if (checkFileMaps(pid, path, openfile, sizeof(openfile)))
         {
-            lidbg("Process %s (%d) has open filemap for %s", name, pid, openfile);
+            lidbg("Process %s (%d) has open filemap for %s\n", name, pid, openfile);
         }
         else if (checkSymLink(pid, path, "cwd"))
         {
-            lidbg("Process %s (%d) has cwd within %s", name, pid, path);
+            lidbg("Process %s (%d) has cwd within %s\n", name, pid, path);
         }
         else if (checkSymLink(pid, path, "root"))
         {
-            lidbg("Process %s (%d) has chroot within %s", name, pid, path);
+            lidbg("Process %s (%d) has chroot within %s\n", name, pid, path);
         }
         else if (checkSymLink(pid, path, "exe"))
         {
-            lidbg("Process %s (%d) has executable path within %s", name, pid, path);
+            lidbg("Process %s (%d) has executable path within %s\n", name, pid, path);
         }
         else
         {
@@ -173,15 +173,20 @@ void killProcessesWithOpenFiles(const char *path, int action)
         }
         if (action == 1)
         {
-            SLOGW("Sending SIGHUP to process %d", pid);
-            lidbg("Sending SIGHUP to process %d,%s", pid, name);
+            SLOGW("Sending SIGHUP to process %d\n", pid);
+            lidbg("Sending SIGHUP to process %d,%s\n", pid, name);
             kill(pid, SIGTERM);
         }
         else if (action == 2)
         {
-            SLOGE("Sending SIGKILL to process %d", pid);
-            lidbg("Sending SIGKILL to process %d,%s", pid, name);
+            SLOGE("Sending SIGKILL to process %d\n", pid);
+            lidbg("Sending SIGKILL to process %d,%s\n", pid, name);
             kill(pid, SIGKILL);
+        }
+        else if (action == 3)
+        {
+            SLOGE("just print  process: %d,%s\n", pid, name);
+            lidbg("[%d]just print  process: %d,%s\n", ++loop, pid, name);
         }
     }
     closedir(dir);
@@ -231,6 +236,17 @@ int checkFileMaps(int pid, const char *mountPoint, char *openFilename, size_t ma
 }
 
 
+static void usage(char *cmd)
+{
+    fprintf(stderr, "Usage: %s just use it as below two ways\n"
+            "1: ./lidbg_umount (default to umount /storage/udisk)\n"
+            "2: ./lidbg_umount /flysystem 3 (1:SIGHUP 2:SIGKILL 3:just print the process who open this system)\n",
+            cmd);
+    lidbg("Usage: %s just use it as below two ways\n"
+            "1: ./lidbg_umount (default to umount /storage/udisk)\n"
+            "2: ./lidbg_umount /flysystem 3 (1:SIGHUP 2:SIGKILL 3:just print the process who open this system)\n",
+            cmd);
+}
 int main(int argc, char **argv)
 {
     argc = argc;
@@ -238,18 +254,38 @@ int main(int argc, char **argv)
     int retries = 5;
     int action = 2;//1.SIGHUP 2.SIGKILL
     const char *path = "/storage/udisk";
-    if (mDebug)
+
+    lidbg("argc=%d\n", argc);
+
+    if (argc == 2 && !strcmp(argv[1], "-h"))
     {
-        SLOGD("Unmounting {%s}, force = %d", path, force);
-        lidbg("Unmounting {%s}, force = %d", path, force);
+        usage("lidbg_umount");
+        exit(EXIT_SUCCESS);
+    }
+
+    if(argc == 3)
+    {
+        lidbg("modify para\n");
+        path = argv[1];
+        action = atoi(argv[2]);
+    }
+
+    SLOGD("Unmounting argc=%d,path=%s, action = %d\n", argc, path, action);
+    lidbg("Unmounting argc=%d,path=%s, action = %d\n", argc, path, action);
+
+    if(action == 3)
+    {
+        lidbg("just print process and return ->\n");
+        killProcessesWithOpenFiles(path, action);
+        exit(EXIT_SUCCESS);
     }
 
     while (retries--)
     {
         if ((!umount(path)) || (errno == EINVAL) || (errno == ENOENT))
         {
-            SLOGI("%s sucessfully unmounted!!", path);
-            lidbg("%s sucessfully unmounted!!", path);
+            SLOGI("%s sucessfully unmounted!!\n", path);
+            lidbg("%s sucessfully unmounted!!\n", path);
             return 0;
         }
 
@@ -258,15 +294,15 @@ int main(int argc, char **argv)
             action = 2; // SIGKILL
         }
 
-        SLOGW("Failed to unmount %s (%s, retries %d, action %d)",
+        SLOGW("Failed to unmount %s (%s, retries %d, action %d)\n",
               path, strerror(errno), retries, action);
-        lidbg("Failed to unmount %s (%s, retries %d, action %d)",
+        lidbg("Failed to unmount %s (%s, retries %d, action %d)\n",
               path, strerror(errno), retries, action);
         killProcessesWithOpenFiles(path, action);
         usleep(500 * 1000);
     }
     errno = EBUSY;
-    SLOGE("Giving up on unmount %s (%s)", path, strerror(errno));
-    lidbg("Giving up on unmount %s (%s)", path, strerror(errno));
+    SLOGE("Giving up on unmount %s (%s)\n", path, strerror(errno));
+    lidbg("Giving up on unmount %s (%s)\n", path, strerror(errno));
     return -1;
 }
