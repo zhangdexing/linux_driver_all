@@ -74,16 +74,20 @@ void lidbg_enable_logcat2(void)
             lidbg("run logcat again \n");
         }
         sizeold = size ;
-
-        for(loop = 0; loop < 10; loop++)
-        {
-            static char buff[64] ;
-            int mtime = ktime_to_ms(ktime_get_boottime());
-            snprintf(buff, 63, "log -t lidbg logcatping:%d.%d",  mtime / 1000, mtime % 1000);
-            lidbg("[%s]\n", buff);
-            lidbg_shell_cmd(buff);
-            ssleep(5);
-        }
+	if(0)
+	{
+            for(loop = 0; loop < 10; loop++)
+            {
+                static char buff[64] ;
+                int mtime = ktime_to_ms(ktime_get_boottime());
+                snprintf(buff, 63, "log -t lidbg logcatping:%d.%d",  mtime / 1000, mtime % 1000);
+                lidbg("[%s]\n", buff);
+                lidbg_shell_cmd(buff);
+                ssleep(5);
+            }
+	}
+	else
+            ssleep(50);
     }
     lidbg("logcat-\n");
 
