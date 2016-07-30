@@ -439,9 +439,9 @@ static int thread_udisk_misc(void *data)
             }
             else
             {
-                while(i < 3 && !fs_is_file_exist(USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf"))
+                while(i < 8 && !fs_is_file_exist(USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf"))
                 {
-                    ssleep(5);
+                    ssleep(3);
                     i++;
                 }
 
