@@ -68,6 +68,11 @@ public class LidbgCommenLogicService extends Service
             printKernelMsg("onStorageStateChanged :" + path + " " + oldState + " -> " + newState + "\n");
             if(Build.VERSION.SDK_INT >= 23 && Environment.MEDIA_MOUNTED.equals(newState) && !path.contains("emulated") && !path.contains("sdcard") && !path.contains("udisk"))
             {
+                printKernelMsg("/storage/udisk exist:"+isFileExist("/storage/udisk")+"\n");
+                if(isFileExist("/storage/udisk"))
+                {
+                    FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:mv /storage/udisk /storage/udisk1 ");
+                }
                 printKernelMsg("ln:" + path + " " + oldState + " -> " + newState + "\n");
                 FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:ln -s " + path + " /storage/udisk &");
             }
@@ -320,7 +325,7 @@ public class LidbgCommenLogicService extends Service
                 printKernelMsg("mountUmountSdcard1Below6_0.unmount\n");
                 mountUmountSdcard1Below6_0(false);
                 break;
-				
+
             case 7:
                 if (intent.hasExtra("paraString"))
                 {
@@ -419,6 +424,11 @@ public class LidbgCommenLogicService extends Service
             e.printStackTrace();
         }
         return true;
+    }
+    public boolean isFileExist(String file)
+    {
+        File kmsgfiFile = new File(file);
+        return kmsgfiFile.exists();
     }
 }
 
