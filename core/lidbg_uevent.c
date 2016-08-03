@@ -15,8 +15,9 @@ struct miscdevice lidbg_uevent_device;
 int uevent_dbg = 0;
 struct mutex lock;
 static struct kfifo cmd_fifo;
-#define FIFO_SIZE (1024*3)
-u8 *cmd_fifo_buffer;
+#define SHELL_LINES (300)
+#define PER_SHELL_SIZE (256)
+#define FIFO_SIZE (SHELL_LINES*PER_SHELL_SIZE+SHELL_LINES*sizeof(u32))
 //static DECLARE_COMPLETION(cmd_ready);
 struct mutex fifo_lock;
 static wait_queue_head_t wait_queue;
@@ -93,23 +94,29 @@ ssize_t  lidbg_uevent_write(struct file *filp, const char __user *buf, size_t co
 }
 ssize_t  lidbg_uevent_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
 {
-    char *cmd;
-    int len;
+    u32 len, mstrlen;
+    char msg_clean_buff[PER_SHELL_SIZE] = {0};
 
     //wait_for_completion(&cmd_ready);
     if(kfifo_is_empty(&cmd_fifo))
         return 0;
     mutex_lock(&fifo_lock);
-    len = kfifo_out(&cmd_fifo, &cmd, sizeof(char *));
+    if (kfifo_out(&cmd_fifo, (unsigned char *) &mstrlen, sizeof(u32)) !=  sizeof(u32))
+    {
+        LIDBG_WARN("\n critical error:kfifo_out.mstrlen.error.return\n");
+        mutex_unlock(&fifo_lock);
+        return 0;
+    }
+    len = kfifo_out(&cmd_fifo, msg_clean_buff , mstrlen);
+    msg_clean_buff[mstrlen + 1] = '\0';
     mutex_unlock(&fifo_lock);
     if(uevent_dbg)
-        LIDBG_WARN("%s\n", cmd);
-    if(copy_to_user(buf, cmd, strlen(cmd)))
+        LIDBG_WARN("kfifo_len:[%d byte ] strlen:%d/len:%d,shell:[%s]\n", kfifo_len(&cmd_fifo), mstrlen, len, msg_clean_buff);
+    if(copy_to_user(buf, msg_clean_buff, mstrlen))
     {
         return -1;
     }
-    kfree(cmd);
-    return strlen(cmd);
+    return mstrlen;
 }
 
 
@@ -152,7 +159,6 @@ struct miscdevice lidbg_uevent_device =
 static int __init lidbg_uevent_init(void)
 {
     //DUMP_BUILD_TIME;
-    LIDBG_WARN("lidbg_uevent_init\n");
     if (misc_register(&lidbg_uevent_device))
         LIDBG_ERR("misc_register\n");
     mutex_init(&lock);
@@ -160,9 +166,13 @@ static int __init lidbg_uevent_init(void)
     //INIT_COMPLETION(cmd_ready);
     init_waitqueue_head(&wait_queue);
 
-    cmd_fifo_buffer = (u8 *)kmalloc(FIFO_SIZE , GFP_KERNEL);
-    kfifo_init(&cmd_fifo, cmd_fifo_buffer, FIFO_SIZE);
+    if (kfifo_alloc(&cmd_fifo, FIFO_SIZE, GFP_KERNEL) < 0)
+    {
+        LIDBG_WARN("kfifo_alloc fail\n");
+        return -1;
+    }
 
+    LIDBG_WARN("lidbg_uevent_init,cmd_fifo:[%d KB],kfifo_avail:[%d KB] kfifo_len:[%d KB]\n", FIFO_SIZE / 1024, kfifo_avail(&cmd_fifo) / 1024, kfifo_len(&cmd_fifo) / 1024);
     return 0;
 }
 
@@ -188,16 +198,23 @@ void lidbg_uevent_shell(char *shell_cmd)
         uevent_shell(shell_cmd);
     else
     {
-        char *cmd;
-        while(kfifo_is_full(&cmd_fifo))
+        u32 mstrlen = strlen(shell_cmd);
+        if(mstrlen >= PER_SHELL_SIZE)
         {
-            LIDBG_WARN("lidbg_uevent_shell:kfifo_is_full\n");
+            LIDBG_ERR("error:\n\n\n\n\n\n\n ignoreshell: size too big [%d>%d][%s]\n\n\n\n\n\n\n", mstrlen, PER_SHELL_SIZE, shell_cmd);
+            return;
+        }
+        while(kfifo_is_full(&cmd_fifo) || kfifo_len(&cmd_fifo) >= ( FIFO_SIZE - mstrlen * 2))
+        {
+            LIDBG_WARN("kfifo_is_full:[%d],kfifo_len [%d byte]\n", kfifo_is_full(&cmd_fifo), kfifo_len(&cmd_fifo));
             msleep(100);
         }
-        cmd = kstrdup(shell_cmd, GFP_KERNEL);
         mutex_lock(&fifo_lock);
-        kfifo_in(&cmd_fifo, &cmd, sizeof(char *));
+        kfifo_in(&cmd_fifo, (unsigned char *) &mstrlen, sizeof(u32));
+        kfifo_in(&cmd_fifo, shell_cmd, mstrlen);
         mutex_unlock(&fifo_lock);
+        if(uevent_dbg)
+            LIDBG_WARN("kfifo_len:%d byte,mstrlen:%d/[%s]\n", kfifo_len(&cmd_fifo),  mstrlen, shell_cmd);
         //complete(&cmd_ready);
         wake_up_interruptible(&wait_queue);
     }
@@ -212,6 +229,10 @@ void lidbg_uevent_main(int argc, char **argv)
     else if(!strcmp(argv[0], "uevent"))
     {
         lidbg_uevent_shell(argv[1]);
+    }
+    else if(!strcmp(argv[0], "size"))
+    {
+        LIDBG_WARN("[%s]:cmd_fifo len: %d byte/%d KB  kfifo_avail:%d KB\n", __func__, kfifo_len(&cmd_fifo), kfifo_len(&cmd_fifo) / 1024, kfifo_avail(&cmd_fifo) / 1024);
     }
     LIDBG_WARN("lidbg_uevent_main:%d,%s\n", uevent_dbg, argv[0]);
 }
