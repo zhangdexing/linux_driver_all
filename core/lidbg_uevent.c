@@ -98,12 +98,12 @@ ssize_t  lidbg_uevent_read(struct file *filp, char __user *buf, size_t count, lo
 
     //wait_for_completion(&cmd_ready);
     if(kfifo_is_empty(&cmd_fifo))
-       return 0;
+        return 0;
     mutex_lock(&fifo_lock);
     len = kfifo_out(&cmd_fifo, &cmd, sizeof(char *));
     mutex_unlock(&fifo_lock);
     if(uevent_dbg)
-        LIDBG_WARN("%s\n",cmd);
+        LIDBG_WARN("%s\n", cmd);
     if(copy_to_user(buf, cmd, strlen(cmd)))
     {
         return -1;
@@ -118,9 +118,9 @@ static unsigned int lidbg_uevent_poll(struct file *filp, struct poll_table_struc
 {
 
     unsigned int mask = 0;
-     //LIDBG_WARN("[lidbg_uevent_poll]wait begin\n");
+    //LIDBG_WARN("[lidbg_uevent_poll]wait begin\n");
     poll_wait(filp, &wait_queue, wait);
-     //LIDBG_WARN("[lidbg_uevent_poll]wait done\n");
+    //LIDBG_WARN("[lidbg_uevent_poll]wait done\n");
     mutex_lock(&fifo_lock);
     if(!kfifo_is_empty(&cmd_fifo))
     {
@@ -136,7 +136,7 @@ static const struct file_operations lidbg_uevent_fops =
     .owner = THIS_MODULE,
     .open = lidbg_uevent_open,
     .write = lidbg_uevent_write,
-     .read = lidbg_uevent_read,
+    .read = lidbg_uevent_read,
     .poll = lidbg_uevent_poll,
 
 
@@ -188,18 +188,18 @@ void lidbg_uevent_shell(char *shell_cmd)
         uevent_shell(shell_cmd);
     else
     {
-	 char *cmd;
-	 while(kfifo_is_full(&cmd_fifo))
-         {
+        char *cmd;
+        while(kfifo_is_full(&cmd_fifo))
+        {
             LIDBG_WARN("lidbg_uevent_shell:kfifo_is_full\n");
-	    msleep(100);
-         }
-        cmd = kstrdup(shell_cmd,GFP_KERNEL);
+            msleep(100);
+        }
+        cmd = kstrdup(shell_cmd, GFP_KERNEL);
         mutex_lock(&fifo_lock);
-	kfifo_in(&cmd_fifo, &cmd, sizeof(char *));
+        kfifo_in(&cmd_fifo, &cmd, sizeof(char *));
         mutex_unlock(&fifo_lock);
         //complete(&cmd_ready);
-	wake_up_interruptible(&wait_queue);
+        wake_up_interruptible(&wait_queue);
     }
 }
 
