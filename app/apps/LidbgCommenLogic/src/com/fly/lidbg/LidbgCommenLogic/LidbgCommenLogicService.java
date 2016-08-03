@@ -68,11 +68,7 @@ public class LidbgCommenLogicService extends Service
             printKernelMsg("onStorageStateChanged :" + path + " " + oldState + " -> " + newState + "\n");
             if(Build.VERSION.SDK_INT >= 23 && Environment.MEDIA_MOUNTED.equals(newState) && !path.contains("emulated") && !path.contains("sdcard") && !path.contains("udisk"))
             {
-                printKernelMsg("/storage/udisk exist:"+isFileExist("/storage/udisk")+"\n");
-                if(isFileExist("/storage/udisk"))
-                {
-                    FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:mv /storage/udisk /storage/udisk1 ");
-                }
+                FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:mv /storage/udisk /storage/udisk1 ");
                 printKernelMsg("ln:" + path + " " + oldState + " -> " + newState + "\n");
                 FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:ln -s " + path + " /storage/udisk &");
             }
