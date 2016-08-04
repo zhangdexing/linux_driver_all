@@ -63,7 +63,7 @@ struct lpc_device *dev;
 
 int lpc_ping_test = 0;
 int lpc_ctrl_by_app = 0;
-//#define LPC_DEBUG_LOG
+#define LPC_DEBUG_LOG
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static void lpc_early_suspend(struct early_suspend *handler);
@@ -192,13 +192,13 @@ static void LPCdealReadFromMCUAll(BYTE *p, UINT length)
 		
 #ifdef LPC_DEBUG_LOG
  	u32 i;
-        lidbg("From LPC:");//mode ,command,para
+        pr_debug("From LPC:");//mode ,command,para
         for(i = 0; i < length; i++)
         {
-            printk("%x ", p[i]);
+            pr_debug("%x ", p[i]);
 
         }
-        lidbg("\n");
+        pr_debug("\n");
 #endif
 
         if(p[0] == 0x05 && p[1] == 0x05)
@@ -236,7 +236,7 @@ static void LPCdealReadFromMCUAll(BYTE *p, UINT length)
         {
         case 0x7f:
 #ifdef LPC_DEBUG_LOG
-            lidbg("LPC ping return!\n");
+            pr_debug("LPC ping return!\n");
 #endif
             break;
         }
@@ -354,7 +354,7 @@ BOOL actualReadFromMCU(BYTE *p, UINT length)
         {
 
 #ifdef LPC_DEBUG_LOG
-            lidbg("More ");
+            pr_debug("More ");
 #endif
             return TRUE;
         }
@@ -616,7 +616,7 @@ static int  lpc_probe(struct platform_device *pdev)
         lidbg("lpc_init do nothing.disable,[%d,%d,%d,%d]\n", g_var.is_fly, lpc_ping_en, g_var.recovery_mode, fs_is_file_exist(FLY_HAL_FILE));
         return 0;
     }
-#if defined(PLATFORM_msm8228) || defined(PLATFORM_ID_4) || defined(PLATFORM_ID_7)
+#if defined(PLATFORM_msm8226) || defined(PLATFORM_ID_4) || defined(PLATFORM_ID_7)
 	  if(g_var.recovery_mode)
 	 		return 0;
 #endif

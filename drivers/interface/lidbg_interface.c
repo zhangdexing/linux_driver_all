@@ -504,7 +504,12 @@ int fly_interface_init(void)
     g_var.usb_request = 0;
     g_var.usb_cam_request = 0;
     g_var.acc_goto_sleep_time = 0;
+#ifdef SUSPEND_ONLINE	
     g_var.suspend_timeout_protect = 0;
+#else
+    g_var.suspend_timeout_protect = 1;
+#endif
+
     g_var.android_boot_completed = 0;
     g_var.udisk_stable_test = 0;
     g_var.suspend_airplane_mode = 0;

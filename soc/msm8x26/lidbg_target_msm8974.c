@@ -105,7 +105,6 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_mcu_wp = 79,
         .gpio_mcu_app = 68,
 	.gpio_request_fastboot = 69,
-
         .gpio_ts_int = 14,
         .gpio_ts_rst = 12,
 

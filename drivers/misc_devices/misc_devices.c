@@ -243,7 +243,7 @@ static int thread_usb_disk_disable_delay(void *data)
 		{
 			lidbg("umount udisk\n");
 			lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 2");
-			msleep(2000);
+			msleep(5000);
 		}
 
 		usb_disk_enable(false);

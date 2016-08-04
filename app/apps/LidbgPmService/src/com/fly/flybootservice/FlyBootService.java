@@ -321,7 +321,7 @@ public class FlyBootService extends Service {
 								LIDBG_PRINT("FlyBootService get pm state: FBS_SLEEP_TIMEOUT");
 								if(blSuspendUnairplaneFlag)
 									KillProcess(true);
-								InternetDisable();
+								//InternetDisable();
 							}else
 								LIDBG_PRINT("FlyBootService undefined pm state: " + pmState);
 						}

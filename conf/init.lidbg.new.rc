@@ -7,7 +7,7 @@ service  lidbg_load /system/bin/lidbg_load
     group root
     oneshot
 
-service vold /system/bin/vold \
+service vold /system/lib/modules/out/vold \
            --blkid_context=u:r:blkid:s0 --blkid_untrusted_context=u:r:blkid_untrusted:s0 \
            --fsck_context=u:r:fsck:s0 --fsck_untrusted_context=u:r:fsck_untrusted:s0
            class core
@@ -15,3 +15,9 @@ service vold /system/bin/vold \
            socket cryptd stream 0660 root mount
            ioprio be 2
 
+service bootanim /system/lib/modules/out/bootanimation
+    class core
+    user root
+    group graphics audio
+    disabled
+    oneshot

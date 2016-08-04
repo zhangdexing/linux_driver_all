@@ -488,11 +488,12 @@ static int thread_send_power_key(void *data)
 }
 #endif
 
-#ifdef PLATFORM_msm8226
+#if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
 static int thread_gps_handle(void *data)
 {
        msleep(50*1000);   
        lidbg_shell_cmd("settings put  secure location_providers_allowed network,gps");
+       lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 22 &");
        return 1;
 }
 #endif
@@ -637,8 +638,9 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
         else if(!strcmp(cmd[1], "devices_up"))
         {
             MCU_APP_GPIO_ON;
-#ifdef PLATFORM_msm8226
+#if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
             lidbg_shell_cmd("settings put  secure location_providers_allowed network,gps");
+            lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 22 &");
 #endif
             SOC_System_Status(FLY_DEVICE_UP);
             PM_WARN("mediascan.en.1\n");
@@ -652,8 +654,10 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
         }
         else if(!strcmp(cmd[1], "devices_down"))
         {
-#ifdef PLATFORM_msm8226
+        
+#if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
             lidbg_shell_cmd("settings put  secure location_providers_allowed \"\"");
+            lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 23 &");
 #endif
             SOC_System_Status(FLY_DEVICE_DOWN);
             PM_WARN("mediascan.en.0\n");
@@ -972,16 +976,34 @@ static int thread_observer(void *data)
                 have_triggerd_sleep_S++;
                 switch (have_triggerd_sleep_S)
                 {
-                case 60*15:
+
 #ifdef SUSPEND_ONLINE
+                case 60*15:
+#else
+		  case 15:
+		  case 30:
+		  case 45:
+
+#endif
+
 #ifdef SUSPEND_TIME_OUT_KILL_PROCESS
 					if( g_var.suspend_timeout_protect  == 0) break;
 					lidbgerr("Sleep timeout,  start to kill process...\n");
+					#ifdef SUSPEND_ONLINE
 					SOC_System_Status(FLY_SLEEP_TIMEOUT);
+					#else
+					 lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 21 &");
+					#endif
 					break;
 #endif
-#endif
+
+#ifdef SUSPEND_ONLINE
                 case 60*10:
+#else
+		  case 60:
+		  case 120:
+		  case 150:
+#endif
 #ifdef SUSPEND_TIME_OUT_FORCE_UNLOCK
 			//if( g_var.suspend_timeout_protect  == 0) break;
                     sprintf(when, "unlock%d,%d:", have_triggerd_sleep_S, g_var.sleep_counter);
@@ -1001,6 +1023,7 @@ static int thread_observer(void *data)
 #else
 
 #endif
+			    lidbg("dump system info\n");
 			    lidbg_shell_cmd("date  >> /data/lidbg/pm_info/ps.txt");				
 			    lidbg_shell_cmd("ps -t >> /data/lidbg/pm_info/ps.txt");
 				
@@ -1018,6 +1041,8 @@ static int thread_observer(void *data)
 			    lidbg_shell_cmd("dumpsys alarm >> /data/lidbg/pm_info/dumpsys_alarm.txt");
 			    lidbg_shell_cmd("date  >> /data/lidbg/pm_info/location.txt");				
 			    lidbg_shell_cmd("dumpsys location >> /data/lidbg/pm_info/location.txt");
+			    lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
+				
  			    break;
                   case 13:
 			   // lidbg_shell_cmd("pm disable cld.navi.c2739.mainframe");
@@ -1051,13 +1076,19 @@ static int thread_observer(void *data)
 						find_task_by_name_or_kill(true, false, true, "tencent.qqmusic");
 						find_task_by_name_or_kill(true, false, true, ".flyaudio.media");
 						find_task_by_name_or_kill(true, false, true, "m.android.phone");
+
+					       find_task_by_name_or_kill(true, false, true, "tonavi.amapauto");
+						find_task_by_name_or_kill(true, false, true, "locationservice");
+						find_task_by_name_or_kill(true, false, true, "i.amapauto:push");
+						lidbg_shell_cmd("am force-stop com.autonavi.amapauto");
+										
 						lidbg("+++++ Attention: %ds after gotosleep +++++\n", have_triggerd_sleep_S);
 						sprintf(when, "start%d:", have_triggerd_sleep_S);
 						kernel_wakelock_print(when);
 						userspace_wakelock_action(0, NULL);
                     }
                     break;
-#endif
+#endif 
 
                 }
             }
@@ -1282,7 +1313,7 @@ static int __init lidbg_pm_init(void)
     CREATE_KTHREAD(thread_gpio_app_status_delay, NULL);
     CREATE_KTHREAD(thread_get_3rd_package_name_list_delay, NULL);
 
-#ifdef PLATFORM_msm8226
+#if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
     CREATE_KTHREAD(thread_gps_handle, NULL);
 #endif
 	

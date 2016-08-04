@@ -493,7 +493,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#099--adust Gsensor Sensitivity \n");
             fs_mem_log("*158#100--dump log for app upload\n");
             fs_mem_log("*158#101--trigge udisk remount uevent  to vold\n");
-
+			
+	     lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
             lidbg_domineering_ack();
         }
@@ -661,7 +662,7 @@ void parse_cmd(char *pt)
                lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
 		 
 	     lidbg_shell_cmd("chmod 777 /data/lidbg/reckmsg/* ");
-
+            lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
            // lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#022"))
