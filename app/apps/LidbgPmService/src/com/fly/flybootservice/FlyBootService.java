@@ -485,6 +485,16 @@ public class FlyBootService extends Service {
 			case 20:
 				LIDBG_PRINT("FlyBootService disableWiFi:"+setWifiState(false)+"\n");
 			break;
+			case 21:
+				forceKillProcess();
+			break;
+			case 22:
+				setLocationMode(true);
+			break;
+			case 23:
+				setLocationMode(false);
+			break;
+
 								
 			default:
 			LIDBG_PRINT("BroadcastReceiver.action:unkown"+action+"\n");
@@ -494,6 +504,16 @@ public class FlyBootService extends Service {
 		}
 
 	};
+	private void setLocationMode(boolean enable) {
+	    LIDBG_PRINT("FlyBootService setLocationMode:"+enable+"\n");
+	    if (enable) {
+	        Settings.Secure.putInt(getContentResolver(), Settings.Secure.LOCATION_MODE,
+	                Settings.Secure.LOCATION_MODE_HIGH_ACCURACY);
+	    } else {
+	        Settings.Secure.putInt(getContentResolver(), Settings.Secure.LOCATION_MODE,
+	                Settings.Secure.LOCATION_MODE_OFF);
+	    }
+	}
 	public String[] FileReadList(String fileName, String split)
 	{
 		// TODO Auto-generated method stub
@@ -809,6 +829,30 @@ public static void releaseBrightWakeLock()
 			LIDBG_PRINT(processName +"."+pid +" will be killed in white list\n");
 			mActivityManager.forceStopPackage(processName);
 		}
+        }
+    releaseWakeLock();
+    }
+
+    private void forceKillProcess() {
+	acquireWakeLock();
+        List<ActivityManager.RunningAppProcessInfo> appProcessList = null;
+        appProcessList = mActivityManager.getRunningAppProcesses();
+        LIDBG_PRINT("forceKillProcess.\n");
+        for (ActivityManager.RunningAppProcessInfo appProcessInfo : appProcessList) {
+            int pid = appProcessInfo.pid;
+            int uid = appProcessInfo.uid;
+            String processName = appProcessInfo.processName;
+            if(blSuspendUnairplaneFlag){
+	            booleanAccWakedupState = SystemProperties.getBoolean("persist.lidbg.AccWakedupState",false);
+	            if(booleanAccWakedupState){
+	                LIDBG_PRINT("Prop AccWakedupState be set:" + booleanAccWakedupState + ", stop kill process.");
+	                break;
+	            }
+            }
+            if (isKillableProcess(processName)) {
+                LIDBG_PRINT(processName +"."+pid +" will be killed\n");
+                mActivityManager.forceStopPackage(processName);
+            }
         }
     releaseWakeLock();
     }
