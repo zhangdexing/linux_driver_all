@@ -79,6 +79,8 @@ LIDBG_DEFINE;
 #define GTP_MAX_TOUCH		5
 #define GTP_ESD_CHECK_CIRCLE_MS	2000
 
+
+
 #if GTP_HAVE_TOUCH_KEY
 static const u16 touch_key_array[] = {KEY_MENU, KEY_HOMEPAGE, KEY_BACK};
 #define GTP_MAX_KEY_NUM  (sizeof(touch_key_array)/sizeof(touch_key_array[0]))
@@ -172,6 +174,38 @@ int gtp_i2c_read(struct i2c_client *client, u8 *buf, int len)
 
     sub_addr = (unsigned int)(buf[0] << 8) + buf[1];
 
+#ifdef SOC_mt35x
+       {
+			u16 left = len - 2;
+			u16 offset = 0;
+			u8 *buffer;
+			while (left > 0) {
+				sub_addr = sub_addr + offset;
+
+				buffer = &buf[offset + 2];
+
+				if (left > MAX_TRANSACTION_LENGTH) {
+					len = MAX_TRANSACTION_LENGTH;
+					left -= MAX_TRANSACTION_LENGTH;
+					offset += MAX_TRANSACTION_LENGTH;
+				} else {
+					len = left;
+					left = 0;
+				}
+
+				retries = 0;
+			    while (retries < 5) {
+					ret = SOC_I2C_Rec_2B_SubAddr(TS_I2C_BUS, client->addr, sub_addr, buffer, len);
+					if (ret == 2)
+						break;
+					retries++;
+				}
+				if (retries >= 5)
+					break;
+			}
+		}
+#else
+
     while (retries < 5)
     {
 
@@ -180,6 +214,8 @@ int gtp_i2c_read(struct i2c_client *client, u8 *buf, int len)
             break;
         retries++;
     }
+#endif
+
     if (retries >= 5)
     {
 #if GTP_SLIDE_WAKEUP
@@ -218,6 +254,42 @@ int gtp_i2c_write(struct i2c_client *client, u8 *buf, int len)
 
     GTP_DEBUG_FUNC();
 
+#ifdef	SOC_mt35x
+		{
+			u8 buffer[MAX_TRANSACTION_LENGTH] = {0};
+			u16 tmp;
+			u16 left = len;
+			u16 offset = 0;
+			tmp = (buf[0] << 8) + buf[1];
+
+			while (left > 0) {
+				buffer[0] = ((tmp + offset) >> 8) & 0xFF;
+				buffer[1] = (tmp + offset) & 0xFF;
+
+				if (left > MAX_I2C_TRANSFER_SIZE) {
+					memcpy(&buffer[GTP_ADDR_LENGTH], &buf[offset + GTP_ADDR_LENGTH], MAX_I2C_TRANSFER_SIZE);
+					len = MAX_TRANSACTION_LENGTH;
+					left -= MAX_I2C_TRANSFER_SIZE;
+					offset += MAX_I2C_TRANSFER_SIZE;
+				} else {
+					memcpy(&buffer[GTP_ADDR_LENGTH], &buf[offset + GTP_ADDR_LENGTH], left);
+					len = left + GTP_ADDR_LENGTH;
+					left = 0;
+				}
+
+				retries = 0;
+			    while (retries < 5) {
+					ret = SOC_I2C_Send(TS_I2C_BUS, client->addr, buffer, len);
+					if (ret == 1)
+						break;
+					retries++;
+				}
+				if (retries >= 5)
+					break;
+			}
+		}
+#else
+
     while (retries < 5)
     {
         ret = SOC_I2C_Send(TS_I2C_BUS, client->addr, buf, len);
@@ -225,6 +297,9 @@ int gtp_i2c_write(struct i2c_client *client, u8 *buf, int len)
             break;
         retries++;
     }
+
+#endif
+
     if ((retries >= 5))
     {
 #if GTP_SLIDE_WAKEUP
@@ -239,6 +314,7 @@ int gtp_i2c_write(struct i2c_client *client, u8 *buf, int len)
                      "<GTP> gtp_reset_guitar exit init_done=%d:\n",
                      init_done);
     }
+
     return ret;
 }
 /*******************************************************
@@ -1893,6 +1969,7 @@ static int goodix_ts_probe(struct platform_device *pdev)
     }
     client->addr = 0x14;
     client->dev = pdev->dev;
+	strcpy(client->name, "lidbg_ctp");
 
     lidbg("GTP I2C Address: 0x%02x\n", client->addr);
     /*if (client->dev.of_node) {

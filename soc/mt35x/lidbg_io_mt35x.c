@@ -14,10 +14,10 @@ struct io_status
     u32 suspend_mod;
 	u32 reg_addr;
 };
-#if 0
+
 static bool io_ready=1;
-static struct io_status io_config[IO_LOG_NUM];
-#endif
+//static struct io_status io_config[IO_LOG_NUM];
+
 int soc_io_suspend(void)
 {
 #if 0
@@ -97,13 +97,11 @@ void soc_irq_enable(unsigned int irq)
 
 int soc_io_irq(struct io_int_config *pio_int_config)//need set to input first?
 {
-#if 0
     if (request_irq(pio_int_config->ext_int_num, pio_int_config->pisr, pio_int_config->irqflags /*IRQF_ONESHOT |*//*IRQF_DISABLED*/, "lidbg_irq", pio_int_config->dev ))
     {
         lidbg("request_irq err!\n");
         return 0;
     }
-#endif
     return 0;
 }
 
@@ -116,7 +114,7 @@ int soc_io_suspend_config(u32 index, u32 direction, u32 pull, u32 drive_strength
 int soc_io_config(u32 index, int func, u32 direction, u32 pull, u32 drive_strength, bool force_reconfig)
 {
 #if 0
-    static bool is_first_init = 0;
+    bool is_first_init = 0;
     is_first_init = (io_config[index - GPIO_OFFSET].gpio == 0) ? 1 : 0;
     if(force_reconfig == 1)
         lidbg("soc_io_config:force_reconfig %d\n" , index);
@@ -169,7 +167,6 @@ free_gpio:
 
 int soc_io_output(u32 group, u32 index, bool status)
 {
-#if 0
     if(io_ready == 0)  
 	{
 		lidbg("%d,%d io not ready\n",group,index);
@@ -178,13 +175,12 @@ int soc_io_output(u32 group, u32 index, bool status)
 	
     gpio_direction_output(index, status);
     gpio_set_value(index, status);
-#endif
+
     return 0;
 }
 
 bool soc_io_input( u32 index)
 {
-#if 0
 	if(io_ready == 0)  
 	{
 		lidbg("%d io not ready\n",index);
@@ -193,8 +189,6 @@ bool soc_io_input( u32 index)
 
 	gpio_direction_input(index);
     return gpio_get_value(index);
-#endif
-	return 1;
 }
 
 

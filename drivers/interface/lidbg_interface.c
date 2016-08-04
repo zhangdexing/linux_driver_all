@@ -464,10 +464,10 @@ int fly_interface_init(void)
     p = (ssize_t) & (plidbg_dev->soc_func_tbl);
     {
         int i;
-        for(i = 0; i < sizeof(plidbg_dev->soc_func_tbl) / 4; i++)
+        for(i = 0; i < sizeof(plidbg_dev->soc_func_tbl) / sizeof(void *); i++)
         {
             // (((int *) & (plidbg_dev->soc_func_tbl))[i]) = interface_func_tbl_default;
-            *((ssize_t *)(p + i * 4)) = (ssize_t)interface_func_tbl_default;
+            *((ssize_t *)(p + i * sizeof(void *))) = (ssize_t)interface_func_tbl_default;
         }
     }
     memset(&(plidbg_dev->soc_pvar_tbl), (ssize_t)NULL, sizeof(struct lidbg_pvar_t));

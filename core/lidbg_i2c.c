@@ -229,7 +229,7 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
     case I2C_API_XFER_MODE_SEND:
     {
         struct i2c_adapter *adap = i2c_api->client->adapter;
-        struct i2c_msg msg;
+        struct i2c_msg msg = {0};
 
         msg.addr = i2c_api->client->addr;
         msg.flags = 0;
@@ -245,9 +245,8 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
     case I2C_API_XFER_MODE_RECV:
     {
         struct i2c_adapter *adap = i2c_api->client->adapter;
-        struct i2c_msg msg[2];
-        char subaddr;
-        subaddr = sub_addr & 0xff;
+        struct i2c_msg msg[2] = {{0}};
+        char subaddr = sub_addr & 0xff;
 
         msg[0].addr = i2c_api->client->addr;
         msg[0].flags = 0;
@@ -273,7 +272,7 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
     case I2C_API_XFER_MODE_RECV_SUBADDR_2BYTES:
     {
         struct i2c_adapter *adap = i2c_api->client->adapter;
-        struct i2c_msg msg[2];
+		struct i2c_msg msg[2] = {{0}};
         char SubAddr[2];
 
         SubAddr[0] = (sub_addr >> 8) & 0xff;
@@ -301,7 +300,7 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
     case I2C_API_XFER_MODE_RECV_NO_SUBADDR:
     {
         struct i2c_adapter *adap = i2c_api->client->adapter;
-        struct i2c_msg msg[2];
+        struct i2c_msg msg[2] = {{0}};
 
         msg[0].addr = i2c_api->client->addr;
         msg[0].flags = I2C_M_RD;
@@ -320,8 +319,9 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
 
     {
         struct i2c_adapter *adap = i2c_api->client->adapter;
-        struct i2c_msg msg[2];
+        struct i2c_msg msg[2] = {{0}};
         char SubAddr[3];
+
         SubAddr[0] = (sub_addr >> 16) & 0xff;
         SubAddr[1] = (sub_addr >> 8) & 0xff;
         SubAddr[2] = sub_addr & 0xff;
@@ -350,8 +350,9 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
     case I2C_API_XFER_MODE_SEND_TEF7000:
     {
         struct i2c_adapter *adap = i2c_api->client->adapter;
-        struct i2c_msg msg[2];
+        struct i2c_msg msg[2]= {{0}};
         char SubAddr[3];
+
         SubAddr[0] = 0x00;
         SubAddr[1] = 0xff;
         SubAddr[2] = 0xff;
@@ -377,7 +378,7 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
     case I2C_API_XFER_MODE_RECV_TEF7000:
     {
         struct i2c_adapter *adap = i2c_api->client->adapter;
-        struct i2c_msg msg[2];
+        struct i2c_msg msg[2]= {{0}};
         char SubAddr[3];
         SubAddr[0] = 0x00;
         SubAddr[1] = 0xff;

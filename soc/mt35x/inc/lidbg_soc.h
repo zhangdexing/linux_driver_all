@@ -201,7 +201,10 @@ struct io_config
 
 } ;
 
-
+//mt35x
+#define GTP_ADDR_LENGTH				2
+#define MAX_TRANSACTION_LENGTH		8
+#define MAX_I2C_TRANSFER_SIZE         (MAX_TRANSACTION_LENGTH - GTP_ADDR_LENGTH)
 //typedef irqreturn_t (*pinterrupt_isr)(int irq, void *dev_id);
 
 struct io_int_config
@@ -275,13 +278,8 @@ extern struct fly_smem *p_fly_smem ;
 #define IO_CONFIG_OUTPUT(group,index) do{  soc_io_config( index, GPIOMUX_FUNC_GPIO, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_16MA, 1);}while(0)
 #define IO_CONFIG_INPUT(group,index) do{  soc_io_config( index, GPIOMUX_FUNC_GPIO, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_16MA, 1);}while(0)
 
-#ifdef PLATFORM_ID_11
-#define GPIO_MAP_OFFSET  (911)
-#else
-#define GPIO_MAP_OFFSET  (0)
-#endif
-
-#define GPIO_TO_INT(x) gpio_to_irq(x+GPIO_MAP_OFFSET)
+extern unsigned int mt_gpio_to_irq(unsigned int gpio);
+#define GPIO_TO_INT(x) mt_gpio_to_irq(x)
 
 //i2c-gpio
 //#define LIDBG_I2C_GPIO
