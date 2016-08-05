@@ -34,7 +34,7 @@ function soc_build_recoveryimage()
         rm -rf $DBG_OUT_PATH/CallMessage.ko $DBG_OUT_PATH/vold $DBG_OUT_PATH/camera4hal.ko $DBG_OUT_PATH/mobileTrafficstats.ko $DBG_OUT_PATH/app4haljni.ko 
         rm -rf $DBG_OUT_PATH/LidbgCommenLogic $DBG_OUT_PATH/mc3xxx.ko $DBG_OUT_PATH/lidbg_flycam.ko $DBG_OUT_PATH/lidbg_spi.ko
         rm -rf $DBG_OUT_PATH/mount.ntfs $DBG_OUT_PATH/flysemdriver.ko $DBG_OUT_PATH/mkfs.ntfs $DBG_OUT_PATH/bootanimation $DBG_OUT_PATH/lidbg_gps.ko
-        rm -rf $DBG_OUT_PATH/tef6638.ko $DBG_OUT_PATH/saf7741.ko $DBG_OUT_PATH/sound_det.ko $DBG_OUT_PATH/lidbg_monkey.ko $DBG_OUT_PATH/lidbg_drivers_dbg.ko
+        rm -rf $DBG_OUT_PATH/tef6638.ko $DBG_OUT_PATH/saf7741.ko $DBG_OUT_PATH/sound_det.ko
         rm -rf $DBG_OUT_PATH/mount.exfat $DBG_OUT_PATH/fsck.ntfs $DBG_OUT_PATH/lidbg_umount
 	cd $DBG_SYSTEM_DIR
 	git checkout $RECOVERY_BUILD_BRANCH

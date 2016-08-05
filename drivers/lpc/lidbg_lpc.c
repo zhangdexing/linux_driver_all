@@ -323,19 +323,22 @@ BOOL actualReadFromMCU(BYTE *p, UINT length)
         return FALSE;
     if(g_var.recovery_mode)
     {
-        BYTE buff[128];
-        BYTE iReadLen = 128;
+        BYTE buff[DATA_BUFF_LENGTH_FROM_MCU];
+        BYTE iReadLen = DATA_BUFF_LENGTH_FROM_MCU;
         int read_cnt, fifo_len;
-        pr_debug("-------recovery_irq-------\n");
         read_cnt = SOC_I2C_Rec_Simple(LPC_I2_ID, MCU_ADDR, buff, iReadLen);
+        pr_debug("-------recovery_irq--%d,%d-----\n",read_cnt,(FIFO_SIZE - kfifo_len(&lpc_data_fifo )));
         down(&dev->sem);
-        kfifo_in(&lpc_data_fifo, buff, iReadLen);
-        if(kfifo_is_full(&lpc_data_fifo))
+        if(kfifo_is_full(&lpc_data_fifo)||(kfifo_len(&lpc_data_fifo) + DATA_BUFF_LENGTH_FROM_MCU > FIFO_SIZE))
         {
             kfifo_reset(&lpc_data_fifo);
             lidbg("kfifo_reset!!!!!\n");
         }
+	 
+        kfifo_in(&lpc_data_fifo, buff, iReadLen);
+
         fifo_len = kfifo_len(&lpc_data_fifo);
+        pr_debug("-------fifo_len=%d-------\n",fifo_len);
         up(&dev->sem);
         if(fifo_len > 0)
         {
@@ -485,6 +488,8 @@ ssize_t  lpc_read(struct file *filp, char __user *buffer, size_t size, loff_t *o
         read_len = fifo_len;
     else
         read_len = size;
+	
+    pr_debug("lpc_read:read_len=%d\n",read_len);
     bytes = kfifo_out(&lpc_data_fifo, lpc_data_for_hal, read_len);
     up(&dev->sem);
     if (copy_to_user(buffer, lpc_data_for_hal, read_len))
@@ -518,14 +523,18 @@ static unsigned int lpc_poll(struct file *filp, struct poll_table_struct *wait)
 {
     unsigned int mask = 0;
     struct lpc_device *dev = filp->private_data;
+    pr_debug("lpc_poll+\n");
+
     poll_wait(filp, &dev->queue, wait);
     down(&dev->sem);
     if(!kfifo_is_empty(&lpc_data_fifo))
     {
         mask |= POLLIN | POLLRDNORM;
-        pr_debug("plc poll have data!!!\n");
+        pr_debug("lpc  poll have data!!!\n");
     }
     up(&dev->sem);
+    pr_debug("lpc_poll-\n");
+
     return mask;
 
 }
