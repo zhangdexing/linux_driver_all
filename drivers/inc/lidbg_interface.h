@@ -397,11 +397,11 @@ struct lidbg_interface
 	 	printk("lidbg: %s:%s try open lidbg_interface!\n",__FILE__,__FUNCTION__);\
 	 	fd = filp_open("/dev/lidbg_interface", O_RDWR, 0);\
 	 	printk("lidbg:get fd=%p\n",(void *)fd);\
-	    if((fd == NULL)||((ssize_t)fd == 0xfffffffe)){printk("lidbg:get fd fail!\n");msleep(500);}\
+	    if((fd == NULL)||((ssize_t)fd == (~(ssize_t)0 - 1))){printk("lidbg:get fd fail!\n");msleep(500);}\
 	    else break;\
 	 }\
 	 BEGIN_KMEM;\
-	 fd->f_op->read(fd, (void*)&plidbg_dev, 4 ,&fd->f_pos);\
+	 fd->f_op->read(fd, (void*)&plidbg_dev, sizeof(void *) ,&fd->f_pos);\
 	 END_KMEM;\
 	filp_close(fd,0);\
 	if(plidbg_dev == NULL)\
