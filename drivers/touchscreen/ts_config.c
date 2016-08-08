@@ -3,6 +3,7 @@
 
 //+++++++++++++++++++++++++++++++++gt9xx+++++++++++++++++++++++++++++++++++++
 #include "gt9xx.h"
+LIDBG_DEFINE;
 
 u8 cfg_info_group1_v1[] = CTP_CFG_GROUP1_V1;
 u8 cfg_info_group2_v1[] = CTP_CFG_GROUP2_V1;
@@ -109,6 +110,7 @@ EXPORT_SYMBOL(cfg_info_len);
 
 static int ts_config_init(void)
 {
+    LIDBG_GET;
     DUMP_BUILD_TIME;
     if(0)
    {
