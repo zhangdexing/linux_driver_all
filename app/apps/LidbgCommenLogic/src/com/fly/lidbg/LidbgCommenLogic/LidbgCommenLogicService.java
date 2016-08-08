@@ -70,7 +70,7 @@ public class LidbgCommenLogicService extends Service
             {
                 FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:mv /storage/udisk /storage/udisk1 ");
                 printKernelMsg("ln:" + path + " " + oldState + " -> " + newState + "\n");
-                FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:ln -s " + path + " /storage/udisk &");
+                FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:ln -s -f " + path + " /storage/udisk &");
             }
             if (Environment.MEDIA_MOUNTED.equals(newState))
             {
