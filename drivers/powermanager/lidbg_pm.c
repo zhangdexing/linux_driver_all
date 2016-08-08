@@ -491,9 +491,11 @@ static int thread_send_power_key(void *data)
 #if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
 static int thread_gps_handle(void *data)
 {
-       msleep(50*1000);   
-       lidbg_shell_cmd("settings put  secure location_providers_allowed network,gps");
-       lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 22 &");
+       msleep(50*1000);
+	  if(ANDROID_VERSION >= 600)
+	       lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 22 &");
+         else
+       	lidbg_shell_cmd("settings put  secure location_providers_allowed network,gps");
        return 1;
 }
 #endif
@@ -639,8 +641,10 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
         {
             MCU_APP_GPIO_ON;
 #if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
-            lidbg_shell_cmd("settings put  secure location_providers_allowed network,gps");
-            lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 22 &");
+	  if(ANDROID_VERSION >= 600)
+            	lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 22 &");
+	  else
+              lidbg_shell_cmd("settings put  secure location_providers_allowed network,gps");
 #endif
             SOC_System_Status(FLY_DEVICE_UP);
             PM_WARN("mediascan.en.1\n");
@@ -656,8 +660,10 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
         {
         
 #if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
-            lidbg_shell_cmd("settings put  secure location_providers_allowed \"\"");
-            lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 23 &");
+	  if(ANDROID_VERSION >= 600)
+           	 lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 23 &");
+	  else
+               lidbg_shell_cmd("settings put  secure location_providers_allowed \"\"");
 #endif
             SOC_System_Status(FLY_DEVICE_DOWN);
             PM_WARN("mediascan.en.0\n");
