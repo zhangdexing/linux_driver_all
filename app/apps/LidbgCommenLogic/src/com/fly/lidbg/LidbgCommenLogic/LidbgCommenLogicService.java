@@ -31,6 +31,9 @@ import android.os.storage.IMountService;
 import android.os.ServiceManager;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.hardware.usb.UsbAccessory;
+import android.hardware.usb.UsbDevice;
+import android.hardware.usb.UsbManager;
 
 public class LidbgCommenLogicService extends Service
 {
@@ -55,6 +58,8 @@ public class LidbgCommenLogicService extends Service
         filter.addAction("com.fly.lidbg.LidbgCommenLogic");
         filter.addAction(Intent.ACTION_SCREEN_OFF);
         filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
+        filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         filter.setPriority(Integer.MAX_VALUE);
         mLidbgCommenLogicService.registerReceiver(myReceiver, filter);
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
@@ -281,6 +286,13 @@ public class LidbgCommenLogicService extends Service
             }
             else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF))
             {
+                return;
+            }
+            else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED) || intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED))
+            {
+                UsbDevice device = (UsbDevice)intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                printKernelMsg("usb event:[Manufacturer:" + device.getManufacturerName() + "/name:" + device.getDeviceName()  + "]\n");
+                //+ "/InterfaceClass:" + device.getInterface(0).getInterfaceClass()
                 return;
             }
 
