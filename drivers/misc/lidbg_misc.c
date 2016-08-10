@@ -571,6 +571,17 @@ void check_airplane_mode(void)
 	LIDBG_WARN("<suspend_airplane_mode = false ret=%d>\n",ret);
 
 }
+void check_HY_display_mode(void)
+{
+    bool exist = fs_is_file_exist("/persist/display/pp_calib_data.bin");
+    int ret = fs_find_string(g_var.pflyhal_config_list, "HYFeatureDisplayon");
+    LIDBG_WARN("<HYFeatureDisplayon.in [%d,%d]>\n", ret, exist);
+    if(ret > 0 && !exist)
+    {
+        lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data.bin /persist/display/");
+        lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
+    }
+}
 
 int misc_init(void *data)
 {
@@ -578,6 +589,8 @@ int misc_init(void *data)
     init_completion(&udisk_misc_wait);
 
     system_switch_init();
+
+    check_HY_display_mode();
 
     te_regist_password("001101", cb_password_upload);
     te_regist_password("001110", cb_password_clean_all);
