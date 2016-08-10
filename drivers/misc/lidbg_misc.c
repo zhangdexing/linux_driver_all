@@ -464,9 +464,11 @@ static __le16 udiskvender[2];
 static int usb_nb_misc_func(struct notifier_block *nb, unsigned long action, void *data)
 {
     struct usb_device *dev = data;
+    int usb_class;
     switch (action)
     {
     case USB_DEVICE_ADD:
+        usb_class = lidbg_get_usb_device_type(dev);
         if(dev && dev->product && dev->descriptor.idVendor && dev->descriptor.idProduct)
         {
             if(strstr(dev->product, "troller") == NULL && udiskvender[0] != dev->descriptor.idVendor && udiskvender[1] != dev->descriptor.idProduct)
@@ -476,7 +478,8 @@ static int usb_nb_misc_func(struct notifier_block *nb, unsigned long action, voi
                 udiskvender[1] = dev->descriptor.idProduct;
             }
         }
-        complete(&udisk_misc_wait);
+        if(usb_class == USB_CLASS_MASS_STORAGE)
+                complete(&udisk_misc_wait);
         break;
     case USB_DEVICE_REMOVE:
         if(g_var.recovery_mode == 1)
