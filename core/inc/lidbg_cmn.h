@@ -34,6 +34,7 @@ int  lidbg_pm_install_dir(char apkpath_or_apkdirpath[]);
 int  lidbg_pm_install(char apkpath_or_apkdirpath[]);
 int  lidbg_force_stop_apk(char packagename[]);
 int  lidbg_toast_show(char *who,char *what);
+int lidbg_get_usb_device_type(struct usb_device * dev);
 void lidbg_domineering_ack(void);
 void mod_cmn_main(int argc, char **argv);
 u32 lidbg_get_ns_count(void);

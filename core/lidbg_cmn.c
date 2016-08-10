@@ -490,6 +490,64 @@ bool lidbg_new_cdev(struct file_operations *cdev_fops, char *nodename)
     }
 }
 
+//returns value in Ch9.h  likes USB_CLASS_MASS_STORAGE/USB_CLASS_VIDEO 
+#define get_iface_desc(iface)	(&(iface)->desc)
+int lidbg_get_usb_device_type(struct usb_device * dev)
+{
+    struct usb_host_interface *alts;
+    struct usb_interface_descriptor *altsd ;
+    struct usb_interface *iface;
+    struct usb_host_config *config ;
+    int i;
+
+    LIDBG_WARN("in1\n");
+    if (dev == NULL || dev->actconfig == NULL)
+    {
+        LIDBG_WARN("dev == NULL||dev->actconfig==NULL\n");
+        return -1;
+    }
+    config = dev->actconfig;
+    LIDBG_WARN("in2\n");
+    if(config != NULL && (config->desc).bNumInterfaces != -1)
+    {
+        LIDBG_WARN("bNumInterfaces:%d\n", config->desc.bNumInterfaces);
+    }
+    else
+    {
+        LIDBG_WARN("bNumInterfaces==NULL\n");
+        return -1;
+    }
+    LIDBG_WARN("in3\n");
+    if (config->desc.bNumInterfaces >= USB_MAXINTERFACES)
+    {
+        LIDBG_WARN("bNumInterfaces>=USB_MAXINTERFACES\n");
+        return -1;
+    }
+
+    for (i = 0; i < config->desc.bNumInterfaces; i++)
+    {
+        LIDBG_WARN("%d============1============\n", i);
+        iface = config->interface[i];
+        if(iface == NULL || (& iface->altsetting[0]) == NULL)
+        {
+            LIDBG_WARN("iface == NULL\n");
+            return -1;
+        }
+        LIDBG_WARN("%d============2============\n", i);
+        alts = & iface->altsetting[0];
+        altsd = get_iface_desc(alts);
+        if(altsd != NULL)
+        {
+            LIDBG_WARN("[%d/bInterfaceClass:%d\n", i, altsd->bInterfaceClass);
+            return altsd->bInterfaceClass;
+        }
+        else
+            LIDBG_WARN("bInterfaceClass:NULL\n");
+        LIDBG_WARN("%d============3============\n", i);
+    }
+    return -1;
+}
+
 /*
 input:  c io w 27 1
 output:  token[0]=c  token[4]=1  return:5
@@ -724,6 +782,7 @@ EXPORT_SYMBOL(lidbg_pm_install_dir);
 EXPORT_SYMBOL(lidbg_pm_install);
 EXPORT_SYMBOL(lidbg_toast_show);
 EXPORT_SYMBOL(lidbg_force_stop_apk);
+EXPORT_SYMBOL(lidbg_get_usb_device_type);
 EXPORT_SYMBOL(lidbg_domineering_ack);
 EXPORT_SYMBOL(mod_cmn_main);
 EXPORT_SYMBOL(lidbg_get_ns_count);
