@@ -8,6 +8,8 @@
 #define I2C_API_FAKE_ADDR 0x7f
 #define I2C_MINORS	      256
 
+#define GTP_DMA_MAX_TRANSACTION_LENGTH  255
+
 int  i2c_api_attach(struct i2c_adapter *adapter);
 int  i2c_api_detach(struct i2c_adapter *adapter);
 
@@ -201,6 +203,11 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
     int ret = 0;
     struct i2c_api *i2c_api ;
 
+#ifdef SOC_mt35x
+	unsigned char *gpDMABuf_va;
+	unsigned int gpDMABuf_pa;
+#endif
+
     lidbg_i2c_running = 1; // for touch intr
 
 #ifdef USE_I2C_LOCK
@@ -213,6 +220,12 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
         return -ENODEV;
 
     i2c_api->client->addr = chip_addr;
+#ifdef SOC_mt35x
+	gpDMABuf_va = (unsigned char *) dma_alloc_coherent(&i2c_api->client->dev, GTP_DMA_MAX_TRANSACTION_LENGTH,
+				      (dma_addr_t *)&gpDMABuf_pa, GFP_KERNEL);
+	if(size > GTP_DMA_MAX_TRANSACTION_LENGTH)
+		lidbg("WARNING I2C transfer size > %d!!!\n", GTP_DMA_MAX_TRANSACTION_LENGTH);
+#endif
 
 #ifdef SOC_RK2818
     lidbg("SOC_RK2818\n");
@@ -235,6 +248,13 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
         msg.flags = 0;
         msg.len = size;
         msg.buf = buf;
+
+#ifdef SOC_mt35x
+		msg.buf = (unsigned char *)(uintptr_t)gpDMABuf_pa;
+		msg.ext_flag = (i2c_api->client->ext_flag | I2C_ENEXT_FLAG | I2C_DMA_FLAG);
+		memcpy(gpDMABuf_va, buf, size);
+#endif
+
 #ifdef  VENDOR_ROCKCHIP
         msg.scl_rate = RXPX3_I2C_RATE;
 #endif
@@ -258,11 +278,21 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
         msg[1].len = size;
         msg[1].buf = buf;
 
+#ifdef SOC_mt35x
+        msg[1].buf = (unsigned char *)(uintptr_t)gpDMABuf_pa;
+        msg[1].ext_flag = (i2c_api->client->ext_flag | I2C_ENEXT_FLAG | I2C_DMA_FLAG);
+#endif
+
 #ifdef  VENDOR_ROCKCHIP
         msg[0].scl_rate = RXPX3_I2C_RATE;
         msg[1].scl_rate = RXPX3_I2C_RATE;
 #endif
         ret = i2c_transfer(adap, msg, 2);
+#ifdef SOC_mt35x
+		if(ret >= 0)
+			memcpy(buf, gpDMABuf_va, size);
+#endif
+
         break;
     }
     case I2C_API_XFER_MODE_SEND_NO_SUBADDR:
@@ -288,11 +318,20 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
         msg[1].len = size;
         msg[1].buf = buf;
 
+#ifdef SOC_mt35x
+        msg[1].buf = (unsigned char *)(uintptr_t)gpDMABuf_pa;
+        msg[1].ext_flag = (i2c_api->client->ext_flag | I2C_ENEXT_FLAG | I2C_DMA_FLAG);
+#endif
+
 #ifdef  VENDOR_ROCKCHIP
         msg[0].scl_rate = RXPX3_I2C_RATE;
         msg[1].scl_rate = RXPX3_I2C_RATE;
 #endif
         ret = i2c_transfer(adap, msg, 2);
+#ifdef SOC_mt35x
+		if(ret >= 0)
+			memcpy(buf, gpDMABuf_va, size);
+#endif
         break;
 
     }
@@ -307,10 +346,19 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
         msg[0].len = size;
         msg[0].buf = buf;
 
+#ifdef SOC_mt35x
+		msg[0].buf = (unsigned char *)(uintptr_t)gpDMABuf_pa;
+        msg[0].ext_flag = (i2c_api->client->ext_flag | I2C_ENEXT_FLAG | I2C_DMA_FLAG);
+#endif
+
 #ifdef  VENDOR_ROCKCHIP
         msg[0].scl_rate = RXPX3_I2C_RATE;
 #endif
         ret = i2c_transfer(adap, msg, 1);
+#ifdef SOC_mt35x
+		if(ret >= 0)
+			memcpy(buf, gpDMABuf_va, size);
+#endif
         break;
     }
 
@@ -336,12 +384,22 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
         msg[1].len = size;
         msg[1].buf = buf;
 
+#ifdef SOC_mt35x
+		msg[1].buf = (unsigned char *)(uintptr_t)gpDMABuf_pa;
+        msg[1].ext_flag = (i2c_api->client->ext_flag | I2C_ENEXT_FLAG | I2C_DMA_FLAG);
+#endif
+
 #ifdef  VENDOR_ROCKCHIP
         msg[0].scl_rate = RXPX3_I2C_RATE;
         msg[1].scl_rate = RXPX3_I2C_RATE;
 #endif
 
         ret = i2c_transfer(adap, msg, 2);
+#ifdef SOC_mt35x
+		if(ret >= 0)
+			memcpy(buf, gpDMABuf_va, size);
+#endif
+
         break;
     }
 
@@ -366,6 +424,12 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
         msg[1].flags = 0;
         msg[1].len = size;
         msg[1].buf = buf;
+
+#ifdef SOC_mt35x
+		msg[1].buf = (unsigned char *)(uintptr_t)gpDMABuf_pa;
+        msg[1].ext_flag = (i2c_api->client->ext_flag | I2C_ENEXT_FLAG | I2C_DMA_FLAG);
+		memcpy(gpDMABuf_va, buf, size);
+#endif
 
 #ifdef  VENDOR_ROCKCHIP
         msg[0].scl_rate = RXPX3_I2C_RATE;
@@ -395,11 +459,20 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
         msg[1].len = size;
         msg[1].buf = buf;
 
+#ifdef SOC_mt35x
+		msg[1].buf = (unsigned char *)(uintptr_t)gpDMABuf_pa;
+        msg[1].ext_flag = (i2c_api->client->ext_flag | I2C_ENEXT_FLAG | I2C_DMA_FLAG);
+#endif
+
 #ifdef  VENDOR_ROCKCHIP
         msg[0].scl_rate = RXPX3_I2C_RATE;
         msg[1].scl_rate = RXPX3_I2C_RATE;
 #endif
         ret = i2c_transfer(adap, msg, 2);
+#ifdef SOC_mt35x
+		if(ret >= 0)
+			memcpy(buf, gpDMABuf_va, size);
+#endif
         break;
 
     }
@@ -411,6 +484,10 @@ static int i2c_api_do_xfer(int bus_id, char chip_addr, unsigned int sub_addr, in
     mutex_unlock(&i2c_lock);
 #endif
     lidbg_i2c_running = 0;
+
+#ifdef SOC_mt35x
+	dma_free_coherent(&i2c_api->client->dev, GTP_DMA_MAX_TRANSACTION_LENGTH, gpDMABuf_va, gpDMABuf_pa);
+#endif
 
     return ret;
 }
