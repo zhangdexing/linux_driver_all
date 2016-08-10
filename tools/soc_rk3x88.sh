@@ -1,3 +1,7 @@
+function soc_make_kernelconfig()
+{
+	echo $FUNCNAME
+}
 
 function soc_build_system()
 {

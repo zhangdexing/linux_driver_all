@@ -1,3 +1,16 @@
+function soc_make_kernelconfig()
+{
+	echo $FUNCNAME
+	#soc_prebuild
+	cd $DBG_KERNEL_SRC_DIR
+	if [ ! -d "$DBG_KERNEL_SRC_DIR/out" ]; then
+		mkdir "$DBG_KERNEL_SRC_DIR/out"
+	fi
+	ARCH=arm make O=out imx_v7_android_defconfig
+	ARCH=arm make O=out menuconfig
+	cp out/.config arch/arm/configs/imx_v7_android_defconfig
+	rm -rf out/source
+}
 
 function soc_build_system()
 {

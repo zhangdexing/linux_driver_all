@@ -90,6 +90,7 @@ function soc_menu()
 	echo [30] common
 	echo [31] make git commit image
 	echo [32] make origin bootimage
+	echo [33] make kernerconfig
 }
 
 function soc_build_git_commit_image()
@@ -128,6 +129,8 @@ function soc_handle()
 		soc_build_git_commit_image;;
 	32)
 		soc_build_origin_bootimage;;
+	33)
+		soc_make_kernelconfig;;
 	*)
 		echo
 	esac

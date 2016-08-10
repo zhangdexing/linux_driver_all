@@ -1,4 +1,12 @@
 
+function soc_make_kernelconfig()
+{
+	echo $FUNCNAME
+	cd $DBG_SYSTEM_DIR
+	soc_prebuild
+	make kernelconfig
+}
+
 function soc_build_system()
 {
 	echo $FUNCNAME

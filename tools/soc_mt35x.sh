@@ -1,4 +1,18 @@
 
+function soc_make_kernelconfig()
+{
+	echo $FUNCNAME
+	#soc_prebuild
+	cd $DBG_KERNEL_SRC_DIR
+	if [ ! -d "$DBG_KERNEL_SRC_DIR/out" ]; then
+		mkdir "$DBG_KERNEL_SRC_DIR/out"
+	fi
+	ARCH=arm64 make O=out cust3561_64_common_defconfig
+	ARCH=arm64 make O=out menuconfig
+	cp out/.config arch/arm64/configs/cust3561_64_common_defconfig
+	rm -rf out/source
+}
+
 function soc_build_system()
 {
 	echo $FUNCNAME
@@ -202,8 +216,6 @@ fi
 function soc_build_bootloader()
 {
 	echo $FUNCNAME
-        cd $DBG_SYSTEM_DIR
-	git checkout origin/$BOOTLOADER_BUILD_BRANCH
 	if [ ! -d "$DBG_BOOTLOADER_DIR/flyaudio" ]; then
 		mkdir "$DBG_BOOTLOADER_DIR/flyaudio"
 	else
@@ -219,7 +231,8 @@ function soc_build_bootloader()
 	echo DEFINES += $(echo BOOTLOADER_TYPE_$DBG_BOOTLOADER_TYPE | tr '[a-z]' '[A-Z]') >> $DBG_BOOTLOADER_DIR/flyaudio/common/build_cfg.mk
 
 	set_env
-	make aboot -j16
+	mmm -B vendor/mediatek/proprietary/bootable/bootloader/lk:lk -j16
+
 	#git checkout $SYSTEM_WORK_BRANCH
 }
 
