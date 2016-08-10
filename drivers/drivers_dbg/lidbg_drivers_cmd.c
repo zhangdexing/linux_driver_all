@@ -493,6 +493,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#099--adust Gsensor Sensitivity \n");
             fs_mem_log("*158#100--dump log for app upload\n");
             fs_mem_log("*158#101--trigge udisk remount uevent  to vold\n");
+            fs_mem_log("*158#102--copy /persist/display/* to udisk\n");
+            fs_mem_log("*158#103--copy udisk QDCM.apk to system/app\n");
 			
 	     lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1196,8 +1198,23 @@ void parse_cmd(char *pt)
             CREATE_KTHREAD(thread_trigge_udisk_uevent, NULL);
             lidbg_domineering_ack();
         }
+        else if (!strcmp(argv[1], "*158#102"))
+        {
+            lidbg("*158#102--copy /persist/display/* to udisk\n");
+            lidbg_shell_cmd("cp -rf /persist/display/* /storage/udisk/");	
+            lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#103"))
+        {
+            lidbg("*158#103--copy udisk QDCM.apk to flysystem/app\n");
+            lidbg_shell_cmd("mount -o remount /system");	
+            lidbg_shell_cmd("cp -rf /storage/udisk/app/* /system/app/");	
+            lidbg_shell_cmd("chmod 777 /system/app/*");	
+            lidbg_shell_cmd("reboot");	
+            lidbg_domineering_ack();
+        }
 
-	
+
     }
     else if(!strcmp(argv[0], "monkey") )
     {
