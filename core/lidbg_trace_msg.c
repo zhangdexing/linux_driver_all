@@ -355,7 +355,11 @@ static int  lidbg_trace_msg_probe(struct platform_device *ppdev)
 
     fs_file_separator(LIDBG_TRACE_MSG_PATH);
     fs_register_filename_list(LIDBG_TRACE_MSG_PATH, true);
+#ifdef PLATFORM_ID_14
+    pdev->disable_flag = 1;
+#else
     FS_REGISTER_INT(pdev->disable_flag, "trace_msg_disable", 1, NULL);
+#endif
     FS_REGISTER_INT(tmp, "kmsg_fifo_save", 0, cb_int_kmsg_fifo_save);
 
 #ifdef  TRACE_MSG_FROM_KMSG
