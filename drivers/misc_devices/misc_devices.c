@@ -30,6 +30,9 @@ int thread_lcd_on_delay(void *data)
 		msleep(1000);
 		lidbg("LCD_ON2.in.hold_bootanim2.false\n");
 		lidbg_shell_cmd("setprop lidbg.hold_bootanim2 false");
+#if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
+		lidbg_shell_cmd("setprop lidbg.hold_bootanim false");
+#endif
 		lidbg_shell_cmd("echo echoLCD_ON2.hold_bootanim2.false > /dev/lidbg_msg");
 	}
 	else
@@ -308,6 +311,9 @@ static int lidbg_dev_event(struct notifier_block *this,
 #endif
         		lidbg("hold_bootanim2.true\n");
 		lidbg_shell_cmd("setprop lidbg.hold_bootanim2 true");
+#if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
+		lidbg_shell_cmd("setprop lidbg.hold_bootanim true");
+#endif
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_GOTO_SLEEP):
 #ifdef DISABLE_USB_WHEN_GOTO_SLEEP
@@ -362,6 +368,7 @@ static int lidbg_dev_event(struct notifier_block *this,
     break;
 
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SIGNAL_EVENT, NOTIFIER_MINOR_SIGNAL_BAKLIGHT_ACK):
+	 lidbg("backlight warning\n");
         LCD_OFF;
         msleep(100);
         LCD_ON;
