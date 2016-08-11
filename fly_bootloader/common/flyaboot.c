@@ -163,7 +163,7 @@ void display_colour(int model)
 }
 void display_enter_recovery_count(int count)
 {
-    drawRect(1024 - 30, fly_screen_h - 30, 40, 30, BLACK_COL, BLACK_COL);
+    drawRect(1024 - 30, fly_screen_h - 30, 40, 30, BG_COL, BG_COL);
 #if (LOGO_FORMAT== RGB888)
     fly_version(1024 - 30, fly_screen_h - 10, "%d", 0X818181, count);
 #else

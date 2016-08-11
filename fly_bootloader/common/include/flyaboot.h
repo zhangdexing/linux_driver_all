@@ -3,6 +3,7 @@
 
 //#include "flymeg.h"
 
+//#define HYUNDAI
 #define FLY_SCREEN_SIZE_1024 1
 #define RECOVERY_MODE   0x77665502
 #define FASTBOOT_MODE   0x77665500
@@ -20,6 +21,13 @@
 #define 		GREEN_COL 		0X00FF00
 #define 		BLACK_COL 		0X000000
 #define		PINK_COL 		0XFF8080
+#define 		SPECIAL_BG_COL 		0x000410
+
+#ifdef	HYUNDAI
+#define	BG_COL	SPECIAL_BG_COL
+#else
+#define	BG_COL	BLACK_COL
+#endif
 
 //#define 		fontsize16		10
 #define 		fontsize		13

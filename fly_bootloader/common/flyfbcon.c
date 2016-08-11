@@ -62,8 +62,8 @@ void display_logo_on_screen(sLogo *plogoparameter)
     dprintf(INFO, "******************************************************************************************\n");
 
     //set logo back color
-    //FlySetLogoBcol(logo_show->back_color);
-    fly_fbcon_clear();
+    fly_setBcol(BG_COL);
+    //fly_fbcon_clear();
 
 #ifdef  DISPLAY_TYPE_MIPI
     if (bytes_per_bpp == 3)
