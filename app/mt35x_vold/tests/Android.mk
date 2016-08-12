@@ -16,4 +16,4 @@ LOCAL_SRC_FILES := VolumeManager_test.cpp
 LOCAL_MODULE := vold_tests
 LOCAL_MODULE_TAGS := eng tests
 
-include $(BUILD_NATIVE_TEST)
+#include $(BUILD_NATIVE_TEST)

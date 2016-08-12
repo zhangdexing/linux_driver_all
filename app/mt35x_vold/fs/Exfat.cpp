@@ -55,14 +55,38 @@ namespace android {
 namespace vold {
 namespace exfat {
 
-static const char* kMkfsPath = "/system/bin/mkexfat";
-static const char* kFsckPath = "/system/bin/exfatfsck";
+static const char *FLY_PRODUCT_PATH = "/flysystem/lib/out/mkfs.exfat";
+static const char *NATIVE_SYSTEM_PATH = "/system/lib/modules/out/mkfs.exfat";
+
+static const char* kMkfsPath = "/system/bin/mkfs.exfat";
+static const char* kFsckPath = "/system/bin/fsck.exfat";
+static const char* kMountPath = "/system/bin/mount.exfat";
+
+int selectPath(){
+	if(!access(FLY_PRODUCT_PATH, X_OK))
+	{
+		kMkfsPath = "/flysystem/lib/out/mkfs.exfat";
+		kFsckPath = "/flysystem/lib/out/fsck.exfat";
+		kMountPath = "/flysystem/lib/out/mount.exfat";
+		return 0;
+	}
+	else if(!access(NATIVE_SYSTEM_PATH, X_OK))
+	{
+		kMkfsPath = "/system/lib/modules/out/mkfs.exfat";
+		kFsckPath = "/system/lib/modules/out/fsck.exfat";
+		kMountPath = "/system/lib/modules/out/mount.exfat";
+		return 0;
+	}
+	else
+		return -1;
+}
+
 
 bool IsSupported() {
     bool ret;
+	ret = selectPath();
     ret = access(kMkfsPath, X_OK) == 0
-            && access(kFsckPath, X_OK) == 0
-            && IsFilesystemSupported("exfat");
+            && access(kFsckPath, X_OK) == 0;
     SLOGI("exfat::IsSupported() = %s", ret?"true":"false");
     return true;
 }
@@ -98,64 +122,33 @@ status_t Check(const std::string& source) {
 status_t Mount(const std::string& source, const std::string& target, bool ro,
         bool remount, bool executable, int ownerUid, int ownerGid, int permMask,
         bool createLost) {
-    int rc;
-    unsigned long flags;
     char mountData[255];
 
     const char* c_source = source.c_str();
     const char* c_target = target.c_str();
 
-    flags = MS_NODEV | MS_NOSUID | MS_DIRSYNC;
-
-    flags |= (executable ? 0 : MS_NOEXEC);
-    flags |= (ro ? MS_RDONLY : 0);
-    flags |= (remount ? MS_REMOUNT : 0);
-
-    /*
-     * Note: This is a temporary hack. If the sampling profiler is enabled,
-     * we make the SD card world-writable so any process can write snapshots.
-     *
-     * TODO: Remove this code once we have a drop box in system_server.
-     */
-    char value[PROPERTY_VALUE_MAX];
-    property_get("persist.sampling_profiler", value, "");
-    if (value[0] == '1') {
-        SLOGW("The SD card is world-writable because the"
-            " 'persist.sampling_profiler' system property is set to '1'.");
-        permMask = 0;
-    }
-
     sprintf(mountData,
-            "uid=%d,gid=%d,fmask=%o,dmask=%o",
-            ownerUid, ownerGid, permMask, permMask);
+#ifdef CONFIG_KERNEL_HAVE_EXFAT
+            "noatime,nodev,nosuid,uid=%d,gid=%d,fmask=%o,dmask=%o,%s,%s",
+#else
+            "noatime,nodev,nosuid,dirsync,uid=%d,gid=%d,fmask=%o,dmask=%o,%s,%s",
+#endif
+            ownerUid, ownerGid, permMask, permMask,
+            (executable ? "exec" : "noexec"),
+            (ro ? "ro" : "rw"));
 
-    rc = mount(c_source, c_target, "exfat", flags, mountData);
+    std::vector<std::string> cmd;
+    cmd.push_back(kMountPath);
+#ifdef CONFIG_KERNEL_HAVE_EXFAT
+    cmd.push_back("-t");
+    cmd.push_back("exfat");
+#endif
+    cmd.push_back("-o");
+    cmd.push_back(mountData);
+    cmd.push_back(c_source);
+    cmd.push_back(c_target);
 
-    SLOGI("exfat::Mount(%s,%s,%08lx,%s) = %d %s",c_source, c_target, flags, mountData, rc, (rc)?strerror(errno):"");
-
-    if (rc && errno == EROFS) {
-        SLOGE("Mount %s as exfat was failed, %d, %s", c_source, errno, strerror(errno));
-        SLOGE("%s appears to be a read only filesystem - retrying mount RO", c_source);
-        flags |= MS_RDONLY;
-        rc = mount(c_source, c_target, "exfat", flags, mountData);
-    }
-
-    if (rc == 0 && createLost) {
-        char *lost_path;
-        asprintf(&lost_path, "%s/LOST.DIR", c_target);
-        if (access(lost_path, F_OK)) {
-            /*
-             * Create a LOST.DIR in the root so we have somewhere to put
-             * lost cluster chains (fsck_msdos doesn't currently do this)
-             */
-            if (mkdir(lost_path, 0755)) {
-                SLOGE("Unable to create LOST.DIR (%s)", strerror(errno));
-            }
-        }
-        free(lost_path);
-    }
-
-    return rc;
+    return ForkExecvp(cmd);
 }
 
 status_t Format(const std::string& source, unsigned int numSectors) {
