@@ -3,6 +3,7 @@
 #include "lidbg.h"
 LIDBG_DEFINE;
 
+#define RAW_DATA_FILE "/sdcard/gps_raw.txt"
 #define DEVICE_NAME "ubloxgps"
 
 #define GPS_START	_IO('g', 1)
@@ -20,6 +21,7 @@ struct gps_device
 
 static int started = 0;
 static int  work_en = 1;
+static int  sdcard_raw_data = 0;
 module_param_named(work_en, work_en, int, 0644 );
 #ifdef CONFIG_HAS_EARLYSUSPEND
 struct early_suspend early_suspend;
@@ -157,14 +159,29 @@ ssize_t gps_read (struct file *filp, char __user *buf, size_t count, loff_t *f_p
 }
 
 
-ssize_t gps_write (struct file *filp, const char __user *buf, size_t count, loff_t *f_pos)
+ssize_t gps_write (struct file *filp, const char __user *buf, size_t size, loff_t *f_pos)
 {
-    //struct gps_device *dev = filp->private_data;
-    lidbg("[ublox]gps_write\n");
+    int argc = 0;
+    char *argv[32] = {NULL};
+    char cmd_buf[512];
+    memset(cmd_buf, '\0', 512);
 
-    lidbg("[ublox] gps_data=>%s\n", gps_data);
+    if(copy_from_user(cmd_buf, buf, size))
+    {
+        lidbg("copy_from_user ERR\n");
+    }
+    if(cmd_buf[size - 1] == '\n')
+        cmd_buf[size - 1] = '\0';
 
-    return count;
+    argc = lidbg_token_string(cmd_buf, " ", argv);
+    if (!strcmp(argv[0], "raw"))
+    {
+        sdcard_raw_data = !sdcard_raw_data;
+        lidbg("sdcard_raw_data:%d\n", sdcard_raw_data);
+        fs_file_separator(RAW_DATA_FILE);
+    }
+
+    return size;
 }
 
 static unsigned int gps_poll(struct file *filp, struct poll_table_struct *wait)
@@ -278,6 +295,10 @@ int thread_gps_server(void *data)
                 ret = SOC_I2C_Rec_Simple(GPS_I2C_BUS, 0x42, gps_data, avi_gps_data_hl);
                 gps_data[avi_gps_data_hl ] = '\0';
                 pr_debug("gps_data=%s\n", gps_data);
+                if (sdcard_raw_data)
+                {
+                    fs_file_write2(RAW_DATA_FILE, gps_data);
+                }
                 if (ret < 0)
                 {
                     lidbg("[ublox]get gps data err!!\n");

@@ -495,6 +495,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#101--trigge udisk remount uevent  to vold\n");
             fs_mem_log("*158#102--copy /persist/display/* to udisk\n");
             fs_mem_log("*158#103--copy udisk QDCM.apk to system/app\n");
+            fs_mem_log("*158#104--save gps raw data to sdcard\n");
 			
 	     lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1213,7 +1214,12 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("reboot");	
             lidbg_domineering_ack();
         }
-
+        else if (!strcmp(argv[1], "*158#104"))
+        {
+            lidbg("*158#104--save gps raw data to sdcard\n");
+            lidbg_shell_cmd("echo raw > /dev/ubloxgps0");	
+            lidbg_domineering_ack();
+        }
 
     }
     else if(!strcmp(argv[0], "monkey") )
