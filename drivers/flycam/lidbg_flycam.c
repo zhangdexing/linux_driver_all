@@ -968,6 +968,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					isRearPlugRec = isRearRec;
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 0&");
+					lidbg_shell_cmd("setprop lidbg.uvccam.rear.isSonix 0&");
 					status_fifo_in(RET_REAR_DISCONNECT);
 					isRearRec = 0;
 					isRearViewAfterFix = 0;
@@ -979,6 +980,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					isRearReady = 1;
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 1&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 1&");
+					lidbg_shell_cmd("setprop lidbg.uvccam.rear.isSonix 1&");
 					wake_up_interruptible(&pfly_UsbCamInfo->Rear_ready_wait_queue);
 					if(!isSuspend)
 					{
@@ -995,6 +997,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 				{
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 1&");
+					lidbg_shell_cmd("setprop lidbg.uvccam.rear.isSonix 0&");
 					status_fifo_in(RET_REAR_NOT_SONIX);
 				}
 			}	
@@ -1009,6 +1012,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					notify_online(RET_ONLINE_DISCONNECT);
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 0&");
+					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.isSonix 0&");
 					isDVRRec = 0;
 					isOnlineRec= 0;
 					isDVRAfterFix = 0;
@@ -1028,6 +1032,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					wake_up_interruptible(&pfly_UsbCamInfo->DVR_ready_wait_queue);
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.osdset 1&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 1&");
+					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.isSonix 1&");
 					if(!isSuspend)
 					{
 						//lidbg("=====CHECK::isDVRFirstResume = %d =====\n",isDVRFirstResume);
@@ -1045,6 +1050,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 				{
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 1&");
+					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.isSonix 0&");
 					status_fifo_in(RET_DVR_NOT_SONIX);
 					notify_online(RET_ONLINE_FOUND_NOTSONIX);
 				}
@@ -1259,7 +1265,7 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 		if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX))
 		{
 			lidbg("%s:====None camera found!====\n",__func__);
-			if((pfly_UsbCamInfo->camStatus)  & FLY_CAM_ISVALID) 
+			if((pfly_UsbCamInfo->camStatus)  & FLY_CAM_ISVALID) /*NOT SONIX*/
 				lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 1&");
 			else lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 0&");
 			isDVRFirstInit = 0;/*no matter what,let the next work continue*/
@@ -1268,6 +1274,7 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 		}
 		lidbg_shell_cmd("setprop lidbg.uvccam.dvr.osdset 1&");
 		lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 1&");
+		lidbg_shell_cmd("setprop lidbg.uvccam.dvr.isSonix 1&");
 	}
 	/*Rec Block mode(First ACCON) : REAR_BLOCK_ID_MODE & DVR_BLOCK_ID_MODE*/
 	if(isDVRACCRec && isDVRACCResume) 
@@ -1385,7 +1392,7 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 		if(!((pfly_UsbCamInfo->camStatus>>4) & FLY_CAM_ISSONIX))
 		{
 			lidbg("%s:====None camera found!====\n",__func__);
-			if((pfly_UsbCamInfo->camStatus>>4)  & FLY_CAM_ISVALID) 
+			if((pfly_UsbCamInfo->camStatus>>4)  & FLY_CAM_ISVALID) /*NOT SONIX*/
 				lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 1&");
 			else lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 0&");
 			isRearViewFirstInit = 0;/*no matter what,let the next work continue*/
@@ -1394,6 +1401,7 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 		}
 		lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 1&");
 		lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 1&");
+		lidbg_shell_cmd("setprop lidbg.uvccam.rear.isSonix 1&");
 	}
 	/*Rec Block mode(First ACCON) : REAR_BLOCK_ID_MODE & DVR_BLOCK_ID_MODE*/
 	if(isRearACCRec && isRearACCResume) 
