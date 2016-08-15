@@ -190,7 +190,8 @@ void monitor_filesize(void)
    }
 
 
-   if((get_totalsize(DESTDIR)+BUFSIZE) >= MAXSIZE) //达到最大存储量，开始覆盖
+   //if((get_totalsize(DESTDIR)+BUFSIZE) >= MAXSIZE) //达到最大存储量，开始覆盖
+   if(lseek(new_fd, 0, SEEK_CUR) >= MAXSIZE)
    {
       if(filenum == 1) //只有一个文件情况下
       {

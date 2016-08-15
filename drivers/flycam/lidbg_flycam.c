@@ -3911,6 +3911,11 @@ int thread_flycam_init(void *data)
 static __init int lidbg_flycam_init(void)
 {
     DUMP_BUILD_TIME;
+
+#ifndef FLY_USB_CAMERA_SUPPORT
+	lidbg("%s return\n",__func__);
+       return 0;
+#endif
     LIDBG_GET;
     CREATE_KTHREAD(thread_flycam_init, NULL);
 	platform_device_register(&flycam_devices);

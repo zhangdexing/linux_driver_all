@@ -200,9 +200,15 @@ static int fb_notifier_callback(struct notifier_block *self,
 		blank = evdata->data;
 
 		if (*blank == FB_BLANK_UNBLANK)
+		{
+			lidbg_shell_cmd("setprop persist.lidbg.AccWakedupState true");
 			powerkey_resume();
+		}
 		else if (*blank == FB_BLANK_POWERDOWN)
+		{
+			lidbg_shell_cmd("setprop persist.lidbg.AccWakedupState false");
 			powerkey_suspend();
+		}
 	}
 
 	return 0;

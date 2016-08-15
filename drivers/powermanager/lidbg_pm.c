@@ -988,8 +988,6 @@ static int thread_observer(void *data)
 #else
 		  case 15:
 		  case 30:
-		  case 45:
-
 #endif
 
 #ifdef SUSPEND_TIME_OUT_KILL_PROCESS
