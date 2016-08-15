@@ -97,8 +97,27 @@
 #define USB_POWER_UDISK_ENABLE
 #define USB_POWER_UDISK_DISABLE
 
-#define USB_WORK_ENABLE
-#define USB_WORK_DISENABLE
+#define USB_WORK_ENABLE do{\
+			 lidbg("USB_WORK_ENABLE\n");\
+			 USB_ID_LOW_HOST;\
+			 USB_POWER_ENABLE;\
+			 USB_POWER_BACK_ENABLE;\
+			 msleep(3000);\
+			 USB_POWER_FRONT_ENABLE;\
+			 msleep(1000);\
+			 USB_POWER_UDISK_ENABLE;\
+			}while(0)
+
+#define USB_WORK_DISENABLE  do{\
+			lidbg("USB_WORK_DISENABLE\n");\
+			USB_POWER_DISABLE;\
+			USB_POWER_UDISK_DISABLE;\
+			USB_POWER_FRONT_DISABLE;\
+			USB_POWER_BACK_DISABLE;\
+			msleep(500);\
+			USB_ID_HIGH_DEV;\
+			}while(0)
+
 
 #define USB_FRONT_WORK_ENABLE
 

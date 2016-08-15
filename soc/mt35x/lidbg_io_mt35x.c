@@ -16,7 +16,7 @@ struct io_status
 };
 
 static bool io_ready=1;
-//static struct io_status io_config[IO_LOG_NUM];
+static struct io_status io_config[IO_LOG_NUM];
 
 int soc_io_suspend(void)
 {

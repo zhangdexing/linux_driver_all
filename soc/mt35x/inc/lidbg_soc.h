@@ -176,6 +176,7 @@ struct gpiomux_setting {
 
 #endif
 
+#define SUSPEND_ONLINE
 #define SOC_KO  "lidbg_ad_mt35x.ko","lidbg_soc_mt35x.ko"
 #define INTERFACE_KO  "lidbg_interface.ko"
 #define USB_MOUNT_POINT  "/storage/udisk"
@@ -216,7 +217,7 @@ struct io_int_config
 } ;
 
 //#define MAKE_GPIO_LOG(group,index)   ((group<<5)|(index))
-#define IO_LOG_NUM  (117)//0~116
+#define IO_LOG_NUM  (204)
 #define AD_LOG_NUM  (16)
 #define TTY_DEV "msm-uart"
 
