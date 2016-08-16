@@ -500,14 +500,12 @@ int lidbg_get_usb_device_type(struct usb_device * dev)
     struct usb_host_config *config ;
     int i;
 
-    LIDBG_WARN("in1\n");
     if (dev == NULL || dev->actconfig == NULL)
     {
         LIDBG_WARN("dev == NULL||dev->actconfig==NULL\n");
         return -1;
     }
     config = dev->actconfig;
-    LIDBG_WARN("in2\n");
     if(config != NULL && (config->desc).bNumInterfaces != -1)
     {
         LIDBG_WARN("bNumInterfaces:%d\n", config->desc.bNumInterfaces);
@@ -517,7 +515,6 @@ int lidbg_get_usb_device_type(struct usb_device * dev)
         LIDBG_WARN("bNumInterfaces==NULL\n");
         return -1;
     }
-    LIDBG_WARN("in3\n");
     if (config->desc.bNumInterfaces >= USB_MAXINTERFACES)
     {
         LIDBG_WARN("bNumInterfaces>=USB_MAXINTERFACES\n");
@@ -526,14 +523,12 @@ int lidbg_get_usb_device_type(struct usb_device * dev)
 
     for (i = 0; i < config->desc.bNumInterfaces; i++)
     {
-        LIDBG_WARN("%d============1============\n", i);
         iface = config->interface[i];
         if(iface == NULL || (& iface->altsetting[0]) == NULL)
         {
             LIDBG_WARN("iface == NULL\n");
             return -1;
         }
-        LIDBG_WARN("%d============2============\n", i);
         alts = & iface->altsetting[0];
         altsd = get_iface_desc(alts);
         if(altsd != NULL)
@@ -543,7 +538,6 @@ int lidbg_get_usb_device_type(struct usb_device * dev)
         }
         else
             LIDBG_WARN("bInterfaceClass:NULL\n");
-        LIDBG_WARN("%d============3============\n", i);
     }
     return -1;
 }
