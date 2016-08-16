@@ -60,6 +60,8 @@ public class LidbgCommenLogicService extends Service
         filter.addAction(Intent.ACTION_SCREEN_ON);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
+        filter.addAction(Intent.ACTION_MEDIA_SCANNER_STARTED);
+        filter.addAction(Intent.ACTION_MEDIA_SCANNER_FINISHED);
         filter.setPriority(Integer.MAX_VALUE);
         mLidbgCommenLogicService.registerReceiver(myReceiver, filter);
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
