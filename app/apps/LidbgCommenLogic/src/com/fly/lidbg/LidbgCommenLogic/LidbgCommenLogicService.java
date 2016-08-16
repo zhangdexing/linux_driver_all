@@ -56,8 +56,8 @@ public class LidbgCommenLogicService extends Service
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.intent.action.BOOT_COMPLETED");
         filter.addAction("com.fly.lidbg.LidbgCommenLogic");
-        filter.addAction(Intent.ACTION_SCREEN_OFF);
-        filter.addAction(Intent.ACTION_SCREEN_ON);
+        //filter.addAction(Intent.ACTION_SCREEN_OFF);
+        //filter.addAction(Intent.ACTION_SCREEN_ON);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         filter.addAction(Intent.ACTION_MEDIA_SCANNER_STARTED);
@@ -279,14 +279,6 @@ public class LidbgCommenLogicService extends Service
             printKernelMsg("BroadcastReceiver:[" + intent.getAction() + "]\n");
             if (intent.getAction().equals(
                         "android.intent.action.BOOT_COMPLETED"))
-            {
-                return;
-            }
-            else if (intent.getAction().equals(Intent.ACTION_SCREEN_ON))
-            {
-                return;
-            }
-            else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF))
             {
                 return;
             }
