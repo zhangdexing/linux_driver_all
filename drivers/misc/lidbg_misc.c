@@ -441,11 +441,6 @@ static int thread_udisk_misc(void *data)
             {
                 while(i < 8 && !fs_is_file_exist(USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf"))
                 {
-                    if(!fs_is_file_exist(USB_MOUNT_POINT"/.nomedia"))
-                    {
-                        LIDBG_WARN("nomedia:%d\n",i );
-                        lidbg_shell_cmd("echo nomedia > "USB_MOUNT_POINT"/.nomedia");
-                    }
                     ssleep(3);
                     i++;
                 }
