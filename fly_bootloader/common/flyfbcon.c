@@ -102,6 +102,15 @@ void display_logo_on_screen(sLogo *plogoparameter)
             }
         }
     }
+	else if(bytes_per_bpp == 4){
+		if(FLY_SCREEN_SIZE_1024){
+			for(i = 0; i < image_base_hdpi; i++){
+				memcpy((fb_base_get() + (((1024 - image_base_wdpi) / 2 +((i + (600 - image_base_hdpi) / 2) * 1024)) * bytes_per_bpp)),
+					pImageBuffer + (i * image_base_wdpi * bytes_per_bpp),
+					image_base_wdpi * bytes_per_bpp);
+			}
+		}
+	}
 #else
     if (bytes_per_bpp == 2)// 2
     {
@@ -132,6 +141,9 @@ void display_logo_on_screen(sLogo *plogoparameter)
         }
     }
 #endif
+#ifdef BOOTLOADER_MT3561
+	flush_memery
+#endif
 #ifdef BOOTLOADER_TYPE_LK
     arch_clean_invalidate_cache_range((unsigned long)fb_base_get(), FBCON_WIDTH * FBCON_HEIGHT * 3);
 #endif
@@ -153,6 +165,9 @@ void fly_fbcon_clear(void)
     dprintf(INFO, "Fbcon clear, width[%d] height[%d] base[0x%x]\n", FBCON_WIDTH, FBCON_HEIGHT, fb_base_get());
     memset(fb_base_get(), 0x00, count * (FBCON_BPP / 8));
 #ifdef BOOTLOADER_IMX6Q
+	flush_memery
+#endif
+#ifdef BOOTLOADER_MT3561
 	flush_memery
 #endif
 }
@@ -209,6 +224,34 @@ void fly_setBcol(unsigned long int backcolor)
     }
 
     free(tem);
+#elif(LOGO_FORMAT == ARGB8888)
+    unsigned char *tem = malloc(1024 * 4);
+    int i = 0, m = 0;
+    unsigned char A;
+    unsigned char R;
+    unsigned char G;
+    unsigned char B;
+    A = 0xff;
+    R = backcolor >> 16 & 0xff;
+    G = backcolor >> 8 & 0xff;
+    B = backcolor & 0xff;
+
+    for(i = 0; i < 1024; i++)
+    {
+
+        tem[m++] = B;
+        tem[m++] = G;
+        tem[m++] = R;
+        tem[m++] = A;
+    }
+    for (i = 0; i < 600; i++)
+    {
+        memcpy (fb_base_get() + ((0 + (i * FBCON_WIDTH)) * 4),
+                tem,
+                1024 * 4);
+    }
+
+    free(tem);
 #else
     u16 *ptr;
     int i, j;
@@ -223,6 +266,9 @@ void fly_setBcol(unsigned long int backcolor)
 #ifdef BOOTLOADER_IMX6Q
 	flush_memery
 #endif
+#endif
+#ifdef BOOTLOADER_MT3561
+	flush_memery
 #endif
 }
 
@@ -264,7 +310,7 @@ void FlySetLogoBcol(unsigned short  backcolor)
 
 void fly_putpext(int x, int y, unsigned long  color)
 {
-    unsigned char *tem = malloc(20 * 3);
+    unsigned char *tem = malloc(20 * 4);
     int i = 0, m = 0;
     unsigned char R;
     unsigned char G;
@@ -293,7 +339,17 @@ void fly_putpext(int x, int y, unsigned long  color)
     arch_clean_invalidate_cache_range((unsigned long)fb_base_get() + ((x + (y * FBCON_WIDTH)) * 3), 1 * 3);
 #endif
     free(tem);
-
+#elif(LOGO_FORMAT == ARGB8888)
+    for(i = 0, m = 0; i < 1; i++)
+    {
+        tem[m++] = B;
+        tem[m++] = G;
+        tem[m++] = R;
+	 tem[m++] = 0xff;
+    }
+    //set RGB888 DATA TO SREEN
+    memcpy (fb_base_get() + ((x + (y * FBCON_WIDTH)) * 4), tem, 1 * 4);
+    free(tem);
 #else
     for(i = 0, m = 0; i < 1; i++)
     {

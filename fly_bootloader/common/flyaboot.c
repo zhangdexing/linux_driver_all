@@ -159,6 +159,9 @@ void display_colour(int model)
     }
 
     //		dprintf(INFO,"[FLYADIO]dcz ====>> len = %d count = %d \n",len,count);
+#ifdef BOOTLOADER_MT3561
+	flush_memery
+#endif
     return ;
 }
 void display_enter_recovery_count(int count)
@@ -170,6 +173,9 @@ void display_enter_recovery_count(int count)
     fly_version(1024 - 30, fly_screen_h - 10, "%d", 0Xffffff, count);
 #endif
 
+#ifdef BOOTLOADER_MT3561
+	flush_memery
+#endif
     return ;
 }
 static void display_count(int model, int count)
@@ -199,6 +205,9 @@ static void display_count(int model, int count)
     default:
         break;
     }
+#ifdef BOOTLOADER_MT3561
+	flush_memery
+#endif
     return ;
 }
 void test_display_logo()
@@ -465,6 +474,9 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
 
     if(*boot_into_fastboot == true)
         display_fastboot_meg();
+#ifdef BOOTLOADER_MT3561
+	flush_memery
+#endif
 
     return;
 }

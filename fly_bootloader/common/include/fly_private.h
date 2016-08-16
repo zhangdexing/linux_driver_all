@@ -22,6 +22,8 @@
 #define FBCON_HEIGHT 600
 #if (LOGO_FORMAT== RGB888)
 #define FBCON_BPP 24
+#elif(LOGO_FORMAT == ARGB8888)
+#define FBCON_BPP 32
 #else
 #define FBCON_BPP 16
 #endif
@@ -60,9 +62,11 @@ void fly_text_lk(int x, int y, const char *s, unsigned long fontcol);
 void fly_version(int x, int y, const char *s, unsigned long fontcol, ...);
 void drawRect(int x0, int y0, int wide, int hide, unsigned long linecolor, unsigned long backcolor);
 extern void *fb_base_get(void);
+#ifndef BOOTLOADER_MT3561
 extern u8 I2C_Byte_Read(u8 device_ID, u16 address);
 extern u8 I2C_Byte_Write(u8 device_ID, u8 address, u8 bytedata);
 
+#endif
 extern int fly_screen_w;
 extern int fly_screen_h;
 extern recovery_meg_t RecoveryMeg;

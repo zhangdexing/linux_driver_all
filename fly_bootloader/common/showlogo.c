@@ -10,13 +10,23 @@
 
 //#include "defaultLogo.h"
 
+#define RGB565_To_ARGB8888(x)   \
+	((((x) &   0x1F) << 3) |    \
+	(((x) &  0x7E0) << 5) |    \
+	(((x) & 0xF800) << 8) |    \
+	(0xFF << 24)) // opaque
+
 
 #define LCD_BASE_ADDR  0x20000000 + 0x10000000 - 0x4000000
 
+#ifndef BOOTLOADER_MT3561
 extern unsigned page_mask;
 extern unsigned page_size;
+#else
+unsigned page_mask = 0;
 //void display_image_on_screen_fly(char *pImageBuffer);
 
+#endif
 //#define unsigned long  u32;
 #define 	u32		unsigned int
 #define  	u16		unsigned short
@@ -244,6 +254,33 @@ err_out:
     return ret;
 }
 
+int RGB565_TO_ARGB8888(unsigned int *p8888, unsigned char *p565, unsigned long Pixel)
+{
+	int ret = FALSE;
+	unsigned long i = 0;
+	unsigned long k = 0;
+	unsigned int pixelRGB565;
+	if (NULL == p8888 || NULL == p565)
+	{
+		dprintf(INFO, "\n err_out: rgb565To888 p8888 or p565 is NULL");
+		goto err_out;
+	}
+	if (Pixel == 0)
+	{
+		dprintf(INFO, "\n err_out: rgb565ToArgb8888 pixel == 0");
+		goto err_out;
+	}
+	for (i = 0; i < Pixel; i++)
+	{
+		pixelRGB565 = (((p565[k+1] << 8) | (p565[k] )) & 0xffff);
+		p8888[i] = RGB565_To_ARGB8888(pixelRGB565);
+		k = k + 2;
+	}
+	dprintf(INFO, "rgb565ToArgb8888 i->%u k->%u\n", i, k);
+	ret = TRUE;
+err_out:
+	return ret;
+}
 
 //解压数据 生成RGB565
 int logoDataDecompress(
@@ -325,7 +362,8 @@ err_out:
 
 int logo_addr_get(unsigned char **partition_add, int partition_add_len,
                   unsigned char **rgb565_add, int rgb565_add_len,
-                  unsigned char **rgb888_add, int rgb888_add_len)
+                  unsigned char **rgb888_add, int rgb888_add_len,
+                  unsigned int **argb8888_add, int argb8888_add_len)
 {
     unsigned n = 0;
 
@@ -353,6 +391,13 @@ int logo_addr_get(unsigned char **partition_add, int partition_add_len,
         goto err_out;
     }
 
+    *argb8888_add = (unsigned char *)malloc(argb8888_add_len);
+    if (NULL == *argb8888_add)
+    {
+        printf("Fail: malloc for argb8888_add !\n");
+        goto err_out;
+    }
+
     return 0;
 
 err_out:
@@ -372,6 +417,12 @@ err_out:
     {
         free(*rgb888_add);
         *rgb888_add = NULL;
+    }
+
+    if (NULL != *argb8888_add)
+    {
+        free(*argb8888_add);
+        *argb8888_add = NULL;
     }
 
     return -1;
@@ -394,6 +445,7 @@ int  show_logo()
     unsigned char *pfileBuf = NULL;
     unsigned char *pDataRGB565 = NULL;
     unsigned char *pDataRGB888 = NULL;
+    unsigned char *pDataARGB8888 = NULL;
     unsigned char *pPartitionData = NULL;
 
     unsigned long pixelDataStartIndex;
@@ -464,7 +516,7 @@ int  show_logo()
     pDataRGB565 = pPartitionData + RGB565_DATA_LEN;
     pDataRGB888 = pDataRGB565 + RGB888_DATA_LEN;
 #else
-    ret = logo_addr_get(&pPartitionData, lenTotal, &pDataRGB565, logoPixel * 2, &pDataRGB888, logoPixel);
+    ret = logo_addr_get(&pPartitionData, lenTotal, &pDataRGB565, logoPixel * 2, &pDataRGB888, logoPixel, &pDataARGB8888, logoPixel*4);
     if(ret)
     {
         dprintf(INFO, "Error::: set logo addr failed !\n");
@@ -498,6 +550,12 @@ int  show_logo()
         goto err_out;
     }
 
+#elif(LOGO_FORMAT == ARGB8888)
+	if(FALSE == RGB565_TO_ARGB8888((unsigned int*)pDataARGB8888, pDataRGB565, logoPixel))
+	{
+	dprintf(INFO, "fail to RGB565_TO_ARGB8888\n");
+	goto err_out;
+	}
 #else
 #endif
     LogoRGB888Info.x_position = pLogoInfo->x_position;
@@ -510,6 +568,8 @@ int  show_logo()
 
 #if (LOGO_FORMAT == RGB888)
     LogoRGB888Info.pdata = (unsigned char *)pDataRGB888;
+#elif(LOGO_FORMAT == ARGB8888)
+	LogoRGB888Info.pdata = (unsigned char *)pDataARGB8888;
 #else
     LogoRGB888Info.pdata = (unsigned char *)pDataRGB565;
 #endif
@@ -530,6 +590,12 @@ int  show_logo()
     {
         free(pDataRGB888);
         pDataRGB888 = NULL;
+    }
+
+    if (NULL != pDataARGB8888)
+    {
+        free(pDataARGB8888);
+        pDataARGB8888 = NULL;
     }
 
     if (NULL != pPartitionData)
