@@ -308,7 +308,7 @@ int thread_gps_server(void *data)
                 if(kfifo_is_full(&gps_data_fifo))
                 {
                     kfifo_reset(&gps_data_fifo);
-                    lidbg("[ublox]kfifo_reset!!!!!\n");
+                    lidbgerr("[ublox]kfifo_reset!!!!!\n");
                 }
                 kfifo_in(&gps_data_fifo, gps_data, avi_gps_data_hl);
                 up(&dev->sem);

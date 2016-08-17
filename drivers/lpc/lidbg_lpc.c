@@ -211,7 +211,7 @@ static void LPCdealReadFromMCUAll(BYTE *p, UINT length)
             if(kfifo_is_full(&lpc_ad_fifo))
             {
                 kfifo_reset(&lpc_ad_fifo);
-                lidbg("kfifo_reset!!!!!\n");
+                lidbgerr("kfifo_reset!!!!!\n");
             }
             kfifo_in(&lpc_ad_fifo, val, 4);
             up(&dev->sem);
@@ -332,7 +332,7 @@ BOOL actualReadFromMCU(BYTE *p, UINT length)
         if(kfifo_is_full(&lpc_data_fifo)||(kfifo_len(&lpc_data_fifo) + DATA_BUFF_LENGTH_FROM_MCU > FIFO_SIZE))
         {
             kfifo_reset(&lpc_data_fifo);
-            lidbg("kfifo_reset!!!!!\n");
+            lidbgerr("kfifo_reset!!!!!\n");
         }
 	 
         kfifo_in(&lpc_data_fifo, buff, iReadLen);
