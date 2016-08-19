@@ -31,8 +31,8 @@ struct bootloader_hw_config g_hw_info[] =
 
         .lpc_info = {
             .lpc_slave_add = 0x50,
-            .lpc_sda = 6,
-            .lpc_scl = 3,
+            .lpc_sda = 49,
+            .lpc_scl = 50,
         },
 	.lk_wakeup_lpc_io = 95,
 	.gpio_mcu_wp = 9,
