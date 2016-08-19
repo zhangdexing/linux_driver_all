@@ -1304,8 +1304,8 @@ public static void releaseBrightWakeLock()
 			{ 1, 6, 23, 0, 0, 24 * 60 * 60 * 1000 },
 			{ 1, 1, 3, 0, 0, 24 * 60 * 60 * 1000 },
 			// debug para below up,cmdParabase = 2
-			{ 1, 0, 22, 0, 0, 24 * 60 * 60 * 1000 },
-			{ 1, 1, 6, 0, 0, 1 * 60 * 60 * 1000 }, };
+			{ 1, 0, 22, 0, 0, 5* 60 * 1000 },
+			{ 1, 1, 6, 0, 0, 5 * 60 * 1000 }, };
 	protected long oldTimes;
 	private int cmdParabase = 0;
 	protected int loopCount = 0;
@@ -1327,6 +1327,15 @@ public static void releaseBrightWakeLock()
 			String log = msg + "\n" + getCurrentTimeString() + "\nloopCount:"
 					+ loopCount + "/" + "interval:" + interval / 1000 + "S\n";
 			LIDBG_PRINT(log);
+			if(cmdParabase==2)
+			{
+				acquireWakeLock();
+				handleRebootEvent();
+				LIDBG_PRINT("test seven days reboot");
+				writeToFile("/dev/lidbg_misc0","flyaudio:reboot lidbg_sevendays_timeout");
+				return;
+			}
+
 			if (loopCount == 1)
 			{
 				setAndaddAlarmAtTtime(cmdPara[cmdParabase + 1][0],
@@ -1360,23 +1369,20 @@ public static void releaseBrightWakeLock()
 		mAlarmManager = (AlarmManager) this
 				.getSystemService(Context.ALARM_SERVICE);
 		mAlarmManager.cancel(peration);
+		long mfutureTime;
+		if(cmdParabase==2)
+		{
+			mfutureTime=SystemClock.elapsedRealtime()+cmdPara[cmdParabase + 1][5];
+			LIDBG_PRINT("debug mode.S:"+cmdPara[cmdParabase + 1][5]/1000);
+		}
+		else
+			mfutureTime=SystemClock.elapsedRealtime()+ getFutureCalenderTimeInMillis(intervalDate,absolutelyHour, absolutelyMinutes,absolutelySeconds);
 		if (repearAlarm == 1)
 		{
-			mAlarmManager.setRepeating(
-					AlarmManager.ELAPSED_REALTIME_WAKEUP,
-					SystemClock.elapsedRealtime()
-							+ getFutureCalenderTimeInMillis(intervalDate,
-									absolutelyHour, absolutelyMinutes,
-									absolutelySeconds),
-					repeatIntervalTimeInMillis, peration);
+			mAlarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,mfutureTime,repeatIntervalTimeInMillis, peration);
 		} else
 		{
-			mAlarmManager.set(
-					AlarmManager.ELAPSED_REALTIME_WAKEUP,
-					SystemClock.elapsedRealtime()
-							+ getFutureCalenderTimeInMillis(intervalDate,
-									absolutelyHour, absolutelyMinutes,
-									absolutelySeconds), peration);
+			mAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,mfutureTime, peration);
 		}
 
 		registerReceiver(mAlarmBroadcast,
@@ -1408,6 +1414,7 @@ public static void releaseBrightWakeLock()
 		if (curHours == cmdPara[cmdParabase + 1][2]&&accState==1&& intervalTimesS > 2 * 60 * 60)// 
 		{
 			//if(cmdParabase==0)
+				acquireWakeLock();
 				writeToFile("/dev/lidbg_misc0","flyaudio:reboot lidbg_sevendays_timeout");
 			//else
 			//	LIDBG_PRINT("salarm:should be reboot but in debug mode.");
