@@ -367,15 +367,34 @@ static  struct file_operations rmtctrl_fops =
     .write = rmtctrl_write,
 };
 
+
+void update_acc_status(void)
+{
+    g_var.acc_flag = SOC_IO_Input(MCU_ACC_STATE_IO, MCU_ACC_STATE_IO, GPIO_CFG_PULL_UP);
+    if(g_var.acc_flag == FLY_ACC_OFF)
+    {
+    	lidbg("%s: set acc.status to 1\n",__FUNCTION__);
+    	lidbg_shell_cmd("setprop persist.lidbg.acc.status 1");
+   }
+    else
+    {
+       lidbg("%s: set acc.status to 0\n",__FUNCTION__);
+    	lidbg_shell_cmd("setprop persist.lidbg.acc.status 0");
+    }
+
+}
+
+
 static int thread_check_acc_and_response_acc_off_delay(void *data)
 {
-   //g_var.acc_flag = SOC_IO_Input(MCU_ACC_STATE_IO, MCU_ACC_STATE_IO, GPIO_CFG_PULL_UP);
-   
+
+   update_acc_status();
    while(0==g_var.android_boot_completed)
     {
         ssleep(1);
 	 lidbg("wait for android_boot_completed.\n");
     }
+    update_acc_status();
 
     ssleep(20);
 	
