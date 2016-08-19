@@ -148,8 +148,22 @@ bool flyparameter_info_get(void)
                 lidbg_shell_cmd("rm /flysystem/lib/out/"FLY_GPS_SO);
                 lidbg_shell_cmd("mount -o remount,ro /flysystem");
             }
-	     g_var.car_type = g_recovery_meg->bootParam.upName.flags;
-	     lidbg("car_type=%s\n",g_var.car_type);
+	     {
+	            char set_car_type[256];
+	            memset(set_car_type, '\0', sizeof(set_car_type));
+		     g_var.car_type = g_recovery_meg->bootParam.upName.flags;
+	            lidbg("car_type=%s\n",g_var.car_type);
+
+	            ret = sprintf(set_car_type, "setprop HWINFO.FLY.car_type %s", g_var.car_type);
+	            if(ret < 0)
+	            {
+	                lidbg("fail to cpy car_type\n");
+	            }
+	            lidbg_shell_cmd( set_car_type );
+	            fs_mem_log("car_type=[%s]\n", g_var.car_type);
+
+	     }
+		 
 #if 1
             if( !strncmp(g_var.car_type, "822", 3))//Israel
             	{
