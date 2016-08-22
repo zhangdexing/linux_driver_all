@@ -1655,7 +1655,7 @@ static int checkSDCardStatus(char *path)
 			strcpy(path, EMMC_MOUNT_POINT0"/camera_rec/");
 #else
 			lidbg("%s:SDCARD1 ERR!!\n",__func__);
-			strcpy(path, EMMC_MOUNT_POINT1"/camera_rec/");
+			//strcpy(path, EMMC_MOUNT_POINT1"/camera_rec/");
 #endif
 			ret = 2;
 		}
