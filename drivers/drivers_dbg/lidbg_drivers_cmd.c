@@ -496,6 +496,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#102--copy /persist/display/* to udisk\n");
             fs_mem_log("*158#103--copy udisk QDCM.apk to system/app\n");
             fs_mem_log("*158#104--save gps raw data to sdcard\n");
+            fs_mem_log("*158#105--MTK USB HOST MODE\n");
+            fs_mem_log("*158#106--MTK USB SLAVE MODE\n");
 			
 	     lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1218,6 +1220,20 @@ void parse_cmd(char *pt)
         {
             lidbg("*158#104--save gps raw data to sdcard\n");
             lidbg_shell_cmd("echo raw > /dev/ubloxgps0");	
+            lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#105"))
+        {
+            lidbg("*158#105--MTK USB HOST MODE\n");
+            lidbg_shell_cmd("chmod 777 /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");	
+            lidbg_shell_cmd("echo a_host > /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");	
+            lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#106"))
+        {
+            lidbg("*158#106--MTK USB SLAVE MODE\n");
+            lidbg_shell_cmd("chmod 777 /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");	
+            lidbg_shell_cmd("echo b_peripheral > /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");	
             lidbg_domineering_ack();
         }
 
