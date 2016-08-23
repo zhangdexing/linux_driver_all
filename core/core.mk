@@ -3,5 +3,5 @@
 EXTRA_CFLAGS += -DBUILD_CORE
 
 ifeq ($(DBG_SOC), mt35x)
-EXTRA_CFLAGS += -Wno-error=date-time
+EXTRA_CFLAGS += -Wno-date-time
 endif
