@@ -23,6 +23,7 @@ cp -u ./halAndJni/inc/hal_lidbg_commen.h $dest_dir/hal_lidbg_commen.h
 cd $DBG_DRIVERS_PATH
 cp -u ./inc/lidbg_interface.h $dest_dir/lidbg_interface.conf
 cp -ru ./touchscreen/ts_config $dest_dir/  &> /dev/null
+cp -ru ./touchscreen/cyttsp4/*.ko $dest_dir/  &> /dev/null
 rm $dest_dir/drivers.conf  &> /dev/null
 rm $dest_dir/state.conf    &> /dev/null
 

@@ -22,7 +22,7 @@
  * Contact Cypress Semiconductor at www.cypress.com <ttdrivers@cypress.com>
  *
  */
-
+#include "lidbg.h"
 #include "cyttsp4_regs.h"
 
 #define CY_CORE_STARTUP_RETRY_COUNT		3
@@ -3934,7 +3934,7 @@ static int cyttsp4_setup_irq_gpio(struct cyttsp4_core_data *cd)
 	int rc;
 
 	/* Initialize IRQ */
-	cd->irq = gpio_to_irq(cd->cpdata->irq_gpio);
+	cd->irq = GPIO_TO_INT(cd->cpdata->irq_gpio);
 	if (cd->irq < 0)
 		return -EINVAL;
 
@@ -3986,7 +3986,8 @@ int cyttsp4_probe(const struct cyttsp4_bus_ops *ops, struct device *dev,
 		rc = -ENODEV;
 		goto error_no_pdata;
 	}
-
+	pdata->core_pdata->irq_gpio=GTP_INT_PORT;
+	pdata->core_pdata->rst_gpio=GTP_RST_PORT;
 	/* get context and debug print buffers */
 	cd = kzalloc(sizeof(*cd), GFP_KERNEL);
 	if (!cd) {

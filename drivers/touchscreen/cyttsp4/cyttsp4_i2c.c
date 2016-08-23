@@ -24,10 +24,148 @@
  */
 
 #include "cyttsp4_regs.h"
-#include <linux/i2c.h>
-#include <linux/version.h>
+#include "cyttsp4_platform.h"
+#include "lidbg.h"
+LIDBG_DEFINE;
+
 
 #define CY_I2C_DATA_SIZE  (2 * 256)
+#define CYTTSP4_SLAVE_ADDRESS 0x24
+#define CY_VKEYS_X 720
+#define CY_VKEYS_Y 1280
+#define CY_MAXX 880
+#define CY_MAXY 1280
+#define CY_MINX 0
+#define CY_MINY 0
+
+
+#define CY_ABS_MIN_X CY_MINX
+#define CY_ABS_MIN_Y CY_MINY
+#define CY_ABS_MAX_X CY_MAXX
+#define CY_ABS_MAX_Y CY_MAXY
+#define CY_ABS_MIN_P 0
+#define CY_ABS_MAX_P 255
+#define CY_ABS_MIN_W 0
+#define CY_ABS_MAX_W 255
+#define CY_PROXIMITY_MIN_VAL	0
+#define CY_PROXIMITY_MAX_VAL	1
+
+#define CY_ABS_MIN_T 0
+#define CY_ABS_MAX_T 15
+
+#define CYTTSP4_I2C_TCH_ADR 0x24
+#define CYTTSP4_LDR_TCH_ADR 0x24
+#define CYTTSP4_I2C_IRQ_GPIO 38 /* J6.9, C19, GPMC_AD14/GPIO_38 */
+#define CYTTSP4_I2C_RST_GPIO 37 /* J6.10, D18, GPMC_AD13/GPIO_37 */
+
+static u16 cyttsp4_btn_keys[] = {
+	/* use this table to map buttons to keycodes (see input.h) */
+	KEY_HOMEPAGE,		/* 172 */ /* Previously was KEY_HOME (102) */
+				/* New Android versions use KEY_HOMEPAGE */
+	KEY_MENU,		/* 139 */
+	KEY_BACK,		/* 158 */
+	KEY_SEARCH,		/* 217 */
+	KEY_VOLUMEDOWN,		/* 114 */
+	KEY_VOLUMEUP,		/* 115 */
+	KEY_CAMERA,		/* 212 */
+	KEY_POWER		/* 116 */
+};
+
+static struct touch_settings cyttsp4_sett_btn_keys = {
+	.data = (uint8_t *)&cyttsp4_btn_keys[0],
+	.size = ARRAY_SIZE(cyttsp4_btn_keys),
+	.tag = 0,
+};
+
+
+static struct cyttsp4_core_platform_data _cyttsp4_core_platform_data = {
+	.irq_gpio = -1,
+	.rst_gpio = -1,
+	.xres     = cyttsp4_xres,
+	.init     = cyttsp4_init,
+	.power    = cyttsp4_power,
+	.detect   = cyttsp4_detect,
+	.irq_stat = cyttsp4_irq_stat,
+	.sett = {
+		NULL,	/* Reserved */
+		NULL,	/* Command Registers */
+		NULL,	/* Touch Report */
+		NULL,	/* Cypress Data Record */
+		NULL,	/* Test Record */
+		NULL,	/* Panel Configuration Record */
+		NULL,	/* &cyttsp4_sett_param_regs, */
+		NULL,	/* &cyttsp4_sett_param_size, */
+		NULL,	/* Reserved */
+		NULL,	/* Reserved */
+		NULL,	/* Operational Configuration Record */
+		NULL, /* &cyttsp4_sett_ddata, *//* Design Data Record */
+		NULL, /* &cyttsp4_sett_mdata, *//* Manufacturing Data Record */
+		NULL,	/* Config and Test Registers */
+		&cyttsp4_sett_btn_keys,	/* button-to-keycode table */
+	},
+	.flags = CY_CORE_FLAG_WAKE_ON_GESTURE,
+	.easy_wakeup_gesture = CY_CORE_EWG_TAP_TAP | CY_CORE_EWG_TWO_FINGER_SLIDE,
+};
+
+static const int16_t cyttsp4_abs[] = {
+	ABS_MT_POSITION_X, CY_ABS_MIN_X, CY_ABS_MAX_X, 0, 0,
+	ABS_MT_POSITION_Y, CY_ABS_MIN_Y, CY_ABS_MAX_Y, 0, 0,
+	ABS_MT_PRESSURE, CY_ABS_MIN_P, CY_ABS_MAX_P, 0, 0,
+	CY_IGNORE_VALUE, CY_ABS_MIN_W, CY_ABS_MAX_W, 0, 0,
+	ABS_MT_TRACKING_ID, CY_ABS_MIN_T, CY_ABS_MAX_T, 0, 0,
+	ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0,
+	ABS_MT_TOUCH_MINOR, 0, 255, 0, 0,
+	ABS_MT_ORIENTATION, -127, 127, 0, 0,
+	ABS_MT_TOOL_TYPE, 0, MT_TOOL_MAX, 0, 0,
+	ABS_DISTANCE, 0, 255, 0, 0,	/* Used with hover */
+};
+
+struct touch_framework cyttsp4_framework = {
+	.abs = cyttsp4_abs,
+	.size = ARRAY_SIZE(cyttsp4_abs),
+	.enable_vkeys = 0,
+};
+
+static struct cyttsp4_mt_platform_data _cyttsp4_mt_platform_data = {
+	.frmwrk = &cyttsp4_framework,
+	//.flags = CY_MT_FLAG_FLIP | CY_MT_FLAG_INV_X | CY_MT_FLAG_INV_Y,
+	.flags =  CY_MT_FLAG_INV_X,
+	.inp_dev_name = CYTTSP4_MT_NAME,
+	.vkeys_x = CY_VKEYS_X,
+	.vkeys_y = CY_VKEYS_Y,
+};
+
+static struct cyttsp4_btn_platform_data _cyttsp4_btn_platform_data = {
+	.inp_dev_name = CYTTSP4_BTN_NAME,
+};
+
+static const int16_t cyttsp4_prox_abs[] = {
+	ABS_DISTANCE, CY_PROXIMITY_MIN_VAL, CY_PROXIMITY_MAX_VAL, 0, 0,
+};
+
+struct touch_framework cyttsp4_prox_framework = {
+	.abs          = cyttsp4_prox_abs,
+	.size         = ARRAY_SIZE(cyttsp4_prox_abs),
+};
+
+static struct cyttsp4_proximity_platform_data _cyttsp4_proximity_platform_data = {
+	.frmwrk        = &cyttsp4_prox_framework,
+	.inp_dev_name  = CYTTSP4_PROXIMITY_NAME,
+};
+
+static struct cyttsp4_platform_data _cyttsp4_platform_data = {
+	.core_pdata   = &_cyttsp4_core_platform_data,
+	.mt_pdata     = &_cyttsp4_mt_platform_data,
+	.btn_pdata    = &_cyttsp4_btn_platform_data,
+	.prox_pdata   = &_cyttsp4_proximity_platform_data,
+	.loader_pdata = &_cyttsp4_loader_platform_data,
+};
+
+
+static struct i2c_board_info _cyttsp4_device = {
+    I2C_BOARD_INFO(CYTTSP4_I2C_NAME, CYTTSP4_SLAVE_ADDRESS),
+    .platform_data = &_cyttsp4_platform_data,
+};
 
 static int cyttsp4_i2c_read_block_data(struct device *dev, u16 addr,
 	int length, void *values, int max_xfer)
@@ -45,7 +183,7 @@ static int cyttsp4_i2c_read_block_data(struct device *dev, u16 addr,
 		client_addr = slave_addr | ((addr >> 8) & 0x1);
 		addr_lo = addr & 0xFF;
 		trans_len = min(length, max_xfer);
-
+#if 0
 		msg_cnt = 0;
 		memset(msgs, 0, sizeof(msgs));
 		msgs[msg_cnt].addr = client_addr;
@@ -61,7 +199,9 @@ static int cyttsp4_i2c_read_block_data(struct device *dev, u16 addr,
 		msg_cnt++;
 
 		rc = i2c_transfer(client->adapter, msgs, msg_cnt);
-		if (rc != msg_cnt)
+#endif
+		rc = SOC_I2C_Rec(TS_I2C_BUS,client_addr,addr_lo,values,trans_len);
+		if (rc != 2)
 			goto exit;
 
 		length -= trans_len;
@@ -88,18 +228,20 @@ static int cyttsp4_i2c_write_block_data(struct device *dev, u16 addr,
 		client_addr = slave_addr | ((addr >> 8) & 0x1);
 		addr_lo = addr & 0xFF;
 		trans_len = min(length, max_xfer);
-
+#if 0
 		memset(&msg, 0, sizeof(msg));
 		msg.addr = client_addr;
 		msg.flags = 0;
 		msg.len = trans_len + 1;
 		msg.buf = wr_buf;
-
+#endif
 		wr_buf[0] = addr_lo;
 		memcpy(&wr_buf[1], values, trans_len);
-
+#if 0
 		/* write data */
 		rc = i2c_transfer(client->adapter, &msg, 1);
+#endif
+		rc = SOC_I2C_Send(TS_I2C_BUS,client_addr,wr_buf,trans_len+1);
 		if (rc != 1)
 			goto exit;
 
@@ -221,11 +363,28 @@ static struct i2c_driver cyttsp4_i2c_driver = {
 	.id_table = cyttsp4_i2c_id,
 };
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0))
-module_i2c_driver(cyttsp4_i2c_driver);
-#else
 static int __init cyttsp4_i2c_init(void)
 {
+	DUMP_BUILD_TIME;
+	LIDBG_GET;
+	struct i2c_adapter *adap;
+	struct i2c_client *client;
+	adap = i2c_get_adapter(TS_I2C_BUS);
+	if (!adap) {
+		lidbg("cyttsp4 get i2c adapter %d\n",TS_I2C_BUS);
+ 		return -ENODEV;
+	} else {
+		lidbg("cyttsp4 get i2c adapter %d ok\n", TS_I2C_BUS);
+ 		client = i2c_new_device(adap, &_cyttsp4_device);
+	}
+	if (!client) {
+		lidbg("cyttsp4 get i2c client %s @ 0x%02x fail!\n", _cyttsp4_device.type,
+                _cyttsp4_device.addr);
+		return -ENODEV;
+	} else {
+		lidbg("cyttsp4 get i2c client ok!\n");
+	}
+	i2c_put_adapter(adap);
 	int rc = i2c_add_driver(&cyttsp4_i2c_driver);
 
 	pr_info("%s: Cypress TTSP I2C Driver (Built %s) rc=%d\n",
@@ -233,14 +392,14 @@ static int __init cyttsp4_i2c_init(void)
 
 	return rc;
 }
-module_init(cyttsp4_i2c_init);
+
 
 static void __exit cyttsp4_i2c_exit(void)
 {
 	i2c_del_driver(&cyttsp4_i2c_driver);
 }
+module_init(cyttsp4_i2c_init);
 module_exit(cyttsp4_i2c_exit);
-#endif
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Cypress TrueTouch(R) Standard Product I2C driver");

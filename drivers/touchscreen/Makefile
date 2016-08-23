@@ -36,7 +36,9 @@ obj-$(CONFIG_TOUCHSCREEN)       += ts_config.o
 #ft5336_ts对应26手机触摸屏驱动，仅初期验证时使用,车机不要编译进来！
 #obj-$(CONFIG_TOUCHSCREEN)	+= ft5x06_ts.o
 #ft5x06_ts-objs :=ft5336_ts.o     
-    
+
+else ifeq ($(DBG_PLATFORM),mt3360)
+obj-$(CONFIG_CYTTSP4)	        += cyttsp4/
 
 else
 obj-$(CONFIG_TOUCHSCREEN)       += lidbg_ts_probe_new.o

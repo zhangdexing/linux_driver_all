@@ -1016,7 +1016,7 @@ int cyttsp4_btn_release(struct device *dev);
 static inline int cyttsp4_btn_probe(struct device *dev) { return 0; }
 static inline int cyttsp4_btn_release(struct device *dev) { return 0; }
 #endif
-
+#define CONFIG_TOUCHSCREEN_CYPRESS_CYTTSP4_PROXIMITY
 #ifdef CONFIG_TOUCHSCREEN_CYPRESS_CYTTSP4_PROXIMITY
 int cyttsp4_proximity_probe(struct device *dev);
 int cyttsp4_proximity_release(struct device *dev);

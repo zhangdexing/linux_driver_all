@@ -27,7 +27,7 @@
 #define _LINUX_CYTTSP4_PLATFORM_H
 
 #include "cyttsp4_core.h"
-
+#define CONFIG_TOUCHSCREEN_CYPRESS_CYTTSP4
 #if defined(CONFIG_TOUCHSCREEN_CYPRESS_CYTTSP4) \
 	|| defined(CONFIG_TOUCHSCREEN_CYPRESS_CYTTSP4_MODULE)
 extern struct cyttsp4_loader_platform_data _cyttsp4_loader_platform_data;
