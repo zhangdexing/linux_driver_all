@@ -477,7 +477,7 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
 #ifdef BOOTLOADER_MT3561
 	flush_memery
 #endif
-
+	bootloader_exit_func();
     return;
 }
 

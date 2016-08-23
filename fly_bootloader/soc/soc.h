@@ -26,4 +26,7 @@ int boot_flyrecovery_from_mmc(void);
 /* dbg msg enable or disable*/
 char *dbg_msg_en(const char *system_cmd, int dbg_msg_en);
 
+/* call before exit bootloader */
+void bootloader_exit_func(void);
+
 #endif

@@ -7,3 +7,4 @@ obj-y += fb_func.o
 obj-y += gpio_func.o
 obj-y += ptn_func.o
 obj-y += hw_func.o
+obj-y += bootloader_exit.o
