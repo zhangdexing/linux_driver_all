@@ -56,7 +56,14 @@ do
 	echo ---------------------------$i---------------------------------------------  >> ./lidbg_log/kfifo_reset.txt
 	cat $i | grep -E "kfifo_reset" >>  ./lidbg_log/kfifo_reset.txt
 
-	cat $i | grep -E "send sigkill to|killing any children in process group|Linux version|force_unlock|WARNING: at|slimbus Read error|unhandled page|lidbgerr|LPC reset reason|overflow error|msm_gpio_show_resume_irq|rejecting I/O to offline device|Watchdog bark|find key word|dsi83.check.err|ftf_pm.wl|usb_enumerate_monitor|I2C slave addr|warn.qpnp_pon_input_dispatch: 114,2,0|Buffer I/O error on device|Unbandled error code|device descriptor|kfifo_reset" >>  ./lidbg_log/$i
+	echo ---------------------------$i---------------------------------------------  >> ./lidbg_log/temp.txt
+	cat $i | grep -E "reach temp" >>  ./lidbg_log/temp.txt
+
+	echo ---------------------------$i---------------------------------------------  >> ./lidbg_log/State.txt
+	cat $i | grep -E "Show Blocked State" >>  ./lidbg_log/State.txt
+
+
+	cat $i | grep -E "send sigkill to|killing any children in process group|Linux version|force_unlock|WARNING: at|slimbus Read error|unhandled page|lidbgerr|LPC reset reason|overflow error|msm_gpio_show_resume_irq|rejecting I/O to offline device|Watchdog bark|find key word|dsi83.check.err|ftf_pm.wl|usb_enumerate_monitor|I2C slave addr|warn.qpnp_pon_input_dispatch: 114,2,0|Buffer I/O error on device|Unbandled error code|device descriptor|kfifo_reset|reach temp|Show Blocked State" >>  ./lidbg_log/$i
 done
 
 	date >>  ./lidbg_log/finish.txt

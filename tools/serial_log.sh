@@ -1,5 +1,6 @@
 sudo chmod 777 /dev/ttyUSB*
 ls /dev/ttyUSB* 
+mv ~/minicom_log ~/minicom_log_old
 mkdir ~/minicom_log
 
 if [ -e "/dev/ttyUSB0"  ]; then

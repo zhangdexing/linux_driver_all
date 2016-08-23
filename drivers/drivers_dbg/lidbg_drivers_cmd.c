@@ -22,18 +22,23 @@ void cb_kv_log_temp(char *key, char *value)
 int thread_dumpsys_meminfo(void *data)
 {
     lidbg_shell_cmd("rm /sdcard/meminfo.txt");
+    lidbg_shell_cmd("rm /sdcard/ps.txt");
+	
     ssleep(10);
     while(1)
     {
-        if(fs_get_file_size("/sdcard/meminfo.txt") < 800 * 1024 * 1024 )
+        if(1/*fs_get_file_size("/sdcard/meminfo.txt") < 800 * 1024 * 1024*/ )
         {
             fs_file_separator("/sdcard/meminfo.txt");
             lidbg_shell_cmd("dumpsys meminfo >>/sdcard/meminfo.txt &");
             lidbg("meminfo size:%d\n", fs_get_file_size("/sdcard/meminfo.txt"));
+	     lidbg_shell_cmd("date  >> /sdcard/ps.txt");				
+	     lidbg_shell_cmd("ps -t >> /sdcard/ps.txt");
         }
         else
             lidbg("stop meminfo ,file size:%d\n", fs_get_file_size("/sdcard/meminfo.txt"));
-        ssleep( 10 * 60 );
+		
+        ssleep( 5 * 60 );
     }
 }
 

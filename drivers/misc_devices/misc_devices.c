@@ -433,6 +433,7 @@ static void parse_cmd(char *pt)
     {
         lidbg("acc_debug_mode enable!");
         g_var.is_debug_mode = 1;
+	 lidbg_shell_cmd("echo appcmd *158#077 > /dev/lidbg_drivers_dbg0");
     }
 
     else if (!strcmp(argv[0], "udisk_enable"))
