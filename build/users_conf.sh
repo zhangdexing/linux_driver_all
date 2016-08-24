@@ -199,7 +199,8 @@ case "$USERS_ID" in
 			15)
 		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/imx6qdl-sabresd;;
 			16)
-		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/mt3561;;
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/mt3561
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/mt3561-release;;
 	esac;;
 
         4)  

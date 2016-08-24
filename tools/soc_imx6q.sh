@@ -61,7 +61,7 @@ function soc_build_recoveryimage()
         fi
 	cp -rf $DBG_OUT_PATH  $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery
 	#echo "$(expr $ANDROID_VERSION / 100 )"
-	cp $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/Android$(expr $ANDROID_VERSION / 100 )/$DBG_PLATFORM/recovery.conf  $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/out
+	cp $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/$DBG_PLATFORM/recovery.conf  $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/out
 	soc_prebuild && soc_build_common 'make recoveryimage -j16'
 }
 

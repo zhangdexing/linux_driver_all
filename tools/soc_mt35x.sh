@@ -43,10 +43,10 @@ function soc_build_recoveryimage()
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/recovery
 	rm -rf $DBG_OUT_PATH/*.apk $DBG_OUT_PATH/ES.ko $DBG_OUT_PATH/ST.ko $DBG_OUT_PATH/mkfs.exfat $DBG_OUT_PATH/GPS.ko $DBG_OUT_PATH/*.so $DBG_OUT_PATH/FlyBootService
         rm -rf $DBG_OUT_PATH/LidbgPmService $DBG_OUT_PATH/SleepTest $DBG_OUT_PATH/build_time.conf $DBG_OUT_PATH/bma2x2.ko $DBG_OUT_PATH/lidbg_rgb_led.ko
-        rm -rf $DBG_OUT_PATH/sslcapture.ko $DBG_OUT_PATH/uvccam.ko $DBG_OUT_PATH/busybox $DBG_OUT_PATH/Firewall.ko $DBG_OUT_PATH/BugReport.    ko
-        rm -rf $DBG_OUT_PATH/CallMessage.ko $DBG_OUT_PATH/vold $DBG_OUT_PATH/camera4hal.ko $DBG_OUT_PATH/mobileTrafficstats.ko $DBG_OUT_PAT    H/app4haljni.ko
+        rm -rf $DBG_OUT_PATH/sslcapture.ko $DBG_OUT_PATH/uvccam.ko $DBG_OUT_PATH/busybox $DBG_OUT_PATH/Firewall.ko $DBG_OUT_PATH/BugReport.ko
+        rm -rf $DBG_OUT_PATH/CallMessage.ko $DBG_OUT_PATH/vold $DBG_OUT_PATH/camera4hal.ko $DBG_OUT_PATH/mobileTrafficstats.ko $DBG_OUT_PATH/app4haljni.ko
         rm -rf $DBG_OUT_PATH/LidbgCommenLogic $DBG_OUT_PATH/mc3xxx.ko $DBG_OUT_PATH/lidbg_flycam.ko $DBG_OUT_PATH/lidbg_spi.ko
-        rm -rf $DBG_OUT_PATH/mount.ntfs $DBG_OUT_PATH/flysemdriver.ko $DBG_OUT_PATH/mkfs.ntfs $DBG_OUT_PATH/bootanimation $DBG_OUT_PATH/lid    bg_gps.ko
+        rm -rf $DBG_OUT_PATH/mount.ntfs $DBG_OUT_PATH/flysemdriver.ko $DBG_OUT_PATH/mkfs.ntfs $DBG_OUT_PATH/bootanimation $DBG_OUT_PATH/lidbg_gps.ko
         rm -rf $DBG_OUT_PATH/tef6638.ko $DBG_OUT_PATH/saf7741.ko $DBG_OUT_PATH/sound_det.ko
         rm -rf $DBG_OUT_PATH/mount.exfat $DBG_OUT_PATH/fsck.ntfs $DBG_OUT_PATH/lidbg_umount
 
@@ -66,7 +66,7 @@ function soc_build_recoveryimage()
         fi
 	cp -rf $DBG_OUT_PATH  $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery
 	#echo "$(expr $ANDROID_VERSION / 100 )"
-	cp $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/Android$(expr $ANDROID_VERSION / 100 )/$DBG_PLATFORM/recovery.conf  $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/out
+	cp $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/mtk3561/recovery.conf  $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/out
 	soc_prebuild && soc_build_common 'make recoveryimage -j16'
 }
 
