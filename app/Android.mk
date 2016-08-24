@@ -74,6 +74,10 @@ ifeq ($(CONFIG_HAL_VOLD_PX3),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,px3_vold)
 endif
 
+ifeq ($(CONFIG_HAL_VOLD_MT3561),y)
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,mt35x_vold)
+endif
+
 ifeq ($(CONFIG_HAL_USB_CAMERA),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,libusb01/android/jni)
 endif
