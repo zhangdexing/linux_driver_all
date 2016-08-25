@@ -3841,6 +3841,7 @@ int thread_flycam_init(void *data)
 
 		if(fs_find_string(g_var.pflyhal_config_list, "ConvertMP4") > 0)
 		{
+			isConvertMP4 = 1;
 			sprintf(temp_cmd, "setprop lidbg.uvccam.isConvertMP4 %d", isConvertMP4);
 			lidbg_shell_cmd(temp_cmd);
 		}

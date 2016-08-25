@@ -5239,7 +5239,10 @@ openfd:
 					
 					if(isStorageOK)
 					{
-						BlackBoxBottomCnt = Emergency_Bottom_Sec / Emergency_Top_Sec;
+						if(Emergency_Top_Sec <= Emergency_Bottom_Sec)
+							BlackBoxBottomCnt = Emergency_Bottom_Sec / Emergency_Top_Sec; /*top <= bottom,use top as base*/
+						else BlackBoxBottomCnt = 1;/*bottom <= top,1 time*/
+						
 						if(msize <= (Emergency_Top_Sec * 30))
 						{
 							lidbg("Waiting for msize restoration!\n");
@@ -5510,7 +5513,7 @@ openfd:
 									}
 						 	 }
 						}
-						if((totalSize%50) == 0) lidbg("total file size = %dMB\n",totalSize); 
+						if((totalSize%50) == 0 && totalSize > 0) lidbg("total file size = %dMB\n",totalSize); 
 						if(totalSize >= Rec_File_Size)	
 						{
 							//isExceed = 1;
@@ -5867,8 +5870,10 @@ openfd:
 				{
 					//if (isIframe == 1)
 					//	isIframe = 0;
+#if 0		
 					unsigned char tmp_val = 0;
-					
+
+		
 					if(i == 0) 
 					{
 						iframe_length = buf0.bytesused;
@@ -5877,7 +5882,6 @@ openfd:
 						memcpy(iFrameData, mem0[buf0.index], iframe_length);
 					}
 
-#if 0
 					unsigned char a = 0;
 					for(a = 0;a < 30;a++){
 						tmp_val = *(unsigned char*)(mem0[buf0.index] + a);
@@ -5892,6 +5896,7 @@ openfd:
 #endif
 
 #if 0
+					/*IFrame filtering */
 					tmp_val = *(unsigned char*)(mem0[buf0.index] + 26);
 					if(tmp_val == 0x65) 
 					{
@@ -5923,15 +5928,24 @@ openfd:
 #endif
 						
 					
-					if(isBlackBoxBottomRec && (msize > (Emergency_Top_Sec*30)) && (isBlackBoxTopRec == 0))
+					if(isBlackBoxBottomRec && (isBlackBoxTopRec == 0))
 					{
 						//lidbg("======Bottom write===lastFrames:%d,Bottom_Sec:%d======\n",bottom_lastFrames,Emergency_Bottom_Sec);
-						if(top_lastFrames < (Emergency_Top_Sec*30 - 150)) tmp_count = Emergency_Top_Sec*30 - 150;
-						else if(top_lastFrames > (Emergency_Top_Sec*30 + 30)) tmp_count = Emergency_Top_Sec*30 + 30;
-						else tmp_count = (top_lastFrames/10)*10 + 10;
-						//tmp_count = 300;
-						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
-						isNormDequeue = 1;
+						if(Emergency_Top_Sec > Emergency_Bottom_Sec) /*bottom < top ,1 time*/
+						{
+							if(msize > (isBlackBoxBottomRec*30)) 
+							{
+								tmp_count = Emergency_Bottom_Sec*30 + 10;
+								isNormDequeue = 1;
+							}
+						}
+						else if(msize > (Emergency_Top_Sec*30))  /*top <= bottom,use top as base*/
+						{
+							if(top_lastFrames < (Emergency_Top_Sec*30 - 150)) tmp_count = Emergency_Top_Sec*30 - 150;
+							else if(top_lastFrames > (Emergency_Top_Sec*30 + 30)) tmp_count = Emergency_Top_Sec*30 + 30;
+							else tmp_count = (top_lastFrames/10)*10 + 10;
+							isNormDequeue = 1;
+						}
 					}
 					else if(!isBlackBoxBottomRec && (msize % 100 == 0) && (msize >= (Emergency_Top_Sec * 30 *2)))
 					{
@@ -5939,7 +5953,7 @@ openfd:
 						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,&tmp_count);
 						if(isVideoLoop)
 						{
-							/*left 5s*/
+							/*left 5s for subpackage*/
 							if((buf0.timestamp.tv_sec - originRecsec) % Rec_Sec < (Rec_Sec - 5))
 								isNormDequeue = 1;
 						}
