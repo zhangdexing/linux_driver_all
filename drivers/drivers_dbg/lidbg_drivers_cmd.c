@@ -503,6 +503,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#104--save gps raw data to sdcard\n");
             fs_mem_log("*158#105--MTK USB HOST MODE\n");
             fs_mem_log("*158#106--MTK USB SLAVE MODE\n");
+            fs_mem_log("*158#107--android display Vertical screen\n");
+            fs_mem_log("*158#108--android display Normal screen\n");
 			
 	     lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1241,7 +1243,18 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("echo b_peripheral > /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");	
             lidbg_domineering_ack();
         }
-
+        else if (!strcmp(argv[1], "*158#107"))
+        {
+            lidbg("*158#107--android display Vertical screen\n");
+            lidbg_shell_cmd("setprop persist.panel.orientation 270");
+            lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#108"))
+        {
+            lidbg("*158#108--android display Normal screen\n");
+            lidbg_shell_cmd("setprop persist.panel.orientation 0");
+            lidbg_domineering_ack();
+        }
     }
     else if(!strcmp(argv[0], "monkey") )
     {
