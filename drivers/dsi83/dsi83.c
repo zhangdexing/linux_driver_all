@@ -657,8 +657,14 @@ static int dsi83_init(void)
 
     if ((screen_x == 1280) && (screen_y == 400))
         dsi83_conf_num = 1;
+    else if ((screen_x == 1024) && (screen_y == 768))
+        dsi83_conf_num = 2;	
+    else if ((screen_x == 768) && (screen_y == 1024))
+        dsi83_conf_num = 3;	
     else
         dsi83_conf_num = 0;		//1024x600 default
+
+    lidbg("dsi83:x/y/num:%d/%d/%d\n",screen_x,screen_y,dsi83_conf_num);
 
     buf_piont = dsi83_conf[2 * dsi83_conf_num];
 
