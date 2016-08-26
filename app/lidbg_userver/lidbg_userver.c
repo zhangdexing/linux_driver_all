@@ -242,11 +242,13 @@ int main(int argc, char **argv)
 	 int fd,read_len;
 	 char str[256];
          char shellstring[256];
-         if(access("/dev/lidbg_uevent", X_OK) != 0)
+         while(access("/dev/lidbg_uevent", X_OK) != 0)
          {
 		system("chmod 777 /dev/lidbg_uevent");
-		sleep(1);
+		lidbg("wait  /dev/lidbg_uevent ...\n");
+		usleep(100*1000);
 	 }
+
 	 fd = open("/dev/lidbg_uevent", O_RDWR);
 	 if((fd == 0)||(fd == (int)0xfffffffe)|| (fd == (int)0xffffffff))
 	 {

@@ -131,6 +131,7 @@ bool flyparameter_info_get(void)
                 lidbg("fail to cpy parameter\n");
             }
             lidbg_shell_cmd( parameter );
+            fs_file_write2("/persist/hwinfo.txt", g_recovery_meg->hwInfo.info);
             lidbg("flyparameter=[%s]\n", g_recovery_meg->hwInfo.info);
             fs_mem_log("flyparameter=[%s]\n", g_recovery_meg->hwInfo.info);
 
@@ -321,7 +322,7 @@ int lidbg_flyparameter_init(void)
 {
     DUMP_BUILD_TIME;
     LIDBG_GET;
-    lidbg_chmod(g_hw.fly_parameter_node);
+    lidbg_chmod(FLYPARAMETER_NODE);
     FS_REGISTER_INT(update_hw_info, "update_hw_info", 0, cb_fly_hw_info_save);
     flyparameter_init();
     lidbg_fly_hw_info_init();//block other ko before hw_info set

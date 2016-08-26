@@ -109,7 +109,7 @@ int thread_loader(void *data)
 #else
     while(!is_file_exist("/dev/log/userver_ok.txt"))
 #endif
-        ssleep(1);
+        msleep(100);
 #endif
 
     if(is_file_exist(RECOVERY_MODE_DIR))

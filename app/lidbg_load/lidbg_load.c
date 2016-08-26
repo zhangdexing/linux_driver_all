@@ -15,9 +15,11 @@ int main(int argc, char **argv)
     system("chmod 777 /dev/dbg_msg");
     
     DUMP_BUILD_TIME_FILE;
-    lidbg("lidbg_iserver: iserver start\n");
+    lidbg("Build Time:lidbg_iserver: iserver start\n");
     system("mkdir /dev/log");
     system("chmod 777 /dev/log");
+    module_insmod("/system/lib/modules/out/lidbg_immediate.ko");
+    module_insmod("/flysystem/lib/out/lidbg_immediate.ko");
 #if 0
     //wait flysystem mount
     while(is_file_exist("/flysystem/lib") == 0)
@@ -133,7 +135,7 @@ int main(int argc, char **argv)
             system("chmod 777 /flysystem/lib/out/lidbg_userver");
             system("chmod 777 /flysystem/lib/out/*");
             lidbg("lidbg_iserver: waitting flyaudio lidbg_uevent...\n");
-            sleep(1);
+            usleep(100*1000);
         }
     }
 
