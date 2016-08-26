@@ -131,6 +131,7 @@ bool flyparameter_info_get(void)
                 lidbg("fail to cpy parameter\n");
             }
             lidbg_shell_cmd( parameter );
+            fs_clear_file("/persist/hwinfo.txt");
             fs_file_write2("/persist/hwinfo.txt", g_recovery_meg->hwInfo.info);
             lidbg("flyparameter=[%s]\n", g_recovery_meg->hwInfo.info);
             fs_mem_log("flyparameter=[%s]\n", g_recovery_meg->hwInfo.info);

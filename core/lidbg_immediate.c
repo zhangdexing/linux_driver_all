@@ -59,10 +59,10 @@ int set_screen_active_area(void)
     switch(lcd_type)
     {
     case 1:
-        soc_set_screen_active_area(196.608 , 147.456  );
+        soc_set_screen_active_area(154.2144 , 85.92  );
         break;
     case 2:
-        soc_set_screen_active_area(196.608 , 147.456  );
+        soc_set_screen_active_area(176.64 , 99.36 );
         break;
     case 3:
         soc_set_screen_active_area(196.608 , 147.456  );
