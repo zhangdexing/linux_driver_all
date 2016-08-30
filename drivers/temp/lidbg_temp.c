@@ -52,7 +52,11 @@ int thread_limit_temp(void *data)
 static int lidbg_temp_event(struct notifier_block *this,
                        unsigned long event, void *ptr)
 {
+    int cpu_temp;
     DUMP_FUN;
+
+    cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
+	
 
     switch (event)
     {
@@ -60,6 +64,9 @@ static int lidbg_temp_event(struct notifier_block *this,
 	    case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_SCREEN_OFF):
 	    {
 		//cpufreq_update_policy(0);	
+		    if(cpu_temp > 90)
+		    	 break;
+
 		g_hw.thermal_ctrl_en = 0;
 		CREATE_KTHREAD(thread_limit_temp, NULL);
 	    	break;
