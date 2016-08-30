@@ -566,6 +566,8 @@ void check_airplane_mode(void)
 	LIDBG_WARN("<suspend_airplane_mode = false ret=%d>\n",ret);
 
 }
+
+#ifdef DISPLAY_CALIBRATION
 void check_HY_display_mode(void)
 {
     bool exist = fs_is_file_exist("/persist/display/pp_calib_data.bin");
@@ -578,6 +580,7 @@ void check_HY_display_mode(void)
         lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
     }
 }
+#endif
 
 int misc_init(void *data)
 {
@@ -585,8 +588,10 @@ int misc_init(void *data)
     init_completion(&udisk_misc_wait);
 
     system_switch_init();
-
+	
+#ifdef DISPLAY_CALIBRATION
     check_HY_display_mode();
+#endif
 
     te_regist_password("001101", cb_password_upload);
     te_regist_password("001110", cb_password_clean_all);
