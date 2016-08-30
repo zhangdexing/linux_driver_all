@@ -505,6 +505,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#106--MTK USB SLAVE MODE\n");
             fs_mem_log("*158#107--android display Vertical screen\n");
             fs_mem_log("*158#108--android display Normal screen\n");
+            fs_mem_log("*158#109--en qualcomm display tun tools \n");
 			
 	     lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1253,6 +1254,16 @@ void parse_cmd(char *pt)
         {
             lidbg("*158#108--android display Normal screen\n");
             lidbg_shell_cmd("setprop persist.panel.orientation 0");
+            lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#109"))
+        {
+            lidbg("*158#109--en qualcomm display tun tools \n");
+            lidbg_shell_cmd("mount -o remount /system");
+            lidbg_shell_cmd("cp -rf /flysystem/lib/out/QDCMMobileApp.ko /system/app/QDCMMobileApp.apk");
+            lidbg_shell_cmd("chmod 777 /system/app/QDCMMobileApp.apk");
+            lidbg_shell_cmd("sync");
+            lidbg_shell_cmd("reboot");
             lidbg_domineering_ack();
         }
     }
