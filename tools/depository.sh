@@ -111,7 +111,7 @@ function depository_copy_lidbg_test()
 {
 	echo $FUNCNAME $DBG_OUT_PATH $UPDATA_BIN_DIR $UPDATA_BIN_PLATFORM_DIR
 #	git checkout $branch_name
-	cp -r $DBG_OUT_PATH  $UPDATA_BIN_DIR
+	cp -ruv $DBG_OUT_PATH  $UPDATA_BIN_DIR
 	if [ -s $DBG_OUT_PATH/H264ToMp4Service.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR

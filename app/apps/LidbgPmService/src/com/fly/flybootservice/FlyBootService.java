@@ -295,6 +295,7 @@ public class FlyBootService extends Service {
 								Intent intentBoot = new Intent(Intent.ACTION_BOOT_COMPLETED);
 								intentBoot.putExtra("flyauduio_accon", "accon");
 								sendBroadcast(intentBoot);
+								system_resume();
 							}else if(pmState == FBS_DEVICE_UP){
 								LIDBG_PRINT("FlyBootService get pm state: FBS_DEVICE_UP\n");
 								LIDBG_PRINT("FlyBootService FBS_DEVICE_UP:isSimCardReady:"+isSimCardReady+"/AirplaneEnable:"+AirplaneEnable+"/blSuspendUnairplaneFlag:"+blSuspendUnairplaneFlag+"\n");
@@ -316,7 +317,7 @@ public class FlyBootService extends Service {
 								LIDBG_PRINT("FlyBootService get pm state: FBS_SCREEN_ON");
 								acquireWakeLock();
 								SendBroadcastToService(KeyBootState, keyScreenOn);
-								system_resume();
+								
 							}else if(pmState == FBS_SLEEP_TIMEOUT){
 								LIDBG_PRINT("FlyBootService get pm state: FBS_SLEEP_TIMEOUT");
 								if(blSuspendUnairplaneFlag)
