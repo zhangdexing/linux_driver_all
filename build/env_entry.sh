@@ -75,7 +75,7 @@ case "$DBG_PLATFORM_ID" in
 	export OTA_PACKAGE_NAME=msm8226-ota-eng.*.zip
 	export DBG_SOC=msm8x26
 	export TEST_PACKAGE_PATH=//192.168.128.128/8x28/升级包发布/专项测试包
-	export REPOSITORY_WORK_BRANCH=8x28_release
+	export REPOSITORY_WORK_BRANCH=8x28-release
 	export SYSTEM_WORK_BRANCH=master
         export MAKE_PAKG_NUM=1
 	export NON_HLOS_FILE_PATH=$BP_SOURCE_PATH/common/build/bin/asic

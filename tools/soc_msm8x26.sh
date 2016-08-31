@@ -143,7 +143,7 @@ function soc_build_release()
 	cd $RELEASE_REPOSITORY
 	expect $DBG_TOOLS_PATH/pull $REPOSITORY_WORK_BRANCH $DBG_REPO_PASSWORD
 	cd $DBG_SYSTEM_DIR
-	expect $DBG_TOOLS_PATH/pull $SYSTEM_WORK_BRANCH $DBG_PASSWORD
+	#expect $DBG_TOOLS_PATH/pull $SYSTEM_WORK_BRANCH $DBG_PASSWORD
 
 	soc_build_all
 	soc_make_otapackage
