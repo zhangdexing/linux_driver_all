@@ -77,7 +77,7 @@ bool ring = false;
 bool ring_old = false;
 #define DEFAULT_MAX_VOLUME (15)
 //refer to MAX_STREAM_VOLUME in AudioService.java (base\services\core\java\com\android\server\audio)
-int max_stream_volume[AUDIO_STREAM_PUBLIC_CNT] =
+int max_stream_volume[AUDIO_STREAM_CNT] =
 {
     DEFAULT_MAX_VOLUME,  // STREAM_VOICE_CALL
     DEFAULT_MAX_VOLUME,  // STREAM_SYSTEM
@@ -121,8 +121,8 @@ bool print_stream_volume(void)
     audio_devices_t device;
     status_t status ;
     sp<IAudioPolicyService> &aps = gAudioPolicyService;
-    lidbg(TAG"getStreamVolumeIndex.in,%d\n", AUDIO_STREAM_PUBLIC_CNT);
-    for (i = 0; i < AUDIO_STREAM_PUBLIC_CNT; i++)
+    lidbg(TAG"getStreamVolumeIndex.in,%d\n", AUDIO_STREAM_CNT);
+    for (i = 0; i < AUDIO_STREAM_CNT; i++)
     {
         device = aps->getDevicesForStream((audio_stream_type_t)i) ;
         status = aps->getStreamVolumeIndex((audio_stream_type_t)i, &index, AUDIO_DEVICE_OUT_DEFAULT);
@@ -165,8 +165,8 @@ bool set_all_stream_volume(int index)
 {
     int i, error = ERROR_VALUE;
     if(dbg_volume)
-        lidbg(TAG"set_all_stream_volume.in,CNT:%d index:%d\n", AUDIO_STREAM_PUBLIC_CNT, index);
-    for (i = 0; i < AUDIO_STREAM_PUBLIC_CNT; i++)
+        lidbg(TAG"set_all_stream_volume.in,CNT:%d index:%d\n", AUDIO_STREAM_CNT, index);
+    for (i = 0; i < AUDIO_STREAM_CNT; i++)
     {
         set_stream_volume((audio_stream_type_t)i, index);
     }
