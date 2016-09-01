@@ -506,8 +506,9 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#107--android display Vertical screen\n");
             fs_mem_log("*158#108--android display Normal screen\n");
             fs_mem_log("*158#109--en qualcomm display tun tools \n");
-			
-	     lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
+            fs_mem_log("*158#110xxx--set navi policy music level 0~100\n");
+
+            lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
             lidbg_domineering_ack();
         }
@@ -1264,6 +1265,20 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("chmod 777 /system/app/QDCMMobileApp.apk");
             lidbg_shell_cmd("sync");
             lidbg_shell_cmd("reboot");
+            lidbg_domineering_ack();
+        }
+        else if (!strncmp(argv[1], "*158#110", 8))
+        {
+            char shell_cmd[64] = {0};
+            lidbg("*158#110--set navi policy music level 0~100\n");
+            if(strlen(argv[1]) < 9)//wrong args
+            {
+                lidbg("error: need para 0-100\n");
+                return;
+            }
+            sprintf(shell_cmd, "setprop persist.lidbg.sound.dbg \"6 %s\"", (argv[1] + 8));
+            lidbg_shell_cmd(shell_cmd);
+            lidbg("%s\n",shell_cmd);
             lidbg_domineering_ack();
         }
     }

@@ -21,7 +21,7 @@ using namespace android;
 
 bool dbg_music = false;
 bool dbg_volume = false;
-bool navi_policy_en = false;
+bool navi_policy_en = true;
 bool playing_old = false;
 int loop_count = 0;
 
@@ -247,11 +247,15 @@ int main(int argc, char **argv)
                 lidbg(TAG"write.[%d,%s]\n", playing, cmd);
         }
         loop_count++;
-        if(loop_count > 200 / 5)
+        if(loop_count > 200)
         {
-            char value[PROPERTY_VALUE_MAX];
             GetAudioPolicyService(false);
             GetAudioFlingerService(false);
+            loop_count = 0;
+        }
+        if(!(loop_count % 20))//per 2 s
+        {
+            char value[PROPERTY_VALUE_MAX];
             property_get("persist.lidbg.sound.dbg", value, "n");
             if(value[0] != 'n')
             {
@@ -276,7 +280,7 @@ int main(int argc, char **argv)
                     lidbg(TAG"dbg_volume:[%d]\n", dbg_volume);
                     break;
                 case 3 :
-                    navi_policy_en = !navi_policy_en;
+                    navi_policy_en = (para[1] == 1);
                     lidbg(TAG"navi_policy_en:[%d]\n", navi_policy_en);
                     break;
                 case 4 :
@@ -290,15 +294,14 @@ int main(int argc, char **argv)
                     break;
                 case 6 :
                     dbg_volume = true;
-                    music_level = para[1];
-                    lidbg(TAG"music_level:[%d]\n", music_level);
+                    music_level = (DEFAULT_MAX_VOLUME * para[1] / 100);
+                    lidbg(TAG"music_level:[%d/%d/%d]\n", music_level, para[1], DEFAULT_MAX_VOLUME);
                     break;
                 default :
                     break;
                 }
                 property_set("persist.lidbg.sound.dbg", "n");
             }
-            loop_count = 0;
         }
         usleep(100000);//100ms
     }
