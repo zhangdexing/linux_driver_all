@@ -389,6 +389,10 @@ case "$USERS_ID" in
 		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/../8909-release;;
 		13)
 		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH_BASIC/AllwinnerA80/android;;
+		16)	
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/mt3561;;
+		17)	
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/msm8996;;
 	esac;;
 	8)
 	export DBG_PLATFORM_PATH=/home/ctb/cks

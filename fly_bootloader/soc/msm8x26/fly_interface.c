@@ -531,9 +531,15 @@ struct boot_img_hdr *hdr = (void*) buf;
 			 * Else update with the atags address in the kernel header
 			 */
 			void *dtb;
+#if (defined BOOTLOADER_MSM8996)
+			dtb = dev_tree_appended((void*) hdr->kernel_addr,
+						hdr->kernel_size,
+						(void *)hdr->tags_addr,NULL);
+#else
 			dtb = dev_tree_appended((void*) hdr->kernel_addr,
 						hdr->kernel_size,
 						(void *)hdr->tags_addr);
+#endif
 			if (!dtb) {
 				dprintf(CRITICAL, "ERROR: Appended Device Tree Blob not found\n");
 				return -1;
@@ -633,9 +639,15 @@ struct boot_img_hdr *hdr = (void*) buf;
 			 * Else update with the atags address in the kernel header
 			 */
 			void *dtb;
+#if (defined BOOTLOADER_MSM8996)
+			dtb = dev_tree_appended((void*) hdr->kernel_addr,
+						kernel_actual,
+						(void *)hdr->tags_addr,NULL);
+#else
 			dtb = dev_tree_appended((void*) hdr->kernel_addr,
 						kernel_actual,
 						(void *)hdr->tags_addr);
+#endif			
 			if (!dtb) {
 				dprintf(CRITICAL, "ERROR: Appended Device Tree Blob not found\n");
 				return -1;

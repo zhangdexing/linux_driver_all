@@ -13,7 +13,7 @@ void gpio_set_direction(int pin, int dir)
 
 void gpio_set_val(int pin, int val)
 {
-#ifdef BOOTLOADER_MSM8909
+#if (defined BOOTLOADER_MSM8909) || (defined BOOTLOADER_MSM8996)
     if(val == 0)
         gpio_set(pin, 0);
     else

@@ -15,7 +15,7 @@ int adc_get(void)
     int ac_ch_val[ADC_KEY_CHNL] = {0};
     int i = 0;
 
-#ifdef BOOTLOADER_MSM8909
+#if (defined BOOTLOADER_MSM8909) || (defined BOOTLOADER_MSM8996)
     return 0;
 #else
     for(i = 0; i < ADC_KEY_CHNL; i++)

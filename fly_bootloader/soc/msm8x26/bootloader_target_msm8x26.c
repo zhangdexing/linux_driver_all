@@ -113,5 +113,45 @@ struct bootloader_hw_config g_hw_info[] =
         .gpio_ready = 36,
         .gpio_hal_ready = 34,
         .dbg_uart_port = "console=ttyHSL1,115200,n8 androidboot.console=ttyHSL1 ",
+    },
+    //msm8996
+    {
+        .display_info = {
+            .dsi83_slave_add = 0x2d,
+            .dsi83_en_pin = 12,
+            .dsi83_sda = 6,
+            .dsi83_scl = 7,
+        },
+
+        .adc_info[0] = {
+            .ad_ch = -1,
+            .ad_ctrl_ch = -1,
+            .ad_vol = 3200,
+        },
+
+        .adc_info[ADC_KEY_CHNL - 1] = {
+            .ad_ch = -1,
+            .ad_ctrl_ch = -1,
+            .ad_vol = 0,
+        },
+
+        .ctp_info = {
+            .ctp_int = 125,
+            .ctp_rst = 89,
+            .ctp_sda = 87,
+            .ctp_scl = 88,
+        },
+
+        .lpc_info = {
+            .lpc_slave_add = 0x50,
+            .lpc_sda = 2,
+            .lpc_scl = 3,
+        },
+
+        .lk_wakeup_lpc_io = 11,
+	.gpio_mcu_wp = 25,
+        .gpio_ready = 28,
+        .gpio_hal_ready = 26,
+        .dbg_uart_port = "console=ttyHSL1,115200,n8 androidboot.console=ttyHSL1 ",
     }
 };
