@@ -560,9 +560,10 @@ case "$DBG_PLATFORM_ID" in
 
     17)
 	export DBG_PLATFORM=msm8996
+	export SOC_ARCH=arm64
 	export BOARD_VERSION=V1
 	export ANDROID_VERSION=601
-	export DBG_CROSS_COMPILE=$DBG_SYSTEM_DIR/prebuilts/gcc/linux-x86/arm/arm-eabi-4.8/bin/arm-eabi-
+	export DBG_CROSS_COMPILE=$DBG_SYSTEM_DIR/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-
 	export JAVA_HOME=$PATHJAVA1P7
 	export JRE_HOME=$JAVA_HOME/jre
 	export CLASSPATH=$JAVA_HOME/lib:$JRE_HOME/lib:$CLASSPATH
@@ -584,7 +585,7 @@ case "$DBG_PLATFORM_ID" in
 	export TEST_PACKAGE_PATH=//192.168.128.128/share/8996/升级包/测试升级包
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=msm8996-master
-	export RECOVERY_BUILD_BRANCH=msm8996-ota-recovery
+	export RECOVERY_BUILD_BRANCH=msm8996-recovery
         export MAKE_PAKG_NUM=21
 
 	export NON_HLOS_FILE_PATH=$BP_SOURCE_PATH/common/build/bin/asic

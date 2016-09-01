@@ -2238,7 +2238,7 @@ try_open_again:
         alloc.len = (alloc.len + 4095) & (~4095);
         alloc.align = 4096;
         alloc.flags = ION_FLAG_CACHED;
-#ifdef PLATFORM_msm8909
+#if (defined PLATFORM_msm8909) || (defined PLATFORM_msm8996)
         alloc.heap_id_mask = ion_type;
 #else
 	alloc.heap_mask = ion_type;

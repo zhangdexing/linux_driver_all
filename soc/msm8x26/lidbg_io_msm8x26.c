@@ -1,12 +1,14 @@
 
 #include "lidbg.h"
-
+#ifndef PLATFORM_msm8996		
 struct msm_gpiomux_config soc_io_config_log[IO_LOG_NUM];
+#endif
 static bool io_ready = 1;
 
 
 int soc_io_suspend(void)
 {
+#ifndef PLATFORM_msm8996		
     int i;
     io_ready = 0;
     for(i = 0; i < IO_LOG_NUM; i++)
@@ -29,13 +31,15 @@ int soc_io_suspend(void)
 
         }
     }
+#endif
 
     return 0;
 }
 int soc_io_resume(void)
 {
+#ifndef PLATFORM_msm8996	
     int i;
-    lidbg("soc_io_resume\n");
+    lidbg("soc_io_resume\n");	
     for(i = 0; i < IO_LOG_NUM; i++)
     {
 #if 0
@@ -50,6 +54,7 @@ int soc_io_resume(void)
 
 #endif
     }
+#endif		
     io_ready = 1;
     return 0;
 }
@@ -80,8 +85,9 @@ static const struct file_operations io_request_fops =
 
 void soc_io_init(void)
 {
+#ifndef PLATFORM_msm8996		
     memset(soc_io_config_log, 0xff, sizeof(soc_io_config_log));
-
+#endif
     proc_create("io_free", 0, NULL, &io_free_fops);
     proc_create("io_request", 0, NULL, &io_request_fops);
 }
@@ -127,7 +133,7 @@ int soc_io_irq(struct io_int_config *pio_int_config)//need set to input first?
 
 int soc_io_suspend_config(u32 index, u32 direction, u32 pull, u32 drive_strength)
 {
-
+#ifndef PLATFORM_msm8996		
     if((soc_io_config_log[index].gpio == 0xffffffff))
     {
         lidbgerr("soc_io_suspend_config ,gpio not config:index %d\n" , index);
@@ -155,12 +161,14 @@ int soc_io_suspend_config(u32 index, u32 direction, u32 pull, u32 drive_strength
 
         return 0;
     }
+#endif		
+	return 0;
 }
 
 int soc_io_config(u32 index, int func, u32 direction,  u32 pull, u32 drive_strength, bool force_reconfig)
 {
-    bool is_first_init = 0;
-
+#ifndef PLATFORM_msm8996	
+    bool is_first_init = 0;	
     is_first_init = (soc_io_config_log[index].gpio == 0xffffffff) ? 1 : 0;
 
     if(force_reconfig == 1)
@@ -252,6 +260,8 @@ free_gpio:
             gpio_free(index);
         return 0;
     }
+#endif		
+	return 0;
 }
 
 
@@ -263,12 +273,12 @@ int soc_io_output(u32 group, u32 index, bool status)
         lidbg("%d,%d io not ready\n", group, index);
         return 0;
     }
-
+#ifndef PLATFORM_msm8996		
     if(status == 1)
         soc_io_config_log[index].settings[GPIOMUX_ACTIVE]->dir = GPIOMUX_OUT_HIGH;
     else
         soc_io_config_log[index].settings[GPIOMUX_ACTIVE]->dir = GPIOMUX_OUT_LOW;
-
+#endif
     index += GPIO_MAP_OFFSET;
     gpio_direction_output(index, status);
     gpio_set_value(index, status);

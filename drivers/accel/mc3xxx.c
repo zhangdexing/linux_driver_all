@@ -212,6 +212,8 @@ LIDBG_DEFINE;
 
 #define MC3XXX_BUFSIZE    256
 
+#define strict_strtoul	kstrtoul
+
 //=============================================================================
 static unsigned char    s_bResolution = 0x00;
 static unsigned char    s_bPCODE      = 0x00;

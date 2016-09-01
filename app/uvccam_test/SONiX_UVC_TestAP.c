@@ -605,7 +605,8 @@ static int video_set_still_format(int dev, unsigned int w, unsigned int h, unsig
 	fmt.fmt.pix.pixelformat = format;
 	fmt.fmt.pix.field = V4L2_FIELD_ANY;
 
-	if(GetKernelVersion()> KERNEL_VERSION (3, 0, 36))
+	//if(GetKernelVersion()> KERNEL_VERSION (3, 0, 36))
+	if(1)
 		ret = ioctl(dev, UVCIOC_STILL_S_FMT_KNL3, &fmt);
 	else
 		ret = ioctl(dev, UVCIOC_STILL_S_FMT_KNL2, &fmt);
@@ -719,7 +720,8 @@ static int video_req_still_buf(int dev)
 	rb.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	rb.memory = V4L2_MEMORY_MMAP;
 
-	if(GetKernelVersion()> KERNEL_VERSION (3, 0, 36))
+	//if(GetKernelVersion()> KERNEL_VERSION (3, 0, 36))
+	if(1)
 		ret = ioctl(dev, UVCIOC_STILL_REQBUF_KNL3, &rb);
 	else
 		ret = ioctl(dev, UVCIOC_STILL_REQBUF_KNL2, &rb);
@@ -1111,7 +1113,8 @@ int get_still_image(int dev, unsigned int w, unsigned int h, unsigned int format
 	memset(&buf, 0, sizeof buf);
 	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 	buf.memory = V4L2_MEMORY_MMAP;
-	if(GetKernelVersion()> KERNEL_VERSION (3, 0, 36))
+	//if(GetKernelVersion()> KERNEL_VERSION (3, 0, 36))
+	if(1)
 		ret = ioctl(dev, UVCIOC_STILL_QUERYBUF_KNL3, &buf);
 	else
 		ret = ioctl(dev, UVCIOC_STILL_QUERYBUF_KNL2, &buf);
@@ -1132,7 +1135,8 @@ int get_still_image(int dev, unsigned int w, unsigned int h, unsigned int format
 	TestAp_Printf(TESTAP_DBG_FLOW, "still Buffer mapped at address %p.\n", mem);
 
 	//get data
-	if(GetKernelVersion()> KERNEL_VERSION (3, 0, 36))
+	//if(GetKernelVersion()> KERNEL_VERSION (3, 0, 36))
+	if(1)
 		ret = ioctl(dev, UVCIOC_STILL_GET_FRAME_KNL3, &buf);
 	else
 		ret = ioctl(dev, UVCIOC_STILL_GET_FRAME_KNL2, &buf);	

@@ -302,7 +302,7 @@ int XU_H264_Set_GOP(int fd, unsigned int GOP);
 int XU_Asic_Read(int fd, unsigned int Addr, unsigned char *AsicData);
 int XU_Asic_Write(int fd, unsigned int Addr, unsigned char AsicData);
 
-#if(CARCAM_PROJECT == 0)
+
 int XU_Multi_Get_status(int fd, struct Multistream_Info *status);
 int XU_Multi_Get_Info(int fd, struct Multistream_Info *Info);
 int XU_Multi_Set_Type(int fd, unsigned int format);
@@ -320,7 +320,7 @@ int XU_Multi_Set_SubStream_FrameRate(int fd, unsigned int sub_fps);
 int XU_Multi_Get_SubStream_FrameRate(int fd, unsigned int *sub_fps);
 int XU_Multi_Set_SubStream_GOP(int fd, unsigned int sub_gop);
 int XU_Multi_Get_SubStream_GOP(int fd, unsigned int *sub_gop);
-#endif
+
 
 int XU_OSD_Timer_Ctrl(int fd, unsigned char enable);
 int XU_OSD_Set_RTC(int fd, unsigned int year, unsigned char month, unsigned char day, unsigned char hour, unsigned char minute, unsigned char second);
@@ -341,7 +341,7 @@ int XU_OSD_Get_AutoScale(int fd, unsigned char *Enable_Line, unsigned char *Enab
 int XU_OSD_Set_Start_Position(int fd, unsigned char OSD_Type, unsigned int RowStart, unsigned int ColStart);
 int XU_OSD_Get_Start_Position(int fd, unsigned int *LineRowStart, unsigned int *LineColStart, unsigned int *BlockRowStart, unsigned int *BlockColStart);
 
-#if(CARCAM_PROJECT == 0)
+
 int XU_OSD_Set_Multi_Size(int fd, unsigned char Stream0, unsigned char Stream1, unsigned char Stream2);
 int XU_OSD_Get_Multi_Size(int fd, unsigned char *Stream0, unsigned char *Stream1, unsigned char *Stream2);
 
@@ -350,7 +350,7 @@ int XU_OSD_Get_MS_Start_Position(int fd, unsigned char *S0_Row, unsigned char *S
 
 int XU_OSD_Set_String(int fd, unsigned char group, char *String);
 int XU_OSD_Get_String(int fd, unsigned char group, char *String);
-#endif
+
 
 int XU_MD_Set_Mode(int fd, unsigned char Enable);
 int XU_MD_Get_Mode(int fd, unsigned char *Enable);
@@ -387,7 +387,7 @@ int XU_Frame_Drop_Ctrl_Get(int fd, unsigned char *Stream1_fps, unsigned char *St
 int XU_SF_Read(int fd, unsigned int Addr, unsigned char* pData,unsigned int Length);
 
 
-#if(CARCAM_PROJECT == 1)
+
 int XU_OSD_Set_CarcamCtrl(int fd, unsigned char SpeedEn, unsigned char CoordinateEn, unsigned char CoordinateCtrl);
 int XU_OSD_Get_CarcamCtrl(int fd, unsigned char *SpeedEn, unsigned char *CoordinateEn, unsigned char *CoordinateCtrl);
 int XU_OSD_Set_Speed(int fd, unsigned int Speed);
@@ -396,6 +396,6 @@ int XU_OSD_Set_Coordinate1(int fd, unsigned char Direction, unsigned char *Vaule
 int XU_OSD_Set_Coordinate2(int fd, unsigned char Direction, unsigned char Vaule1, unsigned long Vaule2, unsigned char Vaule3, unsigned long Vaule4);
 int XU_OSD_Get_Coordinate1(int fd, unsigned char *Direction, unsigned char *Vaule);
 int XU_OSD_Get_Coordinate2(int fd, unsigned char *Direction, unsigned char *Vaule1, unsigned long *Vaule2, unsigned char *Vaule3, unsigned long *Vaule4);
-#endif
+
 
 #endif

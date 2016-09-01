@@ -189,7 +189,7 @@ namespace android
 
     struct ion_flush_data
     {
-#ifdef PLATFORM_msm8909
+#if (defined PLATFORM_msm8909) || (defined PLATFORM_msm8996)
 	ion_user_handle_t handle;
 #else
         struct ion_handle      *handle;
@@ -231,7 +231,7 @@ namespace android
     {
         int                     fd;
         int                     main_ion_fd;
-#ifdef PLATFORM_msm8909
+#if (defined PLATFORM_msm8909) || (defined PLATFORM_msm8996)
 	ion_user_handle_t handle;
 #else
         struct ion_handle      *handle;

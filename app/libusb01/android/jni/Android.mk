@@ -5,6 +5,8 @@ LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
 LIBUSB_ROOT_REL:= ../..
 LIBUSB_ROOT_ABS:= $(LOCAL_PATH)/../..
 
+LOCAL_MULTILIB := first
+
 LOCAL_SRC_FILES := \
   $(LIBUSB_ROOT_REL)/error.c \
   $(LIBUSB_ROOT_REL)/linux.c \

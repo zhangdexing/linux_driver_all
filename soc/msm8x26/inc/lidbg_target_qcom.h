@@ -283,6 +283,8 @@
 #define FLY_GPS_SO  "gps.msm8974.so"
 #elif defined(PLATFORM_msm8909)
 #define FLY_GPS_SO  "gps.msm8909.so"
+#elif defined(PLATFORM_msm8996)
+#define FLY_GPS_SO  "gps.msm8996.so"
 #endif
 
 #define WAKEUP_MCU_BEGIN  do{check_gpio(g_hw.gpio_mcu_i2c_wakeup);SOC_IO_Output(0, g_hw.gpio_mcu_i2c_wakeup, 1); }while(0)
