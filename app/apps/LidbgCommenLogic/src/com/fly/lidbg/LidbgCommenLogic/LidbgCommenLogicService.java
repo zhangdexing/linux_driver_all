@@ -284,8 +284,8 @@ public class LidbgCommenLogicService extends Service
             }
             else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED) || intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED))
             {
-                UsbDevice device = (UsbDevice)intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
-                printKernelMsg("usb event:[Manufacturer:" + device.getManufacturerName() + "/name:" + device.getDeviceName()  + "]\n");
+                //UsbDevice device = (UsbDevice)intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+                //printKernelMsg("usb event:[Manufacturer:" + device.getManufacturerName() + "/name:" + device.getDeviceName()  + "]\n");
                 //+ "/InterfaceClass:" + device.getInterface(0).getInterfaceClass()
                 return;
             }
