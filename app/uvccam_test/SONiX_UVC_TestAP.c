@@ -3899,9 +3899,12 @@ openfd:
 	if((do_save) || (do_record)) 
 		get_driver_prop(cam_id);
 	
-	/*enable OSD*/
-	if(XU_OSD_Set_Enable(dev, 1, 1) <0)
+	/*DVR enable OSD ,Rear control by camera.X.so*/
+	if(cam_id == DVR_ID)
+	{
+		if(XU_OSD_Set_Enable(dev, 1, 1) <0)
 			lidbg( "XU_OSD_Set_Enable Failed\n");	
+	}
 	if(XU_OSD_Set_CarcamCtrl(dev, 0, 0, 0) < 0)
 			lidbg( "XU_OSD_Set_CarcamCtrl Failed\n");	
 
