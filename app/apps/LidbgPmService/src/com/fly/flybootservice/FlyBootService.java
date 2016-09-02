@@ -813,7 +813,9 @@ public static void releaseBrightWakeLock()
         for (ActivityManager.RunningAppProcessInfo appProcessInfo : appProcessList) {
             int pid = appProcessInfo.pid;
             int uid = appProcessInfo.uid;
-            String processName = appProcessInfo.processName;
+            String processName = mPackageManager.getNameForUid(uid);
+            if (processName.startsWith("android.uid"))
+		continue;
             if(blSuspendUnairplaneFlag){
 	            booleanAccWakedupState = SystemProperties.getBoolean("persist.lidbg.AccWakedupState",false);
 	            if(booleanAccWakedupState){
@@ -842,7 +844,9 @@ public static void releaseBrightWakeLock()
         for (ActivityManager.RunningAppProcessInfo appProcessInfo : appProcessList) {
             int pid = appProcessInfo.pid;
             int uid = appProcessInfo.uid;
-            String processName = appProcessInfo.processName;
+            String processName = mPackageManager.getNameForUid(uid);
+            if (processName.startsWith("android.uid"))
+		continue;
             if(blSuspendUnairplaneFlag){
 	            booleanAccWakedupState = SystemProperties.getBoolean("persist.lidbg.AccWakedupState",false);
 	            if(booleanAccWakedupState){
