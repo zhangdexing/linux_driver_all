@@ -1,3 +1,4 @@
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,i2c-tools-3.1.1)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,record_klogctl)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,halAndJni/hal)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,halAndJni/jni)
