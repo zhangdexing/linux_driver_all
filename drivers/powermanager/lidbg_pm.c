@@ -1021,11 +1021,10 @@ static int thread_observer(void *data)
                     }
 #endif
                     break;
-                case 11:
 #ifdef SUSPEND_ONLINE
-					break;
+                case 60:
 #else
-
+                case 11:
 #endif
 			    lidbg("dump system info\n");
 			    lidbg_shell_cmd("date  >> /data/lidbg/pm_info/ps.txt");				

@@ -36,11 +36,11 @@ int thread_limit_temp(void *data)
         lidbg( "%s:%d,%d,%d,%d,%s\n", __FUNCTION__,mem_temp, cpu_temp,get_scaling_max_freq(), cpufreq_get(0),get_cpu_status());
 	 lidbg_chmod(CPU_MAX_NODE);
 #ifdef PLATFORM_msm8226
-        lidbg_readwrite_file(CPU_MAX_NODE, NULL, "600000", strlen("600000"));
+        lidbg_readwrite_file(FREQ_MAX_NODE, NULL, "600000", strlen("600000"));
 #elif defined(PLATFORM_msm8909)
-        lidbg_readwrite_file(CPU_MAX_NODE, NULL, "533333", strlen("533333"));
+        lidbg_readwrite_file(FREQ_MAX_NODE, NULL, "533333", strlen("533333"));
 #elif defined(PLATFORM_msm8974)
-        lidbg_readwrite_file(CPU_MAX_NODE, NULL, "652800", strlen("652800"));
+        lidbg_readwrite_file(FREQ_MAX_NODE, NULL, "652800", strlen("652800"));
 #endif
         msleep(1000);
     }
