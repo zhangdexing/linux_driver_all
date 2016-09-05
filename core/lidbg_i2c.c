@@ -531,15 +531,15 @@ void mod_i2c_main(int argc, char **argv)
 
 #if 1
         lidbg("\nmod_i2c_main:w ");
-        lidbg("bus_id %d;", bus_id);
-        lidbg("dev_addr(8bit)=0x%x(7bit)<<1=0x%x;", dev_addr, dev_addr << 1);
-        lidbg("reg 0x%x;", psend_data[0]);
+        lidbg("bus_id %d;\n", bus_id);
+        lidbg("dev_addr(7bit)=0x%x(8bit)=0x%x;\n", dev_addr, dev_addr << 1);
+        lidbg("reg 0x%x;\n", psend_data[0]);
         lidbg("data_num %d;\n", num); //包括reg和data
 
-        lidbg("data: ");
+        lidbg("data: \n");
         for(i = 0; i < num; i++)
         {
-            lidbg("%x  ", psend_data[i]);
+            lidbg("%d=0x%x  \n", i,psend_data[i]);
         }
 
         lidbg("\n");
@@ -566,7 +566,7 @@ void mod_i2c_main(int argc, char **argv)
 #if 1
         lidbg("\nmod_i2c_main:r ");
         lidbg("bus_id %d;", bus_id);
-        lidbg("dev_addr(8bit)=0x%x(7bit)<<1=0x%x;", dev_addr, dev_addr << 1);
+        lidbg("dev_addr(7bit)=0x%x(8bit)=0x%x;", dev_addr, dev_addr << 1|0x01);
         lidbg("start_reg 0x%x;", start_reg);
         lidbg("data_num %d;\n\n", num); //包括reg和data
 #endif
