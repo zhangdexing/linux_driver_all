@@ -43,6 +43,7 @@ typedef enum {
   NR_EM_STATUS,
   NR_EM_TIME,
   NR_EM_MANUAL,
+  NR_CAM_STATUS,
 }em_ctrl_t;
 
 typedef enum {

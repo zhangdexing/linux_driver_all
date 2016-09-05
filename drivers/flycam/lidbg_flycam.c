@@ -3257,6 +3257,31 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				}
 				notify_online(RET_EM_ISREC_ON);
 		        break;
+			case NR_CAM_STATUS:
+				lidbg("%s:NR_CAM_STATUS\n",__func__);
+				if(DVR_ID == ((char*)arg)[0])
+				{
+					if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID) dvrRespond[2] = RET_SUCCESS;
+					else dvrRespond[2] = RET_NOTVALID;
+					memcpy(returnRespond + length,dvrRespond,3);
+					length += 3;
+					if(copy_to_user((char*)arg,returnRespond,length))
+					{
+						lidbg("%s:copy_to_user ERR\n",__func__);
+					}
+				}
+				else if(REARVIEW_ID == ((char*)arg)[0])
+				{
+					if((pfly_UsbCamInfo->camStatus >> 4) & FLY_CAM_ISVALID) rearRespond[2] = RET_SUCCESS;
+						else rearRespond[2] = RET_NOTVALID;
+					memcpy(returnRespond + length,rearRespond,3);
+					length += 3;
+					if(copy_to_user((char*)arg,returnRespond,length))
+					{
+						lidbg("%s:copy_to_user ERR\n",__func__);
+					}
+				}
+		        break;
 			default:
 		        return -ENOTTY;
 		}
