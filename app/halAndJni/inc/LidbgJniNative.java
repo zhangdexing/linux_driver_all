@@ -18,7 +18,10 @@ public class LidbgJniNative
 	public enum DebugLevel
 	{
 		LevelTest, LevelDriversAbonomal
-	};
+	}
+
+	public static final int CAMERA_ID_BACK = 0;
+	public static final int CAMERA_ID_FRONT = 1;
 
 	private static int sInitialized = 0;
 	private Context gcontext;
@@ -54,6 +57,8 @@ public class LidbgJniNative
 	}
 
 	public native int UrgentRecordCameraManual(int CameraId, int StartOrStop);
+
+	public native boolean isConnectCamera(int cameraid);
 
 	private void hal2jni2appCallBack(String msg)
 	{

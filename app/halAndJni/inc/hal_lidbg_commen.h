@@ -38,6 +38,7 @@ typedef struct
     int   (*urgent_record_ctrl)(int camera_id, int start_stop);
     char    *(*urgent_record_get_status)(int camera_id);
     int   (*urgent_record_manual)(int camera_id, int start_stop);
+    bool   (*is_camera_connect)(int camera_id);
 } HalInterface;
 
 struct lidbg_device_t

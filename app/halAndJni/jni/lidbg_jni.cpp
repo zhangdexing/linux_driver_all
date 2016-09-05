@@ -278,6 +278,18 @@ static jint urgent_record_camera_manual(JNIEnv * /*env*/, jobject /*clazz*/, jin
         return -1;
     }
 }
+static jboolean jni_is_camera_connect(JNIEnv * /*env*/, jobject /*clazz*/, jint id)
+{
+    if(sHalInterface != NULL)
+    {
+        return sHalInterface->is_camera_connect(id);
+    }
+    else
+    {
+        lidbg(DEBG_TAG"[%s].sHalInterface:%s\n", __FUNCTION__, sHalInterface);
+        return false;
+    }
+}
 
 static JNINativeMethod methods[] =
 {
@@ -293,6 +305,7 @@ static JNINativeMethod methods[] =
     { "UrgentRecordCameraCtrl", "(II)I", (void *)urgent_record_camera_ctrl },
     { "UrgentRecordCameraGetStatus", "(I)Ljava/lang/String;", (void *)urgent_record_camera_get_status },
     { "UrgentRecordCameraManual", "(II)I", (void *)urgent_record_camera_manual },
+    { "isConnectCamera", "(I)Z", (void *)jni_is_camera_connect },
 };
 //add up below:
 static jclass registerNativeMethods(JNIEnv *env, const char *className, JNINativeMethod *gMethods, int numMethods)
