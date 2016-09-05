@@ -117,6 +117,7 @@ static int delDays = 6;
 
 static void notify_online(int arg)
 {
+	lidbg("%s:====notify_online => %d====\n",__func__,arg);
 	pfly_UsbCamInfo->onlineNotify_status = arg;
 	isOnlineNotifyReady = 1;
 	wake_up_interruptible(&pfly_UsbCamInfo->onlineNotify_wait_queue);
@@ -2340,10 +2341,10 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				complete(&Rear_res_get_wait);/*HAL get version*/
 		        break;
 			case NR_ONLINE_NOTIFY:
-		        lidbg("%s:NR_ONLINE_NOTIFY\n",__func__);
-				wait_event_interruptible(pfly_UsbCamInfo->onlineNotify_wait_queue, isOnlineNotifyReady == 1);
-          		//arg = pfly_UsbCamInfo->onlineNotify_status;
-				//lidbg("%s:NR_ONLINE_NOTIFY=ss==2=%ld\n",__func__,arg);
+				//wait_event_interruptible(pfly_UsbCamInfo->onlineNotify_wait_queue, isOnlineNotifyReady == 1);
+				 if(wait_event_interruptible(pfly_UsbCamInfo->onlineNotify_wait_queue, isOnlineNotifyReady == 1))
+	        		return -ERESTARTSYS;
+				lidbg("%s:NR_ONLINE_NOTIFY ,isOnlineNotifyReady: %d\n",__func__,isOnlineNotifyReady);
 				isOnlineNotifyReady = 0;
 				return pfly_UsbCamInfo->onlineNotify_status;
 		        break;
