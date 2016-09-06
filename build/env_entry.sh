@@ -527,8 +527,8 @@ case "$DBG_PLATFORM_ID" in
 	export MAKE_PAKG_NUM= ;;
 
     16)
-        export DBG_PLATFORM=cust3561_64_common
-		export SOC_ARCH=arm64
+        export DBG_PLATFORM=evb3561t_66_m0
+	export SOC_ARCH=arm64
         export BOARD_VERSION=V1
         export ANDROID_VERSION=601
         export DBG_CROSS_COMPILE=$DBG_SYSTEM_DIR/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-

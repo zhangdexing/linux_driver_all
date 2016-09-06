@@ -7,7 +7,7 @@ if [ $DBG_PLATFORM = mt3360 ];then
 cd $DBG_SYSTEM_DIR/&&source ./selfenv&&lunch 5
 elif [ $DBG_PLATFORM = rkpx3 ];then
 cd $DBG_SYSTEM_DIR/&&source ./build/envsetup.sh&&lunch rkpx3-$SYSTEM_BUILD_TYPE
-elif [ $DBG_PLATFORM = cust3561_64_common ];then
+elif [ $DBG_PLATFORM = evb3561t_66_m0 ];then
 cd $DBG_SYSTEM_DIR/&&source build/envsetup.sh&&choosecombo release full_$DBG_PLATFORM $SYSTEM_BUILD_TYPE
 else
 cd $DBG_SYSTEM_DIR/&&source build/envsetup.sh&&choosecombo release $DBG_PLATFORM $SYSTEM_BUILD_TYPE
