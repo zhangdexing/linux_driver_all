@@ -265,7 +265,7 @@ void clean_ublox_buf(void)
 
 int thread_gps_server(void *data)
 {
-    int ret;
+    int ret,i;
     DUMP_FUN_ENTER;
     while(1)
     {
@@ -295,6 +295,13 @@ int thread_gps_server(void *data)
                 ret = SOC_I2C_Rec_Simple(GPS_I2C_BUS, 0x42, gps_data, avi_gps_data_hl);
                 gps_data[avi_gps_data_hl ] = '\0';
                 pr_debug("gps_data=%s\n", gps_data);
+		if(gps_data[0] == 0xb5)
+		{
+		    pr_debug("=====start=====\n");
+		    for(i = 0; i < avi_gps_data_hl; i++)
+		        pr_debug("data %d=0x%x\n",   i  , gps_data[i]);
+		    pr_debug("=====stop=====\n");
+		}
                 if (sdcard_raw_data)
                 {
                     fs_file_write2(RAW_DATA_FILE, gps_data);
