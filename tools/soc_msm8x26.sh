@@ -133,6 +133,8 @@ fi
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/ETC
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/EXECUTABLES/vold_intermediates
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/EMMC_BOOTLOADER_OBJ
+
+	touch $DBG_SYSTEM_DIR/kernel/drivers/flyaudio/lidbg_kernel.c
 	set_env
 }
 
