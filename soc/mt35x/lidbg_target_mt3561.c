@@ -29,7 +29,7 @@ struct hw_version_specific g_hw_version_specific[] =
 	.gpio_request_fastboot = 87,
 
         .gpio_ts_int = 10,
-        .gpio_ts_rst = 65,
+        .gpio_ts_rst = 146,
 
         .gpio_dvd_tx = 87,
         .gpio_dvd_rx = 87,
