@@ -24,7 +24,7 @@ struct bootloader_hw_config g_hw_info[] =
 
         .ctp_info = {
             .ctp_int = 10,
-            .ctp_rst = 65,
+            .ctp_rst = 146,
             .ctp_sda = 49,
             .ctp_scl = 50,
         },
