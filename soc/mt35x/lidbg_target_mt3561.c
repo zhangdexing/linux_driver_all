@@ -8,9 +8,12 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_t123_reset = 87,
         .gpio_dsi83_en = 87,
 
-        .gpio_usb_power = 87,
-        .gpio_usb_id = 87,
-        .gpio_usb_switch = 87,
+        .gpio_usb_power = 19,
+        .gpio_usb_id = 0,
+        .gpio_usb_switch = -1,
+        .gpio_usb_udisk_en = 45,
+        .gpio_usb_front_en = 17,
+        .gpio_usb_backcam_en = 20,
 
         .gpio_int_gps = 87,
 
@@ -22,7 +25,7 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_led1 = 87,
         .gpio_led2 = 87,
 
-        .gpio_int_mcu_i2c_request = 87,
+        .gpio_int_mcu_i2c_request = 6,
          .gpio_mcu_i2c_wakeup = 87,
         .gpio_mcu_wp = 87,
         .gpio_mcu_app = 87,
@@ -45,7 +48,7 @@ struct hw_version_specific g_hw_version_specific[] =
         .i2c_bus_ts = 1,
         .i2c_bus_gps = 0,
         .i2c_bus_tef6638 = 0,
-        .i2c_bus_lpc = 0,
+        .i2c_bus_lpc = 3,
         .i2c_bus_pca9634 = 0,
         .ad_val_mcu = 87,
         .fly_parameter_node = "/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/flyparameter",

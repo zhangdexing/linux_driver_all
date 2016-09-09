@@ -113,7 +113,6 @@ int soc_io_suspend_config(u32 index, u32 direction, u32 pull, u32 drive_strength
 
 int soc_io_config(u32 index, int func, u32 direction, u32 pull, u32 drive_strength, bool force_reconfig)
 {
-#if 0
     bool is_first_init = 0;
     is_first_init = (io_config[index - GPIO_OFFSET].gpio == 0) ? 1 : 0;
     if(force_reconfig == 1)
@@ -160,7 +159,6 @@ free_gpio:
             gpio_free(index);
         return 0;
     }
-#endif
 	return 0;
 }
 

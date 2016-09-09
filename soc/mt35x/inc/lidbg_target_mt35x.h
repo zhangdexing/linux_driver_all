@@ -89,13 +89,38 @@
 				SOC_IO_Suspend_Config(g_hw.gpio_usb_id,GPIOMUX_OUT_HIGH,GPIO_CFG_NO_PULL,GPIOMUX_DRV_2MA);\
 		}while(0)
 
+#define USB_POWER_FRONT_ENABLE do{\
+			lidbg("gpio_usb_front_en\n");\
+			check_gpio(g_hw.gpio_usb_front_en);\
+			SOC_IO_Output(0, g_hw.gpio_usb_front_en, 1);\
+	}while(0)
 
-#define USB_POWER_FRONT_ENABLE
-#define USB_POWER_FRONT_DISABLE
-#define USB_POWER_BACK_ENABLE
-#define USB_POWER_BACK_DISABLE
-#define USB_POWER_UDISK_ENABLE
-#define USB_POWER_UDISK_DISABLE
+#define USB_POWER_FRONT_DISABLE do{\
+			check_gpio(g_hw.gpio_usb_front_en);\
+			SOC_IO_Output(0, g_hw.gpio_usb_front_en, 0);\
+	}while(0)
+
+#define USB_POWER_BACK_ENABLE do{\
+			lidbg("gpio_usb_backcam_en\n");\
+			check_gpio(g_hw.gpio_usb_backcam_en);\
+			SOC_IO_Output(0, g_hw.gpio_usb_backcam_en, 1);\
+	}while(0)
+
+#define USB_POWER_BACK_DISABLE do{\
+			check_gpio(g_hw.gpio_usb_backcam_en);\
+			SOC_IO_Output(0, g_hw.gpio_usb_backcam_en, 0);\
+	}while(0)
+
+#define USB_POWER_UDISK_ENABLE do{\
+			lidbg("gpio_usb_udisk_en\n");\
+			check_gpio(g_hw.gpio_usb_udisk_en);\
+			SOC_IO_Output(0, g_hw.gpio_usb_udisk_en, 1);\
+	}while(0)
+
+#define USB_POWER_UDISK_DISABLE do{\
+			check_gpio(g_hw.gpio_usb_udisk_en);\
+			SOC_IO_Output(0, g_hw.gpio_usb_udisk_en, 0);\
+	}while(0)
 
 #define USB_WORK_ENABLE do{\
 			 lidbg("USB_WORK_ENABLE\n");\
