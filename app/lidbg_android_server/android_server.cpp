@@ -91,6 +91,10 @@ int max_stream_volume[AUDIO_STREAM_CNT] =
     DEFAULT_MAX_VOLUME  // STREAM_TTS
 };
 int music_level = DEFAULT_MAX_VOLUME * 70 / 100;
+int delay_off_volume_policy_cnt = 0;
+int delay_off_volume_policy = 2000;//ms
+int delay_step_on_music = 500;//ms
+
 static sp<IAudioFlinger> gAudioFlingerService = 0;
 void GetAudioFlingerService(bool dbg)
 {
@@ -173,25 +177,100 @@ bool set_all_stream_volume(int index)
     error = 0;
     return (error != ERROR_VALUE);
 }
+bool step_on_stream_volume(audio_stream_type_t mstream, int start_index , int end_index, int total_time)
+{
+    int i, error = ERROR_VALUE, old_index = 0;
+    int cnt = abs(end_index - start_index), cur_index, step_delay;
+    step_delay = (total_time / cnt);
+    lidbg(TAG"step_on_stream_volume:[%d/%d/%d/%d/%d]\n", mstream, start_index, end_index, step_delay, cnt);
+    if(cnt != 0)
+    {
+        for (i = 0; i < cnt; i++)
+        {
+            if(end_index > start_index)
+                cur_index = start_index + i;
+            else
+                cur_index = start_index - i;
+            usleep( step_delay * 1000);
+
+            if(cur_index != old_index)
+            {
+                old_index = cur_index;
+                set_stream_volume(mstream, cur_index);
+            }
+        }
+    }
+    set_stream_volume(mstream, end_index);
+    return (error == NO_ERROR);
+}
 
 void check_ring_stream(void)
 {
     sp<IAudioPolicyService> &aps = gAudioPolicyService;
     ring = //aps->isStreamActive(AUDIO_STREAM_RING, 0) |
         aps->isStreamActive(AUDIO_STREAM_NOTIFICATION, 0) ;
+
     if(ring != ring_old)
     {
         ring_old = ring;
         lidbg(TAG"ring.[%d],music_level:[%d/%d]\n", ring, music_level, DEFAULT_MAX_VOLUME);
         if(ring)
         {
+            //step_on_stream_volume(AUDIO_STREAM_MUSIC, DEFAULT_MAX_VOLUME, music_level, 200);
             set_stream_volume(AUDIO_STREAM_MUSIC, music_level);
         }
         else
         {
-            set_all_stream_volume(DEFAULT_MAX_VOLUME);
+            if(dbg_volume)
+                lidbg(TAG"start delay_off_volume_policy_cnt\n");
+            delay_off_volume_policy_cnt = 1;
         }
     }
+
+    if(delay_off_volume_policy_cnt > 0)
+        delay_off_volume_policy_cnt++;
+    if(delay_off_volume_policy_cnt * 100 > delay_off_volume_policy)
+    {
+        if(ring)
+        {
+            if(dbg_volume)
+                lidbg(TAG"restart delay_off_volume_policy_cnt\n");
+            delay_off_volume_policy_cnt = 1;
+        }
+        else
+        {
+            if(dbg_volume)
+                lidbg(TAG"stop delay_off_volume_policy_cnt\n");
+            delay_off_volume_policy_cnt = 0;
+            {
+                //set_all_stream_volume(DEFAULT_MAX_VOLUME);
+                step_on_stream_volume(AUDIO_STREAM_MUSIC, music_level, DEFAULT_MAX_VOLUME, delay_step_on_music);
+            }
+        }
+    }
+
+}
+static void *thread_check_ring_stream(void *data)
+{
+    lidbg( TAG"thread_check_ring_stream:in\n");
+    data = data;
+    while(1)
+    {
+        if(gAudioPolicyService != 0 && gAudioFlingerService != 0)
+        {
+            if(navi_policy_en)
+                check_ring_stream();
+        }
+        else
+        {
+            lidbg( TAG"thread_check_ring_stream:gAudioPolicyService == 0 gAudioFlingerService==0\n");
+            GetAudioPolicyService(true);
+            GetAudioFlingerService(true);
+            sleep(3);
+        }
+        usleep(100000);//100ms
+    }
+    return ((void *) 0);
 }
 
 
@@ -215,6 +294,7 @@ int main(int argc, char **argv)
     GetAudioFlingerService(true);
     if(gAudioPolicyService != 0)
         set_all_stream_volume(DEFAULT_MAX_VOLUME);
+    pthread_create(&ntid, NULL, thread_check_ring_stream, NULL);
     while(1)
     {
         if(gAudioPolicyService != 0 && gAudioFlingerService != 0)
@@ -227,8 +307,6 @@ int main(int argc, char **argv)
                       aps->isStreamActive((audio_stream_type_t)5, 0);
             if(dbg_music)
                 lidbg(TAG"playing=%d\n", playing);
-            if(navi_policy_en)
-                check_ring_stream();
         }
         else
         {
