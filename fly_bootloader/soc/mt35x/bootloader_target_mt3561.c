@@ -10,17 +10,17 @@ struct bootloader_hw_config g_hw_info[] =
             .dsi83_scl = 30,
         },
 
-        .adc_info[0] = {
-            .ad_ch = 38,
-            .ad_ctrl_ch = 6,
-            .ad_vol = 3200000,
-        },
+	.adc_info[0] = {
+	   .ad_ch = -1,
+	   .ad_ctrl_ch = -1,
+	   .ad_vol = 3200,
+         },
 
-        .adc_info[ADC_KEY_CHNL - 1] = {
-            .ad_ch = 39,
-            .ad_ctrl_ch = 7,
-            .ad_vol = 3200000,
-        },
+	.adc_info[ADC_KEY_CHNL - 1] = {
+	  .ad_ch = -1,
+	  .ad_ctrl_ch = -1,
+	  .ad_vol = 0,
+	},
 
         .ctp_info = {
             .ctp_int = 10,
@@ -31,8 +31,8 @@ struct bootloader_hw_config g_hw_info[] =
 
         .lpc_info = {
             .lpc_slave_add = 0x50,
-            .lpc_sda = 49,
-            .lpc_scl = 50,
+            .lpc_sda = 53,
+            .lpc_scl = 54,
         },
 	.lk_wakeup_lpc_io = 95,
 	.gpio_mcu_wp = 9,
