@@ -53,7 +53,7 @@ case "$USERS_ID" in
                 15)
 		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/imx6qdl-sabresd;;
                 16)
-		export DBG_SYSTEM_DIR=/home/msm/swlee/20160704/mt3561;;
+		export DBG_SYSTEM_DIR=/home/msm/swlee/mt3561;;
 	esac;;
 	
    	1)
