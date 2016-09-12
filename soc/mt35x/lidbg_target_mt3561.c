@@ -12,24 +12,24 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_usb_id = 0,
         .gpio_usb_switch = -1,
         .gpio_usb_udisk_en = 45,
-        .gpio_usb_front_en = 17,
+        .gpio_usb_front_en = 21,
         .gpio_usb_backcam_en = 20,
 
         .gpio_int_gps = 87,
 
-        .gpio_int_button_left1 = 87,
-        .gpio_int_button_left2 = 87,
-        .gpio_int_button_right1 = 87,
-        .gpio_int_button_right2 = 87,
+        .gpio_int_button_left1 = 2,
+        .gpio_int_button_left2 = 1,
+        .gpio_int_button_right1 = 4,
+        .gpio_int_button_right2 = 3,
 
         .gpio_led1 = 87,
         .gpio_led2 = 87,
 
         .gpio_int_mcu_i2c_request = 6,
-         .gpio_mcu_i2c_wakeup = 87,
-        .gpio_mcu_wp = 87,
-        .gpio_mcu_app = 87,
-	.gpio_request_fastboot = 87,
+        .gpio_mcu_i2c_wakeup = 7,
+        .gpio_mcu_wp = 55,  //ap_state1
+        .gpio_mcu_app = 9, //ap_state2
+	.gpio_request_fastboot = 82, //ap_state3
 
         .gpio_ts_int = 10,
         .gpio_ts_rst = 146,
@@ -39,11 +39,11 @@ struct hw_version_specific g_hw_version_specific[] =
 
         .gpio_bt_tx = 87,
         .gpio_bt_rx = 87,
-		.gpio_accel_int1 = 87,
+	.gpio_accel_int1 = 87,
 
-		.gpio_back_det = 87,
+	.gpio_back_det = 87,
 
-		.i2c_bus_accel = 0,
+	.i2c_bus_accel = 0,
         .i2c_bus_dsi83 = 0,
         .i2c_bus_ts = 1,
         .i2c_bus_gps = 0,
