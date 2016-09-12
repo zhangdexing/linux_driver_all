@@ -149,7 +149,9 @@ function soc_build_origin_image()
 	#git checkout $REPOSITORY_WORK_BRANCH
 	#cp $DBG_OUT_PATH/FastBoot.apk        $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/FastBoot.apk
 	cp $DBG_OUT_PATH/FlyBootService.apk  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/FlyBootService.apk
-
+	cp -rf $DBG_OUT_PATH/FlyBootService  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/FlyBootService
+	cp $DBG_OUT_PATH/LidbgCommenLogic.apk  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/LidbgCommenLogic.apk
+	cp -rf $DBG_OUT_PATH/LidbgCommenLogic  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/LidbgCommenLogic
 	echo "build_origin" > $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/etc/build_origin
 
 	cd $DBG_SYSTEM_DIR
