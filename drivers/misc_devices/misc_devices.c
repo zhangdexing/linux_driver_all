@@ -67,7 +67,7 @@ static int devices_notifier_callback(struct notifier_block *self,
         else if (*blank == FB_BLANK_POWERDOWN)
         {
             lidbg( "misc:FB_BLANK_POWERDOWN\n");
-            LCD_OFF;
+           // LCD_OFF;
             g_var.fb_on = 0;
         }
     }
