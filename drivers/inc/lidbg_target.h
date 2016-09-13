@@ -69,7 +69,8 @@ struct hw_version_specific
     int gpio_request_fastboot;
     int gpio_gps_rst;
     int gpio_gps_en;
-
+    int gpio_gps_lna_en;
+    int gpio_gps_ant_power;
     int gpio_ts_int;
     int gpio_ts_rst;
 

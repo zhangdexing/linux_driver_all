@@ -688,6 +688,9 @@ static int soc_dev_probe(struct platform_device *pdev)
         CREATE_KTHREAD(thread_udisk_en, NULL);
     }
 #endif
+#ifdef PLATFORM_ID_16
+	GPS_POWER_ON;
+#endif
     return 0;
 
 }

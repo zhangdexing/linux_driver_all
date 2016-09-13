@@ -19,8 +19,8 @@
 #endif
 //gps
 
-#define GPS_POWER_ON do{check_gpio(g_hw.gpio_gps_en);SOC_IO_Output(0, g_hw.gpio_gps_en, 1);}while(0)
-#define GPS_POWER_OFF do{check_gpio(g_hw.gpio_gps_en);SOC_IO_Output(0, g_hw.gpio_gps_en, 0);}while(0)
+#define GPS_POWER_ON  do{SOC_IO_Output(0, g_hw.gpio_gps_lna_en, 1);SOC_IO_Output(0, g_hw.gpio_gps_ant_power, 1);}while(0)
+#define GPS_POWER_OFF do{SOC_IO_Output(0, g_hw.gpio_gps_lna_en, 0);SOC_IO_Output(0, g_hw.gpio_gps_ant_power, 0);}while(0)
 #define MSM_DSI83_POWER_ON do{}while(0)
 #define MSM_DSI83_POWER_OFF do{}while(0)
 #define MSM_ACCEL_POWER_ON do{}while(0)

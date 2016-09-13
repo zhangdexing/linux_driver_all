@@ -15,7 +15,8 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_usb_front_en = 21,
         .gpio_usb_backcam_en = 20,
 
-        .gpio_int_gps = 87,
+        .gpio_gps_lna_en = 46,
+	.gpio_gps_ant_power = 86,
 
         .gpio_int_button_left1 = 2,
         .gpio_int_button_left2 = 1,
