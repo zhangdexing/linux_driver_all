@@ -26,19 +26,12 @@
 #define DUMP_POS     do{lidbg( "come to %s,%s,line %d\n", __FILE__,__FUNCTION__,__LINE__);}while(0)
 
 
-#if defined(SOC_imx6q) || defined(SOC_mt35x)
-#define DUMP_BUILD_TIME_FILE do{\
-	char string[256];\
-	sprintf(string, "echo %s build time:%s,%s >> /dev/lidbg_log.txt", __FILE__,__DATE__,__TIME__);\
-	system(string);\
-}while(0)
-#else
+
 #define DUMP_BUILD_TIME_FILE do{\
 	char string[256];\
 	sprintf(string, "echo %s build time:%s,%s >> /dev/log/lidbg_log.txt", __FILE__,__DATE__,__TIME__);\
 	system(string);\
 }while(0)
-#endif
 
 static inline bool is_file_exist(const char *file)
 {

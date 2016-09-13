@@ -164,13 +164,8 @@ static void lidbg_uevent_poll(bool (*uevent_callback)(int fd))
     if (fd >= 0)
     {
         lidbg( "suc,uevent_open_socket\n");
-#if defined(SOC_imx6q) || defined(SOC_mt35x)
-        system("echo 1 > /dev/userver_ok.txt");
-        system("chmod 777 /dev/userver_ok.txt");
-#else
         system("echo 1 > /dev/log/userver_ok.txt");
         system("chmod 777 /dev/log/userver_ok.txt");
-#endif
         fcntl(fd, F_SETFL, O_NONBLOCK);
         ufd.events = POLLIN;
         ufd.fd = fd;
@@ -254,13 +249,8 @@ int main(int argc, char **argv)
 	 {
 		lidbg("open /dev/lidbg_uevent err\n");
 	 }
-#if defined(SOC_imx6q) || defined(SOC_mt35x)
-        system("echo 1 > /dev/userver_ok.txt");
-        system("chmod 777 /dev/userver_ok.txt");
-#else
         system("echo 1 > /dev/log/userver_ok.txt");
         system("chmod 777 /dev/log/userver_ok.txt");
-#endif
 
 #if 0
 	while(1)

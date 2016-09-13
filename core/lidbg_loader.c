@@ -103,12 +103,7 @@ int thread_loader(void *data)
 
     CREATE_KTHREAD(thread_check_restart, NULL);
 #ifndef SOC_msm8x25
-
-#if defined(SOC_imx6q) || defined(SOC_mt35x)
-    while(!is_file_exist("/dev/userver_ok.txt"))
-#else
     while(!is_file_exist("/dev/log/userver_ok.txt"))
-#endif
         msleep(100);
 #endif
 

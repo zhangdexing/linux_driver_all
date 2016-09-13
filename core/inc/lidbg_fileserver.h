@@ -38,11 +38,7 @@ struct fs_filename_item
     bool remove_after_copy;
 };
 #define LIDBG_LOG_DIR "/data/lidbg/"
-#if defined(SOC_imx6q) || defined(SOC_mt35x)
-#define LIDBG_MEM_DIR "/dev/"
-#else
 #define LIDBG_MEM_DIR "/dev/log/"
-#endif
 #define LIDBG_OSD_DIR LIDBG_LOG_DIR"lidbg_osd/"
 
 extern void lidbg_fileserver_main(int argc, char **argv);
