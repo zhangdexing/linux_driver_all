@@ -277,6 +277,7 @@ public class FlyBootService extends Service {
 								start_fastboot();
 							}else if(pmState == FBS_GOTO_SLEEP){
 								LIDBG_PRINT("FlyBootService get pm state: FBS_GOTO_SLEEP\n");
+								releaseBrightWakeLock();
 								//if(blSuspendUnairplaneFlag)
 								//	KillProcess();
 								system_gotosleep();
