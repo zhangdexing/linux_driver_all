@@ -68,14 +68,14 @@ void lidbg_enable_logcat2(void)
             ssleep(1);
             lidbg_shell_cmd("chmod 777 /sdcard/logcat.txt");
         }
-        if((size == sizeold)&&( g_var.is_fly == 1))
+        if((size == sizeold) && ( g_var.is_fly == 1))
         {
             lidbg_shell_cmd("logcat -b radio -b main -b system -v threadtime -f /sdcard/logcat.txt &");
             lidbg("run logcat again \n");
         }
         sizeold = size ;
-	if(0)
-	{
+        if(0)
+        {
             for(loop = 0; loop < 10; loop++)
             {
                 static char buff[64] ;
@@ -85,8 +85,8 @@ void lidbg_enable_logcat2(void)
                 lidbg_shell_cmd(buff);
                 ssleep(5);
             }
-	}
-	else
+        }
+        else
             ssleep(50);
     }
     lidbg("logcat-\n");
@@ -107,7 +107,7 @@ void lidbg_enable_kmsg(void)
     lidbg_trace_msg_disable(1);
     lidbg_get_current_time(time_buf, NULL);
     sprintf(dmesg_file_name, "kmsg_%d_%s.txt", get_machine_id(), time_buf);
-    sprintf(dmesg_file_path, "/sdcard/%s",dmesg_file_name);
+    sprintf(dmesg_file_path, "/sdcard/%s", dmesg_file_name);
 
     sprintf(cmd, "date >/sdcard/%s", dmesg_file_name);
     lidbg_shell_cmd(cmd);
@@ -124,19 +124,19 @@ void lidbg_enable_kmsg(void)
         if(size >= MEM_SIZE_1_MB * 300)
         {
             lidbg("kmsg file_len over\n");
-	     sprintf(cmd, "rm /sdcard/%s.old", dmesg_file_name);
-   	     lidbg_shell_cmd(cmd);
+            sprintf(cmd, "rm /sdcard/%s.old", dmesg_file_name);
+            lidbg_shell_cmd(cmd);
             ssleep(1);
-	     sprintf(cmd, "cp -rf /sdcard/%s /sdcard/%s.old", dmesg_file_name,dmesg_file_name);
-   	     lidbg_shell_cmd(cmd);
+            sprintf(cmd, "cp -rf /sdcard/%s /sdcard/%s.old", dmesg_file_name, dmesg_file_name);
+            lidbg_shell_cmd(cmd);
             ssleep(5);
-	     sprintf(cmd, "date > /sdcard/%s", dmesg_file_name);
-   	     lidbg_shell_cmd(cmd);
+            sprintf(cmd, "date > /sdcard/%s", dmesg_file_name);
+            lidbg_shell_cmd(cmd);
             ssleep(1);
-	     sprintf(cmd, "chmod 777 /sdcard/%s", dmesg_file_name);
-   	     lidbg_shell_cmd(cmd);
+            sprintf(cmd, "chmod 777 /sdcard/%s", dmesg_file_name);
+            lidbg_shell_cmd(cmd);
         }
-         ssleep(60);
+        ssleep(60);
     }
     lidbg("kmsg-\n");
 }
@@ -468,7 +468,7 @@ static int usb_nb_misc_func(struct notifier_block *nb, unsigned long action, voi
             }
         }
         if(usb_class == USB_CLASS_MASS_STORAGE)
-                complete(&udisk_misc_wait);
+            complete(&udisk_misc_wait);
         break;
     case USB_DEVICE_REMOVE:
         if(g_var.recovery_mode == 1)
@@ -548,26 +548,58 @@ void check_airplane_mode(void)
     int ret = fs_find_string(g_var.pflyhal_config_list, "AirPlaneModeOn");
     if(ret > 0)
     {
-	g_var.suspend_airplane_mode = true;
-	LIDBG_WARN("<suspend_airplane_mode = true ret=%d>\n",ret);
+        g_var.suspend_airplane_mode = true;
+        LIDBG_WARN("<suspend_airplane_mode = true ret=%d>\n", ret);
     }
     else
-	LIDBG_WARN("<suspend_airplane_mode = false ret=%d>\n",ret);
+        LIDBG_WARN("<suspend_airplane_mode = false ret=%d>\n", ret);
 
 }
 
 #ifdef DISPLAY_CALIBRATION
-void check_HY_display_mode(void)
+void check_display_mode(void)
 {
     bool exist = fs_is_file_exist("/persist/display/pp_calib_data.bin");
     int ret = fs_find_string(g_var.pflyhal_config_list, "HYFeatureDisplayon");
-    LIDBG_WARN("<HYFeatureDisplayon.in [%d,%d]>\n", ret, exist);
-    if(!exist)//if(ret > 0 && !exist)
+    LIDBG_WARN("<lcd_type=%d HYFeatureDisplayon.in [%d,%d]>\n", g_var.hw_info.lcd_type, ret, exist);
+    if(ret > 0)
     {
-        LIDBG_WARN("<force use HYFeatureDisplayon>\n");
-        lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data.bin /persist/display/");
+        if(!exist)
+        {
+            LIDBG_WARN("<use HYFeatureDisplayon>\n");
+            lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data.bin /persist/display/");
+            lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
+        }
+    }
+    else
+    {
+        LIDBG_WARN("<check fly lcd Feature\n");
+        switch (g_var.hw_info.lcd_type)
+        {
+        case 1:
+            LIDBG_WARN("<pp_calib_data7.bin>\n");
+            lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data7.bin /persist/display/pp_calib_data.bin");
+            break;
+        case 2:
+            LIDBG_WARN("<pp_calib_data8.bin>\n");
+            lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data8.bin /persist/display/pp_calib_data.bin");
+            break;
+        case 3:
+            LIDBG_WARN("<pp_calib_data10.bin>\n");
+            lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data10.bin /persist/display/pp_calib_data.bin");
+            break;
+        case 4:
+            LIDBG_WARN("<pp_calib_data9.bin>\n");
+            lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data9.bin /persist/display/pp_calib_data.bin");
+            break;
+        default:
+            LIDBG_WARN("<check fly lcd Feature,err lcd_type:%d\n", g_var.hw_info.lcd_type);
+            break;
+        }
         lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
     }
+
+
 }
 #endif
 
@@ -577,9 +609,9 @@ int misc_init(void *data)
     init_completion(&udisk_misc_wait);
 
     system_switch_init();
-	
+
 #ifdef DISPLAY_CALIBRATION
-    check_HY_display_mode();
+    check_display_mode();
 #endif
 
     te_regist_password("001101", cb_password_upload);
@@ -632,7 +664,7 @@ int misc_init(void *data)
 
     lidbg_new_cdev(&misc_nod_fops, "lidbg_misc");
 
-    while(0==g_var.android_boot_completed)
+    while(0 == g_var.android_boot_completed)
         ssleep(5);
 
     complete(&udisk_misc_wait);
