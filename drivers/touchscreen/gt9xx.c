@@ -558,7 +558,6 @@ static void goodix_ts_work_func(struct work_struct *work)
     }
 
     finger = point_data[GTP_ADDR_LENGTH];
-#ifdef SOC_mt3360
     if (finger == 0x00)
     {
         if (ts->use_irq)
@@ -567,9 +566,6 @@ static void goodix_ts_work_func(struct work_struct *work)
         }
         return;
     }
-#endif
-    if ((finger & 0x80) == 0)
-        goto exit_work_func;
 
     touch_num = finger & 0x0f;
     if (touch_num > GTP_MAX_TOUCH)
