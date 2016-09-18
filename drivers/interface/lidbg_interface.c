@@ -76,7 +76,9 @@ bool iSOC_IO_ISR_Add(u32 irq, u32  interrupt_type, pinterrupt_isr func, void *de
     lidbg("ext_int_num:%d,%d\n", irq,GPIO_TO_INT(irq));
 
     ret =  soc_io_irq(&io_int_config1);
-
+#ifdef PLATFORM_ID_16
+    return ret;
+#endif
 #if 1
 #ifdef SUSPEND_ONLINE
 	//if(g_var.suspend_airplane_mode == 0)
