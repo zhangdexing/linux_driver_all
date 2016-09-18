@@ -3410,6 +3410,7 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 	lidbg("-----cmd_num------------[%d]---\n", cmd_num);
 
 	/*Do not check camera status in ACCOFF*/
+#if 0	
 	if(!isSuspend)
 	{
 		/*check camera status before doing ioctl*/
@@ -3424,6 +3425,7 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			return size;
 		}
 	}
+#endif	
 	
 	for(i = 0;i < cmd_num; i++)
 	{
@@ -3711,6 +3713,34 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			isBeforeFormatRearRec = 0;
 			sprintf(temp_cmd, "setprop lidbg.uvccam.isFormat %d", 0);
 			lidbg_shell_cmd(temp_cmd);
+		}
+		else if(!strcmp(keyval[0], "uiStartRec") )
+		{
+			char temp_cmd[256];
+			int uiStartVal;
+			uiStartVal = simple_strtoul(keyval[1], 0, 0);
+			lidbg("uiStartVal = %d\n",uiStartVal);
+			if(uiStartVal == 1)
+			{
+				if((pfly_UsbCamInfo->camStatus)  & FLY_CAM_ISSONIX)
+				{
+					dvr_start_recording();
+					isDVRPlugRec = 1;
+				}
+				if((pfly_UsbCamInfo->camStatus >> 4)  & FLY_CAM_ISSONIX)
+				{
+					rear_start_recording();
+					isRearPlugRec = 1;
+				}
+			}
+			else
+			{
+				if((pfly_UsbCamInfo->camStatus)  & FLY_CAM_ISSONIX)
+					dvr_stop_recording();
+				if((pfly_UsbCamInfo->camStatus >> 4)  & FLY_CAM_ISSONIX)
+					rear_stop_recording();
+			}
+			//complete(&ui_start_rec_wait);
 		}
 #if 0
 		else if(!strcmp(keyval[0], "test") )

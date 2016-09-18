@@ -384,10 +384,7 @@ static int burn_process(int camchoose,struct usb_device* CamArray[MAX_CAM_NUM],i
 	
 	LIDBG_PRINT("Prepare : select webcam #0 ... \n");
 	LIDBG_PRINT("=========start [%d] Camera update===========\n",cam_id);
-	if(cam_id == DVR_ID)
-		system("am broadcast -a com.lidbg.flybootserver.action --es toast Begin_Front_Camera_FW_update!");
-	else if(cam_id == REARVIEW_ID)
-		system("am broadcast -a com.lidbg.flybootserver.action --es toast Begin_Rear_Camera_FW_update!");
+	
 	if (!burn_mgr.Cam_Select(CamArray[camchoose], nFileNum))
 	{
 		LIDBG_PRINT("Cam_Select Fail!\n");
@@ -485,8 +482,8 @@ int main(int argc, char *argv[])
 	}
 	
 	DEBUG_INIT();
-	system("rm -f /dev/log/FWUpdate*.txt");
 	
+
 	LIDBG_PRINT("\n%s\n%s\n%s\n\n", STR_INTRO, STR_VERSION, STR_DATE);
 	LIDBG_PRINT("Prepare : enumerate webcam ...\n");
 	//cam_enum.Set_IDCheckTable(id_table, id_num); // carol 2013/08/29 mark
@@ -550,6 +547,12 @@ int main(int argc, char *argv[])
 	}
 	else if((cam_id == REARVIEW_ID) || (cam_id == DVR_ID))/*Get specify camera index and burn to flash*/
 	{
+		system("echo \"uiStartRec=0\" > /dev/lidbg_flycam0");
+		if(cam_id == DVR_ID)
+			system("am broadcast -a com.lidbg.flybootserver.action --es toast Begin_Front_Camera_FW_update!");
+		else if(cam_id == REARVIEW_ID)
+			system("am broadcast -a com.lidbg.flybootserver.action --es toast Begin_Rear_Camera_FW_update!");
+		sleep(10);
 		camchoose = Choose_CamArray(CamArray, nCamNum, cam_id);
 		if(camchoose != -1) ret = burn_process(camchoose,CamArray, cam_id);
 		if(ret == 0)
@@ -582,6 +585,8 @@ int main(int argc, char *argv[])
 				system("am broadcast -a com.lidbg.flybootserver.action --es toast Rear_Camera_FW_file_is_not_exist!!");
 			}
 		}
+		sleep(10);
+		system("echo \"uiStartRec=1\" > /dev/lidbg_flycam0");
 	}
 
 	
