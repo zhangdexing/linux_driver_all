@@ -14,6 +14,22 @@ struct io_status
     u32 suspend_mod;
 	u32 reg_addr;
 };
+#include <linux/of.h>
+#include <linux/of_irq.h>
+#include <linux/of_address.h>
+
+unsigned int mt_gpio_remap_to_irq(unsigned int gpio)
+{
+	struct device_node *node;
+	int node_irq=-1;
+	char string[50];
+	snprintf(string, 50, "lidbg,gpio_%d",gpio);
+	node= of_find_compatible_node(NULL, NULL,string);
+    if(node){
+		node_irq=irq_of_parse_and_map(node, 0);
+	}
+	return node_irq;
+}
 
 static bool io_ready=1;
 static struct io_status io_config[IO_LOG_NUM];
@@ -199,4 +215,5 @@ EXPORT_SYMBOL(soc_io_config);
 EXPORT_SYMBOL(soc_io_suspend_config);
 EXPORT_SYMBOL(soc_io_suspend);
 EXPORT_SYMBOL(soc_io_resume);
+EXPORT_SYMBOL(mt_gpio_remap_to_irq);
 
