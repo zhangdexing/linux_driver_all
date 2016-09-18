@@ -21,7 +21,6 @@ using namespace android;
 
 bool dbg_music = false;
 bool dbg_volume = false;
-bool navi_policy_en = true;
 bool playing_old = false;
 int loop_count = 0;
 
@@ -75,7 +74,14 @@ static void *thread_check_boot_complete(void *data)
 #define ERROR_VALUE (-2)
 bool ring = false;
 bool ring_old = false;
+#if defined(VENDOR_MTK) 
+bool navi_policy_en = false;
+#define DEFAULT_MAX_VOLUME (100)
+#else
+bool navi_policy_en = true;
 #define DEFAULT_MAX_VOLUME (15)
+#endif
+
 //refer to MAX_STREAM_VOLUME in AudioService.java (base\services\core\java\com\android\server\audio)
 int max_stream_volume[AUDIO_STREAM_CNT] =
 {
@@ -288,11 +294,11 @@ int main(int argc, char **argv)
         lidbg(TAG"wait\n");
         sleep(5);
     }
-    lidbg(TAG"start\n");
+    lidbg(TAG"start:navi_policy_en=%d  DEFAULT_MAX_VOLUME=%d\n",navi_policy_en,DEFAULT_MAX_VOLUME);
 
     GetAudioPolicyService(true);
     GetAudioFlingerService(true);
-    if(gAudioPolicyService != 0)
+    if(gAudioPolicyService != 0&&navi_policy_en)
         set_all_stream_volume(DEFAULT_MAX_VOLUME);
     pthread_create(&ntid, NULL, thread_check_ring_stream, NULL);
     while(1)
