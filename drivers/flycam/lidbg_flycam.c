@@ -3029,7 +3029,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		/*check dvr camera status before doing ioctl*/
 		if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISVALID))
 		{
-			lidbg("%s:DVR not found,ioctl fail!\n",__func__);
+			//lidbg("%s:DVR not found,ioctl fail!\n",__func__);
 			dvrRespond[1] = RET_NOTVALID;
 		}
 		else if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX))
@@ -3047,7 +3047,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		/*check rear camera status before doing ioctl*/
 		if(!((pfly_UsbCamInfo->camStatus >> 4) & FLY_CAM_ISVALID))
 		{
-			lidbg("%s:Rear not found,ioctl fail!\n",__func__);
+			//lidbg("%s:Rear not found,ioctl fail!\n",__func__);
 			rearRespond[1] = RET_NOTVALID;
 		}
 		else if(!((pfly_UsbCamInfo->camStatus >> 4)  & FLY_CAM_ISSONIX))
@@ -3178,7 +3178,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				break;
 			
 			case NR_EM_STATUS:
-		        lidbg("%s:NR_EM_STATUS\n",__func__);
+		        //lidbg("%s:NR_EM_STATUS\n",__func__);
 				//ret = isDVRRec;
 				dvrRespond[2] = isDVRRec;
 				rearRespond[2] = isRearRec;
