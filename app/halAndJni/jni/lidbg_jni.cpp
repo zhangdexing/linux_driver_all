@@ -244,7 +244,7 @@ static jstring urgent_record_camera_get_status(JNIEnv *env, jobject /*clazz*/, j
     if(sHalInterface != NULL)
     {
         char *status = sHalInterface->urgent_record_get_status(id);
-        lidbg(DEBG_TAG"[%s].status=%s\n", __FUNCTION__, status);
+        //lidbg(DEBG_TAG"[%s].status=%s\n", __FUNCTION__, status);
         return env->NewStringUTF(status);
     }
     else

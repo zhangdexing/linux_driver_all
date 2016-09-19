@@ -52,7 +52,6 @@ public class LidbgJniNative
 	public char[] UrgentRecordCameraGetStatusToCharArray(int CameraId)
 	{
 		String ret = UrgentRecordCameraGetStatus(CameraId);
-		printKernelMsg("CharArray:" + ret);
 		return ret.toCharArray();
 	}
 
