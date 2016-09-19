@@ -97,6 +97,7 @@ int max_stream_volume[AUDIO_STREAM_CNT] =
     DEFAULT_MAX_VOLUME  // STREAM_TTS
 };
 int music_level = DEFAULT_MAX_VOLUME * 70 / 100;
+int music_max_level = DEFAULT_MAX_VOLUME ;
 int delay_off_volume_policy_cnt = 0;
 int delay_off_volume_policy = 2000;//ms
 int delay_step_on_music = 500;//ms
@@ -250,7 +251,7 @@ void check_ring_stream(void)
             delay_off_volume_policy_cnt = 0;
             {
                 //set_all_stream_volume(DEFAULT_MAX_VOLUME);
-                step_on_stream_volume(AUDIO_STREAM_MUSIC, music_level, DEFAULT_MAX_VOLUME, delay_step_on_music);
+                step_on_stream_volume(AUDIO_STREAM_MUSIC, music_level, music_max_level, delay_step_on_music);
             }
         }
     }
@@ -380,6 +381,11 @@ int main(int argc, char **argv)
                     dbg_volume = true;
                     music_level = (DEFAULT_MAX_VOLUME * para[1] / 100);
                     lidbg(TAG"music_level:[%d/%d/%d]\n", music_level, para[1], DEFAULT_MAX_VOLUME);
+                    break;
+                case 7 :
+                    dbg_volume = true;
+                    music_max_level = (DEFAULT_MAX_VOLUME * para[1] / 100);
+                    lidbg(TAG"music_max_level:[%d/%d/%d]\n", music_max_level, para[1], DEFAULT_MAX_VOLUME);
                     break;
                 default :
                     break;
