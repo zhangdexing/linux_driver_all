@@ -114,12 +114,12 @@ struct hw_version_specific g_hw_version_specific[] =
 
         .gpio_led1 = 0,
 
-        .gpio_int_mcu_i2c_request = 94,//I2C_C  	lpc-->qcom:request i2c communication,wakeup qcom trigger like this,111111111000111111111
-        .gpio_mcu_i2c_wakeup = 95,//I2C_C2     		qcom-->lpc:wakeup lpc  ,trigger like this ,00000000011100000000
+        .gpio_int_mcu_i2c_request = 94,//I2C_C  P1-15	lpc-->qcom:request i2c communication,wakeup qcom trigger like this,111111111000111111111
+        .gpio_mcu_i2c_wakeup = 95,//I2C_C2     P2-3 		qcom-->lpc:wakeup lpc  ,trigger like this ,00000000011100000000
 
-        .gpio_mcu_wp = 33,//LPC_MSM1     		qcom-->lpc:cpu alive=0,else 1
-        .gpio_mcu_app = 34,//LPC_MSM2    		qcom-->lpc:hal alive=0,else 1
-	.gpio_request_fastboot = 35,//LPC_MSM3  	lpc-->qcom:acc status , on=1,off=0
+        .gpio_mcu_wp = 33,//LPC_MSM1     P0-17		qcom-->lpc:cpu alive=0,else 1
+        .gpio_mcu_app = 34,//LPC_MSM2     P1-25		qcom-->lpc:hal alive=0,else 1
+	.gpio_request_fastboot = 35,//LPC_MSM3   P1-23	lpc-->qcom:acc status , on=1,off=0
 	.gpio_ready = 36,//LPC_MSM4                     qcom-->lpc:gpio ready=1,else 0
 
         .gpio_ts_int = 13,
