@@ -61,7 +61,7 @@ static bool irq_func_ignore = false;
 #define NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE	(130)
 #define NOTIFIER_MINOR_EXCEED_THRESHOLD 		(10)
 
-#define THRESH_VALUE	((25 << 1) + 1)//Level 25
+#define THRESH_VALUE	((12 << 1) + 1)//Level 12
 
 unsigned char g_Tapthresh = THRESH_VALUE;
 
@@ -1062,7 +1062,7 @@ struct file *openFile(char *path, int flag, int mode)
 
 	if (IS_ERR(fp) || !fp->f_op) 
 	{
-		lidbg("Calibration File filp_open return NULL\n");
+		pr_debug("Calibration File filp_open return NULL\n");
 		return NULL; 
 	}
 
@@ -1100,7 +1100,7 @@ void initKernelEnv(void)
 { 
 	oldfs = get_fs(); 
 	set_fs(KERNEL_DS);
-	lidbg(KERN_INFO "initKernelEnv\n");
+	pr_debug(KERN_INFO "initKernelEnv\n");
 } 
 
 //=============================================================================
@@ -1233,7 +1233,7 @@ int mcube_read_cali_file(struct i2c_client *client)
 	int err = 0;
 	char buf[64] = { 0 };
 
-	lidbg("%s %d\n",__func__,__LINE__);
+	pr_debug("%s %d\n",__func__,__LINE__);
 
 	initKernelEnv();
 
@@ -1241,7 +1241,7 @@ int mcube_read_cali_file(struct i2c_client *client)
 
 	if (fd_file == NULL) 
 	{
-		lidbg("fail to open\n");
+		pr_debug("fail to open\n");
 		cali_data[0] = 0;
 		cali_data[1] = 0;
 		cali_data[2] = 0;
@@ -1554,7 +1554,7 @@ int MC3XXX_ReadData(struct i2c_client *client, s16 buffer[MC3XXX_AXES_NUM])
 			buffer[2] = (signed short)buf1[2];
 		}
 	
-		mclidbgreg("MC3XXX_ReadData: %d %d %d\n", buffer[0], buffer[1], buffer[2]);
+		pr_debug("MC3XXX_ReadData: %d %d %d\n", buffer[0], buffer[1], buffer[2]);
 	}
 	else if (enable_RBM_calibration == 1)
 	{
@@ -1822,7 +1822,7 @@ int mc3xxx_read_accel_xyz(struct i2c_client *client, s16 *acc)
 }
 
 //=============================================================================
-/*
+
 static int mc3xxx_measure(struct i2c_client *client, struct acceleration *accel)
 {
 	s16 raw[3] = { 0 };
@@ -1839,7 +1839,7 @@ static int mc3xxx_measure(struct i2c_client *client, struct acceleration *accel)
             else 
                 load_cali_flg--;
 
-            lidbg("load_cali %d\n",ret); 
+            pr_debug("load_cali %d\n",ret); 
         }  
     #endif
 
@@ -1851,15 +1851,29 @@ static int mc3xxx_measure(struct i2c_client *client, struct acceleration *accel)
 	
 	return 0;
 }
-*/
+
 //=============================================================================
 static void mc3xxx_work_func(struct work_struct *work)
 {
 	struct mc3xxx_data *data = container_of(work, struct mc3xxx_data, work);
 	u8 buff = 0, cnt = IRQ_READ_CNT;
+	struct acceleration accel = { 0 },old_accel = { 0 };
+	//char temp_cmd[256] = {0};
 
-	lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD));
+	/*measure for two times*/
+	mc3xxx_measure(data->client, &old_accel);
+	lidbg("%s:1----accel.x = %d, accel.y = %d, accel.z = %d\n",__func__,old_accel.x, old_accel.y, old_accel.z);
+	msleep(10);
+	mc3xxx_measure(data->client, &accel);
+	lidbg("%s:2----accel.x = %d, accel.y = %d, accel.z = %d\n",__func__,accel.x, accel.y, accel.z);
+	
+	//sprintf(temp_cmd, "am broadcast -a com.lidbg.flybootserver.action --es toast old_Y_%d____Y_%d",old_accel.y ,accel.y );
+	//lidbg_shell_cmd(temp_cmd);
 
+	/* slowing or accelerating on 5m/s^2 approximately (machine incline & road incline will increase the error)*/
+	if((old_accel.y > 500 && accel.y > 500) ||(old_accel.y < -500 && accel.y < -500))
+		lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD));
+	
 	WAKEUP_MCU_BEGIN;
 	msleep(1);
 	WAKEUP_MCU_END;
