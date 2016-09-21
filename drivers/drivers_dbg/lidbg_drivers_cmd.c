@@ -508,6 +508,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#109--en qualcomm display tun tools \n");
             fs_mem_log("*158#110xxx--set navi policy music level 0~100\n");
             fs_mem_log("*158#111--revert is_debug_mode\n");
+            fs_mem_log("*158#112--launch MTK settings \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1287,6 +1288,12 @@ void parse_cmd(char *pt)
             lidbg("*158#111--revert is_debug_mode\n");
             g_var.is_debug_mode = !g_var.is_debug_mode;
             lidbg("g_var.is_debug_mode-%d\n",g_var.is_debug_mode);
+            lidbg_domineering_ack();
+        }
+        else if (!strncmp(argv[1], "*158#112", 8))
+        {
+            lidbg("*158#112--launch MTK settings \n");
+            lidbg_shell_cmd("am start -n com.android.settings/com.ATCSetting.mainui.MainActivity &");
             lidbg_domineering_ack();
         }
 
