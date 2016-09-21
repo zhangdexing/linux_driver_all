@@ -1,6 +1,8 @@
 
 #include "lidbg.h"
 
+#ifdef MUC_CONTROL_DSP
+
 int thread_sound_dsp_init(void *data)
 {
     DUMP_FUN;
@@ -17,3 +19,4 @@ int thread_sound_dsp_init(void *data)
     LPC_CMD_RADIO_INIT3;
     return 0;
 }
+#endif
