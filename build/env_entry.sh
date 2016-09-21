@@ -553,7 +553,7 @@ case "$DBG_PLATFORM_ID" in
         export SYSTEM_BUILD_TYPE=userdebug
         export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/vendor/mediatek/proprietary/bootable/bootloader/lk
 	export DBG_BOOTLOADER_TYPE=LK
-        export DBG_BOOTLOADER_IMG=appsboot.mbn
+        export DBG_BOOTLOADER_IMG=lk.bin
         export DBG_BOOTLOADER_PARTITION_NAME=lk
         export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel-3.18
         export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ
