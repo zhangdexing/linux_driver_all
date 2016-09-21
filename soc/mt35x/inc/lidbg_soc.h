@@ -177,6 +177,9 @@ struct gpiomux_setting {
 #endif
 
 #define SUSPEND_ONLINE
+#define MUC_CONTROL_DSP
+#define MUC_DSP6638
+
 #define SOC_KO  "lidbg_ad_mt35x.ko","lidbg_soc_mt35x.ko"
 #define INTERFACE_KO  "lidbg_interface.ko"
 #define USB_MOUNT_POINT  "/storage/udisk"

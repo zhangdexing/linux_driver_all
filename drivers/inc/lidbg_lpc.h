@@ -71,7 +71,8 @@
 		u8 buff[] = {0x02, 0x0a, 0x01};\
         SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
 				}while(0)
-
+				
+#ifdef MUC_DSP7741
 #define LPC_CMD_RADIO_INIT  do{\
 		u8 buff[] = {0x10, 0x01, 0x01};\
         SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
@@ -104,7 +105,47 @@
         SOC_LPC_Send(buff3, SIZE_OF_ARRAY(buff3));\
         SOC_LPC_Send(buff4, SIZE_OF_ARRAY(buff4));\
 				}while(0)
+
+
+#elif defined(MUC_DSP6638)
+#define LPC_CMD_RADIO_INIT  do{\
+		u8 buff[] = {0x10, 0x01, 0x01};\
+        SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
+				}while(0)
+
+#define LPC_CMD_RADIO_INIT2  do{\
+		u8 buff[] = {0x02, 0x0b, 0x01};\
+        SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
+				}while(0)
+				
+#define LPC_CMD_RADIO_INIT3  do{\
+		u8 buff[] = {0x02, 0x0c, 0x01};\
+        SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
+				}while(0)
+				
+#define LPC_CMD_RADIO_SET  do{\
+		u8 buff0[] = {0x10, 0x10, 0x20, 0x09};\
+		u8 buff1[] = {0x10, 0x10, 0xF2, 0x42, 0xFB, 0x02, 0x01};\
+        	u8 buff2[] = {0x10, 0x10, 0xF2, 0x43, 0x1E, 0x04, 0xC4};\
+        	u8 buff3[] = {0x10, 0x10, 0xF2, 0x43, 0x1F, 0x02, 0x00};\
+        	u8 buff4[] = {0x10, 0x10, 0xF2, 0x43, 0x3B, 0x08, 0x00};\
+        	u8 buff5[] = {0x10, 0x10, 0xF2, 0x43, 0x3C, 0x08, 0x00};\
+        	u8 buff6[] = {0x10, 0x10, 0xF2, 0x43, 0x3D, 0x08, 0x00};\
+        	u8 buff7[] = {0x10, 0x10, 0xF2, 0x43, 0x3E, 0x08, 0x00};\
+        SOC_LPC_Send(buff0, SIZE_OF_ARRAY(buff0)); msleep(500);\
+        SOC_LPC_Send(buff1, SIZE_OF_ARRAY(buff1));msleep(500);\
+        SOC_LPC_Send(buff2, SIZE_OF_ARRAY(buff2));msleep(500);\
+        SOC_LPC_Send(buff3, SIZE_OF_ARRAY(buff3));msleep(500);\
+        SOC_LPC_Send(buff4, SIZE_OF_ARRAY(buff4));msleep(500);\
+	 SOC_LPC_Send(buff5, SIZE_OF_ARRAY(buff5));msleep(500);\
+	 SOC_LPC_Send(buff6, SIZE_OF_ARRAY(buff6));msleep(500);\
+	 SOC_LPC_Send(buff7, SIZE_OF_ARRAY(buff7));msleep(500);\
+				}while(0)
+
+#endif
+
 #define LPC_PRINT(x,y,z)  do{lpc_linux_sync(x,y,z);}while(0)
 void lpc_linux_sync(bool print, int mint, char *extra_info);
+
 
 #endif

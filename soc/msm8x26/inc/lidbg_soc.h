@@ -61,6 +61,7 @@
 #ifdef PLATFORM_msm8909
 #define SUSPEND_ONLINE
 #define MUC_CONTROL_DSP
+#define MUC_DSP7741
 #define USB_HUB_SUPPORT
 #define DISPLAY_CALIBRATION
 #endif
