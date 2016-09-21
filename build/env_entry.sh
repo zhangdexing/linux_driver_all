@@ -64,6 +64,8 @@ case "$DBG_PLATFORM_ID" in
 	export SYSTEM_BUILD_TYPE=userdebug
 	export BOOTLOADER_BUILD_BRANCH=for_new_lk
         export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/bootable/bootloader/lk
+        export DBG_BOOTLOADER_IMG=emmc_appsboot.mbn
+        export DBG_BOOTLOADER_PARTITION_NAME=aboot
 	export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
 	export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ
 	export UPDATA_BIN_PLATFORM_DIR=$RELEASE_REPOSITORY
@@ -103,6 +105,8 @@ case "$DBG_PLATFORM_ID" in
 	export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH
 	export SYSTEM_BUILD_TYPE=userdebug
     	export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/bootable/bootloader/lk
+        export DBG_BOOTLOADER_IMG=emmc_appsboot.mbn
+        export DBG_BOOTLOADER_PARTITION_NAME=aboot
 	export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
 	export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ
 	export UPDATA_BIN_PLATFORM_DIR=$RELEASE_REPOSITORY/others/8928
@@ -141,6 +145,8 @@ case "$DBG_PLATFORM_ID" in
 	export SYSTEM_BUILD_TYPE=userdebug
 	export BOOTLOADER_BUILD_BRANCH=master
     	export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/bootable/bootloader/lk
+        export DBG_BOOTLOADER_IMG=emmc_appsboot.mbn
+        export DBG_BOOTLOADER_PARTITION_NAME=aboot
 	export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
 	export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ
 	export UPDATA_BIN_PLATFORM_DIR=$RELEASE_REPOSITORY/others/8974
@@ -197,7 +203,9 @@ case "$DBG_PLATFORM_ID" in
 	export CLASSPATH=$JAVA_HOME/lib:$JRE_HOME/lib:$CLASSPATH
 	export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH
 	export SYSTEM_BUILD_TYPE=userdebug
-    export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/bootable/bootloader/lk
+        export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/bootable/bootloader/lk
+        export DBG_BOOTLOADER_IMG=emmc_appsboot.mbn
+        export DBG_BOOTLOADER_PARTITION_NAME=aboot
 	export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
 	export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ
 	export UPDATA_BIN_PLATFORM_DIR=$RELEASE_REPOSITORY/others/8228_5.0
@@ -236,6 +244,8 @@ case "$DBG_PLATFORM_ID" in
         export SYSTEM_BUILD_TYPE=userdebug
 	export BOOTLOADER_BUILD_BRANCH=5.1_new_lk
         export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/bootable/bootloader/lk
+        export DBG_BOOTLOADER_IMG=emmc_appsboot.mbn
+        export DBG_BOOTLOADER_PARTITION_NAME=aboot
         export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
         export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ
         export UPDATA_BIN_PLATFORM_DIR=$RELEASE_REPOSITORY/others/8974_5.1
@@ -367,6 +377,8 @@ case "$DBG_PLATFORM_ID" in
 	export SYSTEM_BUILD_TYPE=userdebug
 	export BOOTLOADER_BUILD_BRANCH=for_new_bp
 	export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/bootable/bootloader/lk
+        export DBG_BOOTLOADER_IMG=emmc_appsboot.mbn
+        export DBG_BOOTLOADER_PARTITION_NAME=aboot
 	export DBG_BOOTLOADER_TYPE=LK
 	export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
 	export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ
@@ -469,6 +481,8 @@ case "$DBG_PLATFORM_ID" in
         export SYSTEM_BUILD_TYPE=userdebug
 	export BOOTLOADER_BUILD_BRANCH=msm8974-6.0
         export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/bootable/bootloader/lk
+        export DBG_BOOTLOADER_IMG=emmc_appsboot.mbn
+        export DBG_BOOTLOADER_PARTITION_NAME=aboot
 	export DBG_BOOTLOADER_TYPE=LK
         export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
         export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ
@@ -539,6 +553,8 @@ case "$DBG_PLATFORM_ID" in
         export SYSTEM_BUILD_TYPE=userdebug
         export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/vendor/mediatek/proprietary/bootable/bootloader/lk
 	export DBG_BOOTLOADER_TYPE=LK
+        export DBG_BOOTLOADER_IMG=appsboot.mbn
+        export DBG_BOOTLOADER_PARTITION_NAME=lk
         export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel-3.18
         export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ
         export UPDATA_BIN_PLATFORM_DIR=$RELEASE_REPOSITORY
@@ -571,6 +587,8 @@ case "$DBG_PLATFORM_ID" in
 	export SYSTEM_BUILD_TYPE=userdebug
 	export BOOTLOADER_BUILD_BRANCH=msm8996_lk
 	export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/bootable/bootloader/lk
+        export DBG_BOOTLOADER_IMG=emmc_appsboot.mbn
+        export DBG_BOOTLOADER_PARTITION_NAME=aboot
 	export DBG_BOOTLOADER_TYPE=LK
 	export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
 	export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ

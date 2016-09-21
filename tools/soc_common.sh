@@ -64,14 +64,14 @@ function soc_flash_bootloader()
 {
 	echo $FUNCNAME
 if [ $WORK_REMOTE = 0 ];then
-	echo $DBG_PLATFORM&& sudo $DBG_TOOLS_PATH/fastboot flash aboot $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/emmc_appsboot.mbn
+	echo $DBG_PLATFORM&& sudo $DBG_TOOLS_PATH/fastboot flash $DBG_BOOTLOADER_PARTITION_NAME $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$DBG_BOOTLOADER_IMG
 else
 	rm -rf $WORK_LOCAL_PATH/out
 	mkdir $WORK_LOCAL_PATH/out
 if [ $WORK_REMOTE = 1 ];then
-	expect $DBG_TOOLS_PATH/scp $WORK_REMOTE_USERNAME $WORK_REMOTE_PASSWORD $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/emmc_appsboot.img $WORK_LOCAL_PATH/out/emmc_appsboot.img
+	expect $DBG_TOOLS_PATH/scp $WORK_REMOTE_USERNAME $WORK_REMOTE_PASSWORD $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$DBG_BOOTLOADER_IMG $WORK_LOCAL_PATH/out/$DBG_BOOTLOADER_IMG
 fi
-	echo $DBG_PLATFORM&& sudo $DBG_TOOLS_PATH/fastboot aboot recovery $WORK_LOCAL_PATH/out/emmc_appsboot.img
+	echo $DBG_PLATFORM&& sudo $DBG_TOOLS_PATH/fastboot flash $DBG_BOOTLOADER_PARTITION_NAME $WORK_LOCAL_PATH/out/$DBG_BOOTLOADER_IMG
 fi
 }
 
