@@ -3887,7 +3887,7 @@ int thread_flycam_init(void *data)
 		}
 		lidbg("%s:====isDVRVideoLoop:%d====\n",__func__,isDVRVideoLoop);
 
-		if(fs_find_string(g_var.pflyhal_config_list, "YUV") > 0)
+		if(0)
 		{
 			isPrevYUV = 1;
 			sprintf(temp_cmd, "setprop lidbg.uvccam.isPrevYUV %d", isPrevYUV);
