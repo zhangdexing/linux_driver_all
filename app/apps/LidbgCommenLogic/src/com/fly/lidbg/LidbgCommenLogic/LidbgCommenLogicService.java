@@ -62,6 +62,7 @@ public class LidbgCommenLogicService extends Service
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         filter.addAction(Intent.ACTION_MEDIA_SCANNER_STARTED);
         filter.addAction(Intent.ACTION_MEDIA_SCANNER_FINISHED);
+        filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
         filter.setPriority(Integer.MAX_VALUE);
         mLidbgCommenLogicService.registerReceiver(myReceiver, filter);
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
@@ -289,10 +290,14 @@ public class LidbgCommenLogicService extends Service
                 //+ "/InterfaceClass:" + device.getInterface(0).getInterfaceClass()
                 return;
             }
+            else if (intent.getAction().equals(Intent.ACTION_AIRPLANE_MODE_CHANGED))
+            {
+                printKernelMsg("airplaneModeEnabled="+intent.getBooleanExtra("state", false)+"\n");
+                return;
+            }
 
             if (!intent.hasExtra("action"))
             {
-                printKernelMsg("return:!intent.hasExtra(\"action\")\n");
                 return;
             }
             int action = intent.getExtras().getInt("action");
