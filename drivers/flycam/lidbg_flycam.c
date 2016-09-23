@@ -3900,6 +3900,8 @@ int thread_flycam_init(void *data)
 			isConvertMP4 = 1;
 			sprintf(temp_cmd, "setprop lidbg.uvccam.isConvertMP4 %d", isConvertMP4);
 			lidbg_shell_cmd(temp_cmd);
+			sprintf(temp_cmd, "setprop lidbg.uvccam.isDisableOSD 1");//ThinkNavi Flag
+			lidbg_shell_cmd(temp_cmd);
 		}
 		lidbg("%s:====isConvertMP4:%d====\n",__func__,isConvertMP4);
 		

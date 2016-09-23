@@ -2965,6 +2965,9 @@ int main(int argc, char *argv[])
 	unsigned long totalSize = 0;
 	unsigned char tryopencnt = 20;
 
+	char isDisableOSD_str[PROPERTY_VALUE_MAX];
+	int isDisableOSD = 0;
+
 	
  //cjc -
 #if(CARCAM_PROJECT == 1)
@@ -3898,12 +3901,23 @@ openfd:
 	
 	if((do_save) || (do_record)) 
 		get_driver_prop(cam_id);
+
+	property_get("lidbg.uvccam.isDisableOSD", isDisableOSD_str, "0");
+	isDisableOSD = atoi(isDisableOSD_str);
 	
 	/*DVR enable OSD ,Rear control by camera.X.so*/
 	if(cam_id == DVR_ID)
 	{
-		if(XU_OSD_Set_Enable(dev, 1, 1) <0)
-			lidbg( "XU_OSD_Set_Enable Failed\n");	
+		if(isDisableOSD > 0) 
+		{
+			if(XU_OSD_Set_Enable(dev, 0, 0) <0)
+				lidbg( "XU_OSD_Set_Enable Failed\n");	
+		}
+		else
+		{
+			if(XU_OSD_Set_Enable(dev, 1, 1) <0)
+				lidbg( "XU_OSD_Set_Enable Failed\n");	
+		}
 	}
 	if(XU_OSD_Set_CarcamCtrl(dev, 0, 0, 0) < 0)
 			lidbg( "XU_OSD_Set_CarcamCtrl Failed\n");	

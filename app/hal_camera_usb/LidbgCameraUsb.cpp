@@ -1177,7 +1177,9 @@ try_open_again:
         struct  v4l2_crop           crop;
         struct  v4l2_format         v4l2format;
         unsigned int                min;
-	char startNight[PROPERTY_VALUE_MAX];
+		char startNight[PROPERTY_VALUE_MAX];
+		char isDisableOSD_str[PROPERTY_VALUE_MAX];
+		int isDisableOSD = 0;
 	
         ALOGI("%s: E", __func__);
 
@@ -1303,8 +1305,20 @@ try_open_again:
 	lidbg("*****preview cam_id => %d*******",cam_id);
 	if(cam_id == 1)
 	{
-		system("./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --xuset-oe 1 1 ");
-		system("./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --xuset-car 0 0 0");
+		//lidbg.uvccam.isDisableOSD
+		property_get("lidbg.uvccam.isDisableOSD", isDisableOSD_str, "0");
+		isDisableOSD = atoi(isDisableOSD_str);
+		if(isDisableOSD > 0) 
+		{
+			lidbg("========Disable DVR OSD!=======\n");
+			system("setprop lidbg.uvccam.rear.osdset 0&");
+			system("./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 0 --xuset-oe 0 0 ");
+		}
+		else
+		{
+			system("./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --xuset-oe 1 1 ");
+			system("./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --xuset-car 0 0 0");
+		}
 		//lidbg_set_sonix_osd_time();
 	}
 	else if(cam_id == 0)
