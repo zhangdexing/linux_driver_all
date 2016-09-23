@@ -969,6 +969,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					isRearPlugRec = isRearRec;
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 0&");
+					g_var.rear_cam_ready = 0;
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.isSonix 0&");
 					status_fifo_in(RET_REAR_DISCONNECT);
 					isRearRec = 0;
@@ -981,6 +982,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					isRearReady = 1;
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 1&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 1&");
+					g_var.rear_cam_ready = 1;
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.isSonix 1&");
 					wake_up_interruptible(&pfly_UsbCamInfo->Rear_ready_wait_queue);
 					if(!isSuspend)
@@ -998,6 +1000,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 				{
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 1&");
+					g_var.rear_cam_ready = 1;
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.isSonix 0&");
 					status_fifo_in(RET_REAR_NOT_SONIX);
 				}
@@ -1394,14 +1397,22 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 		{
 			lidbg("%s:====None camera found!====\n",__func__);
 			if((pfly_UsbCamInfo->camStatus>>4)  & FLY_CAM_ISVALID) /*NOT SONIX*/
+			{
 				lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 1&");
-			else lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 0&");
+				g_var.rear_cam_ready = 1;
+			}
+			else
+			{
+				lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 0&");
+				g_var.rear_cam_ready = 0;
+			}
 			isRearViewFirstInit = 0;/*no matter what,let the next work continue*/
 			isRearViewAfterFix = 1;
 			return;
 		}
 		lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 1&");
 		lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 1&");
+		g_var.rear_cam_ready = 1;
 		lidbg_shell_cmd("setprop lidbg.uvccam.rear.isSonix 1&");
 	}
 	/*Rec Block mode(First ACCON) : REAR_BLOCK_ID_MODE & DVR_BLOCK_ID_MODE*/
