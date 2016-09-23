@@ -36,6 +36,7 @@ static struct io_status io_config[IO_LOG_NUM];
 
 int soc_io_suspend(void)
 {
+	disable_irq(GPIO_TO_INT(6));
 #if 0
 	int i;
     DUMP_FUN;
@@ -51,6 +52,7 @@ int soc_io_suspend(void)
 
 int soc_io_resume(void)
 {
+	enable_irq(GPIO_TO_INT(6));
 #if 0
     int i;
     DUMP_FUN;
