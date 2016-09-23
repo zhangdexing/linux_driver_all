@@ -74,7 +74,7 @@ static void *thread_check_boot_complete(void *data)
 #define ERROR_VALUE (-2)
 bool ring = false;
 bool ring_old = false;
-#if defined(VENDOR_MTK) 
+#if defined(VENDOR_MTK)
 bool navi_policy_en = false;
 #define DEFAULT_MAX_VOLUME (100)
 #else
@@ -295,11 +295,11 @@ int main(int argc, char **argv)
         lidbg(TAG"wait\n");
         sleep(5);
     }
-    lidbg(TAG"start:navi_policy_en=%d  DEFAULT_MAX_VOLUME=%d\n",navi_policy_en,DEFAULT_MAX_VOLUME);
+    lidbg(TAG"start:navi_policy_en=%d  DEFAULT_MAX_VOLUME=%d\n", navi_policy_en, DEFAULT_MAX_VOLUME);
 
     GetAudioPolicyService(true);
     GetAudioFlingerService(true);
-    if(gAudioPolicyService != 0&&navi_policy_en)
+    if(gAudioPolicyService != 0 && navi_policy_en)
         set_all_stream_volume(DEFAULT_MAX_VOLUME);
     pthread_create(&ntid, NULL, thread_check_ring_stream, NULL);
     while(1)
@@ -312,6 +312,9 @@ int main(int argc, char **argv)
                       aps->isStreamActive((audio_stream_type_t)2, 0) |
                       aps->isStreamActive((audio_stream_type_t)1, 0) |
                       aps->isStreamActive((audio_stream_type_t)5, 0);
+            if(10 < AUDIO_STREAM_CNT)//for MT3561 AUDIO_STREAM_GIS
+                playing = aps->isStreamActive((audio_stream_type_t)10, 0) | playing;
+
             if(dbg_music)
                 lidbg(TAG"playing=%d\n", playing);
         }
