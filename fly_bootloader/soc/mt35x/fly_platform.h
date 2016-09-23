@@ -41,6 +41,7 @@
 #define ROUND_TO_PAGE(x,y) (((x) + (y)) & (~(y)))
 
 /* logo format */
+#define NOT_USE_DSI83
 #define RGB565 1
 #define RGB888 2
 #define ARGB8888 3

@@ -27,7 +27,6 @@ void flyaudio_hw_init(void)
 	gpio_set_val(g_bootloader_hw.lk_wakeup_lpc_io, 1);
 	mdelay(10);
 	gpio_set_val(g_bootloader_hw.lk_wakeup_lpc_io, 0);
-	mdelay(100);
 #endif
-	dsi83_init();
+	//dsi83_init();
 }

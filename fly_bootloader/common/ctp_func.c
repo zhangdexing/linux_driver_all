@@ -177,7 +177,7 @@ int ctp_type_get(void)
     u8 buff0[] = {0, 0};
     u8 buff1[] = {0, 0};
 
-    mdelay(50);
+    //mdelay(50);
     ctp_i2c_config();
 
     for(i = 0; i < (sizeof(ctp_chips) / sizeof(ctp_chips[0])); i++)

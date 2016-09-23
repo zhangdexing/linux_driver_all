@@ -367,7 +367,6 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
 
     send_hw_info(hw_info);
     backlight_disable();
-    ctp_type_get();
     /*
     *don't show static logo before displaying green screen when auto-up
     */
@@ -379,9 +378,15 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
         if(*boot_into_fastboot == 0)
             show_logo();
     }
+#ifdef NOT_USE_DSI83
+    dprintf(INFO, " NOT_USE_DSI83\n");
+#else
     mdelay(1000);
     mdelay(500);
+#endif
+
     backlight_enable();
+    ctp_type_get();
 
 #ifdef RECOVER_MANUUAL_HIGH_LEVEL
 #else
