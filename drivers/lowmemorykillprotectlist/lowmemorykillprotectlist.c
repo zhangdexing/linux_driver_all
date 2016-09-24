@@ -39,7 +39,9 @@ char *lmk_protect_list[] =
 	"kware.thinknavi",
 	"ndroid.keyguard",
 	"o.flyaudiovideo",
-
+        "audio.bluetooth",
+        "cn.flyaudio.dvr",
+        "io.proxyservice",
 
 	"android.policy",
 	"com.sygic.aura",
