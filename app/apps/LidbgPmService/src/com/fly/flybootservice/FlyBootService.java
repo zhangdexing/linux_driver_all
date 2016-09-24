@@ -125,7 +125,6 @@ public class FlyBootService extends Service {
     private boolean AirplaneEnable = false;
     private boolean booleanAccWakedupState = false;
     private static int pmState = -1;
-    private static int pmState_old = -1;
     private int intPlatformId = 0;
     private boolean blSuspendUnairplaneFlag = false;
     private boolean blDozeModeFlag = false;
@@ -234,7 +233,6 @@ public class FlyBootService extends Service {
             @Override
             public void run() {
 					while(true){
-						pmState_old=pmState;
 						pmState = readFromFile(pmFile);
 						if(pmState < 0)
 						{
@@ -249,11 +247,6 @@ public class FlyBootService extends Service {
 								SendBroadcastToService(KeyBootState, keyScreenOFF);
 							}else if(pmState == FBS_DEVICE_DOWN){
 								LIDBG_PRINT("FlyBootService get pm state: FBS_DEVICE_DOWN\n");
-								if(pmState_old!=FBS_SCREEN_OFF)
-								{
-									LIDBG_PRINT("FlyBootService pmState_old!=FBS_SCREEN_OFF return\n");
-									return;
-								}
 								if(!blDozeModeFlag)
 									FlyaudioInternetDisable();
 								AirplaneEnable = SystemProperties.getBoolean("persist.lidbg.AirplaneEnable",false);
