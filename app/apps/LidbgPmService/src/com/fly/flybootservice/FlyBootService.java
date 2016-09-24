@@ -250,12 +250,6 @@ public class FlyBootService extends Service {
 								if(!blDozeModeFlag)
 									FlyaudioInternetDisable();
 								AirplaneEnable = SystemProperties.getBoolean("persist.lidbg.AirplaneEnable",false);
-								LIDBG_PRINT("FlyBootService FBS_DEVICE_DOWN:isSimCardReady:"+isSimCardReady+"/AirplaneEnable:"+AirplaneEnable+"/blSuspendUnairplaneFlag:"+blSuspendUnairplaneFlag+"\n");
-								if((AirplaneEnable) || (!blSuspendUnairplaneFlag)||!isSimCardReady){
-									LIDBG_PRINT("FlyBootService device down enable AirplaneMode\n");
-									enterAirplaneMode();
-								}else
-									LIDBG_PRINT("FlyBootService device down disable AirplaneMode\n");
 								SendBroadcastToService(KeyBootState, keyEearlySusupendOFF);
 								LIDBG_PRINT("FlyBootService sent device_down to hal\n");
 								isWifiApEnabled = isWifiApEnabled();
@@ -277,6 +271,12 @@ public class FlyBootService extends Service {
 								start_fastboot();
 							}else if(pmState == FBS_GOTO_SLEEP){
 								LIDBG_PRINT("FlyBootService get pm state: FBS_GOTO_SLEEP\n");
+								LIDBG_PRINT("FlyBootService FBS_GOTO_SLEEP:isSimCardReady:"+isSimCardReady+"/AirplaneEnable:"+AirplaneEnable+"/blSuspendUnairplaneFlag:"+blSuspendUnairplaneFlag+"\n");
+								if((AirplaneEnable) || (!blSuspendUnairplaneFlag)||!isSimCardReady){
+									LIDBG_PRINT("FlyBootService FBS_GOTO_SLEEP enable AirplaneMode\n");
+									enterAirplaneMode();
+								}else
+									LIDBG_PRINT("FlyBootService FBS_GOTO_SLEEP disable AirplaneMode\n");
 								releaseBrightWakeLock();
 								//if(blSuspendUnairplaneFlag)
 								//	KillProcess();
