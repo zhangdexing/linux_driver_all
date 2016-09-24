@@ -3727,7 +3727,6 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 		}
 		else if(!strcmp(keyval[0], "uiStartRec") )
 		{
-			char temp_cmd[256];
 			int uiStartVal;
 			uiStartVal = simple_strtoul(keyval[1], 0, 0);
 			lidbg("uiStartVal = %d\n",uiStartVal);
@@ -3898,12 +3897,14 @@ int thread_flycam_init(void *data)
 		}
 		lidbg("%s:====isDVRVideoLoop:%d====\n",__func__,isDVRVideoLoop);
 
-		if(0)
+#if 0
+		if(fs_find_string(g_var.pflyhal_config_list, "YUV") > 0)
 		{
 			isPrevYUV = 1;
 			sprintf(temp_cmd, "setprop lidbg.uvccam.isPrevYUV %d", isPrevYUV);
 			lidbg_shell_cmd(temp_cmd);
 		}
+#endif		
 		lidbg("%s:====isPrevYUV:%d====\n",__func__,isPrevYUV);
 
 		if(fs_find_string(g_var.pflyhal_config_list, "ConvertMP4") > 0)
