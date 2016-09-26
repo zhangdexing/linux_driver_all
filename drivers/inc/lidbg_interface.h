@@ -57,6 +57,13 @@
 
 #endif
 
+enum sound_enum
+{
+    SND_START = 1,
+    SND_STOP,
+    SND_NAVI_START,
+    SND_NAVI_STOP,
+};
 
 enum key_enum
 {

@@ -220,6 +220,12 @@ void check_ring_stream(void)
     if(ring != ring_old)
     {
         ring_old = ring;
+        if(0)
+        {
+            char cmd[16];
+            sprintf(cmd, "sound %d", (ring ? 3 : 4));
+            LIDBG_WRITE("/dev/fly_sound0", cmd);
+        }
         lidbg(TAG"ring.[%d],music_level:[%d/%d]\n", ring, music_level, DEFAULT_MAX_VOLUME);
         if(ring)
         {
@@ -329,7 +335,7 @@ int main(int argc, char **argv)
         {
             char cmd[16];
             playing_old = playing;
-            sprintf(cmd, "sound %d", playing);
+            sprintf(cmd, "sound %d", (playing ? 1 : 2));
             LIDBG_WRITE("/dev/fly_sound0", cmd);
             if(dbg_music)
                 lidbg(TAG"write.[%d,%s]\n", playing, cmd);

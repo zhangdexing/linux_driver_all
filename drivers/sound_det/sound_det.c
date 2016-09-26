@@ -13,33 +13,25 @@ struct misc_device
 };
 struct misc_device *dev;
 static int sound_detect_dbg = 0;
-int gps_status = -1;
+int snd_status = -1;
+int snd_dbg = 0;
 volatile int flag = 0;
-struct completion GPS_status_sem;
+struct completion snd_status_sem;
 #ifdef SOUND_DET_TEST
 void SAF7741_Volume(BYTE Volume);
 #endif
 
-int sound_detect_event(bool started)
+int sound_detect_event(int state)
 {
-    if(started)
-    {
-        lidbg(TAG"music_start,%d\n", started);
-        gps_status = 1;
-#ifdef SOUND_DET_TEST
-        SAF7741_Volume(0);
-#endif
-        complete(&GPS_status_sem);
-    }
+    snd_status = state;
+    if(state == SND_START || state == SND_NAVI_START)
+        lidbg(TAG"music_start,%d\n", state);
     else
-    {
-        lidbg(TAG"music_stop,%d\n", started);
-        gps_status = 2;
+        lidbg(TAG"music_stop,%d\n", state);
 #ifdef SOUND_DET_TEST
-        SAF7741_Volume(20);
+    SAF7741_Volume((state == SND_START || state == SND_NAVI_START) ? 0 : 20);
 #endif
-        complete(&GPS_status_sem);
-    }
+    complete(&snd_status_sem);
     return 1;
 }
 
@@ -50,17 +42,18 @@ void cb_sound_detect(char *key, char *value )
 }
 int sound_detect_init(void)
 {
-    init_completion(&GPS_status_sem);
+    init_completion(&snd_status_sem);
     FS_REGISTER_INT(sound_detect_dbg, "sound_detect_dbg", 0, cb_sound_detect);
     lidbg(TAG"sound_detect_init\n");
-
     return 1;
 }
 
 int  iGPS_sound_status(void)
 {
-    wait_for_completion(&GPS_status_sem);
-    return gps_status;
+    wait_for_completion(&snd_status_sem);
+    if(snd_dbg)
+        lidbg(TAG"hal get snd_status:%d\n", snd_status);
+    return snd_status;
 }
 
 
@@ -69,12 +62,11 @@ static void parse_cmd(char *pt)
     int argc = 0;
     char *argv[32] = {NULL};
 
-    lidbg("%s\n", pt);
     argc = lidbg_token_string(pt, " ", argv);
 
     if (!strcmp(argv[0], "sound"))
     {
-        bool value;
+        int value;
         value = simple_strtoul(argv[1], 0, 0);
         sound_detect_event(value);
     }
@@ -88,6 +80,14 @@ static void parse_cmd(char *pt)
             g_var.is_phone_in_call_state = 0;
         lidbg("[is_phone_in_call_state:%d,value:%d]\n", g_var.is_phone_in_call_state, value);
     }
+    else if (!strcmp(argv[0], "dbg"))
+    {
+        snd_dbg = !snd_dbg;
+        lidbg("[snd_dbg:%d]\n", snd_dbg);
+    }
+    else
+        lidbg("error:%s\n", argv[0]);
+
 }
 
 int dev_open(struct inode *inode, struct file *filp)
@@ -130,7 +130,7 @@ ssize_t  dev_read(struct file *filp, char __user *buffer, size_t size, loff_t *o
 {
 
     flag = 0;
-    if(copy_to_user(buffer, &gps_status, 4))
+    if(copy_to_user(buffer, &snd_status, 4))
     {
         lidbg("copy_from_user ERR\n");
     }

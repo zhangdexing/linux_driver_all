@@ -509,6 +509,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#110xxx--set navi policy music level 0~100\n");
             fs_mem_log("*158#111--revert is_debug_mode\n");
             fs_mem_log("*158#112--launch MTK settings \n");
+            fs_mem_log("*158#113--revert sound debug \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1296,7 +1297,12 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("am start -n com.android.settings/com.ATCSetting.mainui.MainActivity &");
             lidbg_domineering_ack();
         }
-
+        else if (!strncmp(argv[1], "*158#113", 8))
+        {
+            lidbg("*158#113--revert sound debug \n");
+            lidbg_shell_cmd("echo dbg > /dev/fly_sound0");
+            lidbg_domineering_ack();
+        }
     }
     else if(!strcmp(argv[0], "monkey") )
     {

@@ -14,7 +14,6 @@ void temp_init(void);
 //int button_resume(void);
 int thread_sound_detect(void *data);
 int sound_detect_init(void);
-int sound_detect_event(bool started);
 int SOC_Get_System_Sound_Status_func(void *para, int length);
 int  iGPS_sound_status(void);
 void set_system_performance(int type);
