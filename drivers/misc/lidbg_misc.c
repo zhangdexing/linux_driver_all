@@ -574,6 +574,12 @@ void check_display_mode(void)
     else
     {
         LIDBG_WARN("<check fly lcd Feature\n");
+        if(0)
+        {
+            lidbg_shell_cmd("rm -rf /persist/display/pp_calib_data.bin");
+            LIDBG_WARN("<force remove lcd Feature\n");
+            return;
+        }
         switch (g_var.hw_info.lcd_type)
         {
         case 1:
