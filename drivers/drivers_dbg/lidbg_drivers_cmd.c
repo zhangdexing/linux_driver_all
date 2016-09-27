@@ -510,6 +510,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#111--revert is_debug_mode\n");
             fs_mem_log("*158#112--launch MTK settings \n");
             fs_mem_log("*158#113--revert sound debug \n");
+            fs_mem_log("*158#114x--use shell cmd dd to test emmc extern SD udisk Stability \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1302,6 +1303,30 @@ void parse_cmd(char *pt)
             lidbg("*158#113--revert sound debug \n");
             lidbg_shell_cmd("echo dbg > /dev/fly_sound0");
             lidbg_domineering_ack();
+        }
+        else if (!strncmp(argv[1], "*158#114", 8))
+        {
+			int type = simple_strtoul((argv[1] + 8), 0, 0);
+			lidbg("*158#114x--use shell cmd dd to test emmc extern SD udisk Stability \n");
+
+			switch(type)
+			{
+			case 1:
+			    lidbg("*158#114x--use shell cmd dd to test emmc Stability \n");
+			    lidbg_shell_cmd("i=0\nwhile\ndo\nlet i++\necho test==============$i\necho test==============$i > /dev/lidbg_msg\ntime dd if=/dev/zero of=/sdcard/test.000 bs=8k count=80000\ndone &\n");
+			    break;
+			case 2:
+			    lidbg("*158#114x--use shell cmd dd to test extern SD  Stability \n");
+			    lidbg_shell_cmd("i=0\nwhile\ndo\nlet i++\necho test==============$i\necho test==============$i > /dev/lidbg_msg\ntime dd if=/dev/zero of=/storage/sdcard1/test.000 bs=8k count=80000\ndone &\n");
+			    break;
+			case 3:
+			    lidbg("*158#114x--use shell cmd dd to test  udisk Stability \n");
+			    lidbg_shell_cmd("i=0\nwhile\ndo\nlet i++\necho test==============$i\necho test==============$i > /dev/lidbg_msg\ntime dd if=/dev/zero of=/storage/udisk/test.000 bs=8k count=80000\ndone &\n");
+			    break;
+			default:
+			    break;
+			}
+			lidbg_domineering_ack();
         }
     }
     else if(!strcmp(argv[0], "monkey") )
