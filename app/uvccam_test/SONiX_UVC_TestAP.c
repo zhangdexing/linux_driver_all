@@ -1644,7 +1644,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 		fflush(fp2);
 		fclose(fp2);
 	}
-	if(isConvertMP4 && !BlackBoxBottomCnt)
+	if(isConvertMP4 && (BlackBoxBottomCnt <= 0))
 	{
 		if(isBlackBoxTopRec == 0 && isBlackBoxBottomRec == 1) 
 		{
@@ -1675,7 +1675,7 @@ void dequeue_buf(int count , FILE * rec_fp)
 			}
 		}
 	}
-	if(isBlackBoxTopRec == 0 && !(BlackBoxBottomCnt--)) isBlackBoxBottomRec = 0;
+	if(isBlackBoxTopRec == 0 && (BlackBoxBottomCnt-- <= 0)) isBlackBoxBottomRec = 0;
 	isBlackBoxTopRec = 0;
 	//system("setprop lidbg.uvccam.isdequeue 0");
 	property_set("lidbg.uvccam.isdequeue", "0");
