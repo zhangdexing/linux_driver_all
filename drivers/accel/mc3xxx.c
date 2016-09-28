@@ -61,11 +61,11 @@ static bool irq_func_ignore = false;
 #define NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE	(130)
 #define NOTIFIER_MINOR_EXCEED_THRESHOLD 		(10)
 
-#define THRESH_VALUE	((12 << 1) + 1)//Level 12
+#define THRESH_VALUE	((10 << 1) + 1)//Level 12
 
 unsigned char g_Tapthresh = THRESH_VALUE;
 
-#define TAP_X_Thresh	(g_Tapthresh + 0x00)	//0~0xff,0xff阀值最大
+#define TAP_X_Thresh	(g_Tapthresh + 0x00)//0~0xff,0xff阀值最大
 #define TAP_Y_Thresh	(g_Tapthresh + 0x00)
 #define TAP_Z_Thresh	(g_Tapthresh + 0x00)
 #define IRQ_READ_CNT	10		//中断函数读reg[0x03]，最大的循环次数
@@ -1018,7 +1018,7 @@ static int mc3xxx_chip_init(struct i2c_client *client)
     mc3xxx_set_gain();
     
     _baDataBuf[0] = MC3XXX_TAP_DETECTION_ENABLE_REG;
-    _baDataBuf[1] = 0xff;
+    _baDataBuf[1] = 0xCC;
     my_i2c_master_send(client, _baDataBuf, 0x2);
     
     _baDataBuf[0] = MC3XXX_INTERRUPT_ENABLE_REG;
@@ -1867,11 +1867,15 @@ static void mc3xxx_work_func(struct work_struct *work)
 	mc3xxx_measure(data->client, &accel);
 	lidbg("%s:2----accel.x = %d, accel.y = %d, accel.z = %d\n",__func__,accel.x, accel.y, accel.z);
 	
-	//sprintf(temp_cmd, "am broadcast -a com.lidbg.flybootserver.action --es toast old_Y_%d____Y_%d",old_accel.y ,accel.y );
+	//sprintf(temp_cmd, "am broadcast -a com.lidbg.flybootserver.action --es toast old_Y_%d____Y_%d&",old_accel.y ,accel.y );
 	//lidbg_shell_cmd(temp_cmd);
 
 	/* slowing or accelerating on 5m/s^2 approximately (machine incline & road incline will increase the error)*/
-	if((old_accel.y > 500 && accel.y > 500) ||(old_accel.y < -500 && accel.y < -500))
+	//if((old_accel.y > 500 && accel.y > 500) ||(old_accel.y < -500 && accel.y < -500))
+	if((accel.y < -500 || accel.y > 500) && (old_accel.y < -500 || old_accel.y > 500))
+		lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD));
+	else if((accel.y < -1800 || accel.y > 1800)||(old_accel.y < -1800 || old_accel.y > 1800) ||
+		(accel.z < -2000 || accel.y > 2000)||(old_accel.y < -2000 || old_accel.y > 2000))
 		lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD));
 	
 	WAKEUP_MCU_BEGIN;
@@ -1892,6 +1896,7 @@ static void mc3xxx_work_func(struct work_struct *work)
 		if(!(buff & 0x80))
 			lidbg("ERROR: mc3xxx failed to read Register[0x03], can not works normally! \n");
 	}
+	else lidbg("%s:buff---0x%x\n",__func__,buff);
 
 	wake_unlock(&irq_wakelock);
 /*
