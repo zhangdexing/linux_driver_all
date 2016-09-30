@@ -204,14 +204,14 @@ static int thread_usb_disk_enable_delay(void *data)
 #endif
 
 #if ANDROID_VERSION >= 600
-	 if(g_var.recovery_mode == 0)
+	 if((g_var.recovery_mode == 0)&&(g_var.android_boot_completed == 0))
 	 {
 	   while(0==g_var.android_boot_completed)
 	    {
 	        ssleep(1);
 		 lidbg("thread_usb_disk_enable_delay wait for android_boot_completed.\n");
 	    }
-	     ssleep(10);
+	     ssleep(5);
 	 }
   #endif
   
