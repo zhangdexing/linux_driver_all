@@ -514,7 +514,11 @@ int fly_interface_init(void)
 
     g_var.android_boot_completed = 0;
     g_var.udisk_stable_test = 0;
+#ifdef DEFAULT_SUSPEND_NO_AIRPLANE_MODE
     g_var.suspend_airplane_mode = 0;
+#else
+    g_var.suspend_airplane_mode = 1;
+#endif
     g_var.enable_gsensor_data_for_android = 0;
     g_var.keep_lcd_on = 0;
 	

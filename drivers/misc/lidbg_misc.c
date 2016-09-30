@@ -549,10 +549,8 @@ void check_airplane_mode(void)
     if(ret > 0)
     {
         g_var.suspend_airplane_mode = true;
-        LIDBG_WARN("<suspend_airplane_mode = true ret=%d>\n", ret);
     }
-    else
-        LIDBG_WARN("<suspend_airplane_mode = false ret=%d>\n", ret);
+        lidbg("<suspend_airplane_mode =%d>\n", g_var.suspend_airplane_mode);
 
 }
 
