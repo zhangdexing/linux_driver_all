@@ -40,7 +40,7 @@ int init_module(void *module_image, unsigned long len,
 inline int module_insmod(char *file)
 {
     void *module = NULL;
-    ssize_t size;
+    ssize_t size = 0;
     int ret;
     module = read_file(file, &size);
     if(!module)

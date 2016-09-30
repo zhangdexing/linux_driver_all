@@ -172,7 +172,7 @@ static int __init lidbg_uevent_init(void)
         return -1;
     }
 
-    LIDBG_WARN("lidbg_uevent_init,cmd_fifo:[%d KB],kfifo_avail:[%d KB] kfifo_len:[%d KB]\n", FIFO_SIZE / 1024, kfifo_avail(&cmd_fifo) / 1024, kfifo_len(&cmd_fifo) / 1024);
+    LIDBG_WARN("lidbg_uevent_init,cmd_fifo:[%d KB],kfifo_avail:[%d KB] kfifo_len:[%d KB]\n", (u32)(FIFO_SIZE / 1024), kfifo_avail(&cmd_fifo) / 1024, kfifo_len(&cmd_fifo) / 1024);
     return 0;
 }
 

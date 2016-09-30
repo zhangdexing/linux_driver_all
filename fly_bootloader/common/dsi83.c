@@ -239,7 +239,7 @@ static void dsi83_reset(void)
     gpio_set_val(DSI83_GPIO_EN, 1);
     mdelay(200);
 }
-
+ 
 static void dsi83_enable(void)
 {
     //SOC_IO_Output(0, DSI83_GPIO_EN, 1);

@@ -81,6 +81,7 @@ int check_storedir(char* pathname)
 
 int sum(const char *fpath, const struct stat *sb, int typeflag) /*回调函数*/
 { 
+     fpath = fpath;typeflag = typeflag;
      total += sb->st_size;  /*累计文件大小*/
      return 0; 
 }  
@@ -120,7 +121,7 @@ int get_filename_num(char *filename,int size)
     int fd;
     int filenum;
     char buf[256];
-   
+    size = size;
     if(-1 == access(CONFIGFILE,0))
     {
         lidbg("record_klogctl:%s not exist!\n",CONFIGFILE);
@@ -264,8 +265,8 @@ int refrech_record(char* filename,int filenum)
     }
     else
     { 
-        char* div;
-        char* s;
+        char* div = NULL;
+        char* s = NULL;
   
         if(NULL != strstr(filename,"/")) 
         {
@@ -434,7 +435,7 @@ int main(int argc,char* argv[])
     long long total = 0;
     int ret = 0;
     int count;
-
+    argc = argc;argv = argv;
     DUMP_BUILD_TIME_FILE;
     lidbg("record_klogctl start\n");
 
