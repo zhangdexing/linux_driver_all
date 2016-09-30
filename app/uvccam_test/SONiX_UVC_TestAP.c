@@ -1491,6 +1491,7 @@ static struct option opts[] = {
 };
 
 char dvr_blackbox_filename[200] = {0};
+char dvr_tmp_blackbox_filename[200] = {0};
 char rear_blackbox_filename[200] = {0};
 char dvr_blackbox_dest_filename[200] = {0};
 char rear_blackbox_dest_filename[200] = {0};
@@ -1521,7 +1522,6 @@ void dequeue_buf(int count , FILE * rec_fp)
 			if(isConvertMP4)
 			{
 				sprintf(dvr_blackbox_filename, "%s/F%s.h264", Em_Save_Tmp_Dir, deq_time_buf);
-				sprintf(dvr_blackbox_dest_filename, "%s/F%s.mp4", Em_Save_Dir, deq_time_buf);
 			}
 			else
 			{
@@ -1657,7 +1657,9 @@ void dequeue_buf(int count , FILE * rec_fp)
 				length = strlen(dvr_blackbox_filename);
 				dvr_blackbox_filename[length - 5] = '\0';
 #endif			
-				sprintf(tmp_cmd, "am broadcast -a com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service --ei action 0 --es src %s --es dec %s&",dvr_blackbox_filename,dvr_blackbox_dest_filename);
+				sprintf(dvr_tmp_blackbox_filename, "%s/F%s.mp4.tmp", Em_Save_Dir, deq_time_buf);
+				sprintf(dvr_blackbox_dest_filename, "%s/F%s.mp4", Em_Save_Dir, deq_time_buf);
+				sprintf(tmp_cmd, "am broadcast -a com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service --ei action 0 --es src %s --es dec %s&",dvr_blackbox_filename,dvr_tmp_blackbox_filename);
 				system(tmp_cmd);
 				//isToDel = 1;
 				send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_ONLINE_INVOKE_NOTIFY, RET_EM_ISREC_OFF);
@@ -2328,18 +2330,21 @@ static void switch_scan(void)
 	
 	//if(isToDel)
 	//{
-#if 0	
+#if 1	
+	/*Cache before MP4 pop(currently DVR only)*/
+	if(isConvertMP4)
+	{
 		property_get("lidbg.uvccam.isTranscoding", isTranscoding_Str, "0");
 		isTranscoding = atoi(isTranscoding_Str);
 		if(isTranscoding) isToDel = 1;
 		if(!isTranscoding && isToDel) 
 		{
-			char tmp_cmd[300] = {0};
-			sprintf(tmp_cmd, "rm -rf %s.h264&",dvr_blackbox_filename);
-			system(tmp_cmd);
-			lidbg("****del %s.h264****\n",dvr_blackbox_filename);
+			lidbg("%s:rename %s==>%s\n",__func__,dvr_tmp_blackbox_filename,dvr_blackbox_dest_filename);			
+			if(rename(dvr_tmp_blackbox_filename, dvr_blackbox_dest_filename) < 0)
+				lidbg("%s:========rename fail=======\n",__func__);			
 			isToDel = 0;
 		}
+	}
 #endif		
 	//}
 	return;
@@ -5954,17 +5959,17 @@ openfd:
 						//lidbg("======Bottom write===lastFrames:%d,Bottom_Sec:%d======\n",bottom_lastFrames,Emergency_Bottom_Sec);
 						if(Emergency_Top_Sec > Emergency_Bottom_Sec) /*bottom < top ,1 time*/
 						{
-							if(msize > (isBlackBoxBottomRec*30)) 
+							if(msize > (isBlackBoxBottomRec*30) + 30) 
 							{
-								tmp_count = Emergency_Bottom_Sec*30 + 10;
+								tmp_count = Emergency_Bottom_Sec*30 + 30;
 								isNormDequeue = 1;
 							}
 						}
-						else if(msize > (Emergency_Top_Sec*30))  /*top <= bottom,use top as base*/
+						else if(msize > (Emergency_Top_Sec*30) + 30)  /*top <= bottom,use top as base*/
 						{
 							if(top_lastFrames < (Emergency_Top_Sec*30 - 150)) tmp_count = Emergency_Top_Sec*30 - 150;
 							else if(top_lastFrames > (Emergency_Top_Sec*30 + 30)) tmp_count = Emergency_Top_Sec*30 + 30;
-							else tmp_count = (top_lastFrames/10)*10 + 10;
+							else tmp_count = (top_lastFrames/10)*10 + 30;
 							isNormDequeue = 1;
 						}
 					}
