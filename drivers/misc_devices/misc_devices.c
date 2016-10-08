@@ -198,11 +198,12 @@ void usb_disk_enable(bool enable)
 }
 static int thread_usb_disk_enable_delay(void *data)
 {
+#ifdef VENDOR_QCOM
 #ifndef FLY_USB_CAMERA_SUPPORT
     if(g_var.recovery_mode == 0)
         msleep(5000);
 #endif
-
+#endif
 #if ANDROID_VERSION >= 600
 	 if((g_var.recovery_mode == 0)&&(g_var.android_boot_completed == 0))
 	 {
