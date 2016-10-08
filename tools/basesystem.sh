@@ -34,11 +34,11 @@ function soc_prebuild()
 		echo $FUNCNAME $SYSTEM_PLATFORM
 		rm -rf $SYSTEM_DIR/kernel/drivers/flyaudio
 		mkdir -p $SYSTEM_DIR/kernel/drivers/flyaudio
-		cp -ru $DIR_DRIVERS_PATH/build_in/*	        $SYSTEM_DIR/kernel/drivers/flyaudio/
-		cp -u $DIR_DRIVERS_PATH/inc/lidbg_interface.h   $SYSTEM_DIR/kernel/drivers/flyaudio/
-		cp -u $DIR_CORE_PATH/cmn_func.c   $SYSTEM_DIR/kernel/drivers/flyaudio/
-		cp -u $DIR_CORE_PATH/inc/cmn_func.h   $SYSTEM_DIR/kernel/drivers/flyaudio/
-		cp -u $DIR_CORE_PATH/inc/lidbg_def.h   $SYSTEM_DIR/kernel/drivers/flyaudio/
+		cp -rv $DIR_DRIVERS_PATH/build_in/*	        $SYSTEM_DIR/kernel/drivers/flyaudio/
+		cp -v $DIR_DRIVERS_PATH/inc/lidbg_interface.h   $SYSTEM_DIR/kernel/drivers/flyaudio/
+		cp -v $DIR_CORE_PATH/cmn_func.c   $SYSTEM_DIR/kernel/drivers/flyaudio/
+		cp -v $DIR_CORE_PATH/inc/cmn_func.h   $SYSTEM_DIR/kernel/drivers/flyaudio/
+		cp -v $DIR_CORE_PATH/inc/lidbg_def.h   $SYSTEM_DIR/kernel/drivers/flyaudio/
 	fi
 }
 

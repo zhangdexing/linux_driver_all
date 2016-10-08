@@ -71,39 +71,39 @@ function depository_copy_lidbg()
 {
 	echo $FUNCNAME $DBG_OUT_PATH $UPDATA_BIN_DIR $UPDATA_BIN_PLATFORM_DIR
 	git checkout $REPOSITORY_WORK_BRANCH
-	cp -ruv $DBG_OUT_PATH  $UPDATA_BIN_DIR
+	cp -rfv $DBG_OUT_PATH  $UPDATA_BIN_DIR
 	if [ -s $DBG_OUT_PATH/H264ToMp4Service.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR
-		cp -ruv $DBG_OUT_PATH/H264ToMp4Service.apk  $UPDATA_BIN_PLATFORM_DIR/app/
+		cp -rfv $DBG_OUT_PATH/H264ToMp4Service.apk  $UPDATA_BIN_PLATFORM_DIR/app/
 	fi
 
 	if [ -s $DBG_OUT_PATH/LidbgCommenLogic.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR
-		cp -ruv $DBG_OUT_PATH/LidbgCommenLogic.apk  $UPDATA_BIN_PLATFORM_DIR/app/
+		cp -rfv $DBG_OUT_PATH/LidbgCommenLogic.apk  $UPDATA_BIN_PLATFORM_DIR/app/
 	fi
 
 	if [ -s $DBG_OUT_PATH/LidbgCommenLogic/LidbgCommenLogic.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR
-		cp -ruv $DBG_OUT_PATH/LidbgCommenLogic/LidbgCommenLogic.apk  $UPDATA_BIN_PLATFORM_DIR/app/
+		cp -rfv $DBG_OUT_PATH/LidbgCommenLogic/LidbgCommenLogic.apk  $UPDATA_BIN_PLATFORM_DIR/app/
 	fi
 	if [ -s $DBG_OUT_PATH/FlyBootService.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR
-		cp -ruv $DBG_OUT_PATH/FlyBootService.apk  $UPDATA_BIN_PLATFORM_DIR/app/
+		cp -rfv $DBG_OUT_PATH/FlyBootService.apk  $UPDATA_BIN_PLATFORM_DIR/app/
 	fi
 
 	if [ -s $DBG_OUT_PATH/FlyBootService/FlyBootService.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR
-		cp -ruv $DBG_OUT_PATH/FlyBootService/FlyBootService.apk  $UPDATA_BIN_PLATFORM_DIR/app/
+		cp -rfv $DBG_OUT_PATH/FlyBootService/FlyBootService.apk  $UPDATA_BIN_PLATFORM_DIR/app/
 	fi
 	if [ -s $DBG_OUT_PATH/FastBoot.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR
-		cp -ruv $DBG_OUT_PATH/FastBoot.apk  $UPDATA_BIN_PLATFORM_DIR/app/
+		cp -rfv $DBG_OUT_PATH/FastBoot.apk  $UPDATA_BIN_PLATFORM_DIR/app/
 	fi
 	#cp -r $DBG_OUT_PATH/*.so  $UPDATA_BIN_DIR/hw/
 }
@@ -111,39 +111,39 @@ function depository_copy_lidbg_test()
 {
 	echo $FUNCNAME $DBG_OUT_PATH $UPDATA_BIN_DIR $UPDATA_BIN_PLATFORM_DIR
 #	git checkout $branch_name
-	cp -ruv $DBG_OUT_PATH  $UPDATA_BIN_DIR
+	cp -rfv $DBG_OUT_PATH  $UPDATA_BIN_DIR
 	if [ -s $DBG_OUT_PATH/H264ToMp4Service.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR
-		cp -ruv $DBG_OUT_PATH/H264ToMp4Service.apk  $UPDATA_BIN_PLATFORM_DIR/app/
+		cp -rfv $DBG_OUT_PATH/H264ToMp4Service.apk  $UPDATA_BIN_PLATFORM_DIR/app/
 	fi
 	if [ -s $DBG_OUT_PATH/LidbgCommenLogic.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR
-		cp -ruv $DBG_OUT_PATH/LidbgCommenLogic.apk  $UPDATA_BIN_PLATFORM_DIR/app/
+		cp -rfv $DBG_OUT_PATH/LidbgCommenLogic.apk  $UPDATA_BIN_PLATFORM_DIR/app/
 	fi
 
 	if [ -s $DBG_OUT_PATH/LidbgCommenLogic/LidbgCommenLogic.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR
-		cp -ruv $DBG_OUT_PATH/LidbgCommenLogic/LidbgCommenLogic.apk  $UPDATA_BIN_PLATFORM_DIR/app/
+		cp -rfv $DBG_OUT_PATH/LidbgCommenLogic/LidbgCommenLogic.apk  $UPDATA_BIN_PLATFORM_DIR/app/
 	fi
 	if [ -s $DBG_OUT_PATH/FlyBootService.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR
-		cp -ruv $DBG_OUT_PATH/FlyBootService.apk  $UPDATA_BIN_PLATFORM_DIR/app/
+		cp -rfv $DBG_OUT_PATH/FlyBootService.apk  $UPDATA_BIN_PLATFORM_DIR/app/
 	fi
 
 	if [ -s $DBG_OUT_PATH/FlyBootService/FlyBootService.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR
-		cp -ruv $DBG_OUT_PATH/FlyBootService/FlyBootService.apk  $UPDATA_BIN_PLATFORM_DIR/app/
+		cp -rfv $DBG_OUT_PATH/FlyBootService/FlyBootService.apk  $UPDATA_BIN_PLATFORM_DIR/app/
 	fi
 
 	if [ -s $DBG_OUT_PATH/FastBoot.apk ]
 	    then
 		echo $FUNCNAME  $UPDATA_BIN_PLATFORM_DIR
-		cp -ruv $DBG_OUT_PATH/FastBoot.apk  $UPDATA_BIN_PLATFORM_DIR/app/
+		cp -rfv $DBG_OUT_PATH/FastBoot.apk  $UPDATA_BIN_PLATFORM_DIR/app/
 	fi
 	#cp -r $DBG_OUT_PATH/*.so  $UPDATA_BIN_DIR/hw/
 }
@@ -152,7 +152,7 @@ function depository_copy_basesystem()
 	echo $FUNCNAME
 	git checkout $REPOSITORY_WORK_BRANCH
 	#cp -r $DBG_SYSTEM_DIR/flyaudio/out/*  $UPDATA_BASESYSTEM_DIR/
-	cp $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$OTA_PACKAGE_NAME $UPDATA_BASESYSTEM_DIR/baseqcom.flb
+	cp -v $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$OTA_PACKAGE_NAME $UPDATA_BASESYSTEM_DIR/baseqcom.flb
 }
 
 function depository_copy_basesystem_test()
@@ -160,17 +160,17 @@ function depository_copy_basesystem_test()
 	echo $FUNCNAME
 #	git checkout $REPOSITORY_WORK_BRANCH
 	#cp -r $DBG_SYSTEM_DIR/flyaudio/out/*  $UPDATA_BASESYSTEM_DIR/
-	cp $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$OTA_PACKAGE_NAME $UPDATA_BASESYSTEM_DIR/baseqcom.flb
+	cp -v $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$OTA_PACKAGE_NAME $UPDATA_BASESYSTEM_DIR/baseqcom.flb
 }
 
 function depository_copy_bpfile()
 {
 	echo $FUNCNAME
-        cp $NON_HLOS_FILE_PATH/NON-HLOS.bin        $UPDATA_BIN_PLATFORM_DIR/radio
-        cp $RPM_FILE_PATH/rpm.mbn                  $UPDATA_BIN_PLATFORM_DIR/radio  
-        cp $SBL_FILE_PATH/sbl1.mbn    	           $UPDATA_BIN_PLATFORM_DIR/radio  
-        cp $TZ_FILE_PATH/tz.mbn    		   $UPDATA_BIN_PLATFORM_DIR/radio
-        cp $TZ_FILE_PATH/sdi.mbn    		   $UPDATA_BIN_PLATFORM_DIR/radio 
+        cp -v $NON_HLOS_FILE_PATH/NON-HLOS.bin        $UPDATA_BIN_PLATFORM_DIR/radio
+        cp -v $RPM_FILE_PATH/rpm.mbn                  $UPDATA_BIN_PLATFORM_DIR/radio  
+        cp -v $SBL_FILE_PATH/sbl1.mbn    	           $UPDATA_BIN_PLATFORM_DIR/radio  
+        cp -v $TZ_FILE_PATH/tz.mbn    		   $UPDATA_BIN_PLATFORM_DIR/radio
+        cp -v $TZ_FILE_PATH/sdi.mbn    		   $UPDATA_BIN_PLATFORM_DIR/radio 
 }
 
 function depository_make_package()
