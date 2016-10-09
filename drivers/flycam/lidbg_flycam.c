@@ -1281,7 +1281,7 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 		lidbg_shell_cmd("setprop lidbg.uvccam.dvr.isSonix 1&");
 	}
 	/*Rec Block mode(First ACCON) : REAR_BLOCK_ID_MODE & DVR_BLOCK_ID_MODE*/
-	if(isDVRACCRec && isDVRACCResume) 
+	if(isDVRACCResume) //fix bug: not recording unexpectedly
 	{
 		lidbg("%s:====Don't need to fix Blurred!====\n",__func__);
 		if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX))
@@ -1316,7 +1316,8 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 		fixScreenBlurred(DVR_ID,0);
 
 	/*Auto start*/
-	if((isDVRFirstInit && isColdBootRec) || (isDVRACCResume && isDVRACCRec))
+	//if((isDVRFirstInit && isColdBootRec) || (isDVRACCResume && isDVRACCRec))
+	if((isDVRFirstInit && isColdBootRec) || (isDVRACCResume))
 	{
 		lidbg("%s:==FirstInit==\n",__func__);
 		/*Wait for SDCard ready*/
@@ -1416,7 +1417,8 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 		lidbg_shell_cmd("setprop lidbg.uvccam.rear.isSonix 1&");
 	}
 	/*Rec Block mode(First ACCON) : REAR_BLOCK_ID_MODE & DVR_BLOCK_ID_MODE*/
-	if(isRearACCRec && isRearACCResume) 
+	//if(isRearACCRec && isRearACCResume) 
+	if(isRearACCResume) //fix bug: not recording unexpectedly
 	{
 		lidbg("%s:====Don't need to fix Blurred!====\n",__func__);
 		if(!((pfly_UsbCamInfo->camStatus>>4) & FLY_CAM_ISSONIX))
@@ -1449,7 +1451,8 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 		fixScreenBlurred(REARVIEW_ID,0);
 
 	/*Auto start*/
-	if((isRearViewFirstInit && isColdBootRec) || (isRearACCResume && isRearACCRec))
+	//if((isRearViewFirstInit && isColdBootRec) || (isRearACCResume && isRearACCRec))
+	if((isRearViewFirstInit && isColdBootRec) || (isRearACCResume))
 	{
 		lidbg("%s:==FirstInit==\n",__func__);
 		/*Wait for SDCard ready*/
