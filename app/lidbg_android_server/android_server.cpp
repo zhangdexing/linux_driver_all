@@ -96,7 +96,7 @@ int max_stream_volume[AUDIO_STREAM_CNT] =
     DEFAULT_MAX_VOLUME, // STREAM_DTMF
     DEFAULT_MAX_VOLUME  // STREAM_TTS
 };
-int music_level = DEFAULT_MAX_VOLUME * 70 / 100;
+int music_level = DEFAULT_MAX_VOLUME * 50 / 100;
 int music_max_level = DEFAULT_MAX_VOLUME ;
 int delay_off_volume_policy_cnt = 0;
 int delay_off_volume_policy = 2000;//ms
