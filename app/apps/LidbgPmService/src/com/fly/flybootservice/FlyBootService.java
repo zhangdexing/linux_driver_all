@@ -131,6 +131,7 @@ public class FlyBootService extends Service {
 
     //do not force-stop apps in list
     private String[] mWhiteList = null;
+    private String[] mWhiteList2 = null;
     //list who can access Internet
     private String[] mInternelWhiteList = null;
     //list about all apps'uid who request Internet permission	
@@ -178,6 +179,7 @@ public class FlyBootService extends Service {
 	fbPm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 	mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 	mWhiteList = FileReadList("/flysystem/lib/out/appProtectList.conf","\n");
+	mWhiteList2 = FileReadList("/flysystem/flytheme/config/SuspendAppProtectList.conf","\n");
 	mInternelWhiteList = FileReadList("/flysystem/lib/out/appInternetProtectList.conf","\n");
 	DUMP();
         LIDBG_PRINT("flybootservice start [getInternelAllAppUids]\n");
@@ -864,9 +866,17 @@ public static void releaseBrightWakeLock()
     }
 
     private boolean isKillableProcess(String packageName) {
-	if (mWhiteList != null)
+	if ((mWhiteList != null)||(mWhiteList2 != null))
 	{
+		if(mWhiteList != null)
 	        for (String processName : mWhiteList) {
+	            if (processName.equals(packageName)) {
+	                return false;
+	            }
+	        }
+
+		if(mWhiteList2 != null)
+	        for (String processName : mWhiteList2) {
 	            if (processName.equals(packageName)) {
 	                return false;
 	            }
@@ -1196,8 +1206,13 @@ public static void releaseBrightWakeLock()
 				LIDBG_PRINT(i +"->"+ mWhiteList[i]+"\n");
 			}
 		}
-		else
-			LIDBG_PRINT("mWhiteList = null\n");
+		if (mWhiteList2 != null)
+		{
+			for (int i = 0; i < mWhiteList2.length; i++)
+			{
+				LIDBG_PRINT(i +"->"+ mWhiteList2[i]+"\n");
+			}
+		}
 		if (mInternelWhiteList != null)
 		{
 			for (int i = 0; i < mInternelWhiteList.length; i++)
