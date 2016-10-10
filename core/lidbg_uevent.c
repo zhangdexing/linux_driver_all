@@ -151,7 +151,7 @@ static const struct file_operations lidbg_uevent_fops =
 
 struct miscdevice lidbg_uevent_device =
 {
-    .minor = 255,
+    .minor = MISC_DYNAMIC_MINOR,
     .name = DEV_NAME,
     .fops = &lidbg_uevent_fops,
 };
