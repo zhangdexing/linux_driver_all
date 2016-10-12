@@ -48,6 +48,18 @@ struct work_struct work_acc_status;
 
 bool is_fake_acc_off = 0;
 
+void check_airplane_mode(void)
+{
+
+    int ret = fs_find_string(g_var.pflyhal_config_list, "AirPlaneModeOn");
+    if(ret > 0)
+    {
+        g_var.suspend_airplane_mode = true;
+	 g_var.alarmtimer_interval = 60 ;
+    }
+        lidbg("<suspend_airplane_mode =%d>\n", g_var.suspend_airplane_mode);
+}
+
 static long long ktime_get_ms(void)
 {
 	static ktime_t k_time;
@@ -387,6 +399,7 @@ void update_acc_status(void)
 
 static int thread_check_acc_and_response_acc_off_delay(void *data)
 {
+   check_airplane_mode();
 
    update_acc_status();
    while(0==g_var.android_boot_completed)
