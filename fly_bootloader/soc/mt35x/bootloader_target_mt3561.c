@@ -34,10 +34,10 @@ struct bootloader_hw_config g_hw_info[] =
             .lpc_sda = 53,
             .lpc_scl = 54,
         },
-	.lk_wakeup_lpc_io = 95,
-	.gpio_mcu_wp = 9,
-	.gpio_ready = 36,
-	.gpio_hal_ready = 34,
+	.lk_wakeup_lpc_io = 7,
+	.gpio_mcu_wp = 55,
+	//.gpio_ready = 36,
+	.gpio_hal_ready = 9,
         .dbg_uart_port = "console=ttyHSL0,115200,n8 androidboot.console=ttyHSL0 ",
     }
 };

@@ -53,6 +53,7 @@ struct hw_version_specific g_hw_version_specific[] =
         .i2c_bus_pca9634 = 0,
         .ad_val_mcu = 87,
         .fly_parameter_node = "/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/flyparameter",
+        .cpu_freq_temp_node = "/sys/class/thermal/thermal_zone1/temp",
 
 	},
 

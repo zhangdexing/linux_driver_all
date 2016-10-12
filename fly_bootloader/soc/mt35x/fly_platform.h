@@ -39,7 +39,7 @@
 #define BOARD_VERSION 0
 #define ADC_KEY_CHNL 2
 #define ROUND_TO_PAGE(x,y) (((x) + (y)) & (~(y)))
-
+#define NEW_SUSPEND 1
 /* logo format */
 #define NOT_USE_DSI83
 #define RGB565 1
