@@ -104,7 +104,10 @@ int thread_loader(void *data)
     CREATE_KTHREAD(thread_check_restart, NULL);
 #ifndef SOC_msm8x25
     while(!is_file_exist("/dev/log/userver_ok.txt"))
+    {
+    	 lidbg("wait for /dev/log/userver_ok.txt\n");
         msleep(100);
+    }
 #endif
 
     if(is_file_exist(RECOVERY_MODE_DIR))

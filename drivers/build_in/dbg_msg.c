@@ -113,8 +113,6 @@ static int __init msg_init(void)
     DUMP_BUILD_TIME;
     ret = misc_register(&misc);
 
-    INIT_COMPLETION(msg_ready);
-
     task = kthread_create(thread_msg, NULL, "thread_dbg_msg");
     if(IS_ERR(task))
     {
