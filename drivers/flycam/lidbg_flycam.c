@@ -264,6 +264,7 @@ static int lidbg_flycam_event(struct notifier_block *this,
 			lidbg("flycam event:suspend %ld\n", event);
 			isSuspend = 1;
 			mod_timer(&suspend_stoprec_timer,SUSPEND_STOPREC_ACCOFF_TIME);		
+			notify_online(RET_EM_ISREC_OFF);
 			break;
 		case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_UP):
 			lidbg_shell_cmd("setprop lidbg.uvccam.isDelDaysFile 1");
@@ -1789,17 +1790,17 @@ static int rear_stop_recording(void)
 static void dvr_fail_proc(void)
 {
 	lidbg("%s:===E===\n",__func__);
-	stop_rec(DVR_ID,1);
-	isDVRRec = 0;
-	isOnlineRec = 0;
+	//stop_rec(DVR_ID,1);
+	//isDVRRec = 0;
+	//isOnlineRec = 0;
 	return;
 }
 
 static void rear_fail_proc(void)
 {
 	lidbg("%s:===E===\n",__func__);
-	stop_rec(REARVIEW_ID,1);
-	isRearRec = 0;
+	//stop_rec(REARVIEW_ID,1);
+	//isRearRec = 0;
 	return;
 }
 

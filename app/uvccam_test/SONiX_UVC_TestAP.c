@@ -5959,7 +5959,8 @@ openfd:
 						//lidbg("======Bottom write===lastFrames:%d,Bottom_Sec:%d======\n",bottom_lastFrames,Emergency_Bottom_Sec);
 						if(Emergency_Top_Sec > Emergency_Bottom_Sec) /*bottom < top ,1 time*/
 						{
-							if(msize > (isBlackBoxBottomRec*30) + 30) 
+							//lidbg("Emergency_Top_Sec > Emergency_Bottom_Sec!!!!\n");
+							if(msize > (Emergency_Bottom_Sec*30) + 30) 
 							{
 								tmp_count = Emergency_Bottom_Sec*30 + 30;
 								isNormDequeue = 1;
