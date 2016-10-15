@@ -214,6 +214,10 @@ int dsi83_check(void)
     {
         check_times = 0;
     }
+	
+    msleep(3000);
+    LPC_CMD_DSI83_INIT;
+
     return 0;
 }
 
@@ -285,8 +289,7 @@ void dsi83_config(void)
     ret = SN65_Sequence_seq8();
     if(ret < 0)
         lidbg( "dsi83:SN65_Sequence_seq8(),err,ret = %d.\n", ret);
-
-
+	
 }
 static void dsi83_work_func(struct work_struct *work)
 {
