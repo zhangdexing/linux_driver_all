@@ -294,6 +294,10 @@ void lidbg_pm_step_call(fly_pm_stat_step step, void *data)
 #ifdef SOC_rk3x88
         grf_backup();
 #endif
+#ifdef PLATFORM_ID_16
+		GPS_POWER_OFF;
+#endif
+
         PM_SLEEP_DBG("SLEEP8.suspend_enter.MCU_WP_GPIO_OFF;sleep_count:%d\n", g_var.sleep_counter);
         break;
     case PM_SUSPEMD_OPS_ENTER9:
@@ -305,6 +309,9 @@ void lidbg_pm_step_call(fly_pm_stat_step step, void *data)
         SOC_System_Status(FLY_KERNEL_UP);
         SOC_IO_RESUME;
         MCU_WP_GPIO_ON;
+#ifdef PLATFORM_ID_16
+		GPS_POWER_ON;
+#endif
         PM_SLEEP_DBG("WAKEUP9.1.suspend_enter.wakeup.MCU_WP_GPIO_ON;\n");
         //suspend_ops->enter.out
         break;
