@@ -80,9 +80,10 @@ function soc_build_common()
 function soc_build_all()
 {
 	echo $FUNCNAME
+	soc_prebuild
 	cd $DBG_SYSTEM_DIR
 	./allmake.sh -p evb3561t_66_m0
-	#soc_prebuild && make -j16 && soc_postbuild
+	soc_postbuild
 }
 
 
