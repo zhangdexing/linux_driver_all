@@ -336,6 +336,7 @@ struct lidbg_pvar_t
     int cpu_freq;
     bool is_fly;
     unsigned int flag_for_15s_off;
+	bool dvr_cam_ready;
 	bool rear_cam_ready;
     bool is_usb11;
     bool fake_suspend;
@@ -493,6 +494,7 @@ static inline int check_pt(void)
 
 #define FLAG_FOR_15S_OFF   (plidbg_dev->soc_pvar_tbl.flag_for_15s_off)
 
+#define DVR_CAM_READY   (plidbg_dev->soc_pvar_tbl.dvr_cam_ready)
 #define REAR_CAM_READY   (plidbg_dev->soc_pvar_tbl.rear_cam_ready)
 
 #define LINUX_TO_LIDBG_TRANSFER (check_pt()?NULL:(plidbg_dev->soc_func_tbl.pfnLINUX_TO_LIDBG_TRANSFER))

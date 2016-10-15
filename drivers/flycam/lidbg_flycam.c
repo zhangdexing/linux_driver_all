@@ -1018,6 +1018,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.isSonix 0&");
+					g_var.dvr_cam_ready = 0;
 					isDVRRec = 0;
 					isOnlineRec= 0;
 					isDVRAfterFix = 0;
@@ -1038,6 +1039,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.osdset 1&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 1&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.isSonix 1&");
+					g_var.dvr_cam_ready = 1;
 					if(!isSuspend)
 					{
 						//lidbg("=====CHECK::isDVRFirstResume = %d =====\n",isDVRFirstResume);
@@ -1056,6 +1058,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 1&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.isSonix 0&");
+					g_var.dvr_cam_ready = 1;
 					status_fifo_in(RET_DVR_NOT_SONIX);
 					notify_online(RET_ONLINE_FOUND_NOTSONIX);
 				}
@@ -1271,8 +1274,15 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 		{
 			lidbg("%s:====None camera found!====\n",__func__);
 			if((pfly_UsbCamInfo->camStatus)  & FLY_CAM_ISVALID) /*NOT SONIX*/
+			{
 				lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 1&");
-			else lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 0&");
+				g_var.dvr_cam_ready = 1;
+			}
+			else
+			{
+				lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 0&");
+				g_var.dvr_cam_ready = 0;
+			} 
 			isDVRFirstInit = 0;/*no matter what,let the next work continue*/
 			isDVRAfterFix = 1;
 			return;
@@ -1280,6 +1290,7 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 		lidbg_shell_cmd("setprop lidbg.uvccam.dvr.osdset 1&");
 		lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 1&");
 		lidbg_shell_cmd("setprop lidbg.uvccam.dvr.isSonix 1&");
+		g_var.dvr_cam_ready = 1;
 	}
 	/*Rec Block mode(First ACCON) : REAR_BLOCK_ID_MODE & DVR_BLOCK_ID_MODE*/
 	if(isDVRACCResume) //fix bug: not recording unexpectedly
