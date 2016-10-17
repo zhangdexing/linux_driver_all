@@ -336,8 +336,6 @@ struct lidbg_pvar_t
     int cpu_freq;
     bool is_fly;
     unsigned int flag_for_15s_off;
-	bool dvr_cam_ready;
-	bool rear_cam_ready;
     bool is_usb11;
     bool fake_suspend;
     bool acc_flag;
@@ -369,6 +367,8 @@ struct lidbg_pvar_t
     int platformid;
     int keep_lcd_on;
     struct list_head *pflyhal_config_list;
+    bool dvr_cam_ready;
+    bool rear_cam_ready;	
 };
 
 typedef struct
