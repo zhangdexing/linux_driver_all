@@ -250,7 +250,7 @@ public class FlyBootService extends Service {
 								SendBroadcastToService(KeyBootState, keyScreenOFF);
 							}else if(pmState == FBS_DEVICE_DOWN){
 								LIDBG_PRINT("FlyBootService get pm state: FBS_DEVICE_DOWN\n");
-								if((!blDozeModeFlag)&&(AirplaneEnable == 0))
+								if((!blDozeModeFlag)&&(AirplaneEnable == false))
 									FlyaudioInternetDisable();
 								SendBroadcastToService(KeyBootState, keyEearlySusupendOFF);
 								LIDBG_PRINT("FlyBootService sent device_down to hal\n");
@@ -306,7 +306,7 @@ public class FlyBootService extends Service {
 									restoreAirplaneMode(mFlyBootService);
 								SendBroadcastToService(KeyBootState, keyEearlySusupendON);
 								InternetEnable();
-								if((!blDozeModeFlag)&&(AirplaneEnable == 0))
+								if((!blDozeModeFlag)&&(AirplaneEnable == false))
 									FlyaudioInternetEnable();
 								if (isWifiApEnabled)
 								{
