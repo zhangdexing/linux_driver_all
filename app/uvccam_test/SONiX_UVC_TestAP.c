@@ -5320,25 +5320,31 @@ openfd:
 
 		if(msize == (Emergency_Top_Sec*30)) XU_H264_Set_IFRAME(dev);
 		
-		if((!strncmp(startRecording, "0", 1)) && (!do_save) )
+		if((!strncmp(startRecording, "0", 1)) && (!do_save))
 		{
-			lidbg("-------eho---------uvccam stop recording -----------\n");
-#if 0
-			if(isPreview) 
-			{
-				sprintf(tmpCMD , "rm -f %s&",Rec_Save_Dir);
-				system(tmpCMD);
-			}
-#endif
-			//dequeue_buf(msize,rec_fp1);
-			//system("echo 'udisk_unrequest' > /dev/flydev0");
-			property_set("fly.uvccam.curprevnum", "-1");
-			send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_STOP);
+			if(!isPreview && i == 0) 
+				lidbg("[%d]:prevent init stop rec!\n",cam_id);
 			
-			if(rec_fp1 != NULL) fclose(rec_fp1);
-			close(dev);
-			close(flycam_fd);
-			return 0;
+			if((!isPreview && i > 3000) || isPreview)//prevent ACCON setprop slow issue
+			{
+				lidbg("[%d]:-------eho---------uvccam stop recording! -----------\n",cam_id);
+#if 0
+				if(isPreview) 
+				{
+					sprintf(tmpCMD , "rm -f %s&",Rec_Save_Dir);
+					system(tmpCMD);
+				}
+#endif
+				//dequeue_buf(msize,rec_fp1);
+				//system("echo 'udisk_unrequest' > /dev/flydev0");
+				property_set("fly.uvccam.curprevnum", "-1");
+				send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_STOP);
+				
+				if(rec_fp1 != NULL) fclose(rec_fp1);
+				close(dev);
+				close(flycam_fd);
+				return 0;
+			}
 		}
 		
 		if(do_get_still_image)
@@ -6073,7 +6079,7 @@ try_open_again:
 		switch_scan();
 		if((!strncmp(startRecording, "0", 1)) && (!do_save) )
 		{
-			lidbg("-------eho---------uvccam stop recording! -----------\n");
+			lidbg("[%d]:-------eho---------uvccam stop recording! -----------\n",cam_id);
 			//system("echo 'udisk_unrequest' > /dev/flydev0");
 			property_set("fly.uvccam.curprevnum", "-1");
 			send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_STOP);
