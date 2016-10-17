@@ -27,14 +27,14 @@ char* get_cpu_status(void);
 int thread_limit_temp(void *data)
 {
     int mem_temp,cpu_temp;
-	
+    lidbg_chmod(CPU_MAX_NODE);
+
     while(g_hw.thermal_ctrl_en == 0)
    {
     	 mem_temp = soc_temp_get(g_hw.mem_sensor_num);
     	 cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
 
-        lidbg( "%s:%d,%d,%d,%d,%s\n", __FUNCTION__,mem_temp, cpu_temp,get_scaling_max_freq(), cpufreq_get(0),get_cpu_status());
-	 lidbg_chmod(CPU_MAX_NODE);
+        pr_debug( "%s:%d,%d,%d,%d,%s\n", __FUNCTION__,mem_temp, cpu_temp,get_scaling_max_freq(), cpufreq_get(0),get_cpu_status());
 #ifdef PLATFORM_msm8226
         lidbg_readwrite_file(FREQ_MAX_NODE, NULL, "600000", strlen("600000"));
 #elif defined(PLATFORM_msm8909)

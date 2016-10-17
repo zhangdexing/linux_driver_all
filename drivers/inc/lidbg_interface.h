@@ -328,7 +328,7 @@ struct hw_info
     int reserve[12];
 };
 
-struct lidbg_pvar_t
+struct lidbg_pvar_t // var must add  at the end of the struct
 {
     int temp;
     FLY_SYSTEM_STATUS system_status;

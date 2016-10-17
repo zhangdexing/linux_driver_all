@@ -125,6 +125,10 @@ static void rmtctrl_timer_func(unsigned long data)
        	send_app_status(FLY_GOTO_SLEEP);
        mod_timer(&rmtctrl_timer,GOTO_SLEEP_TIME_S);
 	}
+	else
+	{
+		lidbg("g_var.acc_flag=%d\n",g_var.acc_flag);
+	}
 	return;
 }
 
