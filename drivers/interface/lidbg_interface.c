@@ -313,14 +313,17 @@ int iSOC_Temp_Get(void)
 
 int iSOC_Uart_Send(char *arg)
 {
+//TBD
+/*
     char cmd[128] = {0};
-
 #ifdef UART_SEND_DATA_TO_LPC
     sprintf(cmd, "/system/lib/modules/out/lidbg_uart_send_data "LPC_UART_PORT" "UART_BAUD_REATE" %d %d %d %d %d", arg[0], arg[1], arg[3], arg[4], arg[5]);
 #endif
 
     lidbg_shell_cmd(cmd);
+ */
     return 0;
+    
 }
 
 static void set_func_tbl(void)

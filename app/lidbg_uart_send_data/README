@@ -1,0 +1,1 @@
+/system/bin/lidbg_uart_send_data /dev/ttyHSL1 9600 3 1 2 3

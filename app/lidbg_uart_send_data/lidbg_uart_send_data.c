@@ -10,21 +10,12 @@
 #include <signal.h>
 #include <pthread.h>
 #include <sys/resource.h>
+#include "lidbg_servicer.h"
 
 #define DEBUG_PRINT_FLAG 1
 
 #define LOG_BYTES   (512)
 
-#define LIDBG_PRINT(msg...) do{\
-	int fd;\
-	char s[LOG_BYTES];\
-	sprintf(s, "hal_msg: " msg);\
-	s[LOG_BYTES - 1] = '\0';\
-	 fd = open("/dev/lidbg_msg", O_RDWR);\
-	 if((fd == 0)||(fd == (int)0xfffffffe)|| (fd == (int)0xffffffff))break;\
-	 write(fd, s, /*sizeof(msg)*/strlen(s)/*LOG_BYTES*/);\
-	 close(fd);\
-}while(0)
 
 struct uartConfig
 {
@@ -47,7 +38,7 @@ int set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)
 
     if ( tcgetattr( fd, &oldtio) != 0)
     {
-        printf("SetupSerial .\n");
+        lidbg("SetupSerial .\n");
         return -1;
     }
 
@@ -82,6 +73,7 @@ int set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)
         break;
     }
 
+    lidbg("nSpeed=%d\n",nSpeed);
     switch ( nSpeed )
     {
     case 2400:
@@ -134,11 +126,11 @@ int set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)
 
     if ((tcsetattr(fd, TCSANOW, &newtio)) != 0)
     {
-        printf("com set error\n");
+        lidbg("com set error\n");
         return -1;
     }
 
-    printf("set done!\n");
+    //lidbg("set done!\n");
     return 0;
 }
 
@@ -150,22 +142,22 @@ int open_port(int fd, char *portName)
 
     if (-1 == pUartInfo.fd)
     {
-        printf("Can't Open Serial Port\n");
+        lidbg("Can't Open Serial Port\n");
         return(-1);
     }
     else
     {
-        printf("open %s .....\n", portName);
+        lidbg("open %s .....\n", portName);
     }
 
     if (fcntl(pUartInfo.fd, F_SETFL, 0) < 0)
-        printf("fcntl failed!\n");
+        lidbg("fcntl failed!\n");
     else
-        printf("fcntl=%d\n", fcntl(pUartInfo.fd, F_SETFL, 0));
+        lidbg("fcntl=%d\n", fcntl(pUartInfo.fd, F_SETFL, 0));
     if (isatty(STDIN_FILENO) == 0)
-        printf("standard input is not a terminal device\n");
+        lidbg("standard input is not a terminal device\n");
     else
-        printf("isatty success!\n");
+        lidbg("isatty success!\n");
 
     return pUartInfo.fd;
 }
@@ -177,61 +169,51 @@ int main(int argc , char **argv)
     static pthread_t writeTheadId;
     int ret;
     int i = 0;
-    char data[5] = {0};
+    char data[32] = {0};
 
-    pUartInfo.wlen = 0;
-    /*
-    	setpriority(PRIO_PROCESS, getpid(), -20);
-    	struct sched_param sp = {90};
-    	if (sched_setscheduler(0,SCHED_FIFO, &sp) < 0)
-    	{
-    		printf(" Error !! \n");
-    	}
-    */
-    if(argc < 3)
+    if(argc < 4)
     {
-        printf("uaer:%s portName baudRate data\n", argv[0]);
-        printf("uaer:example: %s 0 /dev/ttyS0 115200 111\n", argv[0]);
+        lidbg("example: %s /dev/ttyS0 115200 len data[0] data[1] ....\n", argv[0]);
         return -1;
     }
 
     pUartInfo.portName = argv[1];
     pUartInfo.baudRate = strtoul(argv[2], 0, 0);
+    pUartInfo.wlen = strtoul(argv[3], 0, 0);
 
-    for(i = 0; i < 5; i++)
-        data[i] = strtoul(argv[3 + i], 0, 0);
+    for(i = 0; i < pUartInfo.wlen; i++)
+        data[i] = strtoul(argv[4 + i], 0, 0);
 
     pUartInfo.fd = -1;
 
     if(pUartInfo.portName == NULL)
     {
-        printf("ERR:tty dev does not exist.\n");
+        lidbg("ERR:tty dev does not exist.\n");
         return -1;
     }
 
-    printf("%s %s %d\n", argv[0], pUartInfo.portName, pUartInfo.baudRate);
+    //lidbg("%s %s %d\n", argv[0], pUartInfo.portName, pUartInfo.baudRate);
 
     if ((pUartInfo.fd = open_port(pUartInfo.fd, pUartInfo.portName)) < 0)
     {
-        printf("open_port error\n");
+        lidbg("open_port error\n");
         return -1;
     }
 
     if ((i = set_opt(pUartInfo.fd, pUartInfo.baudRate, 8, 'N', 1)) < 0)
     {
-        printf("set_opt error\n");
+        lidbg("set_opt error\n");
         return -1;
     }
 
-    pUartInfo.nwrite = sizeof(data);
-
     if((pUartInfo.fd) > 0) //Tx
     {
-        pUartInfo.wlen = write(pUartInfo.fd, data, pUartInfo.nwrite);
-
-        //usleep(10 * 1000);
+	int len;
+        len = write(pUartInfo.fd, data, pUartInfo.wlen);
 #if DEBUG_PRINT_FLAG
-        LIDBG_PRINT("sent:%d  0x%x 0x%x 0x%x 0x%x 0x%x\n", pUartInfo.wlen, data[0], data[1], data[2], data[3], data[4]);
+    lidbg("len=%d\n", pUartInfo.wlen);
+    for(i = 0; i < pUartInfo.wlen; i++)
+       lidbg("0x%x\n", data[i]);
 #endif
     }
 

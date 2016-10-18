@@ -12,10 +12,12 @@
 #include <sys/resource.h>
 
 #define DEBUG_PRINT_WRITE_FLAG 0
-#define DEBUG_PRINT_READ_FLAG 0
+#define DEBUG_PRINT_READ_FLAG 1
 #define DEBUG_COUNT_FLAG 1
-#define DEBUG_CRC_FLAG 1
+#define DEBUG_CRC_FLAG 0
 #define RD_SIZE (250)
+
+#define DEBUG_PRINT_READ_CHAR 1
 
 struct uartConfig
 {
@@ -136,7 +138,7 @@ int set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop)
 int open_port(int fd, char *portName)
 {
     long vdisable;
-
+    fd = fd;
     pUartInfo.fd = open( portName, O_RDWR | O_NOCTTY);
 
     if (-1 == pUartInfo.fd)
@@ -233,7 +235,11 @@ void *read_thread_fun(void *arg)
 #if DEBUG_PRINT_READ_FLAG
                 for(i = 0; i < pInfo->rlen; i++)
                 {
-                    printf("%d", rbuff[i]);
+#ifdef DEBUG_PRINT_READ_CHAR
+                    printf("%c", rbuff[i]);
+#else
+                    printf("%x", rbuff[i]);
+#endif
                 }
                 printf("\n");
 #endif
