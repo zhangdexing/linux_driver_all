@@ -74,11 +74,13 @@ static struct timer_list set_par_timer;
 static struct timer_list ui_start_rec_timer;
 static struct timer_list em_start_dvr_rec_timer;
 static struct timer_list em_start_rear_rec_timer;
+static struct timer_list stop_thinkware_em_timer;
 
 #define SUSPEND_STOPREC_ONLINE_TIME   (jiffies + 180*HZ)  /* 3min stop Rec after online*/
 #define SUSPEND_STOPREC_ACCOFF_TIME   (jiffies + 180*HZ)  /* 3min stop Rec after accoff,fix online then accoff*/
 #define SET_PAR_WAIT_TIME   (jiffies + 2*HZ) 
 #define UI_REC_WAIT_TIME   (jiffies + 2*HZ) 
+#define STOP_THINKNAVI_EM_WAIT_TIME   (jiffies + 30*HZ) 
 
 /*bool var*/
 static char isDVRRec,isOnlineRec,isRearRec,isDVRFirstInit,isRearViewFirstInit,isRearCheck = 1,isDVRCheck = 1,isOnlineNotifyReady,isDualCam,isColdBootRec,isDVRACCRec,isRearACCRec;
@@ -265,6 +267,7 @@ static int lidbg_flycam_event(struct notifier_block *this,
 			isSuspend = 1;
 			mod_timer(&suspend_stoprec_timer,SUSPEND_STOPREC_ACCOFF_TIME);		
 			notify_online(RET_EM_ISREC_OFF);
+			del_timer(&stop_thinkware_em_timer);
 			break;
 		case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_UP):
 			lidbg_shell_cmd("setprop lidbg.uvccam.isDelDaysFile 1");
@@ -287,10 +290,19 @@ static int lidbg_flycam_event(struct notifier_block *this,
 			lidbg("flycam event:emergency recording %ld\n", event);
 			if(isEmRecPermitted)
 			{
-				if(isDVRRec) lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
-				if(isRearRec) lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
+				if(isDVRRec) 
+				{
+					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
+					notify_online(RET_EM_ISREC_ON);
+					mod_timer(&stop_thinkware_em_timer,STOP_THINKNAVI_EM_WAIT_TIME);
+				}
+				if(isRearRec) 
+				{
+					lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
+					notify_online(RET_EM_ISREC_ON);
+					mod_timer(&stop_thinkware_em_timer,STOP_THINKNAVI_EM_WAIT_TIME);
+				}
 			}
-			notify_online(RET_EM_ISREC_ON);
 			break;
 	    default:
 	        break;
@@ -344,6 +356,12 @@ static void start_dvr_rec_timer_isr(unsigned long data)
 static void start_rear_rec_timer_isr(unsigned long data)
 {
 	complete(&start_rear_rec_wait);
+}
+
+static void stop_thinkware_em_timer_isr(unsigned long data)
+{
+	lidbg("-------[TIMER]ThinkNavi force stop emergency recording -----\n");
+	notify_online(RET_EM_ISREC_OFF);
 }
 
 
@@ -1015,6 +1033,8 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					isDVRPlugRec = isDVRRec;
 					status_fifo_in(RET_DVR_DISCONNECT);
 					notify_online(RET_ONLINE_DISCONNECT);
+					notify_online(RET_EM_ISREC_OFF);
+					del_timer(&stop_thinkware_em_timer);
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.isSonix 0&");
@@ -2376,6 +2396,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		        break;
 			case NR_ONLINE_INVOKE_NOTIFY:
 		        lidbg("%s:NR_ONLINE_INVOKE_NOTIFY arg = %ld\n",__func__,arg);
+				if(arg == RET_EM_ISREC_OFF) del_timer(&stop_thinkware_em_timer);
 				notify_online(arg);
 		        break;
 			default:
@@ -3278,10 +3299,19 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				lidbg("%s:NR_EM_MANUAL\n",__func__);
 				if(isEmRecPermitted)
 				{
-					if(isDVRRec) lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
-					if(isRearRec) lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
+					if(isDVRRec) 
+					{
+						lidbg_shell_cmd("setprop lidbg.uvccam.dvr.blackbox 1");
+						notify_online(RET_EM_ISREC_ON);
+						mod_timer(&stop_thinkware_em_timer,STOP_THINKNAVI_EM_WAIT_TIME);
+					}
+					if(isRearRec) 
+					{
+						lidbg_shell_cmd("setprop lidbg.uvccam.rear.blackbox 1");
+						notify_online(RET_EM_ISREC_ON);
+						mod_timer(&stop_thinkware_em_timer,STOP_THINKNAVI_EM_WAIT_TIME);
+					}
 				}
-				notify_online(RET_EM_ISREC_ON);
 		        break;
 			case NR_CAM_STATUS:
 				lidbg("%s:NR_CAM_STATUS\n",__func__);
@@ -3957,6 +3987,11 @@ int thread_flycam_init(void *data)
 	    em_start_rear_rec_timer.data = 0;
 	    em_start_rear_rec_timer.expires = 0;
 	    em_start_rear_rec_timer.function = start_rear_rec_timer_isr;
+			
+		init_timer(&stop_thinkware_em_timer);
+	    stop_thinkware_em_timer.data = 0;
+	    stop_thinkware_em_timer.expires = 0;
+	    stop_thinkware_em_timer.function = stop_thinkware_em_timer_isr;
 	
 		lidbg("%s:====start osd set====\n",__func__);
 		lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 0");
