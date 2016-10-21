@@ -989,7 +989,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.rear.status 0&");
 					g_var.rear_cam_ready = 0;
-					lidbg_shell_cmd("setprop lidbg.uvccam.rear.isSonix 0&");
+					//lidbg_shell_cmd("setprop lidbg.uvccam.rear.isSonix 0&");
 					status_fifo_in(RET_REAR_DISCONNECT);
 					isRearRec = 0;
 					isRearViewAfterFix = 0;
@@ -1037,7 +1037,7 @@ static int usb_nb_cam_func(struct notifier_block *nb, unsigned long action, void
 					del_timer(&stop_thinkware_em_timer);
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.osdset 0&");
 					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.status 0&");
-					lidbg_shell_cmd("setprop lidbg.uvccam.dvr.isSonix 0&");
+					//lidbg_shell_cmd("setprop lidbg.uvccam.dvr.isSonix 0&");
 					g_var.dvr_cam_ready = 0;
 					isDVRRec = 0;
 					isOnlineRec= 0;
