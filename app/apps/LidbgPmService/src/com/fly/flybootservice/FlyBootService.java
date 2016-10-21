@@ -80,6 +80,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 
 import android.telephony.TelephonyManager;
+import android.os.Handler;
 /*
  * ScreenOn ScreenOff DeviceOff Going2Sleep 四种状态分别表示：1.表示正常开屏状态2.表示关屏，但没关外设的状态
  * 0'~30'的阶段3.表示关屏关外设，但没到点进入深度休眠 30'~60'的阶段4.表示发出休眠请求到执行快速休眠 60'后,即进入深度休眠
@@ -307,7 +308,15 @@ public class FlyBootService extends Service {
 								SendBroadcastToService(KeyBootState, keyEearlySusupendON);
 								InternetEnable();
 								if((!blDozeModeFlag)&&(AirplaneEnable == false))
-									FlyaudioInternetEnable();
+								{
+									LIDBG_PRINT("FlyBootService postDelayed start\n");
+									new Handler(mFlyBootService.getMainLooper()).postDelayed(new Runnable(){    
+										public void run() {    
+										FlyaudioInternetEnable();
+										LIDBG_PRINT("FlyBootService postDelayed stop\n");
+										}    
+									}, 5000);  
+								}
 								if (isWifiApEnabled)
 								{
 									setWifiApState(true);
