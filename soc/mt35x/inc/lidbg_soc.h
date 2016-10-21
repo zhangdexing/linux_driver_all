@@ -177,6 +177,7 @@ struct gpiomux_setting {
 #endif
 
 #define SUSPEND_ONLINE
+#define DEFAULT_SUSPEND_NO_AIRPLANE_MODE
 #define MUC_CONTROL_DSP
 #define MUC_DSP6638
 
