@@ -313,13 +313,17 @@ int main(int argc, char **argv)
         if(gAudioPolicyService != 0 && gAudioFlingerService != 0)
         {
             sp<IAudioPolicyService> &aps = gAudioPolicyService;
-            playing = aps->isStreamActive((audio_stream_type_t)3, 0) |
-                      aps->isStreamActive((audio_stream_type_t)0, 0) |
-                      aps->isStreamActive((audio_stream_type_t)2, 0) |
-                      aps->isStreamActive((audio_stream_type_t)1, 0) |
-                      aps->isStreamActive((audio_stream_type_t)5, 0);
-            if(10 < AUDIO_STREAM_CNT)//for MT3561 AUDIO_STREAM_GIS
-                playing = aps->isStreamActive((audio_stream_type_t)10, 0) | playing;
+            playing = aps->isStreamActive((audio_stream_type_t)0, 0) ;
+            for (int i = 1; i < AUDIO_STREAM_CNT; i++)
+            {
+                playing = aps->isStreamActive((audio_stream_type_t)i, 0) | playing;
+                if(playing != playing_old)//not need to loop the end any more;
+                {
+                    if(dbg_music)
+                        lidbg(TAG"break.%d\n", i);
+                    break;
+                }
+            }
 
             if(dbg_music)
                 lidbg(TAG"playing=%d\n", playing);
