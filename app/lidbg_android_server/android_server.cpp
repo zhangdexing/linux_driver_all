@@ -399,6 +399,15 @@ int main(int argc, char **argv)
                     music_max_level = (DEFAULT_MAX_VOLUME * para[1] / 100);
                     lidbg(TAG"music_max_level:[%d/%d/%d]\n", music_max_level, para[1], DEFAULT_MAX_VOLUME);
                     break;
+                case 8 :
+                    delay_off_volume_policy = para[1] ;
+                    lidbg(TAG"delay_off_volume_policy:[%dms]\n", delay_off_volume_policy);
+                    break;
+                case 9 :
+                    delay_step_on_music = para[1] ;
+                    lidbg(TAG"delay_step_on_music:[%dms]\n", delay_step_on_music);
+                    break;
+
                 default :
                     break;
                 }
