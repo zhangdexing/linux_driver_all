@@ -1329,6 +1329,9 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 			}
 		}
 	}
+	else if(isSuspend)//online
+		fixScreenBlurred(DVR_ID,0);
+#if 0
 	else if(isDVRFirstResume)
 	{
 		fixScreenBlurred(DVR_BLOCK_ID_MODE,0);
@@ -1346,6 +1349,7 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 	}
 	else 
 		fixScreenBlurred(DVR_ID,0);
+#endif
 
 	/*Auto start*/
 	//if((isDVRFirstInit && isColdBootRec) || (isDVRACCResume && isDVRACCRec))
@@ -1392,7 +1396,8 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 			}
 		}
 	}
-	else if(isDVRPlugRec && !isOnlineRec)
+	//else if(isDVRPlugRec && !isOnlineRec)
+	else if(!isOnlineRec)//hot plug
 	{
 		dvr_start_recording();
 	}
@@ -1465,6 +1470,9 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 			}
 		}
 	}
+	else if(isSuspend)//online
+		fixScreenBlurred(REARVIEW_ID,0);
+#if 0
 	else if(isRearFirstResume)
 	{
 		fixScreenBlurred(REAR_BLOCK_ID_MODE,0);
@@ -1481,6 +1489,7 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 	}
 	else 
 		fixScreenBlurred(REARVIEW_ID,0);
+#endif	
 
 	/*Auto start*/
 	//if((isRearViewFirstInit && isColdBootRec) || (isRearACCResume && isRearACCRec))
@@ -1522,7 +1531,8 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 #endif			
 		}
 	}
-	else if(isRearPlugRec && !isOnlineRec)
+	//else if(isRearPlugRec && !isOnlineRec)
+	else if(!isOnlineRec)//hot plug
 	{
 		rear_start_recording();
 	}
