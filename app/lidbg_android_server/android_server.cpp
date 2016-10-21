@@ -286,7 +286,7 @@ static void *thread_check_ring_stream(void *data)
     return ((void *) 0);
 }
 
-
+static char old_debug_cmd_value[PROPERTY_VALUE_MAX];
 int main(int argc, char **argv)
 {
     pthread_t ntid;
@@ -351,10 +351,14 @@ int main(int argc, char **argv)
         {
             char value[PROPERTY_VALUE_MAX];
             property_get("persist.lidbg.sound.dbg", value, "n");
-            if(value[0] != 'n')
+            if(strncmp(old_debug_cmd_value, value, PROPERTY_VALUE_MAX) != 0) //not equ
             {
                 int para[5] = {0}, i = 0;
-                char *token = strtok( value, " ");
+                char *token;
+
+                strcpy(old_debug_cmd_value, value);
+                lidbg(TAG"parse cmd:[%s]\n", value);
+                token = strtok( value, " ");
                 while( token != NULL )
                 {
                     para[i] = atoi(token);
@@ -362,7 +366,6 @@ int main(int argc, char **argv)
                     token = strtok( NULL, " ");
                     i++;
                 }
-
                 switch (para[0])
                 {
                 case 1 :
@@ -399,7 +402,6 @@ int main(int argc, char **argv)
                 default :
                     break;
                 }
-                property_set("persist.lidbg.sound.dbg", "n");
             }
         }
         usleep(100000);//100ms
