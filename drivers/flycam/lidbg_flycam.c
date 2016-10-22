@@ -2882,7 +2882,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					case CMD_CVBS_MODE:
 						lidbg("%s:CMD_CVBS_MODE [%d]\n",__func__,((char*)arg)[1]);
 
-						if(((char*)arg)[1] == 0) 
+						if(((char*)arg)[1] == 1) 
 						{
 							lidbg("%s:CVBS Mode!\n",__func__);
 							CVBSMode = 1;
