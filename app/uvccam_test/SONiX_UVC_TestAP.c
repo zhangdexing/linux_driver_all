@@ -149,6 +149,7 @@ int isTranscoding = 0;
 int isEmPermit = 0;
 int isBrokenIFrame = 0;
 int isConvertMP4 = 0;
+int CVBSMode = 0;
 
 
 // chris -
@@ -176,6 +177,7 @@ char isDelDaysFile_Str[PROPERTY_VALUE_MAX];
 char delDays_Str[PROPERTY_VALUE_MAX];
 char startNight[PROPERTY_VALUE_MAX];
 char isConvertMP4_Str[PROPERTY_VALUE_MAX];
+char CVBSMode_Str[PROPERTY_VALUE_MAX];
 //char startCapture[PROPERTY_VALUE_MAX];
 
 unsigned char isPreview = 0;
@@ -2632,10 +2634,11 @@ static void get_driver_prop(int camID)
 			lidbg("======== delDays-> %d=======\n",delDays);
 		}
 
-		property_get("lidbg.uvccam.isConvertMP4", isConvertMP4_Str, "0");
-		isConvertMP4 = atoi(isConvertMP4_Str);
-		if(isConvertMP4 > 0) 
-			lidbg("======== ConvertMP4!=======\n");
+		property_get("persist.uvccam.CVBSMode", CVBSMode_Str, "0");
+		CVBSMode= atoi(CVBSMode_Str);
+		if(CVBSMode > 0) 
+			lidbg("======== CVBSMode!=======\n");
+
 		
 #if 0
 		property_get("lidbg.uvccam.isDisableVideoLoop", isDisableVideoLoop_Str, "0");
@@ -3873,6 +3876,7 @@ int main(int argc, char *argv[])
 		ioctl(flycam_fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_TOTALSIZE), Rec_File_Size);
 		ioctl(flycam_fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_PATH), Rec_Save_Dir);
 		ioctl(flycam_fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_ISVIDEOLOOP), isVideoLoop);
+		ioctl(flycam_fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_CVBSMODE), CVBSMode);
 		osd_set(REARVIEW_ID);//loop
 		return 0;
 	}

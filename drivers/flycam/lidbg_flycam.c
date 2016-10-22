@@ -109,7 +109,7 @@ static int dvr_osd_fail_times,rear_osd_fail_times;
 static char isDVROSDFail,isRearOSDFail;
 
 static int isDVRVideoLoop = 1,isRearVideoLoop = 1,isPrevYUV = 0,isEmRecPermitted = 1,isThinkNavi,isConvertMP4 = 0;
-static int delDays = 6;
+static int delDays = 6, CVBSMode = 0;
 
 #if 0
 //ioctl
@@ -2259,6 +2259,10 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				lidbg("%s:Rear NR_ISVIDEOLOOP %ld\n",__func__,arg);
 				isRearVideoLoop= arg;
 				break;
+			case NR_CVBSMODE:
+				lidbg("%s:REAR NR_CVBSMODE %ld\n",__func__,arg);
+				CVBSMode = arg;
+				break;
 			case NR_START_REC:
 		        lidbg("%s:Rear NR_START_REC\n",__func__);
 				setDVRProp(REARVIEW_ID);
@@ -2875,6 +2879,30 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 							lidbg("%s:copy_to_user ERR\n",__func__);
 						}
 						break;
+					case CMD_CVBS_MODE:
+						lidbg("%s:CMD_CVBS_MODE [%d]\n",__func__,((char*)arg)[1]);
+
+						if(((char*)arg)[1] == 0) 
+						{
+							lidbg("%s:CVBS Mode!\n",__func__);
+							CVBSMode = 1;
+						}
+						else
+						{
+							lidbg("%s:USB Cam Mode!\n",__func__);
+							CVBSMode = 0;
+						}
+						
+						sprintf(temp_cmd, "setprop persist.uvccam.CVBSMode %d",CVBSMode);
+						lidbg_shell_cmd(temp_cmd);
+						
+						dvrRespond[1] = CVBSMode;
+						length += 2;
+						if(copy_to_user((char*)arg,dvrRespond,length))
+						{
+							lidbg("%s:copy_to_user ERR\n",__func__);
+						}
+						break;
 					case CMD_AUTO_DETECT:
 						lidbg("%s:CMD_AUTO_DETECT\n",__func__);
 						//if(isDVRFirstResume)	msleep(1500);
@@ -3042,6 +3070,14 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						initMsg[length] = CMD_EM_SAVE_DAYS;
 						length++;
 						initMsg[length] = delDays;
+						length++;
+						/*------msgTAIL------*/
+						initMsg[length] = ';';
+						length++;
+
+						initMsg[length] = CMD_CVBS_MODE;
+						length++;
+						initMsg[length] = CVBSMode;
 						length++;
 						/*------msgTAIL------*/
 						initMsg[length] = ';';

@@ -138,13 +138,13 @@ namespace android
 			}
 			else if(camera_id == 0)//back cam:mirror
 			{
-				int isRearSonix = 0;
-				char isRearSonix_Str[PROPERTY_VALUE_MAX];
+				int CVBSMode = 0;
+				char CVBSMode_Str[PROPERTY_VALUE_MAX];
 				ALOGD("%s: back cam:mirror", __func__);
 				
-				property_get("lidbg.uvccam.rear.isSonix", isRearSonix_Str, "0");
-				isRearSonix = atoi(isRearSonix_Str);
-				if(isRearSonix <= 0) 
+				property_get("persist.uvccam.CVBSMode", CVBSMode_Str, "0");
+				CVBSMode = atoi(CVBSMode_Str);
+				if(CVBSMode > 0) 
 				{
 					lidbg("======== Set to CVBS Mode!Not Mirror!=======\n");
 					info->facing = CAMERA_FACING_BACK;//not mirror
