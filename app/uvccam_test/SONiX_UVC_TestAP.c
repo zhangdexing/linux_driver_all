@@ -2634,6 +2634,11 @@ static void get_driver_prop(int camID)
 			lidbg("======== delDays-> %d=======\n",delDays);
 		}
 
+		property_get("lidbg.uvccam.isConvertMP4", isConvertMP4_Str, "0");
+		isConvertMP4 = atoi(isConvertMP4_Str);
+		if(isConvertMP4 > 0) 
+			lidbg("======== ConvertMP4!=======\n");
+
 		property_get("persist.uvccam.CVBSMode", CVBSMode_Str, "0");
 		CVBSMode= atoi(CVBSMode_Str);
 		if(CVBSMode > 0) 
