@@ -315,15 +315,7 @@ int main(int argc, char **argv)
             sp<IAudioPolicyService> &aps = gAudioPolicyService;
             playing = aps->isStreamActive((audio_stream_type_t)0, 0) ;
             for (int i = 1; i < AUDIO_STREAM_CNT; i++)
-            {
                 playing = aps->isStreamActive((audio_stream_type_t)i, 0) | playing;
-                if(playing != playing_old)//not need to loop the end any more;
-                {
-                    if(dbg_music)
-                        lidbg(TAG"break.%d\n", i);
-                    break;
-                }
-            }
 
             if(dbg_music)
                 lidbg(TAG"playing=%d\n", playing);
