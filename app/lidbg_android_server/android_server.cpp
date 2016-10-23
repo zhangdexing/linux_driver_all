@@ -383,6 +383,11 @@ int main(int argc, char **argv)
                 case 3 :
                     navi_policy_en = (para[1] == 1);
                     lidbg(TAG"navi_policy_en:[%d]\n", navi_policy_en);
+                    if(navi_policy_en == 0)
+                    {
+                        lidbg(TAG"restore music to max:[%d]\n", DEFAULT_MAX_VOLUME);
+                        set_all_stream_volume(DEFAULT_MAX_VOLUME);
+                    }
                     break;
                 case 4 :
                     dbg_volume = true;
