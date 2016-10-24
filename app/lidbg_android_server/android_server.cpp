@@ -23,6 +23,7 @@ bool dbg_music = false;
 bool dbg_volume = false;
 bool playing_old = false;
 int loop_count = 0;
+int mypid = -1;
 
 static sp<IAudioPolicyService> gAudioPolicyService = 0;
 
@@ -31,7 +32,7 @@ void GetAudioPolicyService(bool dbg)
     sp<IServiceManager> sm = defaultServiceManager();
     sp<IBinder> binder;
     if(dbg)
-        lidbg( TAG"GetAudioPolicyService.in\n");
+        lidbg( TAG"GetAudioPolicyService.in,mypid:%d\n", mypid);
 
     do
     {
@@ -226,7 +227,7 @@ void check_ring_stream(void)
             sprintf(cmd, "sound %d", (ring ? 3 : 4));
             LIDBG_WRITE("/dev/fly_sound0", cmd);
         }
-        lidbg(TAG"ring.[%d],music_level:[%d/%d]\n", ring, music_level, DEFAULT_MAX_VOLUME);
+        lidbg(TAG"ring.[%d],music_level:[%d/%d],mypid:%d\n", ring, music_level, DEFAULT_MAX_VOLUME, mypid);
         if(ring)
         {
             //step_on_stream_volume(AUDIO_STREAM_MUSIC, DEFAULT_MAX_VOLUME, music_level, 200);
@@ -301,7 +302,8 @@ int main(int argc, char **argv)
         lidbg(TAG"wait\n");
         sleep(5);
     }
-    lidbg(TAG"start:navi_policy_en=%d  DEFAULT_MAX_VOLUME=%d\n", navi_policy_en, DEFAULT_MAX_VOLUME);
+    mypid = getpid();
+    lidbg(TAG"start:navi_policy_en=%d  DEFAULT_MAX_VOLUME=%d,mypid:%d\n", navi_policy_en, DEFAULT_MAX_VOLUME, mypid);
 
     GetAudioPolicyService(true);
     GetAudioFlingerService(true);
@@ -313,9 +315,14 @@ int main(int argc, char **argv)
         if(gAudioPolicyService != 0 && gAudioFlingerService != 0)
         {
             sp<IAudioPolicyService> &aps = gAudioPolicyService;
-            playing = aps->isStreamActive((audio_stream_type_t)0, 0) ;
-            for (int i = 1; i < AUDIO_STREAM_CNT; i++)
-                playing = aps->isStreamActive((audio_stream_type_t)i, 0) | playing;
+            playing = aps->isStreamActive(AUDIO_STREAM_MUSIC, 0) |
+                      aps->isStreamActive(AUDIO_STREAM_VOICE_CALL, 0) |
+                      aps->isStreamActive(AUDIO_STREAM_RING, 0) |
+                      aps->isStreamActive(AUDIO_STREAM_SYSTEM , 0) |
+                      aps->isStreamActive(AUDIO_STREAM_DTMF, 0) |
+                      aps->isStreamActive(AUDIO_STREAM_NOTIFICATION , 0);
+            if(10 < AUDIO_STREAM_CNT)//for MT3561 AUDIO_STREAM_GIS
+                playing = aps->isStreamActive((audio_stream_type_t)10, 0) | playing;
 
             if(dbg_music)
                 lidbg(TAG"playing=%d\n", playing);
@@ -339,7 +346,7 @@ int main(int argc, char **argv)
         loop_count++;
         if(loop_count > 200)
         {
-            GetAudioPolicyService(false);
+            GetAudioPolicyService(true);
             GetAudioFlingerService(false);
             loop_count = 0;
         }
@@ -347,7 +354,7 @@ int main(int argc, char **argv)
         {
             char value[PROPERTY_VALUE_MAX];
             property_get("persist.lidbg.sound.dbg", value, "n");
-            if(strncmp(old_debug_cmd_value, value, PROPERTY_VALUE_MAX) != 0) //not equ
+            if((value[0] != 'n') && strncmp(old_debug_cmd_value, value, PROPERTY_VALUE_MAX) != 0) //not equ
             {
                 int para[5] = {0}, i = 0;
                 char *token;
@@ -407,6 +414,9 @@ int main(int argc, char **argv)
                 case 9 :
                     delay_step_on_music = para[1] ;
                     lidbg(TAG"delay_step_on_music:[%dms]\n", delay_step_on_music);
+                    break;
+                case 10 :
+                    lidbg(TAG"mypid:%d,delay_step_on_music:[%dms],delay_off_volume_policy:[%dms],music_max_level:%d,music_level:%d,navi_policy_en:[%d]\n", mypid, delay_step_on_music, delay_off_volume_policy, music_max_level, music_level, navi_policy_en);
                     break;
 
                 default :
