@@ -188,7 +188,7 @@ bool set_all_stream_volume(int index)
 bool step_on_stream_volume(audio_stream_type_t mstream, int start_index , int end_index, int total_time)
 {
     int i, error = ERROR_VALUE, old_index = 0;
-    int cnt = abs(end_index - start_index), cur_index, step_delay;
+    int cnt = abs(end_index - start_index), cur_index = start_index, step_delay;
     step_delay = (total_time / cnt);
     lidbg(TAG"step_on_stream_volume:[%d/%d/%d/%d/%d]\n", mstream, start_index, end_index, step_delay, cnt);
     if(cnt != 0)
@@ -196,10 +196,34 @@ bool step_on_stream_volume(audio_stream_type_t mstream, int start_index , int en
         for (i = 0; i < cnt; i++)
         {
             if(end_index > start_index)
-                cur_index = start_index + i;
+            {
+                if (abs(end_index - cur_index) > 6)
+                {
+                    cur_index +=  3;
+                    if(dbg_volume)
+                        lidbg(TAG"newstep:3/%d /%d/[%d,%d->%d]\n", cnt, 6, cur_index, start_index, end_index);
+                }
+                else if (abs(end_index - cur_index) > 3)
+                {
+                    cur_index +=  2;
+                    if(dbg_volume)
+                        lidbg(TAG"newstep:2/%d /%d/[%d,%d->%d]\n", cnt, 3, cur_index, start_index, end_index);
+                }
+                else
+                {
+                    cur_index += 1;
+                    if(dbg_volume)
+                        lidbg(TAG"newstep:1/%d /%d/[%d,%d->%d]\n", cnt, 1 , cur_index, start_index, end_index);
+                }
+                usleep(200 * 1000);
+                if(cur_index > end_index)
+                    break;
+            }
             else
+            {
                 cur_index = start_index - i;
-            usleep( step_delay * 1000);
+                usleep( step_delay * 1000);
+            }
 
             if(cur_index != old_index)
             {
@@ -230,8 +254,9 @@ void check_ring_stream(void)
         lidbg(TAG"ring.[%d],music_level:[%d/%d],mypid:%d\n", ring, music_level, DEFAULT_MAX_VOLUME, mypid);
         if(ring)
         {
-            //step_on_stream_volume(AUDIO_STREAM_MUSIC, DEFAULT_MAX_VOLUME, music_level, 200);
-            set_stream_volume(AUDIO_STREAM_MUSIC, music_level);
+            if(delay_off_volume_policy_cnt == 0)
+                step_on_stream_volume(AUDIO_STREAM_MUSIC, DEFAULT_MAX_VOLUME, music_level, 100);
+            //set_stream_volume(AUDIO_STREAM_MUSIC, music_level);
         }
         else
         {
