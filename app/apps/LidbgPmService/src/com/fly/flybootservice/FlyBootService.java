@@ -81,6 +81,9 @@ import android.net.wifi.WifiManager;
 
 import android.telephony.TelephonyManager;
 import android.os.Handler;
+
+import android.bluetooth.BluetoothAdapter;
+
 /*
  * ScreenOn ScreenOff DeviceOff Going2Sleep 四种状态分别表示：1.表示正常开屏状态2.表示关屏，但没关外设的状态
  * 0'~30'的阶段3.表示关屏关外设，但没到点进入深度休眠 30'~60'的阶段4.表示发出休眠请求到执行快速休眠 60'后,即进入深度休眠
@@ -145,6 +148,8 @@ public class FlyBootService extends Service {
     private boolean isWifiApEnabled=false;
     private boolean isWifiEnabled=false;
     private boolean isSimCardReady=false;
+
+    private BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 
     String mInternelBlackList[] = {
             "com.qti.cbwidget"
@@ -280,6 +285,11 @@ public class FlyBootService extends Service {
 									enterAirplaneMode();
 								}else
 									LIDBG_PRINT("FlyBootService FBS_GOTO_SLEEP disable AirplaneMode\n");
+								if (mBtAdapter.isEnabled())
+								{
+									LIDBG_PRINT("FlyBootService bluetooth mBtAdapter.disable()\n");
+									mBtAdapter.disable();
+								}
 								releaseBrightWakeLock();
 								//if(blSuspendUnairplaneFlag)
 								//	KillProcess();
@@ -507,7 +517,9 @@ public class FlyBootService extends Service {
 			case 23:
 				setLocationMode(false);
 			break;
-
+			case 24:
+				mBtAdapter.disable();
+			break;
 								
 			default:
 			LIDBG_PRINT("BroadcastReceiver.action:unkown"+action+"\n");
