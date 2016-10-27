@@ -262,15 +262,6 @@ public class FlyBootService extends Service {
 								LIDBG_PRINT("FlyBootService sent device_down to hal\n");
 								isWifiApEnabled = isWifiApEnabled();
 								isWifiEnabled = isWifiEnabled();
-								LIDBG_PRINT("FlyBootService isWifiApEnabled:"+isWifiApEnabled+"/isWifiEnabled:"+isWifiEnabled+"\n");
-								if (isWifiApEnabled)
-								{
-									setWifiApState(false);
-								}
-								if (isWifiEnabled)
-								{
-									setWifiState(false);
-								}
 							}else if(pmState == FBS_FASTBOOT_REQUEST){
 								LIDBG_PRINT("FlyBootService get pm state: FBS_FASTBOOT_REQUEST\n");
 							}else if(pmState == FBS_ANDROID_DOWN){
@@ -289,6 +280,15 @@ public class FlyBootService extends Service {
 								{
 									LIDBG_PRINT("FlyBootService bluetooth mBtAdapter.disable()\n");
 									mBtAdapter.disable();
+								}
+								LIDBG_PRINT("FlyBootService isWifiApEnabled:"+isWifiApEnabled+"/isWifiEnabled:"+isWifiEnabled+"\n");
+								if (isWifiApEnabled)
+								{
+									setWifiApState(false);
+								}
+								if (isWifiEnabled)
+								{
+									setWifiState(false);
 								}
 								releaseBrightWakeLock();
 								//if(blSuspendUnairplaneFlag)
