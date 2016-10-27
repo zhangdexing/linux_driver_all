@@ -167,6 +167,20 @@ LOCAL_MODULE_CLASS := bin
 LOCAL_MODULE_TAGS := optional debug eng tests samples
 LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
 include $(BUILD_PREBUILT)
+include $(CLEAR_VARS)
+LOCAL_MODULE := GpsInfo.ko
+LOCAL_SRC_FILES := GpsInfo.apk
+LOCAL_MODULE_CLASS := bin
+LOCAL_MODULE_TAGS := optional debug eng tests samples
+LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+include $(BUILD_PREBUILT)
+include $(CLEAR_VARS)
+LOCAL_MODULE := MediaPlayerTest.ko
+LOCAL_SRC_FILES := MediaPlayerTest.apk
+LOCAL_MODULE_CLASS := bin
+LOCAL_MODULE_TAGS := optional debug eng tests samples
+LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+include $(BUILD_PREBUILT)
 
 #include $(CLEAR_VARS)
 #LOCAL_MODULE := ftpd

@@ -42,8 +42,8 @@ char *lmk_protect_list[] =
         "audio.bluetooth",
         "cn.flyaudio.dvr",
         "io.proxyservice",
-        "ncent.wecarnavi",
-
+	"ncent.wecarnavi",
+	"android.GpsInfo",
 	"android.policy",
 	"com.sygic.aura",
 	"mediaserver",
