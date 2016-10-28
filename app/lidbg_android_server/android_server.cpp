@@ -415,7 +415,6 @@ int main(int argc, char **argv)
                     break;
                 case 4 :
                     dbg_volume = true;
-                    print_stream_volume();
                     set_stream_volume((audio_stream_type_t)para[1], para[2]);
                     break;
                 case 5 :
@@ -442,6 +441,9 @@ int main(int argc, char **argv)
                     break;
                 case 10 :
                     lidbg(TAG"mypid:%d,delay_step_on_music:[%dms],delay_off_volume_policy:[%dms],music_max_level:%d,music_level:%d,navi_policy_en:[%d]\n", mypid, delay_step_on_music, delay_off_volume_policy, music_max_level, music_level, navi_policy_en);
+                    break;
+                case 11 :
+                    print_stream_volume();
                     break;
 
                 default :
