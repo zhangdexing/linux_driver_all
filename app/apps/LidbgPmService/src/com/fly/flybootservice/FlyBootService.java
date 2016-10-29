@@ -290,7 +290,7 @@ public class FlyBootService extends Service {
 								{
 									setWifiState(false);
 								}
-								releaseBrightWakeLock();
+								//releaseBrightWakeLock();
 								//if(blSuspendUnairplaneFlag)
 								//	KillProcess();
 								system_gotosleep();
