@@ -511,6 +511,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#112--launch MTK settings \n");
             fs_mem_log("*158#113--revert sound debug \n");
             fs_mem_log("*158#114x--use shell cmd dd to test emmc extern SD udisk Stability \n");
+            fs_mem_log("*158#115--auto update fup and auto install then open the red osd \n");
+            fs_mem_log("*158#116--factory reset and auto install then open the red osd \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1330,6 +1332,29 @@ void parse_cmd(char *pt)
 			}
 			lidbg_domineering_ack();
         }
+        else if (!strcmp(argv[1], "*158#115"))
+        {
+            lidbg("*158#115--auto update fup and auto install then open the red osd \n");
+            lidbg_domineering_ack();
+            g_recovery_meg->bootParam.autoUp.val = 0xb;
+            if(flyparameter_info_save(g_recovery_meg))
+            {
+                lidbg_shell_cmd("rm -rf /storage/udisk/conf");
+                lidbg_shell_cmd("echo autoOps > /persist/autoOps.txt");
+                lidbg_shell_cmd("sync");
+                ssleep(1);
+                lidbg_shell_cmd("reboot recovery");
+            }
+        }
+        else if (!strcmp(argv[1], "*158#116"))
+        {
+                lidbg("*158#116--factory reset and auto install then open the red osd \n");
+                lidbg_domineering_ack();
+                lidbg_shell_cmd("echo autoOps > /persist/autoOps.txt");
+                lidbg_shell_cmd("am broadcast -a android.intent.action.MASTER_CLEAR");
+                lidbg_shell_cmd("sync");
+        }
+		
     }
     else if(!strcmp(argv[0], "monkey") )
     {

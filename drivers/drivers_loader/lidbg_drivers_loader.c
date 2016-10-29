@@ -3,6 +3,7 @@
 static LIST_HEAD(lidbg_list);
 static LIST_HEAD(flyaudio_list);
 static LIST_HEAD(flyaudio_hal_list);
+static LIST_HEAD(auto_update_list);
 LIDBG_DEFINE;
 
 struct judgment
@@ -349,6 +350,15 @@ static int thread_drivers_loader_analyze(void *data)
 
     fs_fill_list(get_lidbg_file_path(buff, "flyaudio.init.rc.conf"), FS_CMD_FILE_LISTMODE, &flyaudio_list);
     analyze_list_cmd(&flyaudio_list);
+
+    if(fs_is_file_exist("/persist/autoOps.txt"))
+    {
+        lidbg_shell_cmd("rm -rf /persist/autoOps.txt");
+        fs_fill_list(get_lidbg_file_path(buff, "flyaudio.autoupdate.conf"), FS_CMD_FILE_LISTMODE, &auto_update_list);
+        analyze_list_cmd(&auto_update_list);
+    }
+    else
+        LIDBG_WARN("<miss autoOps.txt>\n");
 
 
     ssleep(30);//later,exit
