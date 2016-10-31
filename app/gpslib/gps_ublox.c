@@ -565,8 +565,9 @@ static void nmea_call_nmea_cb( NmeaReader  *r )
 
     if (r != NULL  && r->in != NULL && r->callbacks.nmea_cb != NULL)
     {
-        D("[gpsdata]Received==2222=====:%d[%.*s]",  r->pos-1,r->pos-1,r->in);
-        r->callbacks.nmea_cb(now, r->in, r->pos-1);
+        D("[gpsdata]Received==2222=====:%d[%.*s]",  r->pos,r->pos,r->in);
+        r->in[r->pos]='\0';
+        r->callbacks.nmea_cb(now, r->in, r->pos);
     }
     else
         D("[gpsdata]skip: =======nmea_call_nmea_cb=========");
