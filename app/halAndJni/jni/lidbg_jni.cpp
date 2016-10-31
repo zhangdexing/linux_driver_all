@@ -307,6 +307,125 @@ static JNINativeMethod methods[] =
     { "UrgentRecordCameraManual", "(II)I", (void *)urgent_record_camera_manual },
     { "isConnectCamera", "(I)Z", (void *)jni_is_camera_connect },
 };
+
+static jint jni_i2c_open  (JNIEnv *env, jobject /*clazz*/, jstring path)
+{
+    char *mpath = (char *)env->GetStringUTFChars(path, NULL);
+    if(sHalInterface != NULL)
+    {
+        int ret = sHalInterface->i2c_open(mpath);
+        env->ReleaseStringUTFChars(path, mpath);
+        return ret;
+    }
+    else
+    {
+        lidbg(DEBG_TAG"[%s].sHalInterface:%s\n", __FUNCTION__, sHalInterface);
+        return -1;
+    }
+};
+static jint jni_i2c_read  (JNIEnv *env, jobject /*clazz*/,  jint fd, jint slaveAddr, jintArray bufArr, jint len)
+{
+    if(sHalInterface != NULL && fd > 0 && len > 0)
+    {
+        jint *bufInt;
+        char *bufByte;
+        int res = 0, i = 0, j = 0;
+
+        bufInt = (jint *) malloc(len * sizeof(int));
+        if (bufInt == 0)
+        {
+            lidbg(DEBG_TAG"%s: nomem1", __FUNCTION__);
+            return -1;
+        }
+        bufByte = (char *) malloc(len);
+        if (bufByte == 0)
+        {
+            lidbg(DEBG_TAG"%s: nomem2", __FUNCTION__);
+            free(bufInt);
+            return -1;
+        }
+
+        env->GetIntArrayRegion(bufArr, 0, len, bufInt);
+        memset(bufByte, '\0', len);
+        for (i = 0; i < len ; i++)
+            bufByte[i] = bufInt[i];
+
+        j = sHalInterface->i2c_read( fd, slaveAddr, (unsigned  char *)bufByte,  len);
+
+        //lidbg(DEBG_TAG"%s:%d %d %d %d \n", __FUNCTION__, bufByte[0], bufByte[1], bufByte[2], bufByte[3]);
+        for (i = 0; i < len ; i++)
+            bufInt[i] = bufByte[i];
+        env->SetIntArrayRegion( bufArr, 0, len, bufInt);
+        free(bufByte);
+        free(bufInt);
+        return j;
+    }
+    else
+    {
+        lidbg(DEBG_TAG"[%s].sHalInterface:%s\n", __FUNCTION__, sHalInterface);
+        return -1;
+    }
+
+};
+static jint jni_i2c_write  (JNIEnv *env, jobject /*clazz*/, jint fd, jint slaveAddr,  jintArray bufArr, jint len)
+{
+    if(sHalInterface != NULL && fd > 0 && len > 0)
+    {
+        jint *bufInt;
+        char *bufByte;
+        int res = 0, i = 0, j = 0;
+
+        bufInt = (jint *) malloc(len * sizeof(int));
+        if (bufInt == 0)
+        {
+            lidbg(DEBG_TAG"%s: nomem1", __FUNCTION__);
+            return -1;
+        }
+        bufByte = (char *) malloc(len);
+        if (bufByte == 0)
+        {
+            lidbg(DEBG_TAG"%s: nomem2", __FUNCTION__);
+            free(bufInt);
+            return -1;
+        }
+
+        env->GetIntArrayRegion( bufArr, 0, len, bufInt);
+        memset(bufByte, '\0', len);
+        for (i = 0; i < len ; i++)
+            bufByte[i]   = bufInt[i];
+
+        j = sHalInterface->i2c_write( fd,  slaveAddr, (unsigned  char *) bufByte,  len);
+        free(bufByte);
+        free(bufInt);
+        return j;
+    }
+    else
+    {
+        lidbg(DEBG_TAG"[%s].sHalInterface:%s\n", __FUNCTION__, sHalInterface);
+        return -1;
+    }
+
+};
+static jint jni_i2c_close  (JNIEnv * /*env*/, jobject /*clazz*/,  jint fd)
+{
+    if(sHalInterface != NULL)
+    {
+        return sHalInterface->i2c_close(fd);
+    }
+    else
+    {
+        lidbg(DEBG_TAG"[%s].sHalInterface:%s\n", __FUNCTION__, sHalInterface);
+        return false;
+    }
+};
+
+static JNINativeMethod I2C_methods[] =
+{
+    { "IICOpen", "(Ljava/lang/String;)I", (void *)jni_i2c_open },
+    { "IICRead", "(II[II)I", (void *)jni_i2c_read },
+    { "IICWrite", "(II[II)I", (void *)jni_i2c_write },
+    { "IICClose", "(I)I", (void *)jni_i2c_close },
+};
 //add up below:
 static jclass registerNativeMethods(JNIEnv *env, const char *className, JNINativeMethod *gMethods, int numMethods)
 {
@@ -329,7 +448,7 @@ static jclass registerNativeMethods(JNIEnv *env, const char *className, JNINativ
 
 static int registerNatives(JNIEnv *env)
 {
-    int ret = JNI_FALSE, ret2 = JNI_FALSE;
+    int ret[6] = {JNI_FALSE}, i;
     //.1
     {
         static const char *classPathName = "com/android/mypftf99/app4haljni/LidbgJniNative";
@@ -339,7 +458,7 @@ static int registerNatives(JNIEnv *env)
             lidbg(DEBG_TAG"[%s].suc.%s\n", __FUNCTION__, classPathName);
             method_call_java_test = env->GetMethodID(clazz, "hal2jni2appCallBack", "(Ljava/lang/String;)V");
             method_call_java_drivers_abnormal_event = env->GetMethodID(clazz, "driverAbnormalEvent", "(I)V");
-            ret = JNI_TRUE;
+            ret[0] = JNI_TRUE;
         }
         else
         {
@@ -355,7 +474,21 @@ static int registerNatives(JNIEnv *env)
             lidbg(DEBG_TAG"[%s].suc.%s\n", __FUNCTION__, classPathName);
             method_call_java_test = env->GetMethodID(clazz, "hal2jni2appCallBack", "(Ljava/lang/String;)V");
             method_call_java_drivers_abnormal_event = env->GetMethodID(clazz, "driverAbnormalEvent", "(I)V");
-            ret2 = JNI_TRUE;
+            ret[1] = JNI_TRUE;
+        }
+        else
+        {
+            lidbg(DEBG_TAG"[%s].fail.%s\n", __FUNCTION__, classPathName);
+        }
+    }
+    //.3
+    {
+        static const char *classPathName = "com/android/mypftf99/app4haljni/LidbgIICNative";
+        jclass clazz = registerNativeMethods(env, classPathName, I2C_methods, sizeof(I2C_methods) / sizeof(I2C_methods[0]));
+        if (clazz)
+        {
+            lidbg(DEBG_TAG"[%s].suc.%s\n", __FUNCTION__, classPathName);
+            ret[2] = JNI_TRUE;
         }
         else
         {
@@ -363,11 +496,12 @@ static int registerNatives(JNIEnv *env)
         }
     }
     //result
-    if(ret || ret2)
-        return JNI_TRUE;
-    else
-        return JNI_FALSE;
-
+    for(i = 0; i < 6; i++)
+    {
+        if(ret[i] == JNI_TRUE)
+            return JNI_TRUE;
+    }
+    return JNI_FALSE;
 }
 jint JNI_OnLoad(JavaVM *vm, void * /*reserved*/)
 {

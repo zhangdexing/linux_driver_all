@@ -39,6 +39,10 @@ typedef struct
     char    *(*urgent_record_get_status)(int camera_id);
     int   (*urgent_record_manual)(int camera_id, int start_stop);
     bool   (*is_camera_connect)(int camera_id);
+    int (*i2c_open)(char *nodeName);
+    int (*i2c_read)(int fd,  unsigned short slaveAddr, unsigned  char *dataBuf, int len);
+    int (*i2c_write)(int fd, unsigned short slaveAddr, unsigned  char *dataBuf , int len);
+    int (*i2c_close)(int fd);
 } HalInterface;
 
 struct lidbg_device_t

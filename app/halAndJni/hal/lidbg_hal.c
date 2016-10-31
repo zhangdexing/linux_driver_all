@@ -11,6 +11,8 @@
 #include <sys/types.h>
 #include <errno.h>
 
+#include <linux/i2c-dev.h>
+
 #include "lidbg_servicer.h"
 #include "lidbg_flycam_par.h"
 #include "hal_lidbg_commen.h"
@@ -190,8 +192,89 @@ bool   lidbg_hal_is_camera_connect(int camera_id)
     int ret = -1;
     para[0] = camera_id;
     ret = ioctl(flycam_fd, _IO(FLYCAM_EM_MAGIC, NR_CAM_STATUS), para);
-    lidbg(DEBG_TAG"[%s].in.[camera_id:%d,ret:%d,para[2]:%d]\n", __FUNCTION__, camera_id,ret,para[2]);
-    return (para[2]==0);
+    lidbg(DEBG_TAG"[%s].in.[camera_id:%d,ret:%d,para[2]:%d]\n", __FUNCTION__, camera_id, ret, para[2]);
+    return (para[2] == 0);
+};
+int lidbg_hal_i2c_open(char *nodeName)
+{
+    int fd = 0 , res;
+    int retrycount = 10 ;
+    fd = open(nodeName, O_RDWR | O_NONBLOCK, 0);
+    while((retrycount > 0) && ( fd < 0) )
+    {
+        if (fd < 0)
+        {
+            lidbg(DEBG_TAG"Can't open i2c bus:%s\n", nodeName);
+            usleep(20 * 1000);
+        }
+        fd = open(nodeName, O_RDWR | O_NONBLOCK, 0);
+        lidbg(DEBG_TAG"retrycount =%d", retrycount);
+        retrycount--;
+    }
+    return fd;
+};
+int lidbg_hal_i2c_read(int fd,  unsigned short slaveAddr, unsigned char *dataBuf, int len)
+{
+    int ret, reg;
+    lidbg(DEBG_TAG"[%s].in slaveAddr:0x%x reg:0x%x len:%d\n", __FUNCTION__, slaveAddr, dataBuf[0], len);
+    if (ioctl(fd, I2C_SLAVE_FORCE , slaveAddr) < 0)
+    {
+        lidbg(DEBG_TAG"Could not set address to 0x%02x: %s\n", slaveAddr, strerror(errno));
+        return -errno;
+    }
+
+    reg = dataBuf[0];
+    for(ret = 0; ret < len; ret++)
+    {
+        int this_reg = ret + reg;
+        dataBuf[ret] = i2c_smbus_read_byte_data(fd, this_reg);
+        lidbg(DEBG_TAG"[reg.0x%x=0x%x]\n", this_reg, dataBuf[ret]);
+    }
+    return 0;
+}
+int lidbg_hal_i2c_write(int fd,  unsigned short slaveAddr, unsigned char *dataBuf, int len)
+{
+    int ret;
+    lidbg(DEBG_TAG"[%s].in slaveAddr:0x%x len:%d\n", __FUNCTION__, slaveAddr, len);
+    for(ret = 0; ret < len; ret++)
+    {
+        lidbg(DEBG_TAG"[%s]. %d = 0x%x:\n", __FUNCTION__, ret, dataBuf[ret]);
+    }
+    if (ioctl(fd, I2C_SLAVE_FORCE , slaveAddr) < 0)
+    {
+        lidbg(DEBG_TAG"Could not set address to 0x%02x: %s\n", slaveAddr, strerror(errno));
+        return -errno;
+    }
+    if(1)
+    {
+        ret = i2c_smbus_write_i2c_block_data(fd, dataBuf[0], len - 1, dataBuf + 1);//first byte is the reg.
+    }
+    else
+    {
+        union i2c_smbus_data data;
+        struct i2c_smbus_ioctl_data args;
+        int i;
+
+        len -= 1;
+        dataBuf += 1;
+
+        if (len > I2C_SMBUS_I2C_BLOCK_DATA)
+            len = I2C_SMBUS_I2C_BLOCK_DATA;
+        for (i = 1; i <= len; i++)
+            data.block[i] = dataBuf[i - 1];
+        data.block[0] = len;
+
+        args.read_write = I2C_SMBUS_WRITE;
+        args.command = dataBuf[0];
+        args.size = I2C_SMBUS_I2C_BLOCK_BROKEN;
+        args.data = &data;
+        ret = ioctl(fd, I2C_SMBUS, &args);
+    }
+    return ret;
+}
+int lidbg_hal_i2c_close(int fd)
+{
+    return close(fd);
 };
 static HalInterface sLidbgHalInterface =
 {
@@ -208,6 +291,10 @@ static HalInterface sLidbgHalInterface =
     lidbg_hal_urgent_record_get_status,
     lidbg_hal_urgent_record_manual,
     lidbg_hal_is_camera_connect,
+    lidbg_hal_i2c_open,
+    lidbg_hal_i2c_read,
+    lidbg_hal_i2c_write,
+    lidbg_hal_i2c_close,
 };
 const HalInterface *lidbg_hal_interface(struct lidbg_device_t *dev)
 {
