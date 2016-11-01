@@ -18,8 +18,8 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_gps_lna_en = 46,
 	.gpio_gps_ant_power = 86,
 
-        .gpio_int_button_left1 = 4,
-        .gpio_int_button_left2 = 3,
+        .gpio_int_button_left1 = 3,
+        .gpio_int_button_left2 = 4,
         .gpio_int_button_right1 = 1,
         .gpio_int_button_right2 = 2,
 
@@ -54,6 +54,45 @@ struct hw_version_specific g_hw_version_specific[] =
         .ad_val_mcu = 87,
         .fly_parameter_node = "/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/flyparameter",
         .cpu_freq_temp_node = "/sys/class/thermal/thermal_zone1/temp",
+	.ad_val_mcu = 1,
+	.ad_key =
+        {
+            {
+                .ch = 39,
+                .offset = 100,
+                .max = 3300,
+                .key_item = {
+                    {2500, KEY_HOME},
+                    {1535, KEY_VOLUMEUP} ,
+                    {2015, KEY_VOLUMEDOWN} ,
+
+                }
+            },
+
+            {
+                .ch = 38,
+                .offset = 100,
+                .max = 3300,
+                .key_item = {
+                    {2500, KEY_BACK},
+                }
+            },
+            {
+                .ch = 37,
+                .offset = 100,
+                .max = 3300,
+                .key_item = {
+                },
+            },
+
+            {
+                .ch = 36,
+                .offset = 100,
+                .max = 3300,
+                .key_item = {
+                },
+            },
+      },
 
 	},
 
