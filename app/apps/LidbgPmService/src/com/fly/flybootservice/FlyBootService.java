@@ -237,6 +237,8 @@ public class FlyBootService extends Service {
 			+ "\n Build.VERSION.SDK_INT: " + android.os.Build.VERSION.SDK_INT
 			+ "\n Build.VERSION.RELEASE: " + android.os.Build.VERSION.RELEASE);
 
+        restoreAirplaneMode(mFlyBootService);
+
         new Thread() {
             @Override
             public void run() {
