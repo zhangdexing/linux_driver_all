@@ -146,6 +146,9 @@ void acc_status_handle(FLY_ACC_STATUS val)
 	static u32 acc_count = 0;
 	if(val == FLY_ACC_ON){
 		wake_lock(&rmtctrl_wakelock);
+		#ifdef PLATFORM_ID_16
+		dsi83_resume();
+		#endif
 		lidbg("acc_status_handle: FLY_ACC_ON:acc_count=%d\n",acc_count++);
 		g_var.acc_flag = FLY_ACC_ON;
 
@@ -154,12 +157,10 @@ void acc_status_handle(FLY_ACC_STATUS val)
 		repeat_times = 0;
 		system_unormal_wakeup_cnt = 0;
 		system_unormal_wakeuped_ms = 0;
-
 		lidbg("acc_status_handle: set acc.status to 0\n");
 		lidbg_shell_cmd("setprop persist.lidbg.acc.status 0");
 		send_app_status(FLY_KERNEL_UP);//wakeup
 		lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON));
-
 		//if(g_var.is_fly == 0)
 		//    USB_WORK_ENABLE;
 		//LCD_ON;

@@ -255,6 +255,7 @@ int soc_io_suspend(void);
 int soc_io_resume(void);
 int soc_temp_get(int num);
 void lidbg_soc_main(int argc, char **argv);
+extern void dsi83_resume(void);
 
 ///////////////////////////////////////
 #define ADC_MAX_CH (8)
