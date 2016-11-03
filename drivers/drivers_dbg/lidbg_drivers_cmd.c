@@ -513,6 +513,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#114x--use shell cmd dd to test emmc extern SD udisk Stability \n");
             fs_mem_log("*158#115--auto update fup and auto install then open the red osd \n");
             fs_mem_log("*158#116--factory reset and auto install then open the red osd \n");
+            fs_mem_log("*158#117--get qcom band :input just once ,when band changed ,it will tell you though toast \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1354,7 +1355,12 @@ void parse_cmd(char *pt)
                 lidbg_shell_cmd("am broadcast -a android.intent.action.MASTER_CLEAR");
                 lidbg_shell_cmd("sync");
         }
-		
+        else if (!strcmp(argv[1], "*158#117"))
+        {
+                lidbg("*158#117--get qcom band :input just once ,when band changed ,it will tell you though toast \n");
+                lidbg_domineering_ack();
+                lidbg_shell_cmd("/flysystem/lib/out/getQcomBand &");
+        }
     }
     else if(!strcmp(argv[0], "monkey") )
     {

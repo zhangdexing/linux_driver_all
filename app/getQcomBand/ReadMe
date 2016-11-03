@@ -1,0 +1,5 @@
+- 00 to 39 -- CDMA band classes \n 
+- 40 to 79 -- GSM band classes \n 
+- 80 to 91 -- WCDMA band classes \n 
+- 120 to 160 -- LTE band classes \n 
+- 200 to 205 -- TD-SCDMA band classes 
