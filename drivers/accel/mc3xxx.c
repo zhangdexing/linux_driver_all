@@ -2720,7 +2720,7 @@ static int mc3xxx_probe(struct i2c_client *client,
 	mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
 	data->enabled = false;
 
-	lidbg_new_cdev(&mc3xxx_fops, "mc3xxx_enable");
+	lidbg_new_cdev(&mc3xxx_fops, "mc3xxx_enable0");
 
 	//crash_detect_init();
 	lidbg("%s mc3xxx probe ok \n", __func__);
@@ -2752,7 +2752,6 @@ static int mc3xxx_remove(struct i2c_client *client)
 
 	hrtimer_cancel(&data->timer);
 	input_unregister_device(data->input_dev);	
-	misc_deregister(&mc3xxx_device);
 	sysfs_remove_group(&data->input_dev->dev.kobj, &mc3xxx_group);
 	kfree(data);
 	return 0;

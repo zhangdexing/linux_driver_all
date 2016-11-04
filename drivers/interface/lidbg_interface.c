@@ -442,21 +442,11 @@ static struct file_operations dev_fops =
     .release =  interface_release,
 };
 
-
-static struct miscdevice misc =
-{
-    .minor = MISC_DYNAMIC_MINOR,
-    .name = DEVICE_NAME,
-    .fops = &dev_fops,
-
-};
-
 int fly_interface_init(void)
 {
-    int ret;
     ssize_t p ;
     DUMP_BUILD_TIME;
-    ret = misc_register(&misc);
+    lidbg_new_cdev(&dev_fops, DEVICE_NAME);
     plidbg_dev = kmalloc(sizeof(struct lidbg_interface), GFP_KERNEL);
 
     if (plidbg_dev == NULL)

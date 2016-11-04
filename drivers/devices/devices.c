@@ -775,7 +775,7 @@ static int soc_dev_probe(struct platform_device *pdev)
     FS_REGISTER_INT(fan_onoff_temp, "fan_onoff_temp", 65, NULL);
 #endif
 
-    lidbg_new_cdev(&dev_fops, "flydev");
+    lidbg_new_cdev(&dev_fops, "flydev0");
     init_completion(&udisk_event_wait);
     usb_register_notify(&usb_nb_event);
     CREATE_KTHREAD(thread_udisk_uevent, NULL);

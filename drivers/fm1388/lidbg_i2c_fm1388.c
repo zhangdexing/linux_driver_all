@@ -1539,10 +1539,11 @@ static int fm1388_probe(struct platform_device *pdev)
 		fm1388_fw_loaded);
 #endif
 	CREATE_KTHREAD(fm1388_fw_loaded, NULL);
-	pr_err("%s: misc_register.\n", __func__);
-	ret = misc_register(&fm1388_dev);
-	if (ret)
-		dev_err(&pdev->dev, "Couldn't register control device\n");
+	pr_err("%s: lidbg_new_cdev.\n", __func__);
+    if(!lidbg_new_cdev(&fm1388_fops, "fm1388") )
+    {
+        dev_err(&pdev->dev, "Couldn't register control device\n");
+    }
 
 	INIT_DELAYED_WORK(&dsp_start_vr, dsp_start_vr_work);
 

@@ -441,15 +441,6 @@ static struct file_operations dev_fops =
     .release =  hal_release,
 };
 
-
-static struct miscdevice misc =
-{
-    .minor = MISC_DYNAMIC_MINOR,
-    .name = DEVICE_NAME,
-    .fops = &dev_fops,
-
-};
-
 int hal_init(void *data)
 {
     if(fs_is_file_exist(HAL_SO))
@@ -468,9 +459,8 @@ int hal_init(void *data)
 
 int fly_hal_init(void)
 {
-    int ret;
     DUMP_BUILD_TIME;
-    ret = misc_register(&misc);
+    lidbg_new_cdev(&dev_fops, DEVICE_NAME);
 
     plidbg_dev = kmalloc(sizeof(struct lidbg_hal), GFP_KERNEL);
     if (plidbg_dev == NULL)

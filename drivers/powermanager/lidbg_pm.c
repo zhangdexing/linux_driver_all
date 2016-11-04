@@ -1197,8 +1197,8 @@ static int  lidbg_pm_probe(struct platform_device *pdev)
 #endif
 
     clear_pm_log();
-    lidbg_new_cdev(&pm_nod_fops, "lidbg_pm");
-    lidbg_new_cdev(&pm_state_fops, "lidbg_pm_states");
+    lidbg_new_cdev(&pm_nod_fops, "lidbg_pm0");
+    lidbg_new_cdev(&pm_state_fops, "lidbg_pm_states0");
     kthread_run(thread_observer, NULL, "ftf_pmtask");
     LIDBG_MODULE_LOG;
 

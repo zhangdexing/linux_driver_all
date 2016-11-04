@@ -655,7 +655,7 @@ int misc_init(void *data)
     //lidbg_trace_msg_cb_register("unhandled",NULL,unhandled_monitor);
     lidbg_trace_msg_cb_register("lidbgerr", NULL, lidbgerr_monitor);
 
-    lidbg_new_cdev(&misc_nod_fops, "lidbg_misc");
+    lidbg_new_cdev(&misc_nod_fops, "lidbg_misc0");
 
     while(0 == g_var.android_boot_completed)
         ssleep(5);

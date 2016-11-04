@@ -5,6 +5,8 @@ void lidbg_uevent_send(enum kobject_action action, char *envp_ext[]);
 void lidbg_uevent_shell(char *shell_cmd);
 bool lidbg_uevent_focus(char *focus, void(*callback)(char *focus, char *uevent));
 void lidbg_uevent_main(int argc, char **argv);
+bool lidbg_new_cdev(struct file_operations *cdev_fops, char *nodename);
+
 
 #endif
 

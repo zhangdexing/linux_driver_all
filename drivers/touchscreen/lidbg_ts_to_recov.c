@@ -7,7 +7,7 @@
 #define TOUCH_MODE_MMAP    11
 #define TOUCH_MODE_NORMAL  22
 #define TOUCH_MODE_SEL     TOUCH_MODE_NORMAL
-#define DEVICE_NAME "fenzhi"
+#define DEVICE_NAME "fenzhi0"
 touch_t *touch;
 
 touch_t *touchtemp;

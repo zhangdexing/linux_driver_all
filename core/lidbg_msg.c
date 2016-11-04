@@ -103,17 +103,8 @@ static struct file_operations dev_fops =
     .release =  msg_release,
 };
 
-static struct miscdevice misc =
-{
-    .minor = MISC_DYNAMIC_MINOR,
-    .name = DEVICE_NAME,
-    .fops = &dev_fops,
-
-};
 static int __init msg_init(void)
 {
-    int ret;
-
     plidbg_msg = ( lidbg_msg *)vmalloc(sizeof( lidbg_msg));
     if (plidbg_msg == NULL)
     {
@@ -123,7 +114,7 @@ static int __init msg_init(void)
     plidbg_msg->w_pos = plidbg_msg->r_pos = 0;
 
 
-    ret = misc_register(&misc);
+    lidbg_new_cdev(&dev_fops, DEVICE_NAME);
 
     CREATE_KTHREAD(thread_msg, NULL);
 
@@ -131,12 +122,11 @@ static int __init msg_init(void)
 
     LIDBG_MODULE_LOG;
 
-    return ret;
+    return 0;
 }
 
 static void __exit msg_exit(void)
 {
-    misc_deregister(&misc);
     lidbg (DEVICE_NAME"msg  dev_exit\n");
 }
 

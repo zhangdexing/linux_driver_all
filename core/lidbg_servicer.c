@@ -155,15 +155,6 @@ static struct file_operations dev_fops =
     .fasync = servicer_fasync,
 };
 
-static struct miscdevice misc =
-{
-    .minor = MISC_DYNAMIC_MINOR,
-    .name = DEVICE_NAME,
-    .fops = &dev_fops,
-
-};
-
-
 static int __init servicer_init(void)
 {
     int ret;
@@ -173,7 +164,7 @@ static int __init servicer_init(void)
     //注册驱动程序时采用misc_register函数注册，此函数中会自动创建设备节点，即设备文件。无需mknod指令创建设备文件。因为misc_register()会调用class_device_create()或者device_create()。
 
 
-    ret = misc_register(&misc);
+    ret =lidbg_new_cdev(&dev_fops, DEVICE_NAME);
     lidbg (DEVICE_NAME"servicer_init\n");
     //DECLARE_KFIFO(cmd_fifo);
     //INIT_KFIFO(cmd_fifo);
@@ -192,7 +183,6 @@ static int __init servicer_init(void)
 
 static void __exit servicer_exit(void)
 {
-    misc_deregister(&misc);
     lidbg (DEVICE_NAME"servicer  dev_exit\n");
 }
 

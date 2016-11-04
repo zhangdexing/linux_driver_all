@@ -540,7 +540,7 @@ int ts_probe_thread(void *data)
         parse_ts_info(&ts_probe_dev[g_var.hw_info.ts_type > 0 ? g_var.hw_info.ts_type - 1 : USE_TS_NUM - 1 ]);
     }
 
-    lidbg_new_cdev(&dev_fops, "ts_probe");
+    lidbg_new_cdev(&dev_fops, "ts_probe0");
 
     LIDBG_WARN("<ts_probe_thread exited>\n");
     return 0;
@@ -665,7 +665,7 @@ static int  flyts_hal_init(void)
         lidbg("flyts_hal_init kmalloc err\n");
         return 0;
     }
-    lidbg_new_cdev(&flyts_hal_fops, "lidbg_ts_probe");//add cdev
+    lidbg_new_cdev(&flyts_hal_fops, "lidbg_ts_probe0");//add cdev
     init_waitqueue_head(&wait_queue);
     sema_init(&sem, 1);
     kfifo_init(&flyts_hal_data_fifo, flyts_hal_fifo_buffer, FIFO_SIZE);

@@ -127,7 +127,7 @@ static  struct file_operations factory_patch_nod_fops =
 int thread_factory_patch_init(void *data)
 {
     register_lidbg_notifier(&lidbg_factory_notifier);
-    lidbg_new_cdev(&factory_patch_nod_fops, "lidbg_factory_patch");
+    lidbg_new_cdev(&factory_patch_nod_fops, "lidbg_factory_patch0");
     return 0;
 }
 

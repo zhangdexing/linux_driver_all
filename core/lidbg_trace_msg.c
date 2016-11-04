@@ -1,7 +1,7 @@
 
 #include "lidbg.h"
 
-#define DEVICE_NAME "lidbg_trace_msg"
+#define DEVICE_NAME "lidbg_trace_msg0"
 #define LIDBG_TRACE_MSG_FIFO_SIZE		(32  * 1024)
 
 static LIST_HEAD(lidbg_trace_msg_string_list);

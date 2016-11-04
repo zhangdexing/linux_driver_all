@@ -618,7 +618,7 @@ static int  lpc_probe(struct platform_device *pdev)
     init_waitqueue_head(&dev->queue);
     kfifo_init(&lpc_data_fifo, fifo_buffer, FIFO_SIZE);
     kfifo_init(&lpc_ad_fifo, ad_fifo_buff, AD_FIFO_SIZE);
-    lidbg_new_cdev(&lpc_fops, "fly_lpc");
+    lidbg_new_cdev(&lpc_fops, "fly_lpc0");
 
     if((!g_var.recovery_mode && g_var.is_fly) || g_hw.lpc_disable) //origin system and fly mode when lpc_ping_en enable,lpc driver will go on;
     {

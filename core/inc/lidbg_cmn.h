@@ -42,7 +42,6 @@ u32 get_tick_count(void);
 int  lidbg_launch_user( char bin_path[], char argv1[], char argv2[], char argv3[], char argv4[], char argv5[], char argv6[]);
 int lidbg_task_kill_select(char *task_name);
 char *lidbg_get_current_time(char *time_string, struct rtc_time *ptm);
-bool lidbg_new_cdev(struct file_operations *cdev_fops, char *nodename);
 void set_power_state(int state);
 void lidbg_loop_warning(void);
 void lidbg_system_switch(bool origin_system);

@@ -398,7 +398,7 @@ static int tef6638_probe(struct platform_device *pdev)
 
     if(TEF6638_Init())
     {
-        lidbg_new_cdev(&tef6638_fops, "tef6638");//add cdev
+        lidbg_new_cdev(&tef6638_fops, "tef66380");//add cdev
         send_cmds_to_lpc();
         lidbg("TEF6638 init succeed!\n");
     }

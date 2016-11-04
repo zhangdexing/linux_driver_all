@@ -204,8 +204,8 @@ static int node_probe(struct platform_device *pdev)
     spin_lock_init(&fifo_app2hal_lock);
     spin_lock_init(&fifo_hal2appl_lock);
 
-    lidbg_new_cdev(&app_fops, "appNode");
-    lidbg_new_cdev(&hal_fops, "halNode");
+    lidbg_new_cdev(&app_fops, "appNode0");
+    lidbg_new_cdev(&hal_fops, "halNode0");
 
     return 0;
 

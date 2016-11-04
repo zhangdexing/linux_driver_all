@@ -166,7 +166,7 @@ static int soc_dev_probe(struct platform_device *pdev)
     sound_detect_init();
     dev = (struct misc_device *)kmalloc( sizeof(struct misc_device), GFP_KERNEL );
     init_waitqueue_head(&dev->queue);
-    lidbg_new_cdev(&dev_fops, "fly_sound");
+    lidbg_new_cdev(&dev_fops, "fly_sound0");
 
     return 0;
 

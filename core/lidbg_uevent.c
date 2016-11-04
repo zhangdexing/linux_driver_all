@@ -1,6 +1,5 @@
 
 #include "lidbg.h"
-#define DEV_NAME "lidbg_uevent"
 
 struct uevent_dev
 {
@@ -21,6 +20,99 @@ static struct kfifo cmd_fifo;
 //static DECLARE_COMPLETION(cmd_ready);
 struct mutex fifo_lock;
 static wait_queue_head_t wait_queue;
+
+
+static struct class *lidbg_cdev_class = NULL;
+loff_t node_default_lseek(struct file *file, loff_t offset, int origin)
+{
+    return 0;
+}
+bool new_cdev(struct file_operations *cdev_fops, char *nodename)
+{
+    struct cdev *new_cdev = NULL;
+    struct device *new_device = NULL;
+    dev_t dev_number = 0;
+    int major_number_ts = 0;
+    int err, result;
+
+    if(!cdev_fops->owner || !nodename)
+    {
+        LIDBG_ERR("cdev_fops->owner||nodename \n");
+        return false;
+    }
+
+    new_cdev = kzalloc(sizeof(struct cdev), GFP_KERNEL);
+    if (!new_cdev)
+    {
+        LIDBG_ERR("kzalloc \n");
+        return false;
+    }
+
+    dev_number = MKDEV(major_number_ts, 0);
+    if(major_number_ts)
+        result = register_chrdev_region(dev_number, 1, nodename);
+    else
+        result = alloc_chrdev_region(&dev_number, 0, 1, nodename);
+
+    if (result)
+    {
+        LIDBG_ERR("alloc_chrdev_region result:%d \n", result);
+        return false;
+    }
+    major_number_ts = MAJOR(dev_number);
+
+    if(!cdev_fops->llseek)
+        cdev_fops->llseek = node_default_lseek;
+
+    cdev_init(new_cdev, cdev_fops);
+    new_cdev->owner = cdev_fops->owner;
+    new_cdev->ops = cdev_fops;
+    err = cdev_add(new_cdev, dev_number, 1);
+    if (err)
+    {
+        LIDBG_ERR("cdev_add result:%d \n", err);
+        return false;
+    }
+
+    if(!lidbg_cdev_class)
+    {
+        lidbg_cdev_class = class_create(cdev_fops->owner, "lidbg_cdev_class");
+        if(IS_ERR(lidbg_cdev_class))
+        {
+            LIDBG_ERR("class_create\n");
+            cdev_del(new_cdev);
+            kfree(new_cdev);
+            lidbg_cdev_class = NULL;
+            return false;
+        }
+    }
+
+    new_device = device_create(lidbg_cdev_class, NULL, dev_number, NULL, "%s", nodename);
+    if (!new_device)
+    {
+        LIDBG_ERR("device_create\n");
+        cdev_del(new_cdev);
+        kfree(new_cdev);
+        return false;
+    }
+
+    return true;
+}
+bool lidbg_new_cdev(struct file_operations *cdev_fops, char *nodename)
+{
+    if(new_cdev(cdev_fops, nodename))
+    {
+        char path[32];
+        sprintf(path, "/dev/%s", nodename);
+        LIDBG_SUC("D[%s]\n", path);
+        return true;
+    }
+    else
+    {
+        LIDBG_ERR("[/dev/%s]\n", nodename);
+        return false;
+    }
+}
 
 
 bool uevent_focus(char *focus, void(*callback)(char *focus, char *uevent))
@@ -138,7 +230,7 @@ static unsigned int lidbg_uevent_poll(struct file *filp, struct poll_table_struc
 }
 
 
-static const struct file_operations lidbg_uevent_fops =
+static  struct file_operations lidbg_uevent_fops =
 {
     .owner = THIS_MODULE,
     .open = lidbg_uevent_open,
@@ -149,18 +241,30 @@ static const struct file_operations lidbg_uevent_fops =
 
 };
 
+/*
 struct miscdevice lidbg_uevent_device =
 {
     .minor = MISC_DYNAMIC_MINOR,
     .name = DEV_NAME,
     .fops = &lidbg_uevent_fops,
 };
+*/
 
 static int __init lidbg_uevent_init(void)
 {
+    int rc;
     //DUMP_BUILD_TIME;
+/*
     if (misc_register(&lidbg_uevent_device))
         LIDBG_ERR("misc_register\n");
+*/
+    LIDBG_WARN(".in\n");
+    rc = lidbg_new_cdev(&lidbg_uevent_fops, "lidbg_uevent");
+    while(!rc )
+    {
+        LIDBG_ERR("lidbg_new_cdev:error\n");
+	ssleep(1);
+    }
     mutex_init(&lock);
     mutex_init(&fifo_lock);
     //INIT_COMPLETION(cmd_ready);
@@ -178,7 +282,7 @@ static int __init lidbg_uevent_init(void)
 
 static void __exit lidbg_uevent_exit(void)
 {
-    misc_deregister(&lidbg_uevent_device);
+    //misc_deregister(&lidbg_uevent_device);
 }
 
 
@@ -241,6 +345,7 @@ EXPORT_SYMBOL(lidbg_uevent_focus);
 EXPORT_SYMBOL(lidbg_uevent_send);
 EXPORT_SYMBOL(lidbg_uevent_shell);
 EXPORT_SYMBOL(lidbg_uevent_main);
+EXPORT_SYMBOL(lidbg_new_cdev);
 
 module_init(lidbg_uevent_init);
 module_exit(lidbg_uevent_exit);

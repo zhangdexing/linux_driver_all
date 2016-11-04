@@ -126,7 +126,6 @@ static int __init msg_init(void)
 
 static void __exit msg_exit(void)
 {
-    misc_deregister(&misc);
     lidbg (DEVICE_NAME"msg  dev_exit\n");
 }
 

@@ -586,7 +586,7 @@ static int temp_probe(struct platform_device *pdev)
 {
     int ret = 0;
     lidbg("-----------temp_probe------------\n");
-    lidbg_new_cdev(&temp_nod_fops, "lidbg_temp");
+    lidbg_new_cdev(&temp_nod_fops, "lidbg_temp0");
     if(g_hw.thermal_ctrl_en)
     {
    	 register_lidbg_notifier(&lidbg_notifier);

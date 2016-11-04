@@ -1,17 +1,6 @@
-#include <linux/errno.h>
-#include <linux/kernel.h>
-#include <linux/module.h>
-#include <linux/device.h>
-#include <linux/fs.h>
-#include <linux/platform_device.h>
-#include <linux/init.h>
-#include <linux/types.h>
-#include <linux/miscdevice.h>
-#include <linux/slab.h>
+
+#include "lidbg.h"
 #include <asm/uaccess.h>
-#include <linux/input.h>
-#include <linux/delay.h>
-#include <linux/version.h>
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)
 #include <linux/semaphore.h>
@@ -21,7 +10,6 @@
 
 
 #include "semcmd.h"
-
 
 
 #define DEVICE_NAME	"flysemdriver"
@@ -226,22 +214,14 @@ static struct file_operations flysemdriver_fops =
     //	.close		= flykeydriver_close,
 };
 
-static struct miscdevice misc =
-{
-    .minor	= MISC_DYNAMIC_MINOR,
-    .name	= DEVICE_NAME,
-    .fops	= &flysemdriver_fops,
-};
-
 
 static int __init  flysemdriver_init(void)
 {
 
     int result;
-    int ret = misc_register(&misc);
-    if(ret < 0 )
+    if(!lidbg_new_cdev(&flysemdriver_fops, DEVICE_NAME) )
     {
-        return ret;
+        return -1;
     }
     sem_devp = kmalloc(sizeof(struct sem_dev), GFP_KERNEL);
 
@@ -263,14 +243,12 @@ static int __init  flysemdriver_init(void)
     return 0;
 
 fail_malloc:
-    misc_deregister(&misc);
     return result;
 }
 
 static void __exit flysemdriver_exit(void)
 {
     kfree(sem_devp);
-    misc_deregister(&misc);
 }
 
 module_init(flysemdriver_init);

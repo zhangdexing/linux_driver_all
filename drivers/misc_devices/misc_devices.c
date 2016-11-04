@@ -672,7 +672,7 @@ static int soc_dev_probe(struct platform_device *pdev)
     //lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_BL_LCD_STATUS_CHANGE, NOTIFIER_MINOR_BL_APP_ON));
     //lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_BL_LCD_STATUS_CHANGE, NOTIFIER_MINOR_BL_HAL_ON));
 
-    lidbg_new_cdev(&dev_fops, "flydev");
+    lidbg_new_cdev(&dev_fops, "flydev0");
 
    // lidbg_trace_msg_cb_register("unable to enumerate USB device", NULL, usb_enumerate_monitor);
     lidbg_trace_msg_cb_register("clusters badly computed", NULL, sd_error_monitor);

@@ -338,7 +338,7 @@ static int rgb_led_probe(struct platform_device *pdev)
     lidbg("PCA9634 init start!\n");
     if(PCA9634_Init())
     {
-        lidbg_new_cdev(&pca9634_fops, "lidbg_rgb_led");//add cdev
+        lidbg_new_cdev(&pca9634_fops, "lidbg_rgb_led0");//add cdev
         lidbg("lidbg_rgb_led init succeed!\n");
     }
     else
@@ -391,7 +391,6 @@ static int rgb_led_init(void)
     LIDBG_GET;
     platform_device_register(&rgb_led_devices);
     platform_driver_register(&rgb_led_driver);
-    //misc_register(&misc);
     return 0;
 
 }

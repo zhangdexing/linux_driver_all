@@ -36,7 +36,7 @@ static  struct file_operations drivers_dbg_nod_fops =
 };
 int thread_drivers_dbg_init(void *data)
 {
-    lidbg_new_cdev(&drivers_dbg_nod_fops, "lidbg_drivers_dbg");
+    lidbg_new_cdev(&drivers_dbg_nod_fops, "lidbg_drivers_dbg0");
    if((!g_var.is_fly) && (g_var.recovery_mode == 0) )
    {
    	    set_wifi_adb_mode(true);

@@ -222,7 +222,7 @@ static int ad_probe(struct platform_device *pdev)
     init_waitqueue_head(&dev->queue);
     sema_init(&dev->sem, 1);
     kfifo_init(&ad_data_fifo, fifo_buffer, FIFO_SIZE);
-    lidbg_new_cdev(&ad_nod_fops, "lidbg_ad");
+    lidbg_new_cdev(&ad_nod_fops, "lidbg_ad0");
     init_completion(&ad_val);
     if((g_var.recovery_mode == 1) || (g_var.is_fly == 0))
     {

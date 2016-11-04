@@ -115,7 +115,7 @@ static struct dev_pm_ops key_ops =
 static int key_probe(struct platform_device *pdev)
 {
     lidbg("-----------key_probe------------\n");
-    lidbg_new_cdev(&key_nod_fops, "lidbg_key");
+    lidbg_new_cdev(&key_nod_fops, "lidbg_key0");
 
     return 0;
 }

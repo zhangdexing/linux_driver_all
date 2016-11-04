@@ -827,14 +827,6 @@ static struct file_operations dev_fops =
     .release =  acc_release,
 };
 
-static struct miscdevice misc =
-{
-    .minor = MISC_DYNAMIC_MINOR,
-    .name = DEVICE_NAME,
-    .fops = &dev_fops,
-
-};
-
 static int  acc_remove(struct platform_device *pdev)
 {
     return 0;
@@ -902,14 +894,13 @@ static int __init acc_init(void)
 
     platform_driver_register(&acc_driver);
 
-    ret = misc_register(&misc);
-
+    if(!lidbg_new_cdev(&dev_fops, DEVICE_NAME) )
+        ret = -1;
     return ret;
 }
 
 static void __exit acc_exit(void)
 {
-    misc_deregister(&misc);
     lidbg (DEVICE_NAME"acc dev_exit\n");
 }
 

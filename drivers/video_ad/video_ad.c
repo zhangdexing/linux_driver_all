@@ -1324,7 +1324,6 @@ static int video_ad_probe(struct platform_device *pdev)
 
 static int video_ad_remove(struct platform_device *pdev)
 {
-    misc_deregister(&video_dev);
 
     return 0;
 }

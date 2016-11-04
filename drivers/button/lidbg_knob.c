@@ -751,7 +751,7 @@ static int  knob_probe(struct platform_device *pdev)
         lidbg("[knob]:kmalloc err\n");
         return ret;
     }
-    lidbg_new_cdev(&knob_fops, "knob");//add cdev
+    lidbg_new_cdev(&knob_fops, "knob0");//add cdev
 
     // 2init all the tools
     init_waitqueue_head(&pfly_KeyEncoderInfo->wait_queue);

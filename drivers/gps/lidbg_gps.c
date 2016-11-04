@@ -606,7 +606,6 @@ static void gps_server_exit(void)
 {
     lidbg("[ublox] ==IN==gps_server_driver_exit==\n");
 
-    // misc_deregister(&misc);
     // kfree(dev);
 }
 

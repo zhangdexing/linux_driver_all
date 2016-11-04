@@ -200,82 +200,7 @@ int  lidbg_launch_user( char bin_path[], char argv1[], char argv2[], char argv3[
 #endif
 }
 
-static struct class *lidbg_cdev_class = NULL;
-loff_t node_default_lseek(struct file *file, loff_t offset, int origin)
-{
-    return 0;
-}
-bool new_cdev(struct file_operations *cdev_fops, char *nodename)
-{
-    struct cdev *new_cdev = NULL;
-    struct device *new_device = NULL;
-    dev_t dev_number = 0;
-    int major_number_ts = 0;
-    int err, result;
 
-    if(!cdev_fops->owner || !nodename)
-    {
-        LIDBG_ERR("cdev_fops->owner||nodename \n");
-        return false;
-    }
-
-    new_cdev = kzalloc(sizeof(struct cdev), GFP_KERNEL);
-    if (!new_cdev)
-    {
-        LIDBG_ERR("kzalloc \n");
-        return false;
-    }
-
-    dev_number = MKDEV(major_number_ts, 0);
-    if(major_number_ts)
-        result = register_chrdev_region(dev_number, 1, nodename);
-    else
-        result = alloc_chrdev_region(&dev_number, 0, 1, nodename);
-
-    if (result)
-    {
-        LIDBG_ERR("alloc_chrdev_region result:%d \n", result);
-        return false;
-    }
-    major_number_ts = MAJOR(dev_number);
-
-    if(!cdev_fops->llseek)
-        cdev_fops->llseek = node_default_lseek;
-
-    cdev_init(new_cdev, cdev_fops);
-    new_cdev->owner = cdev_fops->owner;
-    new_cdev->ops = cdev_fops;
-    err = cdev_add(new_cdev, dev_number, 1);
-    if (err)
-    {
-        LIDBG_ERR("cdev_add result:%d \n", err);
-        return false;
-    }
-
-    if(!lidbg_cdev_class)
-    {
-        lidbg_cdev_class = class_create(cdev_fops->owner, "lidbg_cdev_class");
-        if(IS_ERR(lidbg_cdev_class))
-        {
-            LIDBG_ERR("class_create\n");
-            cdev_del(new_cdev);
-            kfree(new_cdev);
-            lidbg_cdev_class = NULL;
-            return false;
-        }
-    }
-
-    new_device = device_create(lidbg_cdev_class, NULL, dev_number, NULL, "%s%d", nodename, 0);
-    if (!new_device)
-    {
-        LIDBG_ERR("device_create\n");
-        cdev_del(new_cdev);
-        kfree(new_cdev);
-        return false;
-    }
-
-    return true;
-}
 
 u32 lidbg_get_random_number(u32 num_max)
 {
@@ -468,25 +393,6 @@ int lidbg_readdir_and_dealfile(char *insure_is_dir, void (*callback)(char *dirna
             entry = NULL;
         }
         return count;
-    }
-}
-bool lidbg_new_cdev(struct file_operations *cdev_fops, char *nodename)
-{
-    if(new_cdev(cdev_fops, nodename))
-    {
-        char path[32];
-        sprintf(path, "/dev/%s0", nodename);
-#ifdef SOC_msm8x25
-        ssleep(1);
-        lidbg_chmod(path);
-#endif
-        LIDBG_SUC("D[%s]\n", path);
-        return true;
-    }
-    else
-    {
-        LIDBG_ERR("[/dev/%s0]\n", nodename);
-        return false;
     }
 }
 
@@ -762,7 +668,6 @@ EXPORT_SYMBOL(lidbg_get_random_number);
 EXPORT_SYMBOL(lidbg_exe);
 EXPORT_SYMBOL(lidbg_mount);
 EXPORT_SYMBOL(lidbg_chmod);
-EXPORT_SYMBOL(lidbg_new_cdev);
 EXPORT_SYMBOL(lidbg_mv);
 EXPORT_SYMBOL(lidbg_rm);
 EXPORT_SYMBOL(lidbg_rmdir);
