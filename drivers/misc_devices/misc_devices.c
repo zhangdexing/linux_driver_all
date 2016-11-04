@@ -157,7 +157,7 @@ void usb_disk_enable(bool enable)
     DUMP_FUN;
     lidbg("%d,%d\n", g_var.usb_status,enable);
 
-   if(g_var.usb_status == enable)
+   if((g_var.usb_status == enable)&&(enable == 1))
    {
    	lidbg("usb_disk_enable skip\n");
    	return;
@@ -357,7 +357,7 @@ static int lidbg_dev_event(struct notifier_block *this,
         //if(!g_var.is_fly)
     {
 #ifdef SUSPEND_ONLINE
-        g_var.usb_status = 0;
+        g_var.usb_status = 0; 
 #endif
         if((g_var.led_hal_status & g_var.led_app_status)/*&&(g_var.fb_on == 1)*/&&(g_var.flyaudio_reboot==0))
         {
