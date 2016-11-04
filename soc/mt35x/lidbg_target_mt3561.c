@@ -40,7 +40,7 @@ struct hw_version_specific g_hw_version_specific[] =
 
         .gpio_bt_tx = 87,
         .gpio_bt_rx = 87,
-	.gpio_accel_int1 = 87,
+	.gpio_accel_int1 = 83,
 
 	.gpio_back_det = 87,
 

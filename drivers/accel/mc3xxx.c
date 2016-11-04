@@ -48,7 +48,9 @@
 //#include <mach/system.h>
 #include <mach/hardware.h>
 #include <linux/fs.h>*/
-#include	<linux/sensors.h>
+#ifndef PLATFORM_ID_16
+#include <linux/sensors.h>
+#endif
 #include "lidbg.h"
 //#include "lidbg_crash_detect.c"
 
@@ -1998,8 +2000,9 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	int ret = 0;
-	float convert_para = 0.0f;
-
+	#ifndef PLATFORM_ID_16
+		float convert_para = 0.0f;
+	#endif
     #ifdef DOT_CALI
         void __user *data1 = NULL;
         char strbuf[256] = { 0 };
@@ -2052,14 +2055,14 @@ static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			lidbg("copy to error in %s.\n",__func__);
 		}     			
 		break;
-
+	#ifndef PLATFORM_ID_16
 	case IOCTL_SENSOR_GET_CONVERT_PARA:
 		convert_para = MC3XXX_CONVERT_PARAMETER;
 		if(copy_to_user((void __user *) arg,(const void *)&convert_para,sizeof(float))!=0){
 			lidbg("copy to error in %s.\n",__func__);
 		}     			
         break;
-			
+	#endif
 	#ifdef DOT_CALI
 	case GSENSOR_IOCTL_READ_SENSORDATA:	
 	case GSENSOR_IOCTL_READ_RAW_DATA:
@@ -2269,6 +2272,9 @@ static void mc3xxx_early_resume(struct early_suspend *handler)
 #ifdef SUSPEND_ONLINE
 static int mc3xxx_acc_resume(struct mc3xxx_data *mc_data)
 {
+#ifdef PLATFORM_ID_16
+	return 0;
+#endif
 	if(flydata->enabled == 1)
 	{
         mutex_lock(&flydata->lock);
@@ -2300,6 +2306,9 @@ static int mc3xxx_acc_resume(struct mc3xxx_data *mc_data)
 
 static int mc3xxx_acc_suspend(struct mc3xxx_data *mc_data)
 {
+#ifdef PLATFORM_ID_16
+	return 0;
+#endif
 	if(flydata->enabled == 1) {
 
 		mc3xxx_set_mode(mc_data->client, MC3XXX_STANDBY);
@@ -2679,13 +2688,14 @@ static int mc3xxx_probe(struct i2c_client *client,
 	data->cdev = mc3xxx_acc_cdev;
 	data->cdev.sensors_enable = mc3xxx_acc_enable_set;
 	data->cdev.sensors_poll_delay = mc3xxx_acc_poll_delay_set;
+#ifndef PLATFORM_ID_16
 	ret = sensors_classdev_register(&client->dev, &data->cdev);
 	if (ret) {
 		dev_err(&client->dev,
 			"class device create failed: %d\n", ret);
 		goto exit_remove_sysfs_int;
 	}
-
+#endif
 #ifdef SUSPEND_ONLINE
 	data->fb_notif = lidbg_notifier;
 	register_lidbg_notifier(&data->fb_notif);
@@ -2769,6 +2779,7 @@ MODULE_DEVICE_TABLE(i2c, mc3xxx_id);
 
 static struct of_device_id mc3xxx_acc_match_table[] = {
 	{ .compatible = "mcube, mc3xxx",},
+	{ .compatible = "mediatek,gsensor",},
 	{ },
 };
 

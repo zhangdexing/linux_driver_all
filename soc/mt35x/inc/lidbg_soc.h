@@ -1,7 +1,7 @@
 #ifndef _LIGDBG_MT3561__
 #define _LIGDBG_MT3561__
 
-
+#include "sensors.h"
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
