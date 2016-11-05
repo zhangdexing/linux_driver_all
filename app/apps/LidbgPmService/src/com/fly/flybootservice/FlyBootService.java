@@ -729,6 +729,10 @@ public static void releaseBrightWakeLock()
                             "com.baidu.BaiduMap")
                     && info.baseActivity.getPackageName().equals(
                             "com.baidu.BaiduMap")
+                    || info.topActivity.getPackageName().equals(
+                            "com.thinkware.thinknavi")
+                    && info.baseActivity.getPackageName().equals(
+                            "com.thinkware.thinknavi")
 		|| info.topActivity.getPackageName().equals(
                             "com.waze")
                     && info.baseActivity.getPackageName().equals(
