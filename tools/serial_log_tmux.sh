@@ -1,6 +1,6 @@
 sudo chmod 777 /dev/ttyUSB*
 ls /dev/ttyUSB* 
-mv ~/minicom_log ~/minicom_log_$(date '+%y-%m-%d-%h-%m-%s')
+mv ~/minicom_log ~/minicom_log_$(date '+%y-%m-%d_%H-%M-%S')
 mkdir ~/minicom_log
 # mt3561 921600
 # tmux attach -t logcatch
