@@ -90,13 +90,18 @@ void gps_power_enable(void)
 	msleep(100);
 }
 
+void display_power_enable(void)
+{
+    SOC_IO_Output(0, DSI83_GPIO_EN, 1);
+}
+
 struct probe_device i2c_probe_dev[] =
 {
   	{DEV_ACCEL, accel_i2c_bus, 0x18, 0x00, "bma2x2.ko", NULL, NULL},
   	{DEV_ACCEL, accel_i2c_bus, 0x4c, 0x00, "mc3xxx.ko", accel_power_enable, mc3x_find_cb},
 
 	{DEV_GPS, gps_i2c_bus, 0x42, 0x00, "lidbg_gps.ko", gps_power_enable, NULL ,0},
-	{DEV_DISPLAY, display_i2c_bus, 0x2d, 0x00, "dsi83.ko", NULL, NULL ,0},
+	{DEV_DISPLAY, display_i2c_bus, 0x2d, 0x00, "dsi83.ko", display_power_enable, NULL ,0},
 	{DEV_LED, pca9634_i2c_bus, 0x70, 0x00, "lidbg_rgb_led.ko", NULL, NULL ,0},
 #ifndef MUC_CONTROL_DSP
 	{DEV_RADIO, saf7741_i2c_bus, 0x1c, 0x00, "saf7741.ko", radio_reset_lpc, NULL ,1},
