@@ -25,7 +25,7 @@ int find_ad_key(struct ad_key_remap *p)
     static int count = 0;
     int val = 0;
     int i;
-    if((g_hw.ad_val_mcu == 1) && (g_var.is_fly == 0))
+    if((g_hw.ad_val_mcu > 0) && (g_var.is_fly == 0))
     {
         if(LPC_ADC_Get(p->ch, &val) == 0)
             val = p->max;
