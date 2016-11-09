@@ -534,6 +534,7 @@ void parse_cmd(char *pt)
             lidbg_pm_install(get_lidbg_file_path(buff, "app4haljni.ko"));
             lidbg_pm_install(get_lidbg_file_path(buff, "MediaPlayerTest.ko"));
             lidbg_pm_install(get_lidbg_file_path(buff, "GpsInfo.ko"));
+            lidbg_pm_install(get_lidbg_file_path(buff, "setting.ko"));
             lidbg_domineering_ack();
         }
         if (!strcmp(argv[1], "*158#999"))
