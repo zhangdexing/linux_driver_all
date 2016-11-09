@@ -1244,28 +1244,35 @@ void parse_cmd(char *pt)
         else if (!strcmp(argv[1], "*158#105"))
         {
             lidbg("*158#105--MTK USB HOST MODE\n");
-            if(g_var.platformid == 17){
-		SOC_IO_Output(14, 14, 0);
-		SOC_IO_Output(14, 14, 1);
-		lidbg_domineering_ack();
-            }else{
+            if(g_var.platformid == 17)
+	    {
+		SOC_IO_Output(0, 14, 0);
+		msleep(500);
+		SOC_IO_Output(0, 14, 1);
+            }
+	     else if(g_var.platformid == 16)
+            {
 		lidbg_shell_cmd("chmod 777 /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");
 		lidbg_shell_cmd("echo a_host > /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");
-		lidbg_domineering_ack();
             }
+		lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#106"))
         {
             lidbg("*158#106--MTK USB SLAVE MODE\n");
-            if(g_var.platformid == 17){
-		SOC_IO_Output(14, 14, 0);
-		SOC_IO_Output(14, 14, 1);
-		lidbg_domineering_ack();
-            }else{
+            if(g_var.platformid == 17)
+	    {
+		SOC_IO_Output(0, 14, 0);
+		msleep(500);
+		SOC_IO_Output(0, 14, 1);
+            }
+	     else if(g_var.platformid == 16)
+           {
 		lidbg_shell_cmd("chmod 777 /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");
 		lidbg_shell_cmd("echo b_peripheral > /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");
-		lidbg_domineering_ack();
             }
+	     lidbg_domineering_ack();
+
         }
         else if (!strcmp(argv[1], "*158#107"))
         {
