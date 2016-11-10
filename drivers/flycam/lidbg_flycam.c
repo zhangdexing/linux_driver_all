@@ -399,7 +399,7 @@ static int thread_stop_rec_func(void *data)
 /*can not block in ISR function*/
 static int thread_set_par_func(void *data)
 {
-	//char temp_cmd[256];	
+	char temp_cmd[256];	
 	while(1)
 	{
 		wait_for_completion(&set_par_wait);
@@ -436,7 +436,7 @@ static int thread_set_par_func(void *data)
 			msleep(800);
 			start_rec(REARVIEW_ID,1);
 		}
-#if 0
+#if 1
 		if(isDualCam)
 		{
 			if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID)	isDVRVideoLoop = 1;
@@ -1329,7 +1329,7 @@ static void work_DVR_fixScreenBlurred(struct work_struct *work)
 			}
 		}
 	}
-	else if(isSuspend)//online
+	else if(isDVRFirstInit || isSuspend)//fisrt init or online
 		fixScreenBlurred(DVR_ID,0);
 #if 0
 	else if(isDVRFirstResume)
@@ -1470,7 +1470,7 @@ static void work_RearView_fixScreenBlurred(struct work_struct *work)
 			}
 		}
 	}
-	else if(isSuspend)//online
+	else if(isRearViewFirstInit || isSuspend)//online
 		fixScreenBlurred(REARVIEW_ID,0);
 #if 0
 	else if(isRearFirstResume)
