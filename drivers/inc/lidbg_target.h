@@ -52,6 +52,7 @@ struct hw_version_specific
     int gpio_usb_front_en;
     int gpio_usb_backcam_en;
     int gpio_int_gps;
+    int gpio_usb_vbus_en;
 
     int gpio_int_button_left1;
     int gpio_int_button_left2;

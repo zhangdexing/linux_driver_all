@@ -1249,9 +1249,9 @@ void parse_cmd(char *pt)
             lidbg("*158#105--MTK USB HOST MODE\n");
             if(g_var.platformid == 17)
 	    {
-		SOC_IO_Output(0, 14, 0);
+		USB_VBUS_POWER_DISABLE;
 		msleep(500);
-		SOC_IO_Output(0, 14, 1);
+		USB_VBUS_POWER_ENABLE;
             }
 	     else if(g_var.platformid == 16)
             {
@@ -1265,9 +1265,9 @@ void parse_cmd(char *pt)
             lidbg("*158#106--MTK USB SLAVE MODE\n");
             if(g_var.platformid == 17)
 	    {
-		SOC_IO_Output(0, 14, 0);
+		USB_VBUS_POWER_DISABLE;
 		msleep(500);
-		SOC_IO_Output(0, 14, 1);
+		USB_VBUS_POWER_ENABLE;
             }
 	     else if(g_var.platformid == 16)
            {

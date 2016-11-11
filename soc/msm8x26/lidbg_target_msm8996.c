@@ -11,6 +11,7 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_usb_power = 13,
         .gpio_usb_id = 49,
         .gpio_usb_switch = -1,
+        .gpio_usb_vbus_en = 14,
         .gpio_usb_udisk_en = 14,
         .gpio_usb_front_en = 15,
         .gpio_usb_backcam_en = 16,

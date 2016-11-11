@@ -126,6 +126,16 @@
 	}while(0)
 
 
+#define USB_VBUS_POWER_ENABLE do{\
+			check_gpio(g_hw.gpio_usb_vbus_en);\
+			SOC_IO_Output(0, g_hw.gpio_usb_vbus_en, 1);\
+	}while(0)
+
+#define USB_VBUS_POWER_DISABLE do{\
+			check_gpio(g_hw.gpio_usb_vbus_en);\
+			SOC_IO_Output(0, g_hw.gpio_usb_vbus_en, 0);\
+	}while(0)
+
 #define USB_POWER_DISABLE do{\
 			LPC_CMD_USB5V_OFF;\
 			g_var.usb_status = 0;\
@@ -243,6 +253,29 @@
 			USB_POWER_BACK_DISABLE;\
 			msleep(500);\
 			USB_ID_HIGH_DEV;\
+			}while(0)
+#elif defined(PLATFORM_msm8996)
+#define USB_WORK_ENABLE do{\
+				lidbg("USB_WORK_ENABLE\n");\
+				USB_VBUS_POWER_ENABLE;\
+				USB_ID_LOW_HOST;\
+    				USB_POWER_ENABLE;\
+    				USB_POWER_BACK_ENABLE;\
+    				msleep(3000);\
+    				USB_POWER_FRONT_ENABLE;\
+    				msleep(1000);\
+				USB_POWER_UDISK_ENABLE;\
+			}while(0)
+
+#define USB_WORK_DISENABLE  do{\
+			lidbg("USB_WORK_DISENABLE\n");\
+			USB_POWER_DISABLE;\
+			USB_POWER_UDISK_DISABLE;\
+			USB_POWER_FRONT_DISABLE;\
+			USB_POWER_BACK_DISABLE;\
+			msleep(500);\
+			USB_ID_HIGH_DEV;\
+			USB_VBUS_POWER_DISABLE;\
 			}while(0)
 #else  //msm8228
 #define USB_WORK_ENABLE do{\
