@@ -346,9 +346,13 @@ int main(int argc, char **argv)
                       aps->isStreamActive(AUDIO_STREAM_SYSTEM , 0) |
                       aps->isStreamActive(AUDIO_STREAM_DTMF, 0) |
                       aps->isStreamActive(AUDIO_STREAM_NOTIFICATION , 0);
-            if(10 < AUDIO_STREAM_CNT)//for MT3561 AUDIO_STREAM_GIS
-                playing = aps->isStreamActive((audio_stream_type_t)10, 0) | playing;
 
+#if defined(VENDOR_MTK)//for MT3561 AUDIO_STREAM_GIS
+            {
+                for (int i = (int)AUDIO_STREAM_NOTIFICATION; i < AUDIO_STREAM_CNT; i++)
+                    playing = aps->isStreamActive((audio_stream_type_t)i, 0) | playing;
+            }
+#endif
             if(dbg_music)
                 lidbg(TAG"playing=%d\n", playing);
         }
