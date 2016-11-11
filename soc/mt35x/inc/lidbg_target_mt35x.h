@@ -67,6 +67,16 @@
 	}while(0)
 
 
+#define USB_VBUS_POWER_ENABLE do{\
+			check_gpio(g_hw.gpio_usb_vbus_en);\
+			SOC_IO_Output(0, g_hw.gpio_usb_vbus_en, 1);\
+	}while(0)
+
+#define USB_VBUS_POWER_DISABLE do{\
+			check_gpio(g_hw.gpio_usb_vbus_en);\
+			SOC_IO_Output(0, g_hw.gpio_usb_vbus_en, 0);\
+	}while(0)
+
 #define USB_POWER_DISABLE do{\
 			LPC_CMD_USB5V_OFF;\
 			g_var.usb_status = 0;\
