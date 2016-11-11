@@ -565,8 +565,8 @@ static void nmea_call_nmea_cb( NmeaReader  *r )
 
     if (r != NULL  && r->in != NULL && r->callbacks.nmea_cb != NULL)
     {
-        D("[gpsdata]Received==2222=====:%d[%.*s]",  r->pos,r->pos,r->in);
-        r->in[r->pos]='\0';
+        D("[gpsdata]Received==2222=====:%d[%.*s]",  r->pos, r->pos, r->in);
+        r->in[r->pos] = '\0';
         r->callbacks.nmea_cb(now, r->in, r->pos);
     }
     else
@@ -582,7 +582,7 @@ nmea_reader_parse( NmeaReader  *r )
     NmeaTokenizer  tzer[1];
     Token          tok;
     unsigned int info;
-    bool is_unkonwn=false;
+    bool is_unkonwn = false;
 
     D("[gpsdata]Received: '%.*s'", r->pos, r->in);
     if (r->pos < 9)
@@ -670,17 +670,17 @@ nmea_reader_parse( NmeaReader  *r )
     else
     {
         tok.p -= 2;
-	is_unkonwn=true;
+        is_unkonwn = true;
         D("unknown sentence '%.*s", tok.end - tok.p, tok.p);
     }
     info = GPS_LOCATION_HAS_LAT_LONG | GPS_LOCATION_HAS_ALTITUDE |
            GPS_LOCATION_HAS_BEARING | GPS_LOCATION_HAS_SPEED | GPS_LOCATION_HAS_ACCURACY;
 
-	if(!is_unkonwn)
-	{
-        D("[gpsdata]Received==111=====:%d[%.*s]",  r->pos-1,r->pos-1,r->in);
-	    nmea_call_nmea_cb(r );
-	}
+    if(!is_unkonwn)
+    {
+        D("[gpsdata]Received==111=====:%d[%.*s]",  r->pos - 1, r->pos - 1, r->in);
+        nmea_call_nmea_cb(r );
+    }
 
     if ((r->fix.flags & info) == info)
     {

@@ -190,7 +190,7 @@ static void *thread_uevent(void *data)
 
     pthread_t lidbg_uevent_tid;
     data = data;
-    lidbg("lidbg_userver: uevent thread start\n"); 
+    lidbg("lidbg_userver: uevent thread start\n");
     lidbg_uevent_poll(lidbg_uevent_callback);
 
     return ((void *) 0);
@@ -228,76 +228,76 @@ int main(int argc, char **argv)
     DUMP_BUILD_TIME_FILE;
 
     if(0)
-       ret = pthread_create(&ntid,NULL,thread_uevent,NULL);
+        ret = pthread_create(&ntid, NULL, thread_uevent, NULL);
 
-    #define SHELL_ERRS_FILE "/dev/dbg_msg"
+#define SHELL_ERRS_FILE "/dev/dbg_msg"
 
     if(1)
     {
-	 int fd,read_len;
-	 char str[256];
-         char shellstring[256];
-         while(access("/dev/lidbg_uevent", X_OK) != 0)
-         {
-		system("chmod 777 /dev/lidbg_uevent");
-		lidbg("wait  /dev/lidbg_uevent ...\n");
-		usleep(100*1000);
-	 }
+        int fd, read_len;
+        char str[256];
+        char shellstring[256];
+        while(access("/dev/lidbg_uevent", X_OK) != 0)
+        {
+            system("chmod 777 /dev/lidbg_uevent");
+            lidbg("wait  /dev/lidbg_uevent ...\n");
+            usleep(100 * 1000);
+        }
 
-	 fd = open("/dev/lidbg_uevent", O_RDWR);
-	 if((fd == 0)||(fd == (int)0xfffffffe)|| (fd == (int)0xffffffff))
-	 {
-		lidbg("open /dev/lidbg_uevent err\n");
-	 }
+        fd = open("/dev/lidbg_uevent", O_RDWR);
+        if((fd == 0) || (fd == (int)0xfffffffe) || (fd == (int)0xffffffff))
+        {
+            lidbg("open /dev/lidbg_uevent err\n");
+        }
         system("echo 1 > /dev/log/userver_ok.txt");
         system("chmod 777 /dev/log/userver_ok.txt");
 
 #if 0
-	while(1)
-	 {
-		memset(str,'\0',256);
-		read_len = read(fd, str, 256);
-		if(read_len >=0)
-		{
-		   lidbg("do:%s\n",str);
-		   snprintf(shellstring, 256, "%s 2>> "SHELL_ERRS_FILE, str );
-	           system(shellstring);
-		}
-	 }
+        while(1)
+        {
+            memset(str, '\0', 256);
+            read_len = read(fd, str, 256);
+            if(read_len >= 0)
+            {
+                lidbg("do:%s\n", str);
+                snprintf(shellstring, 256, "%s 2>> "SHELL_ERRS_FILE, str );
+                system(shellstring);
+            }
+        }
 #else
-{
-	struct epoll_event  events[1];
-	int  nevents;
-        int  epoll_fd = epoll_create(1);
- 	epoll_register( epoll_fd, fd );
-	while(1)
-	{
+        {
+            struct epoll_event  events[1];
+            int  nevents;
+            int  epoll_fd = epoll_create(1);
+            epoll_register( epoll_fd, fd );
+            while(1)
+            {
 
-		nevents = epoll_wait( epoll_fd, events, 1, -1 );
-		if (nevents < 0)
-		{
-		    if (errno != EINTR)
-		    {
-			lidbg("epoll_wait() unexpected error: %s", strerror(errno));
-		    }
-		    continue;
-		}
+                nevents = epoll_wait( epoll_fd, events, 1, -1 );
+                if (nevents < 0)
+                {
+                    if (errno != EINTR)
+                    {
+                        lidbg("epoll_wait() unexpected error: %s", strerror(errno));
+                    }
+                    continue;
+                }
                 if ((events[0].events & EPOLLIN) != 0)
-		{
-			memset(str,'\0',256);
-			read_len = read(fd, str, 256);
-			if(read_len >=0)
-			{
-//			   lidbg("do+:%s\n",str);
-			   snprintf(shellstring, 256, "%s 2>> "SHELL_ERRS_FILE, str );
-			   system(shellstring);
-//			   lidbg("do-:%s\n",str);
-			}
-		}
-	}
-}
+                {
+                    memset(str, '\0', 256);
+                    read_len = read(fd, str, 256);
+                    if(read_len >= 0)
+                    {
+                        //lidbg("do+:%s\n",str);
+                        snprintf(shellstring, 256, "%s 2>> "SHELL_ERRS_FILE, str );
+                        system(shellstring);
+                        //lidbg("do-:%s\n",str);
+                    }
+                }
+            }
+        }
 #endif
-     }
+    }
     return 0;
 }
 
