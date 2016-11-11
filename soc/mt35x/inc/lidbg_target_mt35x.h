@@ -127,7 +127,6 @@
 			 USB_ID_LOW_HOST;\
 			 USB_POWER_ENABLE;\
 			 USB_POWER_BACK_ENABLE;\
-			 msleep(3000);\
 			 USB_POWER_FRONT_ENABLE;\
 			 msleep(1000);\
 			 USB_POWER_UDISK_ENABLE;\

@@ -1243,7 +1243,7 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#105"))
         {
-            lidbg("*158#105--MTK USB HOST MODE\n");
+            lidbg("*158#105--USB HOST MODE\n");
             if(g_var.platformid == 17)
 	    {
 		SOC_IO_Output(0, 14, 0);
@@ -1259,7 +1259,7 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#106"))
         {
-            lidbg("*158#106--MTK USB SLAVE MODE\n");
+            lidbg("*158#106--USB SLAVE MODE\n");
             if(g_var.platformid == 17)
 	    {
 		SOC_IO_Output(0, 14, 0);
