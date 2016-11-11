@@ -23,9 +23,8 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_int_button_right2 = 91,
 
         .gpio_led1 = 50,
-
-        .gpio_int_mcu_i2c_request = 24,//I2C_C  	lpc-->qcom:request i2c communication,wakeup qcom trigger like this,111111111000111111111
-        .gpio_mcu_i2c_wakeup = 11,//I2C_C2     		qcom-->lpc:wakeup lpc  ,trigger like this ,00000000011100000000
+        .gpio_int_mcu_i2c_request = 80,//I2C_C  	lpc-->qcom:request i2c communication,wakeup qcom trigger like this,111111111000111111111
+        .gpio_mcu_i2c_wakeup = 79,//I2C_C2     		qcom-->lpc:wakeup lpc  ,trigger like this ,00000000011100000000
 
         .gpio_mcu_wp = 25,//LPC_MSM1     		qcom-->lpc:cpu alive=0,else 1
         .gpio_mcu_app = 26,//LPC_MSM2    		qcom-->lpc:hal alive=0,else 1
@@ -52,7 +51,7 @@ struct hw_version_specific g_hw_version_specific[] =
         .i2c_bus_lpc = 1,
         .i2c_bus_pca9634 = 12,//
         .ad_val_mcu = 1,
-        .fly_parameter_node = "/dev/block/platform/7824900.sdhci/by-name/flyparameter",
+        .fly_parameter_node = "/dev/block/bootdevice/by-name/flyparameter",
 
         .thermal_ctrl_en = 0,
         // msm8909.dtsi  qcom,sensor-information
