@@ -80,7 +80,7 @@ static void parse_cmd(char *pt)
     {
         int value;
         value = simple_strtoul(argv[1], 0, 0);
-        if(value >= 1 && value <= 3)
+        if(value >= 1)
             g_var.is_phone_in_call_state = 1;
         else
             g_var.is_phone_in_call_state = 0;

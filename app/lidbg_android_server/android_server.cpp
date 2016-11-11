@@ -21,9 +21,14 @@ using namespace android;
 
 bool dbg_music = false;
 bool dbg_volume = false;
-bool playing_old = false;
 int loop_count = 0;
 int mypid = -1;
+bool playing = false;
+bool playing_old = false;
+int boot_completed = 0;
+int phone_call_state = AUDIO_MODE_INVALID;
+int phone_call_state_old = AUDIO_MODE_INVALID;
+
 
 static sp<IAudioPolicyService> gAudioPolicyService = 0;
 
@@ -50,8 +55,6 @@ void GetAudioPolicyService(bool dbg)
         lidbg( TAG"GetAudioPolicyService.succes1\n");
 }
 
-bool playing = false;
-int boot_completed = 0;
 static void *thread_check_boot_complete(void *data)
 {
     data = data;
@@ -347,6 +350,8 @@ int main(int argc, char **argv)
                       aps->isStreamActive(AUDIO_STREAM_DTMF, 0) |
                       aps->isStreamActive(AUDIO_STREAM_NOTIFICATION , 0);
 
+            phone_call_state = aps->getPhoneState();
+
 #if defined(VENDOR_MTK)//for MT3561 AUDIO_STREAM_GIS
             {
                 for (int i = (int)AUDIO_STREAM_NOTIFICATION; i < AUDIO_STREAM_CNT; i++)
@@ -354,7 +359,7 @@ int main(int argc, char **argv)
             }
 #endif
             if(dbg_music)
-                lidbg(TAG"playing=%d\n", playing);
+                lidbg(TAG"playing=%d/phone_call_state=%d\n", playing, phone_call_state);
         }
         else
         {
@@ -371,6 +376,16 @@ int main(int argc, char **argv)
             LIDBG_WRITE("/dev/fly_sound0", cmd);
             if(dbg_music)
                 lidbg(TAG"write.[%d,%s]\n", playing, cmd);
+        }
+        if(phone_call_state != phone_call_state_old)
+        {
+            char cmd[32];
+            phone_call_state_old = phone_call_state;
+            sprintf(cmd, "sound %d", ((phone_call_state >= AUDIO_MODE_IN_CALL) ? 1 : 2));
+            lidbg(TAG"phone_call_state[%d,%s]\n", phone_call_state, cmd);
+            LIDBG_WRITE("/dev/fly_sound0", cmd);
+            sprintf(cmd, "phoneCallState %d", phone_call_state);
+            LIDBG_WRITE("/dev/fly_sound0", cmd);
         }
         loop_count++;
         if(loop_count > 200)

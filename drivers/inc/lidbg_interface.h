@@ -63,6 +63,8 @@ enum sound_enum
     SND_STOP,
     SND_NAVI_START,
     SND_NAVI_STOP,
+    SND_PA_MUTE,
+    SND_PA_UNMUTE,
 };
 
 enum key_enum
