@@ -148,6 +148,7 @@ public class FlyBootService extends Service {
     private boolean isWifiApEnabled=false;
     private boolean isWifiEnabled=false;
     private boolean isSimCardReady=false;
+    private boolean isFirstBoot=true;
 
     private BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -403,8 +404,12 @@ public class FlyBootService extends Service {
 			LIDBG_PRINT("flybootserver.BroadcastReceiver:["+intent.getAction()+"]\n");
 			if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED"))
 			{
-				acquireBrightWakeLock();
-				writeToFile("/dev/lidbg_interface", "BOOT_COMPLETED");
+				if(isFirstBoot)
+				{
+				    isFirstBoot = false;
+				    acquireBrightWakeLock();
+				    writeToFile("/dev/lidbg_interface", "BOOT_COMPLETED");
+				}
 				return;
 			}
 			else  if (intent.getAction().equals(Intent.ACTION_SCREEN_ON))
