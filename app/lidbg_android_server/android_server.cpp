@@ -130,29 +130,34 @@ void GetAudioFlingerService(bool dbg)
         lidbg( TAG"GetAudioFlingerService.succes1\n");
 }
 
-bool print_stream_volume(void)
+int get_stream_volume(bool dbg, audio_stream_type_t stream_type)
 {
-    int i, error = ERROR_VALUE, index;
+    int index;
     audio_devices_t device;
     status_t status ;
     sp<IAudioPolicyService> &aps = gAudioPolicyService;
-    lidbg(TAG"getStreamVolumeIndex.in,%d\n", AUDIO_STREAM_CNT);
-    for (i = 0; i < AUDIO_STREAM_CNT; i++)
+    device = aps->getDevicesForStream(stream_type) ;
+    status = aps->getStreamVolumeIndex(stream_type, &index, AUDIO_DEVICE_OUT_DEFAULT);
+    if(0 != device && NO_ERROR == status )
     {
-        device = aps->getDevicesForStream((audio_stream_type_t)i) ;
-        status = aps->getStreamVolumeIndex((audio_stream_type_t)i, &index, AUDIO_DEVICE_OUT_DEFAULT);
-        if(0 != device && NO_ERROR == status )
-        {
-            lidbg(TAG"getStreamVolumeIndex.success:index-%d/%d\n", i, index);
-            error = 0;
-        }
-        else
-        {
-            lidbg(TAG"getStreamVolumeIndex.error:device:%d  status-%d/%d\n", device, i, status);
-        }
+        if(dbg)
+            lidbg(TAG"getStreamVolumeIndex.success:index-%d/%d\n", stream_type, index);
     }
-    error = 0;
-    return (error != ERROR_VALUE);
+    else
+    {
+        if(dbg)
+            lidbg(TAG"getStreamVolumeIndex.error:status-%d/%d  device:%d \n",  stream_type, status, device);
+        index = -1 ;
+    }
+    return index;
+}
+
+void print_stream_volume(void)
+{
+    for (int i = 0; i < AUDIO_STREAM_CNT; i++)
+    {
+        get_stream_volume(true, (audio_stream_type_t)i);
+    }
 }
 bool set_stream_volume(audio_stream_type_t mstream, int index)
 {
@@ -343,21 +348,38 @@ int main(int argc, char **argv)
         if(gAudioPolicyService != 0 && gAudioFlingerService != 0)
         {
             sp<IAudioPolicyService> &aps = gAudioPolicyService;
-            playing = aps->isStreamActive(AUDIO_STREAM_MUSIC, 0) |
-                      aps->isStreamActive(AUDIO_STREAM_VOICE_CALL, 0) |
-                      aps->isStreamActive(AUDIO_STREAM_RING, 0) |
-                      aps->isStreamActive(AUDIO_STREAM_SYSTEM , 0) |
-                      aps->isStreamActive(AUDIO_STREAM_DTMF, 0) |
-                      aps->isStreamActive(AUDIO_STREAM_NOTIFICATION , 0);
 
             phone_call_state = aps->getPhoneState();
 
-#if defined(VENDOR_MTK)//for MT3561 AUDIO_STREAM_GIS
+            playing = aps->isStreamActive(AUDIO_STREAM_VOICE_CALL, 0);
+            if(1)
             {
-                for (int i = (int)AUDIO_STREAM_NOTIFICATION; i < AUDIO_STREAM_CNT; i++)
-                    playing = aps->isStreamActive((audio_stream_type_t)i, 0) | playing;
+                for (int i = 0; i < AUDIO_STREAM_CNT; i++)
+                {
+                    if( get_stream_volume(false, (audio_stream_type_t)i) == 0)
+                    {
+                        playing |=  false;
+                        if(dbg_music)
+                            lidbg(TAG"find mute stream:%d\n", i);
+                    }
+                    else
+                        playing = aps->isStreamActive((audio_stream_type_t)i, 0) | playing;
+                }
             }
-#endif
+            else
+            {
+                //save old stable method
+                playing = aps->isStreamActive(AUDIO_STREAM_VOICE_CALL, 0) |
+                          aps->isStreamActive(AUDIO_STREAM_RING, 0) |
+                          aps->isStreamActive(AUDIO_STREAM_SYSTEM , 0) |
+                          aps->isStreamActive(AUDIO_STREAM_DTMF, 0) |
+                          aps->isStreamActive(AUDIO_STREAM_NOTIFICATION , 0);
+
+                if(get_stream_volume(dbg_music, AUDIO_STREAM_MUSIC) > 0)
+                    playing = aps->isStreamActive(AUDIO_STREAM_MUSIC, 0) | playing;
+            }
+
+
             if(dbg_music)
                 lidbg(TAG"playing=%d/phone_call_state=%d\n", playing, phone_call_state);
         }
