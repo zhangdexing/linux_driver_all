@@ -76,37 +76,27 @@ static void *thread_check_boot_complete(void *data)
 }
 
 #define ERROR_VALUE (-2)
+#define DEFAULT_MUSIC_LEVEL_PERCENT (60)
+
 bool ring = false;
 bool ring_old = false;
 bool recheck_navi_policy = false;
 int first_mute_stream_id = -1;
-#if defined(VENDOR_MTK)
 bool navi_policy_en = false;
-#define DEFAULT_MAX_VOLUME (100)
-#else
-bool navi_policy_en = true;
-#define DEFAULT_MAX_VOLUME (15)
-#endif
+int max_volume = -1;
+
+int music_level ;
+int music_max_level ;
+int delay_off_volume_policy_cnt = 0;
+int delay_off_volume_policy = 1000;//ms
+int delay_step_on_music = 500;//ms
+
+static char old_debug_cmd_value[PROPERTY_VALUE_MAX];
 
 //refer to MAX_STREAM_VOLUME in AudioService.java (base\services\core\java\com\android\server\audio)
 int max_stream_volume[AUDIO_STREAM_CNT] =
 {
-    DEFAULT_MAX_VOLUME,  // STREAM_VOICE_CALL
-    DEFAULT_MAX_VOLUME,  // STREAM_SYSTEM
-    DEFAULT_MAX_VOLUME,  // STREAM_RING
-    DEFAULT_MAX_VOLUME, // STREAM_MUSIC
-    DEFAULT_MAX_VOLUME,  // STREAM_ALARM
-    DEFAULT_MAX_VOLUME,  // STREAM_NOTIFICATION
-    DEFAULT_MAX_VOLUME, // STREAM_BLUETOOTH_SCO
-    DEFAULT_MAX_VOLUME,  // STREAM_SYSTEM_ENFORCED
-    DEFAULT_MAX_VOLUME, // STREAM_DTMF
-    DEFAULT_MAX_VOLUME  // STREAM_TTS
 };
-int music_level = DEFAULT_MAX_VOLUME * 60 / 100;
-int music_max_level = DEFAULT_MAX_VOLUME ;
-int delay_off_volume_policy_cnt = 0;
-int delay_off_volume_policy = 1000;//ms
-int delay_step_on_music = 500;//ms
 
 static sp<IAudioFlinger> gAudioFlingerService = 0;
 void GetAudioFlingerService(bool dbg)
@@ -154,6 +144,20 @@ int get_stream_volume(bool dbg, audio_stream_type_t stream_type)
     return index;
 }
 
+int get_max_volume(bool dbg)
+{
+    int volume;
+    for (int i = 0; i < AUDIO_STREAM_CNT; i++)
+    {
+        volume = get_stream_volume(dbg, (audio_stream_type_t)i);
+        if(volume > max_volume)
+            max_volume = volume;
+    }
+    if(dbg)
+        lidbg(TAG"get_max_volume:%d\n", max_volume);
+    return max_volume;
+}
+
 void print_stream_volume(void)
 {
     for (int i = 0; i < AUDIO_STREAM_CNT; i++)
@@ -168,8 +172,8 @@ bool set_stream_volume(audio_stream_type_t mstream, int index)
     status_t status ;
     sp<IAudioPolicyService> &aps = gAudioPolicyService;
     device = aps->getDevicesForStream(mstream) ;
-    if(index > max_stream_volume[mstream])
-        index = max_stream_volume[mstream];
+    //if(index > max_stream_volume[mstream])
+    //    index = max_stream_volume[mstream];
     status = aps->setStreamVolumeIndex(mstream, index , device);
     if(0 != device && NO_ERROR == status )
     {
@@ -261,11 +265,11 @@ void check_ring_stream(void)
             sprintf(cmd, "sound %d", (ring ? 3 : 4));
             LIDBG_WRITE("/dev/fly_sound0", cmd);
         }
-        lidbg(TAG"ring.[%d],music_level:[%d/%d],mypid:%d\n", ring, music_level, DEFAULT_MAX_VOLUME, mypid);
+        lidbg(TAG"ring.[%d],music_level:[%d/%d],mypid:%d\n", ring, music_level, max_volume, mypid);
         if(ring)
         {
             if(delay_off_volume_policy_cnt == 0)
-                step_on_stream_volume(AUDIO_STREAM_MUSIC, DEFAULT_MAX_VOLUME, music_level, 100);
+                step_on_stream_volume(AUDIO_STREAM_MUSIC, max_volume, music_level, 100);
             //set_stream_volume(AUDIO_STREAM_MUSIC, music_level);
         }
         else
@@ -292,7 +296,7 @@ void check_ring_stream(void)
                 lidbg(TAG"stop delay_off_volume_policy_cnt\n");
             delay_off_volume_policy_cnt = 0;
             {
-                //set_all_stream_volume(DEFAULT_MAX_VOLUME);
+                //set_all_stream_volume(max_volume);
                 step_on_stream_volume(AUDIO_STREAM_MUSIC, music_level, music_max_level, delay_step_on_music);
             }
         }
@@ -307,7 +311,7 @@ static void *thread_check_ring_stream(void *data)
     {
         if(gAudioPolicyService != 0 && gAudioFlingerService != 0)
         {
-            if(navi_policy_en)
+            if(navi_policy_en && max_volume > 0)
             {
                 if(recheck_navi_policy)
                 {
@@ -330,7 +334,17 @@ static void *thread_check_ring_stream(void *data)
     return ((void *) 0);
 }
 
-static char old_debug_cmd_value[PROPERTY_VALUE_MAX];
+void init_para(bool dbg)
+{
+    max_volume = get_max_volume(dbg);
+    music_level = max_volume * DEFAULT_MUSIC_LEVEL_PERCENT / 100;
+    music_max_level = max_volume ;
+}
+void print_para(void)
+{
+    lidbg(TAG"mypid:%d,delay_step_on_music:[%dms],delay_off_volume_policy:[%dms],music_max_level:%d,music_level:%d,navi_policy_en:[%d],max_volume[%d]\n",
+          mypid, delay_step_on_music, delay_off_volume_policy, music_max_level, music_level, navi_policy_en, max_volume);
+}
 int main(int argc, char **argv)
 {
     pthread_t ntid;
@@ -345,13 +359,14 @@ int main(int argc, char **argv)
         lidbg(TAG"wait\n");
         sleep(5);
     }
-    mypid = getpid();
-    lidbg(TAG"start:navi_policy_en=%d  DEFAULT_MAX_VOLUME=%d,mypid:%d\n", navi_policy_en, DEFAULT_MAX_VOLUME, mypid);
+    sleep(5);//ensure audioserver.java to init para.
 
     GetAudioPolicyService(true);
     GetAudioFlingerService(true);
-    if(gAudioPolicyService != 0 && navi_policy_en)
-        set_all_stream_volume(DEFAULT_MAX_VOLUME);
+
+    mypid = getpid();
+    lidbg(TAG"start:navi_policy_en=%d  max_volume=%d,mypid:%d\n", navi_policy_en, max_volume, mypid);
+
     pthread_create(&ntid, NULL, thread_check_ring_stream, NULL);
     while(1)
     {
@@ -423,6 +438,12 @@ int main(int argc, char **argv)
             LIDBG_WRITE("/dev/fly_sound0", cmd);
             if(dbg_music)
                 lidbg(TAG"write.[%d,%s]\n", playing, cmd);
+            if(max_volume == -1)
+            {
+                lidbg(TAG"init_para\n");
+                init_para(true);
+                print_para();
+            }
         }
         if(phone_call_state != phone_call_state_old)
         {
@@ -472,12 +493,12 @@ int main(int argc, char **argv)
                     break;
                 case 3 :
                     navi_policy_en = (para[1] == 1);
-                    lidbg(TAG"navi_policy_en:[%d]\n", navi_policy_en);
                     if(navi_policy_en == 0)
                     {
-                        lidbg(TAG"restore music to max:[%d]\n", DEFAULT_MAX_VOLUME);
-                        set_all_stream_volume(DEFAULT_MAX_VOLUME);
+                        lidbg(TAG"restore music to max:[%d]\n", max_volume);
+                        set_all_stream_volume(max_volume);
                     }
+                    print_para();
                     break;
                 case 4 :
                     dbg_volume = true;
@@ -489,13 +510,13 @@ int main(int argc, char **argv)
                     break;
                 case 6 :
                     dbg_volume = true;
-                    music_level = (DEFAULT_MAX_VOLUME * para[1] / 100);
-                    lidbg(TAG"music_level:[%d/%d/%d]\n", music_level, para[1], DEFAULT_MAX_VOLUME);
+                    music_level = (max_volume * para[1] / 100);
+                    lidbg(TAG"music_level:[%d/%d/%d]\n", music_level, para[1], max_volume);
                     break;
                 case 7 :
                     dbg_volume = true;
-                    music_max_level = (DEFAULT_MAX_VOLUME * para[1] / 100);
-                    lidbg(TAG"music_max_level:[%d/%d/%d]\n", music_max_level, para[1], DEFAULT_MAX_VOLUME);
+                    music_max_level = (max_volume * para[1] / 100);
+                    lidbg(TAG"music_max_level:[%d/%d/%d]\n", music_max_level, para[1], max_volume);
                     break;
                 case 8 :
                     delay_off_volume_policy = para[1] ;
@@ -506,10 +527,11 @@ int main(int argc, char **argv)
                     lidbg(TAG"delay_step_on_music:[%dms]\n", delay_step_on_music);
                     break;
                 case 10 :
-                    lidbg(TAG"mypid:%d,delay_step_on_music:[%dms],delay_off_volume_policy:[%dms],music_max_level:%d,music_level:%d,navi_policy_en:[%d]\n", mypid, delay_step_on_music, delay_off_volume_policy, music_max_level, music_level, navi_policy_en);
+                    print_para();
                     break;
                 case 11 :
                     print_stream_volume();
+                    print_para();
                     break;
 
                 default :
