@@ -78,6 +78,8 @@ static void *thread_check_boot_complete(void *data)
 #define ERROR_VALUE (-2)
 bool ring = false;
 bool ring_old = false;
+bool recheck_navi_policy = false;
+int first_mute_stream_id = -1;
 #if defined(VENDOR_MTK)
 bool navi_policy_en = false;
 #define DEFAULT_MAX_VOLUME (100)
@@ -198,7 +200,7 @@ bool step_on_stream_volume(audio_stream_type_t mstream, int start_index , int en
     int i, error = ERROR_VALUE, old_index = 0;
     int cnt = abs(end_index - start_index), cur_index = start_index, step_delay;
     step_delay = (total_time / cnt);
-    lidbg(TAG"step_on_stream_volume:[%d/%d/%d/%d/%d]\n", mstream, start_index, end_index, step_delay, cnt);
+    lidbg(TAG"step_on_stream_volume:[%d/%d->%d/%d/%d]\n", mstream, start_index, end_index, step_delay, cnt);
     if(cnt != 0)
     {
         for (i = 0; i < cnt; i++)
@@ -306,7 +308,15 @@ static void *thread_check_ring_stream(void *data)
         if(gAudioPolicyService != 0 && gAudioFlingerService != 0)
         {
             if(navi_policy_en)
+            {
+                if(recheck_navi_policy)
+                {
+                    recheck_navi_policy = false;
+                    ring_old = false;
+                    lidbg(TAG"check_ring_stream\n");
+                }
                 check_ring_stream();
+            }
         }
         else
         {
@@ -359,11 +369,26 @@ int main(int argc, char **argv)
                     if( get_stream_volume(false, (audio_stream_type_t)i) == 0)
                     {
                         playing |=  false;
-                        if(dbg_music)
-                            lidbg(TAG"find mute stream:%d\n", i);
+                        if(i > 0 && first_mute_stream_id == -1)
+                        {
+                            first_mute_stream_id = i;
+                            lidbg(TAG"first_mute_stream_id:%d\n", first_mute_stream_id);
+                        }
                     }
                     else
                         playing = aps->isStreamActive((audio_stream_type_t)i, 0) | playing;
+
+                    //audiomanager.java (setstreammute API ) will broke the navi policy logic,so I should restart it again when there is a mute event happend.
+                    if(first_mute_stream_id > 0)
+                    {
+                        if( get_stream_volume(false, (audio_stream_type_t)first_mute_stream_id) > 0)
+                        {
+                            lidbg(TAG"first_mute_stream_id:%d.unmute\n", first_mute_stream_id);
+                            first_mute_stream_id = -1;
+                            recheck_navi_policy = true;
+                        }
+                    }
+
                 }
             }
             else
