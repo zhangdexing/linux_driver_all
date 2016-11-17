@@ -228,11 +228,15 @@ static status_t readMetadata(const std::string& path, std::string& fsType,
 	        }
 
 	        else {
-		    strcat(mountPoint, "udisk");
+		    strcat(mountPoint, "udisk-id-");
+                    strcat(mountPoint, value);
+/*
 		    if(*(pos + len) == '0')
 			strcat(mountPoint, "1");
 		    else
 		        strcat(mountPoint, pos + len);
+*/
+
 	        }                
             }
 
