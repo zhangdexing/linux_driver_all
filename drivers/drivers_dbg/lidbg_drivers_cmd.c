@@ -1389,13 +1389,13 @@ void parse_cmd(char *pt)
         else if (!strcmp(argv[1], "*158#118"))
         {
                 lidbg("*158#118--enable navi stream policy \n");
-                lidbg_shell_cmd("setprop persist.lidbg.sound.dbg \"3 1\"");
+                lidbg_shell_cmd("setprop persist.lidbg.sound.dbg \"13 1\"");
                 lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#119"))
         {
                 lidbg("*158#119--disable navi stream policy \n");
-                lidbg_shell_cmd("setprop persist.lidbg.sound.dbg \"3 0\"");
+                lidbg_shell_cmd("setprop persist.lidbg.sound.dbg \"13 0\"");
                 lidbg_domineering_ack();
         }
     }
