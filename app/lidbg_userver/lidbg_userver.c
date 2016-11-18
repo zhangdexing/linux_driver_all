@@ -1,6 +1,7 @@
 
 #include "lidbg_servicer.h"
 #include "lidbg_insmod.h"
+#include <sys/time.h>
 
 #define LIDBG_UEVENT_MSG_LEN  (512)
 #define LIDBG_UEVENT_NODE_NAME "lidbg_uevent"
@@ -266,6 +267,9 @@ int main(int argc, char **argv)
         }
 #else
         {
+            int  waste_time_ms;
+            struct timeval start;
+            struct timeval end;
             struct epoll_event  events[1];
             int  nevents;
             int  epoll_fd = epoll_create(1);
@@ -290,8 +294,16 @@ int main(int argc, char **argv)
                     {
                         //lidbg("do+:%s\n",str);
                         snprintf(shellstring, 256, "%s 2>> "SHELL_ERRS_FILE, str );
+                        gettimeofday(&start, NULL);
                         system(shellstring);
-                        //lidbg("do-:%s\n",str);
+                        gettimeofday(&end, NULL);
+                        waste_time_ms = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000;
+                        if(waste_time_ms >= 1000)
+                        {
+                            //below cmd :have a check
+                            //echo flyaudio:sleep 10 > /dev/lidbg_misc0
+                            lidbg("waste time:[%d ms==>%s]\n", waste_time_ms, str);
+                        }
                     }
                 }
             }
