@@ -516,6 +516,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#117--get qcom band :input just once ,when band changed ,it will tell you though toast \n");
             fs_mem_log("*158#118--enable navi stream policy \n");
             fs_mem_log("*158#119--disable navi stream policy \n");
+            fs_mem_log("*158#120--enable uart print when lpm comes \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1396,6 +1397,12 @@ void parse_cmd(char *pt)
         {
                 lidbg("*158#119--disable navi stream policy \n");
                 lidbg_shell_cmd("setprop persist.lidbg.sound.dbg \"13 0\"");
+                lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#120"))
+        {
+                lidbg("*158#120--enable uart print when lpm comes \n");
+                lidbg_shell_cmd("echo 0 > /sys/module/printk/parameters/console_suspend");
                 lidbg_domineering_ack();
         }
     }
