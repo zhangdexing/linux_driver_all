@@ -1090,7 +1090,9 @@ public static void releaseBrightWakeLock()
 	    LIDBG_PRINT("FlyaudioInternetDisable:"+mFlyaudioInternetActionEn+"\n");
 	    if(!mFlyaudioInternetActionEn)
 	    	    return;
+	    writeToFile("/dev/lidbg_misc0", "flyaudio:echo flyaudio lock > /dev/lidbg_pm0");	
 	    appInternetControl(false);
+	    writeToFile("/dev/lidbg_misc0", "flyaudio:echo flyaudio unlock > /dev/lidbg_pm0");	
 	}
 	public void FlyaudioWhiteListInternetEnable(boolean enable)
 	{

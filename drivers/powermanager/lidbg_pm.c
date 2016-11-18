@@ -21,8 +21,10 @@ static DEFINE_TIMER(suspendkey_timer, suspendkey_timer_isr, 0, 0);
 #endif
 static DECLARE_COMPLETION(sleep_observer_wait);
 static atomic_t is_in_sleep = ATOMIC_INIT(0);
+static atomic_t user_lock_cnt = ATOMIC_INIT(0);
 int power_on_off_test = 0;
 static struct wake_lock pm_wakelock;
+static struct wake_lock user_wakelock;
 void observer_start(void);
 void observer_stop(void);
 extern int soc_io_resume_config(u32 index, u32 direction, u32 pull, u32 drive_strength);
@@ -536,7 +538,21 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
     {
 
         lidbg("case:[%s]\n", cmd[1]);
-        if(!strcmp(cmd[1], "screen_off"))
+	if(!strcmp(cmd[1], "lock"))
+	{
+	    LIDBG_WARN("wake_lock(&user_wakelock):%d\n",(atomic_add_return(1, &user_lock_cnt)));
+	    wake_lock(&user_wakelock);
+	}
+	else if(!strcmp(cmd[1], "unlock"))
+	{
+	    int i = atomic_sub_return(1, &user_lock_cnt);
+	    LIDBG_WARN("wake_unlock(&user_wakelock):%d\n",i);
+	    if (i <= 0)
+	    {
+	        wake_unlock(&user_wakelock);
+	    }
+	}
+       else if(!strcmp(cmd[1], "screen_off"))
         {
             SOC_System_Status(FLY_SCREEN_OFF);
             if(SOC_Hal_Acc_Callback)
@@ -1312,6 +1328,7 @@ static int __init lidbg_pm_init(void)
     lidbg_mkdir(PM_DIR);
 
     wake_lock_init(&pm_wakelock, WAKE_LOCK_SUSPEND, "lidbg_pm");
+    wake_lock_init(&user_wakelock, WAKE_LOCK_SUSPEND, "lidbg_pm_user");
     wake_lock(&pm_wakelock);
 
     MCU_WP_GPIO_ON;
