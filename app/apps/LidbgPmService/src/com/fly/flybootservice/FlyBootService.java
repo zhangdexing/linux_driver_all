@@ -247,7 +247,7 @@ public class FlyBootService extends Service {
 						pmState = readFromFile(pmFile);
 						if(pmState < 0)
 						{
-							LIDBG_PRINT("FlyBootService get pm state failed.");
+							LIDBG_PRINT("FlyBootService get pm state failed.\n");
 							delay(500);
 						}
 						else{
@@ -339,12 +339,12 @@ public class FlyBootService extends Service {
 									setWifiState(true);
 								}
 							}else if(pmState == FBS_SCREEN_ON){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_SCREEN_ON");
+								LIDBG_PRINT("FlyBootService get pm state: FBS_SCREEN_ON\n");
 								acquireWakeLock();
 								SendBroadcastToService(KeyBootState, keyScreenOn);
 								
 							}else if(pmState == FBS_SLEEP_TIMEOUT){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_SLEEP_TIMEOUT");
+								LIDBG_PRINT("FlyBootService get pm state: FBS_SLEEP_TIMEOUT\n");
 								if(blSuspendUnairplaneFlag)
 									KillProcess(true);
 								//InternetDisable();
@@ -358,7 +358,7 @@ public class FlyBootService extends Service {
     }
 
 	public void reSetPmState () {
-		LIDBG_PRINT("flybootservice reset PM state.");
+		LIDBG_PRINT("flybootservice reset PM state.\n");
 		FBS_SCREEN_OFF = 0;
 		FBS_GOTO_SLEEP = 1;
 		FBS_DEVICE_DOWN = 2;
@@ -591,12 +591,12 @@ public class FlyBootService extends Service {
     public void onDestroy() {
         // TODO Auto-generated method stub
         super.onDestroy();
-        LIDBG_PRINT("flybootservice destory...");
+        LIDBG_PRINT("flybootservice destory...\n");
     }
 
     public void acquireWakeLock() {
         if (mWakeLock == null) {
-            LIDBG_PRINT(" +++++ acquire flybootservice wakelock +++++ ");
+            LIDBG_PRINT(" +++++ acquire flybootservice wakelock +++++ \n");
             fbPm= (PowerManager) getSystemService(Context.POWER_SERVICE);
 
             mWakeLock = (WakeLock) fbPm.newWakeLock(
@@ -604,16 +604,16 @@ public class FlyBootService extends Service {
             if (mWakeLock != null && !mWakeLock.isHeld())
                 mWakeLock.acquire();
             else
-				  LIDBG_PRINT(" Error: new flybootservice wakelock failed !");
+				  LIDBG_PRINT(" Error: new flybootservice wakelock failed !\n");
         }
     }
 
     public static void releaseWakeLock() {
-        LIDBG_PRINT(" ----- release flybootservice wakelock ----- ");
+        LIDBG_PRINT(" ----- release flybootservice wakelock ----- \n");
         if (mWakeLock != null && mWakeLock.isHeld()) {
             mWakeLock.release();
             if(mWakeLock.isHeld())
-                LIDBG_PRINT(" Error: release flybootservice wakelock failed !");
+                LIDBG_PRINT(" Error: release flybootservice wakelock failed !\n");
             mWakeLock = null;
         }
     }
@@ -626,28 +626,28 @@ public void acquireBrightWakeLock()
 	mBrightWakeLock = (WakeLock) fbPm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "lidbg.bright.wakelock");
         if (mBrightWakeLock != null)
         {
-            LIDBG_PRINT(" ----- acquireBrightWakeLock ----- ");
+            LIDBG_PRINT(" ----- acquireBrightWakeLock ----- \n");
             mBrightWakeLock.acquire();
         }
         else
-            LIDBG_PRINT(" Error: acquireBrightWakeLock");
+            LIDBG_PRINT(" Error: acquireBrightWakeLock\n");
     }
 }
 public static void releaseBrightWakeLock()
 {
     if (mBrightWakeLock != null )
     {
-        LIDBG_PRINT(" ----- releaseBrightWakeLock ----- ");
+        LIDBG_PRINT(" ----- releaseBrightWakeLock ----- \n");
         mBrightWakeLock.release();
         if(mBrightWakeLock.isHeld())
-            LIDBG_PRINT(" Error: releaseBrightWakeLock !");
+            LIDBG_PRINT(" Error: releaseBrightWakeLock !\n");
         mBrightWakeLock = null;
     }
 }
 
 
     public static void restoreAirplaneMode(Context context) {
-        LIDBG_PRINT("restoreAirplaneMode+");
+        LIDBG_PRINT("restoreAirplaneMode+\n");
         if (Settings.Global.getInt(context.getContentResolver(), "fastboot_airplane_mode", -1) != 0) {
             return;
         }
@@ -664,7 +664,7 @@ public static void releaseBrightWakeLock()
         context.sendBroadcastAsUser(intentAirplane, UserHandle.ALL);
         Settings.Global.putInt(context.getContentResolver(), "fastboot_airplane_mode", -1);
 
-        LIDBG_PRINT("restoreAirplaneMode end");
+        LIDBG_PRINT("restoreAirplaneMode end\n");
     }
 
     public void SendBroadcastToService(String key, String value) {
@@ -678,7 +678,7 @@ public static void releaseBrightWakeLock()
 
 	private void system_gotosleep(){
 
-		LIDBG_PRINT(" ********** system gotosleep ********** ");
+		LIDBG_PRINT(" ********** system gotosleep ********** \n");
 		if(blSuspendUnairplaneFlag){
 			fbPm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 			msgTokenal("flyaudio gotosleep");
@@ -693,7 +693,7 @@ public static void releaseBrightWakeLock()
 	private void start_fastboot(){
 		firstBootFlag = true;
 
-		LIDBG_PRINT(" ********** start fastboot ********** ");
+		LIDBG_PRINT(" ********** start fastboot ********** \n");
 		fbPm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 
 		powerOffSystem();
@@ -701,7 +701,7 @@ public static void releaseBrightWakeLock()
 
 	private void system_resume(){
 		if(firstBootFlag){
-			LIDBG_PRINT("FlyBootService system resume...");
+			LIDBG_PRINT("FlyBootService system resume...\n");
 			enableShowLogo(true);
 			powerOnSystem(mFlyBootService);
 		}
@@ -711,7 +711,7 @@ public static void releaseBrightWakeLock()
         @Override
         public void onReceive(Context context, Intent intent) {
                 Log.d(TAG, "Send Broadcast finish in " + SystemClock.elapsedRealtime());
-                LIDBG_PRINT("o Send Broadcast finish");
+                LIDBG_PRINT("  Send Broadcast finish\n");
                 sendBroadcastDone = true;
         }
     };
@@ -778,14 +778,14 @@ public static void releaseBrightWakeLock()
     }
 
     private void powerOffSystem() {
-		LIDBG_PRINT("powerOffSystem+");
+		LIDBG_PRINT("powerOffSystem+\n");
 		sendBecomingNoisyIntent();
-		LIDBG_PRINT("powerOffSystem step 1");
+		LIDBG_PRINT("powerOffSystem step 1\n");
 
 		SystemProperties.set("ctl.start", "bootanim");
-		LIDBG_PRINT("powerOffSystem step 2");
+		LIDBG_PRINT("powerOffSystem step 2\n");
 
-		LIDBG_PRINT("powerOffSystem step 3");
+		LIDBG_PRINT("powerOffSystem step 3\n");
 		getLastPackage();
 		bIsKLDRunning = IsKLDrunning();
 
@@ -796,11 +796,11 @@ public static void releaseBrightWakeLock()
 			SystemProperties.set("fly.gps.run", "0");
 			Log.d(TAG, "-----fly.gps.run-----0---");
 		}
-		LIDBG_PRINT("powerOffSystem step 4");
+		LIDBG_PRINT("powerOffSystem step 4\n");
 		//if(!blSuspendUnairplaneFlag)
 			KillProcess(false);
 		msgTokenal("flyaudio pre_gotosleep");
-		LIDBG_PRINT("powerOffSystem-");
+		LIDBG_PRINT("powerOffSystem-\n");
     }
 
     private void powerOnSystem(Context context) {
@@ -854,7 +854,7 @@ public static void releaseBrightWakeLock()
             if(blSuspendUnairplaneFlag){
 	            booleanAccWakedupState = SystemProperties.getBoolean("persist.lidbg.AccWakedupState",false);
 	            if(booleanAccWakedupState){
-	                LIDBG_PRINT("Prop AccWakedupState be set:" + booleanAccWakedupState + ", stop kill process.");
+	                LIDBG_PRINT("Prop AccWakedupState be set:" + booleanAccWakedupState + ", stop kill process.\n");
 	                break;
 	            }
             }
@@ -885,7 +885,7 @@ public static void releaseBrightWakeLock()
             if(blSuspendUnairplaneFlag){
 	            booleanAccWakedupState = SystemProperties.getBoolean("persist.lidbg.AccWakedupState",false);
 	            if(booleanAccWakedupState){
-	                LIDBG_PRINT("Prop AccWakedupState be set:" + booleanAccWakedupState + ", stop kill process.");
+	                LIDBG_PRINT("Prop AccWakedupState be set:" + booleanAccWakedupState + ", stop kill process.\n");
 	                break;
 	            }
             }
@@ -956,7 +956,7 @@ public static void releaseBrightWakeLock()
    {
 	LIDBG_PRINT("Flyaudio Remote-Control disabled, AirplaneEnable:::"+AirplaneEnable);
 	if (isAirplaneModeOn(this)) {
-		LIDBG_PRINT("isAirplaneModeOn return.");
+		LIDBG_PRINT("isAirplaneModeOn return.\n");
 		return;
 	}
 	Settings.Global.putInt(getContentResolver(), "fastboot_airplane_mode", 0);
@@ -1016,7 +1016,7 @@ public static void releaseBrightWakeLock()
                 e.printStackTrace();
             }
         } else {
-            LIDBG_PRINT("file not exists!!!");
+            LIDBG_PRINT("file not exists!!!\n");
         }
     }
 
@@ -1032,7 +1032,7 @@ public static void releaseBrightWakeLock()
             String str = msg;
             if (mFile.exists()) {
                 try {
-                    LIDBG_PRINT(" msgTokenal");
+                    LIDBG_PRINT(" msgTokenal\n");
                     FileOutputStream fout = new FileOutputStream(
                             mFile.getAbsolutePath());
                     byte[] bytes = str.getBytes();
@@ -1386,7 +1386,7 @@ public static void releaseBrightWakeLock()
 			{
 				acquireWakeLock();
 				handleRebootEvent();
-				LIDBG_PRINT("test seven days reboot");
+				LIDBG_PRINT("test seven days reboot\n");
 				writeToFile("/dev/lidbg_misc0","flyaudio:reboot lidbg_sevendays_timeout");
 				return;
 			}
