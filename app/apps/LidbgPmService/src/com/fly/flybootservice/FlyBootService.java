@@ -252,6 +252,8 @@ public class FlyBootService extends Service {
 						}
 						else{
 							if(pmState == FBS_SCREEN_OFF){
+								isWifiApEnabled = isWifiApEnabled();
+								isWifiEnabled = isWifiEnabled();
 								isSimCardReady = isSimCardReady();
 								AirplaneEnable = SystemProperties.getBoolean("persist.lidbg.AirplaneEnable",false);
 								LIDBG_PRINT("FlyBootService get pm state: FBS_SCREEN_OFF/isSimCardReady:"+isSimCardReady+"\n");
@@ -263,8 +265,6 @@ public class FlyBootService extends Service {
 									FlyaudioInternetDisable();
 								SendBroadcastToService(KeyBootState, keyEearlySusupendOFF);
 								LIDBG_PRINT("FlyBootService sent device_down to hal\n");
-								isWifiApEnabled = isWifiApEnabled();
-								isWifiEnabled = isWifiEnabled();
 							}else if(pmState == FBS_FASTBOOT_REQUEST){
 								LIDBG_PRINT("FlyBootService get pm state: FBS_FASTBOOT_REQUEST\n");
 							}else if(pmState == FBS_ANDROID_DOWN){
