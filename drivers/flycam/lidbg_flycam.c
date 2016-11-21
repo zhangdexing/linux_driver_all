@@ -436,7 +436,7 @@ static int thread_set_par_func(void *data)
 			msleep(800);
 			start_rec(REARVIEW_ID,1);
 		}
-#if 1
+#if 0
 		if(isDualCam)
 		{
 			if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID)	isDVRVideoLoop = 1;
@@ -450,11 +450,31 @@ static int thread_set_par_func(void *data)
 			else	isDVRVideoLoop = 0;
 			isRearVideoLoop = 0;
 		}
-		sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", isDVRVideoLoop);
-		lidbg_shell_cmd(temp_cmd);
-		sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
-		lidbg_shell_cmd(temp_cmd);
 #endif		
+		if(isUIStartRec == 1)
+		{
+			if(isDualCam)
+			{
+				sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", 1);
+				lidbg_shell_cmd(temp_cmd);
+				sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", 1);
+				lidbg_shell_cmd(temp_cmd);
+			}
+			else
+			{
+				sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", 1);
+				lidbg_shell_cmd(temp_cmd);
+				sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", 0);
+				lidbg_shell_cmd(temp_cmd);
+			}
+		}
+		else
+		{
+			sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", 0);
+			lidbg_shell_cmd(temp_cmd);
+			sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", 0);
+			lidbg_shell_cmd(temp_cmd);
+		}	
 	}
 	return 0;
 }
@@ -1769,8 +1789,8 @@ static int dvr_stop_recording(void)
 	if(isDVRRec)
 	{
 		lidbg("%s:====DVR stop rec====\n",__func__);
-		if(stop_rec(DVR_ID,1)) return -1;
 		isDVRRec = 0;
+		if(stop_rec(DVR_ID,1)) return -1;
 	}
 	else if(isOnlineRec) 
 	{
@@ -1817,8 +1837,8 @@ static int rear_stop_recording(void)
 	if(isRearRec)
 	{
 		lidbg("%s:====Rear stop rec====\n",__func__);
-		if(stop_rec(REARVIEW_ID,1)) return -1;
 		isRearRec = 0;
+		if(stop_rec(REARVIEW_ID,1)) return -1;
 	}
 	else
 	{
@@ -2571,10 +2591,30 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						{
 							lidbg("%s:copy_to_user ERR\n",__func__);
 						}
-						sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", isDVRVideoLoop);
-						lidbg_shell_cmd(temp_cmd);
-						sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", isRearVideoLoop);
-						lidbg_shell_cmd(temp_cmd);
+						if(isUIStartRec == 1)
+						{
+							if(isDualCam)
+							{
+								sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", 1);
+								lidbg_shell_cmd(temp_cmd);
+								sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", 1);
+								lidbg_shell_cmd(temp_cmd);
+							}
+							else
+							{
+								sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", 1);
+								lidbg_shell_cmd(temp_cmd);
+								sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", 0);
+								lidbg_shell_cmd(temp_cmd);
+							}
+						}
+						else
+						{
+							sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", 0);
+							lidbg_shell_cmd(temp_cmd);
+							sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", 0);
+							lidbg_shell_cmd(temp_cmd);
+						}
 						//mod_timer(&ui_start_rec_timer,UI_REC_WAIT_TIME);
 						break;
 
