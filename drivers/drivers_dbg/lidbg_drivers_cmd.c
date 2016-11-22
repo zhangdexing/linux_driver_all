@@ -517,6 +517,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#118--enable navi stream policy \n");
             fs_mem_log("*158#119--disable navi stream policy \n");
             fs_mem_log("*158#120--enable uart print when lpm comes \n");
+            fs_mem_log("*158#121--auto input test \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1403,6 +1404,13 @@ void parse_cmd(char *pt)
         {
                 lidbg("*158#120--enable uart print when lpm comes \n");
                 lidbg_shell_cmd("echo 0 > /sys/module/printk/parameters/console_suspend");
+                lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#121"))
+        {
+                lidbg("*158#121--auto input test \n");
+                lidbg_shell_cmd("chmod 777 /data/tap_setting.sh");
+                lidbg_shell_cmd("/data/tap_setting.sh &");
                 lidbg_domineering_ack();
         }
     }
