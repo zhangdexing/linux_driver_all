@@ -436,8 +436,7 @@ int main(int argc, char **argv)
             playing_old = playing;
             sprintf(cmd, "sound %d", (playing ? 1 : 2));
             LIDBG_WRITE("/dev/fly_sound0", cmd);
-            if(dbg_music)
-                lidbg(TAG"write.[%d,%s]\n", playing, cmd);
+            lidbg(TAG"[playing=%d]\n", playing);
             if(max_volume == -1)
             {
                 lidbg(TAG"init_para\n");
@@ -449,11 +448,19 @@ int main(int argc, char **argv)
         {
             char cmd[32];
             phone_call_state_old = phone_call_state;
-            sprintf(cmd, "sound %d", ((phone_call_state >= AUDIO_MODE_IN_CALL) ? 1 : 2));
-            lidbg(TAG"phone_call_state[%d,%s]\n", phone_call_state, cmd);
-            LIDBG_WRITE("/dev/fly_sound0", cmd);
             sprintf(cmd, "phoneCallState %d", phone_call_state);
             LIDBG_WRITE("/dev/fly_sound0", cmd);
+            if(phone_call_state >= AUDIO_MODE_IN_CALL)
+            {
+                sprintf(cmd, "sound %d", 1);
+                LIDBG_WRITE("/dev/fly_sound0", cmd);
+            }
+            else if(!playing)
+            {
+                sprintf(cmd, "sound %d", 2);
+                LIDBG_WRITE("/dev/fly_sound0", cmd);
+            }
+            lidbg(TAG"incall[%d],playing[%d],phone_call_state[%d]\n", (phone_call_state >= AUDIO_MODE_IN_CALL) , playing, phone_call_state);
         }
         loop_count++;
         if(loop_count > 200)
