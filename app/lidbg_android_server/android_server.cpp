@@ -345,6 +345,19 @@ void print_para(void)
     lidbg(TAG"mypid:%d,delay_step_on_music:[%dms],delay_off_volume_policy:[%dms],music_max_level:%d,music_level:%d,navi_policy_en:[%d],max_volume[%d]\n",
           mypid, delay_step_on_music, delay_off_volume_policy, music_max_level, music_level, navi_policy_en, max_volume);
 }
+static int sound_vote = 0;
+int handle_sound_state(const char *who, int sound)
+{
+    char cmd[16];
+    if(sound)
+        sound_vote++;
+    else
+        sound_vote--;
+    sprintf(cmd, "sound %d", (sound_vote > 0 ? 1 : 2));
+    LIDBG_WRITE("/dev/fly_sound0", cmd);
+    lidbg(TAG"handle_sound_state:[%d/%d/%s]\n", sound_vote, sound, who);
+    return 1;
+}
 int main(int argc, char **argv)
 {
     pthread_t ntid;
@@ -368,6 +381,16 @@ int main(int argc, char **argv)
     lidbg(TAG"start:navi_policy_en=%d  max_volume=%d,mypid:%d\n", navi_policy_en, max_volume, mypid);
 
     pthread_create(&ntid, NULL, thread_check_ring_stream, NULL);
+
+    //sync:some platform as mtk,not the value [AUDIO_MODE_INVALID],we should sync it first.
+    if(gAudioPolicyService != 0)
+    {
+        sp<IAudioPolicyService> &aps = gAudioPolicyService;
+        phone_call_state = aps->getPhoneState();
+        if(phone_call_state < AUDIO_MODE_IN_CALL)
+            phone_call_state_old = phone_call_state;
+    }
+
     while(1)
     {
         if(gAudioPolicyService != 0 && gAudioFlingerService != 0)
@@ -432,11 +455,8 @@ int main(int argc, char **argv)
 
         if(playing != playing_old)
         {
-            char cmd[16];
             playing_old = playing;
-            sprintf(cmd, "sound %d", (playing ? 1 : 2));
-            LIDBG_WRITE("/dev/fly_sound0", cmd);
-            lidbg(TAG"[playing=%d]\n", playing);
+            handle_sound_state("playing", playing);
             if(max_volume == -1)
             {
                 lidbg(TAG"init_para\n");
@@ -450,17 +470,7 @@ int main(int argc, char **argv)
             phone_call_state_old = phone_call_state;
             sprintf(cmd, "phoneCallState %d", phone_call_state);
             LIDBG_WRITE("/dev/fly_sound0", cmd);
-            if(phone_call_state >= AUDIO_MODE_IN_CALL)
-            {
-                sprintf(cmd, "sound %d", 1);
-                LIDBG_WRITE("/dev/fly_sound0", cmd);
-            }
-            else if(!playing)
-            {
-                sprintf(cmd, "sound %d", 2);
-                LIDBG_WRITE("/dev/fly_sound0", cmd);
-            }
-            lidbg(TAG"incall[%d],playing[%d],phone_call_state[%d]\n", (phone_call_state >= AUDIO_MODE_IN_CALL) , playing, phone_call_state);
+            handle_sound_state("phone_call", (phone_call_state >= AUDIO_MODE_IN_CALL));
         }
         loop_count++;
         if(loop_count > 200)
