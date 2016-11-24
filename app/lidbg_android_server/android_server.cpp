@@ -24,7 +24,6 @@ bool dbg_volume = false;
 int loop_count = 0;
 int mypid = -1;
 bool playing = false;
-bool playing_old = false;
 int boot_completed = 0;
 int phone_call_state = AUDIO_MODE_INVALID;
 int phone_call_state_old = AUDIO_MODE_INVALID;
@@ -84,6 +83,8 @@ bool recheck_navi_policy = false;
 int first_mute_stream_id = -1;
 bool navi_policy_en = false;
 int max_volume = -1;
+int  sound_on = 0;
+
 
 int music_level ;
 int music_max_level ;
@@ -345,17 +346,12 @@ void print_para(void)
     lidbg(TAG"mypid:%d,delay_step_on_music:[%dms],delay_off_volume_policy:[%dms],music_max_level:%d,music_level:%d,navi_policy_en:[%d],max_volume[%d]\n",
           mypid, delay_step_on_music, delay_off_volume_policy, music_max_level, music_level, navi_policy_en, max_volume);
 }
-static int sound_vote = 0;
 int handle_sound_state(const char *who, int sound)
 {
     char cmd[16];
-    if(sound)
-        sound_vote++;
-    else
-        sound_vote--;
-    sprintf(cmd, "sound %d", (sound_vote > 0 ? 1 : 2));
+    sprintf(cmd, "sound %d", (sound > 0 ? 1 : 2));
     LIDBG_WRITE("/dev/fly_sound0", cmd);
-    lidbg(TAG"handle_sound_state:[%d/%d/%s]\n", sound_vote, sound, who);
+    lidbg(TAG"handle_sound_state:[%d/%s/%d/%d]\n", sound, who, playing, phone_call_state);
     return 1;
 }
 int main(int argc, char **argv)
@@ -453,26 +449,36 @@ int main(int argc, char **argv)
             GetAudioFlingerService(true);
         }
 
-        if(playing != playing_old)
-        {
-            playing_old = playing;
-            handle_sound_state("playing", playing);
-            if(max_volume == -1)
-            {
-                lidbg(TAG"init_para\n");
-                init_para(true);
-                print_para();
-            }
-        }
         if(phone_call_state != phone_call_state_old)
         {
             char cmd[32];
             phone_call_state_old = phone_call_state;
             sprintf(cmd, "phoneCallState %d", phone_call_state);
             LIDBG_WRITE("/dev/fly_sound0", cmd);
-            if(phone_call_state != AUDIO_MODE_RINGTONE)
-                handle_sound_state("phone_call", (phone_call_state >= AUDIO_MODE_IN_CALL));
         }
+        if( (playing || phone_call_state >= AUDIO_MODE_RINGTONE))
+        {
+            if(sound_on == 0)
+            {
+                sound_on = 1;
+                handle_sound_state("vote", sound_on);
+                if(max_volume == -1)
+                {
+                    lidbg(TAG"init_para\n");
+                    init_para(true);
+                    print_para();
+                }
+            }
+        }
+        else
+        {
+            if(sound_on == 1)
+            {
+                sound_on = 0;
+                handle_sound_state("vote", sound_on);
+            }
+        }
+
         loop_count++;
         if(loop_count > 200)
         {
