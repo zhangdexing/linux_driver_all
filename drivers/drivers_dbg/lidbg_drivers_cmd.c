@@ -66,12 +66,12 @@ int thread_format_sdcard1(void *data)
         lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 5");
         lidbg_shell_cmd("echo ==thread_format_sdcard1.system mount sdcard1.5S==== > /dev/lidbg_msg");
         ssleep(5);
-        lidbg_shell_cmd("echo \"formatcomplete=1\" > /dev/lidbg_flycam0");
+        lidbg_shell_cmd("echo \"formatcomplete=1\" > /dev/lidbg_flycam0&");
     }
     else
     {
         LIDBG_WARN("sdcard1.device:NULL");
-		lidbg_shell_cmd("echo \"formatcomplete=0\" > /dev/lidbg_flycam0");
+		lidbg_shell_cmd("echo \"formatcomplete=0\" > /dev/lidbg_flycam0&");
     }
     lidbg_shell_cmd("echo ==thread_format_sdcard1.stop==== > /dev/lidbg_msg");
     return 0;

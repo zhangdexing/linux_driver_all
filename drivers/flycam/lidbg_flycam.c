@@ -85,7 +85,7 @@ static struct timer_list stop_thinkware_em_timer;
 /*bool var*/
 static char isDVRRec,isOnlineRec,isRearRec,isDVRFirstInit,isRearViewFirstInit,isRearCheck = 1,isDVRCheck = 1,isOnlineNotifyReady,isDualCam,isColdBootRec,isDVRACCRec,isRearACCRec;
 static char isSuspend,isDVRAfterFix,isRearViewAfterFix,isDVRFirstResume,isRearFirstResume,isUpdating,isKSuspend,isDVRReady,isRearReady,isDVRACCResume,isRearACCResume;
-static char isUIStartRec,isDVRPlugRec,isRearPlugRec,isEMDVRStartRec,isEMRearStartRec,isBeforeFormatDVRRec,isBeforeFormatRearRec;
+static char isUIStartRec,isDVRPlugRec,isRearPlugRec,isEMDVRStartRec,isEMRearStartRec,isBeforeFormatDVRRec,isBeforeFormatRearRec,isBeforeFormatUIRec;
 
 //struct work_struct work_t_fixScreenBlurred;
 
@@ -455,6 +455,7 @@ static int thread_set_par_func(void *data)
 		{
 			if(isDualCam)
 			{
+				lidbg("isDVRVideoLoop 1,isRearVideoLoop 1\n");
 				sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", 1);
 				lidbg_shell_cmd(temp_cmd);
 				sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", 1);
@@ -462,6 +463,7 @@ static int thread_set_par_func(void *data)
 			}
 			else
 			{
+				lidbg("isDVRVideoLoop 1,isRearVideoLoop 0\n");
 				sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", 1);
 				lidbg_shell_cmd(temp_cmd);
 				sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", 0);
@@ -470,6 +472,7 @@ static int thread_set_par_func(void *data)
 		}
 		else
 		{
+			lidbg("isDVRVideoLoop 0,isRearVideoLoop 0\n");
 			sprintf(temp_cmd, "setprop persist.uvccam.isDVRVideoLoop %d", 0);
 			lidbg_shell_cmd(temp_cmd);
 			sprintf(temp_cmd, "setprop persist.uvccam.isRearVideoLoop %d", 0);
@@ -1955,6 +1958,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			case NR_ISVIDEOLOOP:
 				lidbg("%s:DVR NR_ISVIDEOLOOP %ld\n",__func__,arg);
 				isDVRVideoLoop= arg;
+				isUIStartRec = isDVRVideoLoop;
 				break;
 			case NR_DELDAYS:
 				lidbg("%s:DVR NR_DELDAYS %ld\n",__func__,arg);
@@ -2857,7 +2861,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 									rear_stop_recording();
 								}
 								*/
-								isBeforeFormatDVRRec = isDVRRec;
+								isBeforeFormatUIRec = isUIStartRec;
 								isUIStartRec = 0;
 								complete(&ui_start_rec_wait);
 							}
@@ -3837,20 +3841,27 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			int formatVal;
 			formatVal = simple_strtoul(keyval[1], 0, 0);
 			lidbg("formatcomplete = %d\n",formatVal);
-			if(formatVal == 1) status_fifo_in(RET_FORMAT_SUCCESS);
-			else status_fifo_in(RET_FORMAT_FAIL);
+			
 			ssleep(7);
 			/*
 			if(!isDVRRec && !isOnlineRec&&  isBeforeFormatDVRRec)
 				dvr_start_recording();
 			if(!isRearRec &&  isBeforeFormatRearRec)
 				rear_start_recording();
-			*/
+			
 			if(isBeforeFormatDVRRec)
 			{
 				isUIStartRec = 1;
 				mod_timer(&ui_start_rec_timer,UI_REC_WAIT_TIME);
 			}
+			*/
+			isUIStartRec = isBeforeFormatUIRec;
+			if(!isDVRRec && !isOnlineRec)
+				dvr_start_recording();
+			if(!isRearRec)
+				rear_start_recording();
+			if(formatVal == 1) status_fifo_in(RET_FORMAT_SUCCESS);
+			else status_fifo_in(RET_FORMAT_FAIL);
 			isBeforeFormatDVRRec = 0;
 			isBeforeFormatRearRec = 0;
 			sprintf(temp_cmd, "setprop lidbg.uvccam.isFormat %d", 0);

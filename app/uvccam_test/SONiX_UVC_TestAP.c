@@ -53,7 +53,7 @@
 
 static int lidbg_get_current_time(char isXUSet , char *time_string, struct rtc_time *ptm);
 static void send_driver_msg(char magic ,char nr,unsigned long arg);
-int find_earliest_file(char* Dir,char* minRecName);
+unsigned int find_earliest_file(char* Dir,char* minRecName);
 
 
 #define TESTAP_VERSION		"v1.0.21_SONiX_UVC_TestAP_Multi"
@@ -1633,6 +1633,12 @@ void dequeue_buf(int count , FILE * rec_fp)
 			if(isBeginTopDeq && rec_fp != NULL) fwrite(tempa, lengtha, 1, rec_fp);//write data to the output files
 			//else lidbg("****[%d]throw*****\n",cam_id);
 		}
+		else
+		{
+			if(rec_fp1 != NULL) fclose(rec_fp1);
+			if(old_rec_fp1 != NULL) fclose(old_rec_fp1);	
+		}
+		
 		if(isBlackBoxTopRec) 
 		{
 			if(isBeginTopDeq && fp1 != NULL) fwrite(tempa, lengtha, 1, fp1);
@@ -1810,7 +1816,7 @@ void *thread_bottom_count_frame(void *par)
 void *thread_del_tmp_emfile(void *par)
 {
 	char minRecName[100] = {0};
-	int filecnt = 0;
+	unsigned int filecnt = 0;
 	char minRecPath[200] = {0};
 	char tmp_cmd[300] = {0};
 	char isFormat_str[PROPERTY_VALUE_MAX];
@@ -2383,7 +2389,7 @@ int lidbg_del_days_file(char* Dir,int days)
 	char filepath[200] = {0};
 	DIR *pDir ;
 	struct dirent *ent; 
-	unsigned char filecnt = 0;
+	unsigned int filecnt = 0;
 	int ret;
 	char *date_time_key[5] = {NULL};
 	char *date_key[3] = {NULL};
@@ -2440,11 +2446,11 @@ int lidbg_del_days_file(char* Dir,int days)
 
 }
 
-int find_earliest_file(char* Dir,char* minRecName)
+unsigned int find_earliest_file(char* Dir,char* minRecName)
 {
 	DIR *pDir ;
 	struct dirent *ent; 
-	unsigned char filecnt = 0;
+	unsigned int filecnt = 0;
 	int ret;
 	char *date_time_key[5] = {NULL};
 	char *date_key[3] = {NULL};
@@ -2456,10 +2462,15 @@ int find_earliest_file(char* Dir,char* minRecName)
 	char tmpDName[100] = {0};
 	struct tm prevTm,curTm;
 	time_t prevtimep = 0,curtimep;
-	
+
+	//lidbg("========find_earliest_file:%s=======\n",Dir);
 	/*find the earliest rec file and del*/
 	pDir=opendir(Dir);  
-	if(pDir == NULL) return -1;
+	if(pDir == NULL) 
+	{
+		lidbg("========pDir NULL=======\n");
+		return -1;
+	}
 	while((ent=readdir(pDir))!=NULL)  
 	{  
 	        if(!(ent->d_type & DT_DIR))  
@@ -2835,7 +2846,7 @@ void check_storage_file_size()
 				}
 				if(mbFreedisk < 10 && total_frame_cnt > 300)
 				{
-					lidbg("======Recording Protect![%dMB]======\n",mbFreedisk);
+					lidbg("[%d]:======Recording Protect![%dMB]======\n",cam_id,mbFreedisk);
 					send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
 #if 0									
 					close(dev);
@@ -2865,7 +2876,7 @@ void check_storage_file_size()
 void del_earliest_file()
 {
 	char minRecName[100] = EMMC_MOUNT_POINT0"/camera_rec/1111.mp4";//error for del
-	unsigned char filecnt = 0;
+	unsigned int filecnt = 0;
 	struct stat filebuf; 
 	char filepath[200] = {0};
 	filecnt = find_earliest_file(Rec_Save_Dir,minRecName);
@@ -2912,13 +2923,10 @@ void *thread_free_space(void *par)
 {
 	while(1)
 	{
-		sleep(1);
-		if(!isPreview && (cam_id == DVR_ID))
-			check_total_file_size();
-		if(isVideoLoop)
-			check_storage_file_size();	
-		if(isExceed)
-			del_earliest_file();
+		sleep(5);
+		//check_total_file_size();
+		check_storage_file_size();	
+		if(isExceed && isVideoLoop) del_earliest_file();
 	}
 }
 
@@ -5151,19 +5159,18 @@ openfd:
 	//XU_H264_Set_GOP(dev, 10);
 	property_set("lidbg.uvccam.isdequeue", "0");
 	
-	pthread_create(&thread_top_dequeue_id,NULL,thread_top_dequeue,NULL);
-	pthread_create(&thread_dequeue_id,NULL,thread_dequeue,NULL);
-	pthread_create(&thread_count_top_frame_dequeue_id,NULL,thread_top_count_frame,NULL);
-	pthread_create(&thread_count_bottom_frame_dequeue_id,NULL,thread_bottom_count_frame,NULL);
-#if 1	
-	if((i % 30 == 0) && !isPreview && (cam_id == DVR_ID))
+	if(!isPreview)
+	{
+		pthread_create(&thread_top_dequeue_id,NULL,thread_top_dequeue,NULL);
+		pthread_create(&thread_dequeue_id,NULL,thread_dequeue,NULL);
+		pthread_create(&thread_count_top_frame_dequeue_id,NULL,thread_top_count_frame,NULL);
+		pthread_create(&thread_count_bottom_frame_dequeue_id,NULL,thread_bottom_count_frame,NULL);
 		pthread_create(&thread_free_space_id,NULL,thread_free_space,NULL);
-#endif
-
-#if 1
-	if(cam_id == DVR_ID)
-		pthread_create(&thread_del_tmp_emfile_id,NULL,thread_del_tmp_emfile,NULL);
-#endif	
+		if (cam_id == DVR_ID)
+		{
+			pthread_create(&thread_del_tmp_emfile_id,NULL,thread_del_tmp_emfile,NULL);
+		}
+	}
 
 	top_lastFrames = Emergency_Top_Sec * 30;
 	bottom_lastFrames = Emergency_Bottom_Sec * 30;
@@ -5575,7 +5582,7 @@ openfd:
 			if(!isPreview && i == 0) 
 				lidbg("[%d]:prevent init stop rec!\n",cam_id);
 			
-			if((!isPreview && i > 3000) || isPreview)//prevent ACCON setprop slow issue
+			if((!isPreview && i > 60) || isPreview)//prevent ACCON setprop slow issue
 			{
 				lidbg("[%d]:-------eho---------uvccam stop recording! -----------\n",cam_id);
 #if 0
