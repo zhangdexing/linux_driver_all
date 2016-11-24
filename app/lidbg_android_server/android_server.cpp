@@ -470,7 +470,8 @@ int main(int argc, char **argv)
             phone_call_state_old = phone_call_state;
             sprintf(cmd, "phoneCallState %d", phone_call_state);
             LIDBG_WRITE("/dev/fly_sound0", cmd);
-            handle_sound_state("phone_call", (phone_call_state >= AUDIO_MODE_IN_CALL));
+            if(phone_call_state != AUDIO_MODE_RINGTONE)
+                handle_sound_state("phone_call", (phone_call_state >= AUDIO_MODE_IN_CALL));
         }
         loop_count++;
         if(loop_count > 200)
