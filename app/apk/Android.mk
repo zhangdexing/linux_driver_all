@@ -30,13 +30,13 @@ LOCAL_MODULE_TAGS := optional debug eng tests samples
 LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
 include $(BUILD_PREBUILT)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := QDCMMobileApp.ko
-LOCAL_SRC_FILES := QDCMMobileApp.apk
-LOCAL_MODULE_CLASS := bin
-LOCAL_MODULE_TAGS := optional debug eng tests samples
-LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
-include $(BUILD_PREBUILT)
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := QDCMMobileApp.ko
+#LOCAL_SRC_FILES := QDCMMobileApp.apk
+#LOCAL_MODULE_CLASS := bin
+#LOCAL_MODULE_TAGS := optional debug eng tests samples
+#LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+#include $(BUILD_PREBUILT)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := pp_calib_data.bin
@@ -46,13 +46,13 @@ LOCAL_MODULE_TAGS := optional debug eng tests samples
 LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
 include $(BUILD_PREBUILT)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := H264ToMp4Service.apk
-LOCAL_SRC_FILES := H264ToMp4Service.apk
-LOCAL_MODULE_CLASS := bin
-LOCAL_MODULE_TAGS := optional debug eng tests samples
-LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
-include $(BUILD_PREBUILT)
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := H264ToMp4Service.apk
+#LOCAL_SRC_FILES := H264ToMp4Service.apk
+#LOCAL_MODULE_CLASS := bin
+#LOCAL_MODULE_TAGS := optional debug eng tests samples
+#LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+#include $(BUILD_PREBUILT)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := fdiskcmd.txt
@@ -79,22 +79,22 @@ LOCAL_MODULE_TAGS := optional debug eng tests samples
 LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
 include $(BUILD_PREBUILT)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := ES.ko
-LOCAL_SRC_FILES := ESFileExplorer.apk
-LOCAL_MODULE_CLASS := bin
-LOCAL_MODULE_TAGS := optional debug eng tests samples
-LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
-include $(BUILD_PREBUILT)
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := ES.ko
+#LOCAL_SRC_FILES := ESFileExplorer.apk
+#LOCAL_MODULE_CLASS := bin
+#LOCAL_MODULE_TAGS := optional debug eng tests samples
+#LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+#include $(BUILD_PREBUILT)
 
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := ST.ko
-LOCAL_SRC_FILES := StabilityTest.apk
-LOCAL_MODULE_CLASS := bin
-LOCAL_MODULE_TAGS := optional debug eng tests samples
-LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
-include $(BUILD_PREBUILT)
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := ST.ko
+#LOCAL_SRC_FILES := StabilityTest.apk
+#LOCAL_MODULE_CLASS := bin
+#LOCAL_MODULE_TAGS := optional debug eng tests samples
+#LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+#include $(BUILD_PREBUILT)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := GPS.ko
@@ -104,13 +104,13 @@ LOCAL_MODULE_TAGS := optional debug eng tests samples
 LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
 include $(BUILD_PREBUILT)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := mobileTrafficstats.ko
-LOCAL_SRC_FILES := mobileTrafficstats.apk
-LOCAL_MODULE_CLASS := bin
-LOCAL_MODULE_TAGS := optional debug eng tests samples
-LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
-include $(BUILD_PREBUILT)
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := mobileTrafficstats.ko
+#LOCAL_SRC_FILES := mobileTrafficstats.apk
+#LOCAL_MODULE_CLASS := bin
+#LOCAL_MODULE_TAGS := optional debug eng tests samples
+#LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+#include $(BUILD_PREBUILT)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := camera4hal.ko
@@ -128,29 +128,29 @@ include $(BUILD_PREBUILT)
 #LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
 #include $(BUILD_PREBUILT)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := CallMessage.ko
-LOCAL_SRC_FILES := CallMessage.apk
-LOCAL_MODULE_CLASS := bin
-LOCAL_MODULE_TAGS := optional debug eng tests samples
-LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
-include $(BUILD_PREBUILT)
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := CallMessage.ko
+#LOCAL_SRC_FILES := CallMessage.apk
+#LOCAL_MODULE_CLASS := bin
+#LOCAL_MODULE_TAGS := optional debug eng tests samples
+#LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+#include $(BUILD_PREBUILT)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := sslcapture.ko
-LOCAL_SRC_FILES := sslcapture.apk
-LOCAL_MODULE_CLASS := bin
-LOCAL_MODULE_TAGS := optional debug eng tests samples
-LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
-include $(BUILD_PREBUILT)
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := sslcapture.ko
+#LOCAL_SRC_FILES := sslcapture.apk
+#LOCAL_MODULE_CLASS := bin
+#LOCAL_MODULE_TAGS := optional debug eng tests samples
+#LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+#include $(BUILD_PREBUILT)
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := Firewall.ko
-LOCAL_SRC_FILES := Firewall.apk
-LOCAL_MODULE_CLASS := bin
-LOCAL_MODULE_TAGS := optional debug eng tests samples
-LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
-include $(BUILD_PREBUILT)
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := Firewall.ko
+#LOCAL_SRC_FILES := Firewall.apk
+#LOCAL_MODULE_CLASS := bin
+#LOCAL_MODULE_TAGS := optional debug eng tests samples
+#LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+#include $(BUILD_PREBUILT)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := app4haljni.ko
@@ -168,20 +168,23 @@ LOCAL_MODULE_TAGS := optional debug eng tests samples
 LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
 include $(BUILD_PREBUILT)
 include $(CLEAR_VARS)
-LOCAL_MODULE := GpsInfo.ko
-LOCAL_SRC_FILES := GpsInfo.apk
-LOCAL_MODULE_CLASS := bin
-LOCAL_MODULE_TAGS := optional debug eng tests samples
-LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
-include $(BUILD_PREBUILT)
-include $(CLEAR_VARS)
-LOCAL_MODULE := MediaPlayerTest.ko
-LOCAL_SRC_FILES := MediaPlayerTest.apk
-LOCAL_MODULE_CLASS := bin
-LOCAL_MODULE_TAGS := optional debug eng tests samples
-LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
-include $(BUILD_PREBUILT)
-include $(CLEAR_VARS)
+
+#LOCAL_MODULE := GpsInfo.ko
+#LOCAL_SRC_FILES := GpsInfo.apk
+#LOCAL_MODULE_CLASS := bin
+#LOCAL_MODULE_TAGS := optional debug eng tests samples
+#LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+#include $(BUILD_PREBUILT)
+
+#include $(CLEAR_VARS)
+#LOCAL_MODULE := MediaPlayerTest.ko
+#LOCAL_SRC_FILES := MediaPlayerTest.apk
+#LOCAL_MODULE_CLASS := bin
+#LOCAL_MODULE_TAGS := optional debug eng tests samples
+#LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+#include $(BUILD_PREBUILT)
+#include $(CLEAR_VARS)
+
 LOCAL_MODULE := setting.ko
 LOCAL_SRC_FILES := setting.apk
 LOCAL_MODULE_CLASS := bin
