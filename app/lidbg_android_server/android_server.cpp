@@ -156,6 +156,8 @@ int get_max_volume(bool dbg)
     }
     if(dbg)
         lidbg(TAG"get_max_volume:%d\n", max_volume);
+    if(max_volume < 15)
+        max_volume = 15;
     return max_volume;
 }
 
