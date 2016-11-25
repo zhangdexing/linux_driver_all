@@ -471,9 +471,10 @@ int fly_interface_init(void)
 
 
     {
-        int ret = fs_fill_list(FLYHAL_CONFIG_PATH, FS_CMD_FILE_LISTMODE, &flyhal_config_list);
+        int ret = fs_fill_list(FLYHAL_CONFIG_PATH, FS_CMD_FILE_CONFIGMODE, &flyhal_config_list);
         LIDBG_WARN("FLYHAL_CONFIG_PATH:%s ret=%d", FLYHAL_CONFIG_PATH, ret);
         g_var.pflyhal_config_list = &flyhal_config_list;
+        fs_show_list(g_var.pflyhal_config_list);
     }
 
 

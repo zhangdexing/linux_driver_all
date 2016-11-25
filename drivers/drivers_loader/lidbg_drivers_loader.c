@@ -19,6 +19,8 @@ struct judgment judgment_list[] =
     {"gboot_mode", -1, NULL},
     {"is_uart_print_enable", -1, NULL},
     {"car_type", -1, NULL},
+    {"flylink.en", -1, NULL},
+    {"baidu.carlife.en", -1, NULL},
 };
 void judgment_list_print(void)
 {
@@ -105,7 +107,8 @@ void judgment_list_init(void)
     g_var.platformid = judgment_list[0].value;
     LIDBG_WARN("g_var.platformid:%d\n", g_var.platformid);
     judgment_list[4].pvalue = g_var.car_type ;
-
+    fs_get_intvalue(g_var.pflyhal_config_list, "flylink.en", &(judgment_list[5].value), NULL);
+    fs_get_intvalue(g_var.pflyhal_config_list, "baidu.carlife.en", &(judgment_list[6].value), NULL);
 
     judgment_list_print();
 }

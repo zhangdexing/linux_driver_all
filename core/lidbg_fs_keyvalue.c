@@ -11,7 +11,7 @@ int get_int_value(struct list_head *client_list, char *key, int *int_value, void
     struct string_dev *pos;
     if (list_empty(client_list))
     {
-        FS_ERR("<list_is_empty>%pf\n", client_list);
+        FS_ALWAYS("<list_is_empty>%pf\n", client_list);
         return -2;
     }
     list_for_each_entry(pos, client_list, tmp_list)
@@ -70,9 +70,9 @@ int fileserver_deal_cmd(struct list_head *client_list, enum string_dev_cmd cmd, 
         list_for_each_entry(pos, client_list, tmp_list)
         {
             if(pos->yourvalue)
-                FS_WARN("[%s]=[%s]\n", pos->yourkey, pos->yourvalue);
+                FS_ALWAYS("[%s]=[%s]\n", pos->yourkey, pos->yourvalue);
             else
-                FS_WARN("[%s]\n", pos->yourkey);
+                FS_ALWAYS("[%s]\n", pos->yourkey);
         }
         break;
 
