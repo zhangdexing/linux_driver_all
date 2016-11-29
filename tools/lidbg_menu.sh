@@ -94,6 +94,7 @@ function lidbg_disable()
 	adb wait-for-devices remount && adb shell rm /system/lib/modules/out/lidbg_loader.ko && adb shell rm /flysystem/lib/out/lidbg_loader.ko
 }
 
+
 function lidbg_menu()
 {
 	echo $DBG_ROOT_PATH
@@ -105,6 +106,7 @@ function lidbg_menu()
 	echo [6] del lidbg loader'             '删除lidbg_loader.ko驱动
 	echo [7] open dbg_cfg.sh
 	echo [8] push out to /data'            'push驱动模块到/data加载,不影响ota
+	echo [9] change platformid'            '更换平台：ep: 9 16 更换到mtk平台
 
 	echo
 	soc_menu
@@ -142,6 +144,9 @@ function lidbg_handle()
 			gedit $DBG_ROOT_PATH/dbg_cfg.sh &;;
 		8)
 			lidbg_pushfly_data;;
+		9)
+			find $DBG_ROOT_PATH/dbg_cfg.sh | xargs sed -i "s/$DBG_PLATFORM_ID/$2/g"
+			exit;;
 		*)
 			echo
 		esac
@@ -152,7 +157,7 @@ function menu_do()
 {
 	chmod 777 $DBG_ROOT_PATH -R
 	if [[ $1 -le 20 ]] ;then
-		lidbg_handle $1
+		lidbg_handle $1 $2
 	elif [[ $1 -le 40 ]] ;then
 		soc_handle $1 $2 $3 $4
 	elif [[ $1 -le 50 ]] ;then
