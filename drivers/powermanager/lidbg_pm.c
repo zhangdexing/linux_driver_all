@@ -567,6 +567,11 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
         else  if(!strcmp(cmd[1], "screen_on"))
         {
             wake_lock(&pm_wakelock);
+	if(g_var.system_status == FLY_SCREEN_OFF)
+	{
+	    lidbg("LCD_ON:fake suspend,open lcd immedia...\n");
+	    LCD_ON;
+	}
             SOC_System_Status(FLY_SCREEN_ON);
             if(SOC_Hal_Acc_Callback)
             {
@@ -574,6 +579,7 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
                 SOC_Hal_Acc_Callback(1);
             }
             LPC_PRINT(true,g_var. sleep_counter, "PM:screen_on");
+
         }
         else  if(!strcmp(cmd[1], "android_up"))
         {

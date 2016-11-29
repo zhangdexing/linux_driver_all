@@ -70,8 +70,8 @@ void set_cpu_governor(int state);
 #define CREATE_KTHREAD(func,data)\
 do{\
 struct task_struct *task;\
-lidbg("create kthread %s\n","_"#func);\
-task = kthread_create(func, data, "_"#func);\
+lidbg("create kthread %s\n",""#func);\
+task = kthread_create(func, data, ""#func);\
 if(IS_ERR(task))\
 {\
 	lidbg("Unable to start thread.\n");\
