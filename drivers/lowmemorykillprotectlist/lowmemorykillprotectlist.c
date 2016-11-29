@@ -59,11 +59,22 @@ char *lmk_protect_list[] =
 	"logcat",
 	NULL,
 };
-
+void dump_list(void)
+{
+    int i = 0;
+    while(1)
+    {
+        if(lmk_protect_list[i] == NULL)
+            break;
+        printk(KERN_CRIT"%s:%d->[%s] \n" , __func__, i, lmk_protect_list[i]);
+        i++;
+    }
+}
 static int lowmemorykillprotectlist_init(void)
 {
     DUMP_BUILD_TIME;
     lmk_white_list = lmk_protect_list;
+    dump_list();
     return 0;
 }
 
