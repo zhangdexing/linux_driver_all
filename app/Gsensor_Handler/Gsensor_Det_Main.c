@@ -22,6 +22,9 @@ int main(int argc, char **argv)
 	char logLine[200];
 	time_t tt;
     char tmpbuf[80];
+	char x_Cnt = 0;
+	char y_Cnt = 0;
+	char z_Cnt = 0;
 	char rollOverCnt = 0;
 	
 	lidbg("Gsensor_Det_Main start\n");
@@ -75,43 +78,47 @@ open_dev:
 		/*Flat Ground No Move HYUNDAI:100,280,900*/
 		if(accel.x > 700 || accel.x < -700)
 		{
-			if(rollOverCnt++ >= 4) //filter
+			lidbg("X axis Crash Warning____%d____\n",x_Cnt);
+			if(++x_Cnt >= 2) //filter
 			{
 				sprintf(logLine , "X axis Crash Warning.%s\n",tmpbuf);
 				lidbg(logLine);
 				if(isDebug)
 					write(fd_txt,logLine, strlen(logLine));
 				ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
-				rollOverCnt = 0;
+				x_Cnt = 0;
 			}
 		}
 		else if(accel.y > 800 || accel.y < -200)
 		{
-			if(rollOverCnt++ >= 4) //filter
+			lidbg("Y axis Crash Warning____%d____\n",y_Cnt);
+			if(++y_Cnt >= 2) //filter
 			{
 				sprintf(logLine , "Y axis Crash Warning.%s\n",tmpbuf);
 				lidbg(logLine);
 				if(isDebug)
 					write(fd_txt,logLine, strlen(logLine));
 				ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
-				rollOverCnt = 0;
+				y_Cnt = 0;
 			}
 		}
 		else if(accel.z > 1600 || accel.z < -300)
 		{
-			if(rollOverCnt++ >= 4) //filter
+			lidbg("Z axis Crash Warning____%d____\n",z_Cnt);
+			if(++z_Cnt >= 2) //filter
 			{
 				sprintf(logLine , "Z axis Crash Warning.%s\n",tmpbuf);
 				lidbg(logLine);
 				if(isDebug)
 					write(fd_txt,logLine, strlen(logLine));
 				ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
-				rollOverCnt = 0;
+				z_Cnt = 0;
 			}
 		}
 		else if( degree > 40 || degree < -40)
 		{
-			if(rollOverCnt++ >= 4) //filter
+			lidbg("Roll Over Warning____%d____\n",rollOverCnt);
+			if(++rollOverCnt >= 2) //filter
 			{
 				sprintf(logLine , "Roll Over Warning.%s\n",tmpbuf);
 				lidbg(logLine);
@@ -121,7 +128,13 @@ open_dev:
 				rollOverCnt = 0;
 			}
 		}
-		else rollOverCnt = 0;
+		else 
+		{
+			x_Cnt = 0;
+			y_Cnt = 0;
+			z_Cnt = 0;
+			rollOverCnt = 0;
+		}
 		
 		/*LogPrint*/
 		if(isDebug)
