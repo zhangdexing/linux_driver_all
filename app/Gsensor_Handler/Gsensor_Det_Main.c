@@ -2,9 +2,9 @@
 #include "lidbg_servicer.h"
 #include <math.h>
 
+
 #define GSENSOR                                0x95
 #define GSENSOR_NOTIFY_CHAIN                     _IO(GSENSOR,  0x11)
-static int isDebug = 1;
 
 #define GSENSOR_X_P_THRESHOLD					  700
 #define GSENSOR_X_N_THRESHOLD				-700
@@ -23,6 +23,8 @@ struct acceleration {
 
 int main(int argc, char **argv)
 {
+	int isDebug = 0;
+	char isDebug_String[PROPERTY_VALUE_MAX];
 	int fd = 0,fd_txt = 0;
   	int ret;
 	struct acceleration accel;
@@ -51,6 +53,10 @@ open_dev:
 
 	system("chmod 0777 /dev/mc3xxx");
 	sleep(1);
+
+	property_get("persist.gsensor.isDebug", isDebug_String, "0");
+	isDebug = atoi(isDebug_String);
+	lidbg("========[persist.gsensor.isDebug]-> %d =======\n",isDebug);
 	
 	if(isDebug)
 	{
@@ -87,7 +93,7 @@ open_dev:
 		/*Flat Ground No Move HYUNDAI:100,280,900*/
 		if(accel.x > GSENSOR_X_P_THRESHOLD || accel.x < GSENSOR_X_N_THRESHOLD)
 		{
-			lidbg("X axis Crash Warning____%d____\n",x_Cnt);
+			lidbg("X axis Crash Warning____%d:%d,%d,%d,%f____\n",x_Cnt,accel.x,accel.y,accel.z,degree);
 			if(++x_Cnt >= 2) //filter
 			{
 				sprintf(logLine , "X axis Crash Warning.%s\n",tmpbuf);
@@ -100,7 +106,7 @@ open_dev:
 		}
 		else if(accel.y > GSENSOR_Y_P_THRESHOLD || accel.y < GSENSOR_Y_N_THRESHOLD)
 		{
-			lidbg("Y axis Crash Warning____%d____\n",y_Cnt);
+			lidbg("Y axis Crash Warning____%d:%d,%d,%d,%f____\n",y_Cnt,accel.x,accel.y,accel.z,degree);
 			if(++y_Cnt >= 2) //filter
 			{
 				sprintf(logLine , "Y axis Crash Warning.%s\n",tmpbuf);
@@ -113,7 +119,7 @@ open_dev:
 		}
 		else if(accel.z > GSENSOR_Z_P_THRESHOLD || accel.z < GSENSOR_Z_N_THRESHOLD)
 		{
-			lidbg("Z axis Crash Warning____%d____\n",z_Cnt);
+			lidbg("Z axis Crash Warning____%d:%d,%d,%d,%f____\n",z_Cnt,accel.x,accel.y,accel.z,degree);
 			if(++z_Cnt >= 2) //filter
 			{
 				sprintf(logLine , "Z axis Crash Warning.%s\n",tmpbuf);
@@ -126,7 +132,7 @@ open_dev:
 		}
 		else if( degree > GSENSOR_DEGREE_P_THRESHOLD || degree < GSENSOR_DEGREE_N_THRESHOLD)
 		{
-			lidbg("Roll Over Warning____%d____\n",rollOverCnt);
+			lidbg("Roll Over Warning____%d:%d,%d,%d,%f____\n",rollOverCnt,accel.x,accel.y,accel.z,degree);
 			if(++rollOverCnt >= 2) //filter
 			{
 				sprintf(logLine , "Roll Over Warning.%s\n",tmpbuf);

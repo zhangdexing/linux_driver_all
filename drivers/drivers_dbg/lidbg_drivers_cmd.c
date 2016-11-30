@@ -519,6 +519,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#120--enable uart print when lpm comes \n");
             fs_mem_log("*158#121--auto input test \n");
             fs_mem_log("*158#122--delete logcat black list conf \n");
+			fs_mem_log("*158#123--gsensor debug switch \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1421,6 +1422,26 @@ void parse_cmd(char *pt)
                 lidbg_shell_cmd("mount -o remount /system");
                 lidbg_shell_cmd("mv /flysystem/lib/out/logcatBlackList.conf /flysystem");
                 lidbg_domineering_ack();
+        }
+		else if (!strncmp(argv[1], "*158#123", 8))
+        {
+            //opt args,ex:*158#0680
+            int n;
+            lidbg("*158#123--gsensor debug switch\n");
+            n = strlen(argv[1]);
+            if(n != 9)//wrong args
+            {
+                lidbg("wrong args!");
+                return;
+            }
+            lidbg("--------ISDEBUG:%s---------", argv[1] + 8);
+            if(!strcmp((argv[1] + 8), "0"))
+                lidbg_shell_cmd("setprop persist.gsensor.isDebug 0&");
+            else if(!strcmp((argv[1] + 8), "1"))
+                lidbg_shell_cmd("setprop persist.gsensor.isDebug 1&");
+			lidbg_domineering_ack();
+            msleep(3000);
+            lidbg_reboot();
         }
 
     }
