@@ -2,7 +2,7 @@
 ################hal select####################
 export CONFIG_HAL_USERVER=y
 export CONFIG_HAL_LOAD=y
-export CONFIG_HAL_ANDROID_SERVER=y
+#export CONFIG_HAL_ANDROID_SERVER=y
 export CONFIG_APP_LIDBGPMSERVICE=y
 export CONFIG_HAL_BOOTANIMATION_6=y
 export CONFIG_HAL_VOLD_MT3561=y

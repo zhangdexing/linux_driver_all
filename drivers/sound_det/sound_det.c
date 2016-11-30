@@ -51,12 +51,6 @@ int sound_detect_init(void)
 int  iGPS_sound_status(void)
 {
     wait_for_completion(&snd_status_sem);
-    if(g_var.platformid == 16)
-    {
-        lidbg(TAG"for mt3561 delay:mute pop\n");
-        msleep(200);
-    }
-
     if(snd_dbg)
         lidbg(TAG"hal get snd_status:%d\n", snd_status);
     return snd_status;
