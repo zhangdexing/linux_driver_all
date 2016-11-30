@@ -2,13 +2,21 @@
 #include "lidbg_servicer.h"
 #include "../../drivers/inc/lidbg_flycam_par.h" /*flycam parameter*/
 
+#include <math.h>
+
 pthread_t thread_checkStatus_id;
-int fd = 0;
+int fd = 0,fd_txt = 0;
 struct pollfd fds;
 
 //ioctl
 #define READ_CAM_PROP(magic , nr) _IOR(magic, nr ,int) 
 #define WRITE_CAM_PROP(magic , nr) _IOW(magic, nr ,int)
+
+struct acceleration {
+	int x;
+	int y;
+	int z;
+};
 
 void startRec(void)
 {
@@ -55,23 +63,31 @@ int main(int argc, char **argv)
   	int ret;
 	char fw_version[256];
 	char testCMD[200];
+	char logLine[200];
 	lidbg("@@lidbg_ioctl start\n");
 
 open_dev:
-	fd = open("/dev/lidbg_flycam0", O_RDWR);
+	fd = open("/dev/mc3xxx", O_RDWR);
 	if((fd == 0xfffffffe) || (fd == 0) || (fd == 0xffffffff))
 	{
-	    lidbg("@@open lidbg_flycam0 fail\n");
+	    lidbg("@@open mc3xxx fail\n");
 	    goto open_dev;
 	}
 
-	lidbg("@@open lidbg_flycam0 ok\n");
+	lidbg("@@open mc3xxx ok\n");
 
-	system("chmod 0777 /dev/lidbg_flycam0");
+	system("chmod 0777 /dev/mc3xxx");
 	sleep(1);
 
-	fds.fd     = fd;
-   	fds.events = POLLIN;
+	fd_txt= open("/sdcard/gsensor_angle.txt",  O_RDWR|O_CREAT|O_TRUNC, 0777);
+	if((fd == 0xfffffffe) || (fd == 0) || (fd == 0xffffffff))
+	{
+	    lidbg("@@open gsensor_angle fail\n");
+	}
+
+	
+
+
 #if 0
 	ret = pthread_create(&thread_checkStatus_id,NULL,thread_checkStatus,NULL);
 	if(ret != 0)
@@ -89,34 +105,17 @@ open_dev:
 	//testCMD[0] = CMD_SET_RESOLUTION;
 	//strcpy(testCMD + 1,"1280x720");
 
-	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_PATH), "/storage/sdcard1/camera_rec/Bl/");
-	lidbg("@@==NR_EM_PATH==0:0x%x,1:%d,2:%d,3:%d,4:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3],testCMD[4]);
-
-	testCMD[0] = 0;
-	testCMD[1] = 5;
-	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_TIME), testCMD);
-	lidbg("@@==NR_EM_TIME==0:0x%x,1:%d,2:%d,3:%d,4:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3],testCMD[4]);
-
-	testCMD[0] = 0;
-	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_STATUS), testCMD);
-	lidbg("@@==NR_EM_STATUS==0:0x%x,1:%d,2:%d,3:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3]);
-
-	testCMD[0] = 1;
-	testCMD[1] = 1;
-	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_START), testCMD);
-	lidbg("@@==NR_EM_START==0:0x%x,1:%d,2:%d,3:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3]);
-
-	sleep(20);
-
-	testCMD[0] = 0;
-	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_STATUS), testCMD);
-	lidbg("@@==NR_EM_STATUS==0:0x%x,1:%d,2:%d,3:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3]);
-
-	testCMD[0] = 1;
-	testCMD[1] = 0;
-	ret = ioctl(fd,_IO(FLYCAM_EM_MAGIC, NR_EM_START), testCMD);
-	lidbg("@@==NR_EM_START==0:0x%x,1:%d,2:%d,3:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3]);
-
+	struct acceleration accel;
+	double rad;
+	while(1)
+	{
+		sleep(1);
+		read(fd, &accel, sizeof(struct acceleration));
+		rad = atan(accel.x/sqrt(accel.y*accel.y + accel.z*accel.z));
+		lidbg("GsensorData:%d,%d,%d====%f",accel.x,accel.y,accel.z,(rad/3.14)*180);
+		sprintf(logLine , "%d,%d,%d,%f\n",accel.x,accel.y,accel.z,(rad/3.14)*180);
+		write(fd_txt,logLine, strlen(logLine));
+	}
 
 #if 0
 	testCMD[0] = CMD_TIME_SEC;

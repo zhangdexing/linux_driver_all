@@ -47,6 +47,7 @@ ifeq ($(CONFIG_HAL_USB_CAMERA),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,uvccam_test)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,hal_camera_usb)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,hal_camera_study_v4l2)
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,Gsensor_Handler)
 endif
 
 ifeq ($(CONFIG_HAL_USB_CAMERA),y)
@@ -96,7 +97,5 @@ endif
 ifeq ($(CONFIG_HAL_VOLD_MT3561),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,mt35x_vold)
 endif
-
-
 
 include $(SUBDIR_MAKEFILES)

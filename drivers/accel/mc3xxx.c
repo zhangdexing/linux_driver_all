@@ -48,41 +48,24 @@
 //#include <mach/system.h>
 #include <mach/hardware.h>
 #include <linux/fs.h>*/
-#ifndef PLATFORM_ID_16
-#include <linux/sensors.h>
-#endif
+#include	<linux/sensors.h>
 #include "lidbg.h"
-//#include "lidbg_crash_detect.c"
-
-static int cnt_crash_detected = 0;
-static struct wake_lock irq_wakelock;
-
-static struct mc3xxx_data *flydata = NULL;
-static bool irq_func_ignore = false;
-
-#define NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE	(130)
-#define NOTIFIER_MINOR_EXCEED_THRESHOLD 		(10)
-
-#define THRESH_VALUE	((10 << 1) + 1)//Level 12
-
-unsigned char g_Tapthresh = THRESH_VALUE;
-
-#define TAP_X_Thresh	(g_Tapthresh + 0x00)//0~0xff,0xff阀值最大
-#define TAP_Y_Thresh	(g_Tapthresh + 0x00)
-#define TAP_Z_Thresh	(g_Tapthresh + 0x00)
-#define IRQ_READ_CNT	10		//中断函数读reg[0x03]，最大的循环次数
+#include "lidbg_crash_detect.c"
 
 //=== CONFIGURATIONS ==========================================================
 #define DOT_CALI
-#define _MC3XXX_DEBUG_ON_
+//#define _MC3XXX_DEBUG_ON_
 
 //=============================================================================
 #ifdef _MC3XXX_DEBUG_ON_
     #define mclidbgreg(x...)     lidbg(x)
     #define mclidbgfunc(x...)    lidbg(x)
+    #define lidbg(x...) 	      lidbg(x)
+    #define lidbg(x...) 	      lidbg(x)
 #else
     #define mclidbgreg(x...)
     #define mclidbgfunc(x...)
+    #define lidbg(x...)
     #define lidbg(x...)
 #endif
 
@@ -214,8 +197,6 @@ LIDBG_DEFINE;
 
 #define MC3XXX_BUFSIZE    256
 
-#define strict_strtoul	kstrtoul
-
 //=============================================================================
 static unsigned char    s_bResolution = 0x00;
 static unsigned char    s_bPCODE      = 0x00;
@@ -281,6 +262,7 @@ static signed int enable_RBM_calibration = 0;
 #define GSENSOR_IOCTL_SET_CALI_MODE            _IOW(GSENSOR, 0x0e,int)
 #define GSENSOR_MCUBE_IOCTL_READ_PRODUCT_ID    _IOR(GSENSOR, 0x0f, int)
 #define GSENSOR_MCUBE_IOCTL_READ_FILEPATH      _IOR(GSENSOR, 0x10, char[256])
+#define GSENSOR_NOTIFY_CHAIN                     _IO(GSENSOR,  0x11)
 
 typedef struct{
 	int x;
@@ -291,6 +273,8 @@ typedef struct{
 static int load_cali_flg = 0;
 
 #endif  // END OF #ifdef DOT_CALI
+
+struct mc3xxx_data *data1 = NULL;
 
 //=============================================================================
 #define MC3XXX_WAKE       1
@@ -791,9 +775,9 @@ static ssize_t mc3xxx_enable_store(struct device *dev,
 {
 	bool new_enable = false;
 
-	//struct i2c_client *client = container_of(mc3xxx_device.parent, struct i2c_client, dev);
+	struct i2c_client *client = container_of(mc3xxx_device.parent, struct i2c_client, dev);
 	
-	//struct mc3xxx_data *mc3xxx = i2c_get_clientdata(client);
+	struct mc3xxx_data *mc3xxx = i2c_get_clientdata(client);
 
 	if (sysfs_streq(buf, "1"))
 		new_enable = true;
@@ -804,7 +788,7 @@ static ssize_t mc3xxx_enable_store(struct device *dev,
 		return -EINVAL;
 	}
 
-	//mc3xxx_enable(mc3xxx, new_enable);
+	mc3xxx_enable(mc3xxx, new_enable);
 
 	return count;
 }
@@ -985,21 +969,6 @@ static struct attribute_group mc3xxx_group =
 };
 
 //=============================================================================
-int mc3xxx_set_mode(struct i2c_client *client, unsigned char mode) 
-{
-	int comres = 0;
-	unsigned char data = 0;
-
-	if (mode < 4)
-	{
-		data = (0x40 | mode);
-		comres = my_i2c_smbus_write_byte_data(client, MC3XXX_MODE_FEATURE_REG, data);
-	} 
-
-	return comres;
-}
-
-//=============================================================================
 static int mc3xxx_chip_init(struct i2c_client *client)
 {
     int ret = 0;
@@ -1020,27 +989,12 @@ static int mc3xxx_chip_init(struct i2c_client *client)
     mc3xxx_set_gain();
     
     _baDataBuf[0] = MC3XXX_TAP_DETECTION_ENABLE_REG;
-    _baDataBuf[1] = 0xCC;
+    _baDataBuf[1] = 0x00;
     my_i2c_master_send(client, _baDataBuf, 0x2);
     
     _baDataBuf[0] = MC3XXX_INTERRUPT_ENABLE_REG;
-    _baDataBuf[1] = 0x3f;
+    _baDataBuf[1] = 0x00;
     my_i2c_master_send(client, _baDataBuf, 0x2);
-
-//0x0a 0x0b 0x0c
-    _baDataBuf[0] = MC3XXX_TAP_DWELL_REJECT_REG;
-    _baDataBuf[1] = TAP_X_Thresh;
-    my_i2c_master_send(client, _baDataBuf, 0x2);
-
-    _baDataBuf[0] = MC3XXX_DROP_CONTROL_REG;
-    _baDataBuf[1] = TAP_Y_Thresh;
-    my_i2c_master_send(client, _baDataBuf, 0x2);
-
-    _baDataBuf[0] = MC3XXX_SHAKE_DEBOUNCE_REG;
-    _baDataBuf[1] = TAP_Z_Thresh;
-    my_i2c_master_send(client, _baDataBuf, 0x2);
-
-
 
     _baDataBuf[0] = 0x2A;
     my_i2c_master_send(client, &(_baDataBuf[0]), 1);
@@ -1052,7 +1006,20 @@ static int mc3xxx_chip_init(struct i2c_client *client)
     return (MC3XXX_RETCODE_SUCCESS);
 }
 
+//=============================================================================
+int mc3xxx_set_mode(struct i2c_client *client, unsigned char mode) 
+{
+	int comres = 0;
+	unsigned char data = 0;
 
+	if (mode < 4)
+	{
+		data = (0x40 | mode);
+		comres = my_i2c_smbus_write_byte_data(client, MC3XXX_MODE_FEATURE_REG, data);
+	} 
+
+	return comres;
+}
 
 #ifdef DOT_CALI
 //=============================================================================
@@ -1064,7 +1031,7 @@ struct file *openFile(char *path, int flag, int mode)
 
 	if (IS_ERR(fp) || !fp->f_op) 
 	{
-		pr_debug("Calibration File filp_open return NULL\n");
+		lidbg("Calibration File filp_open return NULL\n");
 		return NULL; 
 	}
 
@@ -1102,7 +1069,7 @@ void initKernelEnv(void)
 { 
 	oldfs = get_fs(); 
 	set_fs(KERNEL_DS);
-	pr_debug(KERN_INFO "initKernelEnv\n");
+	lidbg(KERN_INFO "initKernelEnv\n");
 } 
 
 //=============================================================================
@@ -1235,7 +1202,7 @@ int mcube_read_cali_file(struct i2c_client *client)
 	int err = 0;
 	char buf[64] = { 0 };
 
-	pr_debug("%s %d\n",__func__,__LINE__);
+	lidbg("%s %d\n",__func__,__LINE__);
 
 	initKernelEnv();
 
@@ -1243,7 +1210,7 @@ int mcube_read_cali_file(struct i2c_client *client)
 
 	if (fd_file == NULL) 
 	{
-		pr_debug("fail to open\n");
+		lidbg("fail to open\n");
 		cali_data[0] = 0;
 		cali_data[1] = 0;
 		cali_data[2] = 0;
@@ -1556,7 +1523,7 @@ int MC3XXX_ReadData(struct i2c_client *client, s16 buffer[MC3XXX_AXES_NUM])
 			buffer[2] = (signed short)buf1[2];
 		}
 	
-		pr_debug("MC3XXX_ReadData: %d %d %d\n", buffer[0], buffer[1], buffer[2]);
+		mclidbgreg("MC3XXX_ReadData: %d %d %d\n", buffer[0], buffer[1], buffer[2]);
 	}
 	else if (enable_RBM_calibration == 1)
 	{
@@ -1824,7 +1791,6 @@ int mc3xxx_read_accel_xyz(struct i2c_client *client, s16 *acc)
 }
 
 //=============================================================================
-
 static int mc3xxx_measure(struct i2c_client *client, struct acceleration *accel)
 {
 	s16 raw[3] = { 0 };
@@ -1841,7 +1807,7 @@ static int mc3xxx_measure(struct i2c_client *client, struct acceleration *accel)
             else 
                 load_cali_flg--;
 
-            pr_debug("load_cali %d\n",ret); 
+            lidbg("load_cali %d\n",ret); 
         }  
     #endif
 
@@ -1858,50 +1824,6 @@ static int mc3xxx_measure(struct i2c_client *client, struct acceleration *accel)
 static void mc3xxx_work_func(struct work_struct *work)
 {
 	struct mc3xxx_data *data = container_of(work, struct mc3xxx_data, work);
-	u8 buff = 0, cnt = IRQ_READ_CNT;
-	struct acceleration accel = { 0 },old_accel = { 0 };
-	//char temp_cmd[256] = {0};
-
-	/*measure for two times*/
-	mc3xxx_measure(data->client, &old_accel);
-	lidbg("%s:1----accel.x = %d, accel.y = %d, accel.z = %d\n",__func__,old_accel.x, old_accel.y, old_accel.z);
-	msleep(10);
-	mc3xxx_measure(data->client, &accel);
-	lidbg("%s:2----accel.x = %d, accel.y = %d, accel.z = %d\n",__func__,accel.x, accel.y, accel.z);
-	
-	//sprintf(temp_cmd, "am broadcast -a com.lidbg.flybootserver.action --es toast old_Y_%d____Y_%d&",old_accel.y ,accel.y );
-	//lidbg_shell_cmd(temp_cmd);
-
-	/* slowing or accelerating on 5m/s^2 approximately (machine incline & road incline will increase the error)*/
-	//if((old_accel.y > 500 && accel.y > 500) ||(old_accel.y < -500 && accel.y < -500))
-	if((accel.y < -500 || accel.y > 500) && (old_accel.y < -500 || old_accel.y > 500))
-		lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD));
-	else if((accel.y < -1800 || accel.y > 1800)||(old_accel.y < -1800 || old_accel.y > 1800) ||
-		(accel.z < -2000 || accel.y > 2000)||(old_accel.y < -2000 || old_accel.y > 2000))
-		lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD));
-	
-	WAKEUP_MCU_BEGIN;
-	msleep(1);
-	WAKEUP_MCU_END;
-	msleep(50);
-
-	my_i2c_smbus_read_i2c_block_data(data->client, 0x03, 1, &buff);
-
-	if(!(buff & 0x80))
-	{
-		while(!(buff & 0x80) && cnt){
-			lidbg("Warning: mc3xxx failed to read Register[0x03] = 0x%x, by %d times \n", buff, IRQ_READ_CNT-cnt+1);
-			my_i2c_smbus_read_i2c_block_data(data->client, 0x03, 1, &buff);
-			cnt--;
-			msleep(10);
-		}
-		if(!(buff & 0x80))
-			lidbg("ERROR: mc3xxx failed to read Register[0x03], can not works normally! \n");
-	}
-	else lidbg("%s:buff---0x%x\n",__func__,buff);
-
-	wake_unlock(&irq_wakelock);
-/*
 	struct acceleration accel = { 0 };
 	ktime_t ts; 
 
@@ -1919,7 +1841,8 @@ static void mc3xxx_work_func(struct work_struct *work)
 	
 		input_sync(data->input_dev);
 	}
-	get_gsensor_data(accel.x, accel.y, accel.z);*/
+	if (1 == g_var.android_boot_completed)
+		get_gsensor_data(accel.x, accel.y, accel.z);
 }
 
 //=============================================================================
@@ -1934,62 +1857,21 @@ static enum hrtimer_restart mc3xxx_timer_func(struct hrtimer *timer)
 	return HRTIMER_NORESTART;
 }
 
-static irqreturn_t mc3xxx_irq_func(int irq, void *handle)
-{
-    struct mc3xxx_data *data = handle;
-
-	if( irq_func_ignore == true) {
-
-		printk(KERN_ERR"mc3xxx irq_func_ignore! \n");
-		irq_func_ignore = false;
-		return IRQ_HANDLED;
-	}
-
-	wake_lock(&irq_wakelock);
-	cnt_crash_detected++;
-	printk(KERN_ERR"Tap Event Detected! \n");
-	//fs_mem_log("Tap Event Detected! by %d times\n", cnt_crash_detected);
-
-	if (data == NULL)
-		return IRQ_HANDLED;
-	if (data->client == NULL)
-		return IRQ_HANDLED;
-
-    //queue_work(data->mc3xxx_wq, &data->work);
-
-    if(!work_pending(&data->work))
-        schedule_work(&data->work);
-
-    return IRQ_HANDLED;
-}
-
-
 //=============================================================================
 static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 {
-	if(data->enabled == enable)
-		return 0;
-
 	if(enable)
 	{
 		msleep(10);  //
         mutex_lock(&data->lock);
-		mc3xxx_chip_init(data->client);
-
-		mc3xxx_set_mode(data->client, MC3XXX_WAKE);
-		SOC_IO_ISR_Enable(ACCEL_INT1);
-		//enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
-
+		mc3xxx_chip_init(data->client);                
         mutex_unlock(&data->lock);
-		//hrtimer_start(&data->timer, ktime_set(0, sensor_duration * 1000000), HRTIMER_MODE_REL);
+		hrtimer_start(&data->timer, ktime_set(0, sensor_duration * 1000000), HRTIMER_MODE_REL);
 		data->enabled = true;
 	}
 	else
 	{
-		//hrtimer_cancel(&data->timer);
-		SOC_IO_ISR_Disable(ACCEL_INT1);
-		//disable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
-		mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
+		hrtimer_cancel(&data->timer);
 		data->enabled = false;
 	}
 
@@ -2000,9 +1882,8 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	int ret = 0;
-	#ifndef PLATFORM_ID_16
-		float convert_para = 0.0f;
-	#endif
+	float convert_para = 0.0f;
+
     #ifdef DOT_CALI
         void __user *data1 = NULL;
         char strbuf[256] = { 0 };
@@ -2055,14 +1936,14 @@ static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			lidbg("copy to error in %s.\n",__func__);
 		}     			
 		break;
-	#ifndef PLATFORM_ID_16
+
 	case IOCTL_SENSOR_GET_CONVERT_PARA:
 		convert_para = MC3XXX_CONVERT_PARAMETER;
 		if(copy_to_user((void __user *) arg,(const void *)&convert_para,sizeof(float))!=0){
 			lidbg("copy to error in %s.\n",__func__);
 		}     			
         break;
-	#endif
+			
 	#ifdef DOT_CALI
 	case GSENSOR_IOCTL_READ_SENSORDATA:	
 	case GSENSOR_IOCTL_READ_RAW_DATA:
@@ -2207,7 +2088,10 @@ static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		}				 
 		break;		
 #endif
-		
+
+	case GSENSOR_NOTIFY_CHAIN:
+		lidbg("fwq GSENSOR_NOTIFY_CHAIN\n");
+		lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD));
 	default:
 		ret = -EINVAL;
 		break;
@@ -2228,6 +2112,32 @@ static int mc3xxx_release(struct inode *inode, struct file *filp)
 	return 0;
 }
 
+ssize_t  mc3xxx_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
+{
+	char temp_cmd[200];
+	struct acceleration accel = { 0 };
+
+	mc3xxx_measure(data1->client, &accel);
+	/*
+	sprintf(temp_cmd,"%4d,%4d,%4d",
+		accel.x,
+		accel.y,
+		accel.z);
+	*/
+	
+	//get_gsensor_data(accel.x, accel.y, accel.z);
+
+	accel.x = -accel.x * MCONVERT_PARA;
+	accel.y = -accel.y * MCONVERT_PARA;
+	accel.z = -accel.z * MCONVERT_PARA;
+
+	if(copy_to_user(buffer, (char*)&accel, sizeof(struct acceleration)))
+    {
+        return -1;
+    }
+	return sizeof(struct acceleration);
+}
+
 //=============================================================================
 static struct file_operations sensor_fops =
 {
@@ -2235,6 +2145,7 @@ static struct file_operations sensor_fops =
     .open       	= mc3xxx_open,
     .release    	= mc3xxx_release,
     .unlocked_ioctl = mc3xxx_ioctl,
+    .read = mc3xxx_read,
 };
 
 #if defined(CONFIG_HAS_EARLYSUSPEND)
@@ -2269,27 +2180,8 @@ static void mc3xxx_early_resume(struct early_suspend *handler)
 	hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
 }
 #else
-#ifdef SUSPEND_ONLINE
-static int mc3xxx_acc_resume(struct mc3xxx_data *mc_data)
+static int mc3xxx_acc_resume(struct mc3xxx_data *data)
 {
-#ifdef PLATFORM_ID_16
-	return 0;
-#endif
-	if(flydata->enabled == 1)
-	{
-        mutex_lock(&flydata->lock);
-		mc3xxx_chip_init(flydata->client);
-
-		mc3xxx_set_mode(flydata->client, MC3XXX_WAKE);
-
-		irq_func_ignore = true;
-		SOC_IO_ISR_Enable(ACCEL_INT1);
-		//enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
-		msleep(50);
-		irq_func_ignore = false;
-        mutex_unlock(&flydata->lock);
-	}
-/*
 	//char buf[1] = {0};
 	MSM_ACCEL_POWER_ON;
 	lidbg("%s\n", __func__);
@@ -2300,22 +2192,12 @@ static int mc3xxx_acc_resume(struct mc3xxx_data *mc_data)
     mutex_unlock(&data->lock);
 	if(data->enabled == true)
 		hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
-*/
+
     return 0;
 }
 
-static int mc3xxx_acc_suspend(struct mc3xxx_data *mc_data)
+static int mc3xxx_acc_suspend(struct mc3xxx_data *data)
 {
-#ifdef PLATFORM_ID_16
-	return 0;
-#endif
-	if(flydata->enabled == 1) {
-
-		mc3xxx_set_mode(mc_data->client, MC3XXX_STANDBY);
-		SOC_IO_ISR_Disable(ACCEL_INT1);
-		irq_func_ignore = false;
-	}
-/*
 	//char buf[1] = {0};
 	MSM_ACCEL_POWER_OFF;
 	lidbg("%s\n", __func__);
@@ -2325,14 +2207,14 @@ static int mc3xxx_acc_suspend(struct mc3xxx_data *mc_data)
     mutex_lock(&data->lock);
     mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
     mutex_unlock(&data->lock);
-*/
+
     return 0;
 }
-#endif
+
 static int fb_notifier_callback(struct notifier_block *self,
                                 unsigned long event, void *data)
 {
-/*    struct fb_event *evdata = data;
+    struct fb_event *evdata = data;
     int *blank;
 	struct mc3xxx_data *mc_data =
         container_of(self, struct mc3xxx_data, fb_notif);
@@ -2345,7 +2227,7 @@ static int fb_notifier_callback(struct notifier_block *self,
         else if (*blank == FB_BLANK_POWERDOWN)
             mc3xxx_acc_suspend(mc_data);
     }
-*/
+
     return 0;
 }
 
@@ -2503,8 +2385,6 @@ static int mc3xxx_acc_poll_delay_set(struct sensors_classdev *sensors_cdev,
 static int mc3xxx_acc_enable_set(struct sensors_classdev *sensors_cdev,
 	unsigned int enable)
 {
-	return 0;
-	/*
 	struct mc3xxx_data *acc = container_of(sensors_cdev,
 		struct mc3xxx_data, cdev);
 	int err;
@@ -2513,78 +2393,30 @@ static int mc3xxx_acc_enable_set(struct sensors_classdev *sensors_cdev,
 	if (enable)
 		err = mc3xxx_enable(acc, 1);
 	else
-	{
-		lidbg("%s  do nothing! \n", __func__);
-		//err = mc3xxx_enable(acc, 0);
-	}
-	return err;*/
+		err = mc3xxx_enable(acc, 0);
+	return err;
 }
 
-ssize_t  mc3xxx_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
+
+static int thread_notifier_func(void *data)
 {
-
-	char mc3xxx_state[2] = {0};
-	sprintf(mc3xxx_state, "%d", flydata->enabled);
-
-	if(copy_to_user(buffer, mc3xxx_state, strlen(mc3xxx_state)))
+	while(1)
 	{
-		lidbg("copy_from_user ERR\n");
+		//wait_for_completion(&completion_for_notifier);
+		//lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD));
+		msleep(1000);
+		queue_work(data1->mc3xxx_wq, &data1->work);		
 	}
-
-	return size;
+	return 0;
 }
 
-ssize_t mc3xxx_write (struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
-{
-    char cmd_buf[3];
-	unsigned int value;
-    memset(cmd_buf, '\0', 3);
-
-    if(copy_from_user(cmd_buf, buf, 2))
-    {
-        PM_ERR("copy_from_user ERR\n");
-    }
-
-	value = simple_strtoul(cmd_buf, 0, 0);
-	//lidbg("value = %d\n", value);
-
-	if (sysfs_streq(cmd_buf, "0"))
-		mc3xxx_enable(flydata, 0);
-
-	else if (sysfs_streq(cmd_buf, "1"))
-		mc3xxx_enable(flydata, 1);
-
-	else if (value < 100)
-	{
-		lidbg("set Sensitivity level %d -> level %d\n", g_Tapthresh>>1, value);
-		g_Tapthresh = (value << 1) + 1;
-		mutex_lock(&flydata->lock);
-
-		mc3xxx_chip_init(flydata->client);
-		if(flydata->enabled == 1)
-			mc3xxx_set_mode(flydata->client, MC3XXX_WAKE);
-
-        mutex_unlock(&flydata->lock);
-	}
-	else
-		lidbg("mc3xxx_enable write args error!\n");
-
-	return size;
-}
-
-static  struct file_operations mc3xxx_fops =
-{
-    .owner = THIS_MODULE,
-    .read = mc3xxx_read,
-    .write = mc3xxx_write,
-};
 
 //=============================================================================
 static int mc3xxx_probe(struct i2c_client *client,
 		const struct i2c_device_id *id)
 {
 	int ret = 0;
-	struct mc3xxx_data *data = NULL;
+	
 	//lidbg(KERN_ERR"%s mc3xxx probe start... \n", __func__);
     if (MC3XXX_RETCODE_SUCCESS != mc3xxx_i2c_auto_probe(client))
     {
@@ -2604,33 +2436,31 @@ static int mc3xxx_probe(struct i2c_client *client,
         load_cali_flg = 30;
     #endif
 
-	data = kzalloc(sizeof(struct mc3xxx_data), GFP_KERNEL);
-	if(data == NULL)
+	data1 = kzalloc(sizeof(struct mc3xxx_data), GFP_KERNEL);
+	if(data1 == NULL)
 	{
 		ret = -ENOMEM;
 		goto err_alloc_data_failed;
 	}
 
-	flydata = data;
-
-	data->mc3xxx_wq = create_singlethread_workqueue("mc3xxx_wq");
-	if (!data->mc3xxx_wq)
+	data1->mc3xxx_wq = create_singlethread_workqueue("mc3xxx_wq");
+	if (!data1->mc3xxx_wq)
 	{
 		ret = -ENOMEM;
 		goto err_create_workqueue_failed;
 	}
-	INIT_WORK(&data->work, mc3xxx_work_func);
-	mutex_init(&data->lock);
+	INIT_WORK(&data1->work, mc3xxx_work_func);
+	mutex_init(&data1->lock);
 
 	sensor_duration = SENSOR_DURATION_DEFAULT;
 	sensor_state_flag = 1;
-	data->client = client;
+	data1->client = client;
 	dev.client = client;
 
-	i2c_set_clientdata(client, data);	
+	i2c_set_clientdata(client, data1);	
 
-	data->input_dev = input_allocate_device();
-	if (!data->input_dev) {
+	data1->input_dev = input_allocate_device();
+	if (!data1->input_dev) {
 		ret = -ENOMEM;
 		goto exit_input_dev_alloc_failed;
 	}
@@ -2644,21 +2474,21 @@ static int mc3xxx_probe(struct i2c_client *client,
 		goto err_chip_init_failed;
 	}
 
-	set_bit(EV_ABS, data->input_dev->evbit);
-	data->map[0] = G_0;
-	data->map[1] = G_1;
-	data->map[2] = G_2;
-	data->inv[0] = G_0_REVERSE;
-	data->inv[1] = G_1_REVERSE;
-	data->inv[2] = G_2_REVERSE;
+	set_bit(EV_ABS, data1->input_dev->evbit);
+	data1->map[0] = G_0;
+	data1->map[1] = G_1;
+	data1->map[2] = G_2;
+	data1->inv[0] = G_0_REVERSE;
+	data1->inv[1] = G_1_REVERSE;
+	data1->inv[2] = G_2_REVERSE;
 
-	input_set_abs_params(data->input_dev, ABS_X, -32*8, 32*8, INPUT_FUZZ, INPUT_FLAT);
-	input_set_abs_params(data->input_dev, ABS_Y, -32*8, 32*8, INPUT_FUZZ, INPUT_FLAT);
-	input_set_abs_params(data->input_dev, ABS_Z, -32*8, 32*8, INPUT_FUZZ, INPUT_FLAT);
+	input_set_abs_params(data1->input_dev, ABS_X, -32*8, 32*8, INPUT_FUZZ, INPUT_FLAT);
+	input_set_abs_params(data1->input_dev, ABS_Y, -32*8, 32*8, INPUT_FUZZ, INPUT_FLAT);
+	input_set_abs_params(data1->input_dev, ABS_Z, -32*8, 32*8, INPUT_FUZZ, INPUT_FLAT);
 
-	data->input_dev->name = ACCEL_INPUT_DEV_NAME;
+	data1->input_dev->name = ACCEL_INPUT_DEV_NAME;
 
-	ret = input_register_device(data->input_dev);
+	ret = input_register_device(data1->input_dev);
 	if (ret) {
 		goto exit_input_register_device_failed;
 	}
@@ -2670,74 +2500,64 @@ static int mc3xxx_probe(struct i2c_client *client,
 		goto exit_misc_device_register_failed;
 	}
 
-	ret = sysfs_create_group(&data->input_dev->dev.kobj, &mc3xxx_group);
+	ret = sysfs_create_group(&data1->input_dev->dev.kobj, &mc3xxx_group);
 
-	if (data->use_irq){
-		hrtimer_init(&data->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-		data->timer.function = mc3xxx_timer_func;
-		hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
-	}
-	else
-	{
-		SOC_IO_Input(ACCEL_INT1, ACCEL_INT1, GPIO_CFG_NO_PULL);
-		SOC_IO_ISR_Add(ACCEL_INT1, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, mc3xxx_irq_func, data);
-		SOC_IO_ISR_Disable(ACCEL_INT1);
-		wake_lock_init(&irq_wakelock, WAKE_LOCK_SUSPEND, "irq_wakelock");
+	if (!data1->use_irq){
+		hrtimer_init(&data1->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+		data1->timer.function = mc3xxx_timer_func;
+		hrtimer_start(&data1->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
 	}
 
-	data->cdev = mc3xxx_acc_cdev;
-	data->cdev.sensors_enable = mc3xxx_acc_enable_set;
-	data->cdev.sensors_poll_delay = mc3xxx_acc_poll_delay_set;
-#ifndef PLATFORM_ID_16
-	ret = sensors_classdev_register(&client->dev, &data->cdev);
+	data1->cdev = mc3xxx_acc_cdev;
+	data1->cdev.sensors_enable = mc3xxx_acc_enable_set;
+	data1->cdev.sensors_poll_delay = mc3xxx_acc_poll_delay_set;
+	ret = sensors_classdev_register(&client->dev, &data1->cdev);
 	if (ret) {
 		dev_err(&client->dev,
 			"class device create failed: %d\n", ret);
 		goto exit_remove_sysfs_int;
 	}
-#endif
+
 #ifdef SUSPEND_ONLINE
-	data->fb_notif = lidbg_notifier;
-	register_lidbg_notifier(&data->fb_notif);
+	data1->fb_notif = lidbg_notifier;
+	register_lidbg_notifier(&data1->fb_notif);
 	if(0)
 #endif
 {
 #if defined(CONFIG_FB)
-    data->fb_notif.notifier_call = fb_notifier_callback;
-    ret = fb_register_client(&data->fb_notif);
+    data1->fb_notif.notifier_call = fb_notifier_callback;
+    ret = fb_register_client(&data1->fb_notif);
     if (ret) {
-        dev_err(&data->client->dev, "Unable to register fb_notifier: %d\n", ret);
+        dev_err(&data1->client->dev, "Unable to register fb_notifier: %d\n", ret);
 		goto exit_remove_sysfs_int;
 	}
 
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
-	data->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
-	data->early_suspend.suspend = mc3xxx_early_suspend;
-	data->early_suspend.resume = mc3xxx_early_resume;
-	register_early_suspend(&data->early_suspend);
+	data1->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
+	data1->early_suspend.suspend = mc3xxx_early_suspend;
+	data1->early_suspend.resume = mc3xxx_early_resume;
+	register_early_suspend(&data1->early_suspend);
 #endif
 }
-	mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
-	data->enabled = false;
+	data1->enabled = 1;
 
-	lidbg_new_cdev(&mc3xxx_fops, "mc3xxx_enable0");
+	lidbg(KERN_ERR"%s mc3xxx probe ok \n", __func__);
 
-	//crash_detect_init();
-	lidbg("%s mc3xxx probe ok \n", __func__);
+	lidbg_shell_cmd("./flysystem/lib/out/lidbg_gsensor_det&");
 
 	return 0;
 
 exit_remove_sysfs_int:
-	sysfs_remove_group(&data->input_dev->dev.kobj, &mc3xxx_group);
+	sysfs_remove_group(&data1->input_dev->dev.kobj, &mc3xxx_group);
 exit_misc_device_register_failed:
-	input_unregister_device(data->input_dev);	
+	input_unregister_device(data1->input_dev);	
 exit_input_register_device_failed:
-	input_free_device(data->input_dev);
+	input_free_device(data1->input_dev);
 err_chip_init_failed:
 exit_input_dev_alloc_failed:
-	destroy_workqueue(data->mc3xxx_wq);	
+	destroy_workqueue(data1->mc3xxx_wq);	
 err_create_workqueue_failed:
-	kfree(data);	
+	kfree(data1);	
 err_alloc_data_failed:
 err_check_functionality_failed:
 exit:
@@ -2752,6 +2572,7 @@ static int mc3xxx_remove(struct i2c_client *client)
 
 	hrtimer_cancel(&data->timer);
 	input_unregister_device(data->input_dev);	
+	misc_deregister(&mc3xxx_device);
 	sysfs_remove_group(&data->input_dev->dev.kobj, &mc3xxx_group);
 	kfree(data);
 	return 0;
@@ -2778,10 +2599,8 @@ MODULE_DEVICE_TABLE(i2c, mc3xxx_id);
 
 static struct of_device_id mc3xxx_acc_match_table[] = {
 	{ .compatible = "mcube, mc3xxx",},
-	{ .compatible = "mediatek,gsensor",},
 	{ },
 };
-
 /*static const struct dev_pm_ops mc3xxx_pm_ops = {
 	.suspend	= mc3xxx_acc_suspend,
 	.resume 	= mc3xxx_acc_resume,
