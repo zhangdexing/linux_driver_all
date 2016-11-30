@@ -51,7 +51,7 @@
 #include	<linux/sensors.h>
 #include "lidbg.h"
 #include "lidbg_servicer.h"
-#include "lidbg_crash_detect.c"
+//#include "lidbg_crash_detect.c"
 
 //=== CONFIGURATIONS ==========================================================
 #define DOT_CALI
@@ -80,7 +80,6 @@ static union{
 	const unsigned short normal_i2c[2];
 }u_i2c_addr = {{0x00},};
 
-LIDBG_DEFINE;
 //=============================================================================
 #define G_0            ABS_X
 #define G_1            ABS_Y
@@ -273,7 +272,17 @@ static int load_cali_flg = 0;
 
 #endif  // END OF #ifdef DOT_CALI
 
-struct mc3xxx_data *data1 = NULL;
+
+//===============/*Flyaudio*/==================
+LIDBG_DEFINE;
+
+#define MCONVERT_PARA		981 / 1024		//g = 9.81
+#define NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE	(130)
+#define NOTIFIER_MINOR_EXCEED_THRESHOLD 		(10)
+
+struct mc3xxx_data *m_data = NULL;
+//==========================================
+
 
 //=============================================================================
 #define MC3XXX_WAKE       1
@@ -1820,6 +1829,7 @@ static int mc3xxx_measure(struct i2c_client *client, struct acceleration *accel)
 }
 
 //=============================================================================
+#if 0
 static void mc3xxx_work_func(struct work_struct *work)
 {
 	struct mc3xxx_data *data = container_of(work, struct mc3xxx_data, work);
@@ -1843,8 +1853,9 @@ static void mc3xxx_work_func(struct work_struct *work)
 	if (1 == g_var.android_boot_completed)
 		get_gsensor_data(accel.x, accel.y, accel.z);
 }
-
+#endif
 //=============================================================================
+#if 0
 static enum hrtimer_restart mc3xxx_timer_func(struct hrtimer *timer)
 {
 	struct mc3xxx_data *data = container_of(timer, struct mc3xxx_data, timer);
@@ -1855,7 +1866,7 @@ static enum hrtimer_restart mc3xxx_timer_func(struct hrtimer *timer)
 
 	return HRTIMER_NORESTART;
 }
-
+#endif
 //=============================================================================
 static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 {
@@ -1865,12 +1876,12 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
         mutex_lock(&data->lock);
 		mc3xxx_chip_init(data->client);                
         mutex_unlock(&data->lock);
-		hrtimer_start(&data->timer, ktime_set(0, sensor_duration * 1000000), HRTIMER_MODE_REL);
+		//hrtimer_start(&data->timer, ktime_set(0, sensor_duration * 1000000), HRTIMER_MODE_REL);
 		data->enabled = true;
 	}
 	else
 	{
-		hrtimer_cancel(&data->timer);
+		//hrtimer_cancel(&data->timer);
 		data->enabled = false;
 	}
 
@@ -2113,10 +2124,9 @@ static int mc3xxx_release(struct inode *inode, struct file *filp)
 
 ssize_t  mc3xxx_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
 {
-	char temp_cmd[200];
 	struct acceleration accel = { 0 };
 
-	if(isACCON) mc3xxx_measure(data1->client, &accel);
+	if(isACCON) mc3xxx_measure(m_data->client, &accel);
 	/*
 	sprintf(temp_cmd,"%4d,%4d,%4d",
 		accel.x,
@@ -2155,7 +2165,7 @@ static void mc3xxx_early_suspend(struct early_suspend *handler)
 	
 	data = container_of(handler, struct mc3xxx_data, early_suspend);
 
-	hrtimer_cancel(&data->timer);
+	//hrtimer_cancel(&data->timer);
 
     mutex_lock(&data->lock);
 	mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
@@ -2176,7 +2186,7 @@ static void mc3xxx_early_resume(struct early_suspend *handler)
     mc3xxx_set_mode(data->client, MC3XXX_WAKE);
     mutex_unlock(&data->lock);
 
-	hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
+	//hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
 }
 #else
 static int mc3xxx_acc_resume(struct mc3xxx_data *data)
@@ -2185,15 +2195,15 @@ static int mc3xxx_acc_resume(struct mc3xxx_data *data)
 	MSM_ACCEL_POWER_ON;
 	lidbg("%s\n", __func__);
     //struct mc3xxx_data *data = dev_get_drvdata(dev);
-    hrtimer_cancel(&data->timer);
+    //hrtimer_cancel(&data->timer);
     mutex_lock(&data->lock);
 	mc3xxx_chip_init(data->client); 
     MC3XXX_ResetCalibration(data->client); 
     mcube_read_cali_file(data->client); 
     mc3xxx_set_mode(data->client, MC3XXX_WAKE); //MC3XXX_STANDBY
     mutex_unlock(&data->lock);
-	if(data->enabled == true)
-		hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
+	if(data->enabled == true);
+		//hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
 
     return 0;
 }
@@ -2204,7 +2214,7 @@ static int mc3xxx_acc_suspend(struct mc3xxx_data *data)
 	MSM_ACCEL_POWER_OFF;
 	lidbg("%s\n", __func__);
     //struct mc3xxx_data *data = dev_get_drvdata(dev);
-    hrtimer_cancel(&data->timer);
+    //hrtimer_cancel(&data->timer);
 	//input_sync(data->input_dev);
     mutex_lock(&data->lock);
     mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
@@ -2373,7 +2383,7 @@ _I2C_AUTO_PROBE_RECHECK_:
     #undef _MC3XXX_I2C_PROBE_ADDR_COUNT_
 }
 
-
+#if 0
 static int mc3xxx_acc_poll_delay_set(struct sensors_classdev *sensors_cdev,
 	unsigned int delay_msec)
 {
@@ -2402,19 +2412,7 @@ static int mc3xxx_acc_enable_set(struct sensors_classdev *sensors_cdev,
 	return err;
 }
 
-
-static int thread_notifier_func(void *data)
-{
-	while(1)
-	{
-		//wait_for_completion(&completion_for_notifier);
-		//lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD));
-		msleep(1000);
-		queue_work(data1->mc3xxx_wq, &data1->work);		
-	}
-	return 0;
-}
-
+#endif
 
 //=============================================================================
 static int mc3xxx_probe(struct i2c_client *client,
@@ -2441,31 +2439,34 @@ static int mc3xxx_probe(struct i2c_client *client,
         load_cali_flg = 30;
     #endif
 
-	data1 = kzalloc(sizeof(struct mc3xxx_data), GFP_KERNEL);
-	if(data1 == NULL)
+	m_data = kzalloc(sizeof(struct mc3xxx_data), GFP_KERNEL);
+	if(m_data == NULL)
 	{
 		ret = -ENOMEM;
 		goto err_alloc_data_failed;
 	}
 
-	data1->mc3xxx_wq = create_singlethread_workqueue("mc3xxx_wq");
-	if (!data1->mc3xxx_wq)
+	m_data->mc3xxx_wq = create_singlethread_workqueue("mc3xxx_wq");
+	if (!m_data->mc3xxx_wq)
 	{
 		ret = -ENOMEM;
 		goto err_create_workqueue_failed;
 	}
-	INIT_WORK(&data1->work, mc3xxx_work_func);
-	mutex_init(&data1->lock);
+	
+#if 0	
+	INIT_WORK(&m_data->work, mc3xxx_work_func);
+#endif
+	mutex_init(&m_data->lock);
 
 	sensor_duration = SENSOR_DURATION_DEFAULT;
 	sensor_state_flag = 1;
-	data1->client = client;
+	m_data->client = client;
 	dev.client = client;
 
-	i2c_set_clientdata(client, data1);	
+	i2c_set_clientdata(client, m_data);	
 
-	data1->input_dev = input_allocate_device();
-	if (!data1->input_dev) {
+	m_data->input_dev = input_allocate_device();
+	if (!m_data->input_dev) {
 		ret = -ENOMEM;
 		goto exit_input_dev_alloc_failed;
 	}
@@ -2479,21 +2480,21 @@ static int mc3xxx_probe(struct i2c_client *client,
 		goto err_chip_init_failed;
 	}
 
-	set_bit(EV_ABS, data1->input_dev->evbit);
-	data1->map[0] = G_0;
-	data1->map[1] = G_1;
-	data1->map[2] = G_2;
-	data1->inv[0] = G_0_REVERSE;
-	data1->inv[1] = G_1_REVERSE;
-	data1->inv[2] = G_2_REVERSE;
+	set_bit(EV_ABS, m_data->input_dev->evbit);
+	m_data->map[0] = G_0;
+	m_data->map[1] = G_1;
+	m_data->map[2] = G_2;
+	m_data->inv[0] = G_0_REVERSE;
+	m_data->inv[1] = G_1_REVERSE;
+	m_data->inv[2] = G_2_REVERSE;
 
-	input_set_abs_params(data1->input_dev, ABS_X, -32*8, 32*8, INPUT_FUZZ, INPUT_FLAT);
-	input_set_abs_params(data1->input_dev, ABS_Y, -32*8, 32*8, INPUT_FUZZ, INPUT_FLAT);
-	input_set_abs_params(data1->input_dev, ABS_Z, -32*8, 32*8, INPUT_FUZZ, INPUT_FLAT);
+	input_set_abs_params(m_data->input_dev, ABS_X, -32*8, 32*8, INPUT_FUZZ, INPUT_FLAT);
+	input_set_abs_params(m_data->input_dev, ABS_Y, -32*8, 32*8, INPUT_FUZZ, INPUT_FLAT);
+	input_set_abs_params(m_data->input_dev, ABS_Z, -32*8, 32*8, INPUT_FUZZ, INPUT_FLAT);
 
-	data1->input_dev->name = ACCEL_INPUT_DEV_NAME;
+	m_data->input_dev->name = ACCEL_INPUT_DEV_NAME;
 
-	ret = input_register_device(data1->input_dev);
+	ret = input_register_device(m_data->input_dev);
 	if (ret) {
 		goto exit_input_register_device_failed;
 	}
@@ -2505,45 +2506,49 @@ static int mc3xxx_probe(struct i2c_client *client,
 		goto exit_misc_device_register_failed;
 	}
 
-	ret = sysfs_create_group(&data1->input_dev->dev.kobj, &mc3xxx_group);
-
-	if (!data1->use_irq){
-		hrtimer_init(&data1->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-		data1->timer.function = mc3xxx_timer_func;
-		hrtimer_start(&data1->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
+	ret = sysfs_create_group(&m_data->input_dev->dev.kobj, &mc3xxx_group);
+	
+#if 0
+	if (!m_data->use_irq){
+		hrtimer_init(&m_data->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+		m_data->timer.function = mc3xxx_timer_func;
+		hrtimer_start(&m_data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
 	}
+#endif	
 
-	data1->cdev = mc3xxx_acc_cdev;
-	data1->cdev.sensors_enable = mc3xxx_acc_enable_set;
-	data1->cdev.sensors_poll_delay = mc3xxx_acc_poll_delay_set;
-	ret = sensors_classdev_register(&client->dev, &data1->cdev);
+	m_data->cdev = mc3xxx_acc_cdev;
+/*
+	m_data->cdev.sensors_enable = mc3xxx_acc_enable_set;
+	m_data->cdev.sensors_poll_delay = mc3xxx_acc_poll_delay_set;
+*/	
+	ret = sensors_classdev_register(&client->dev, &m_data->cdev);
 	if (ret) {
 		dev_err(&client->dev,
 			"class device create failed: %d\n", ret);
 		goto exit_remove_sysfs_int;
 	}
 #ifdef SUSPEND_ONLINE
-	data1->fb_notif = lidbg_notifier;
-	register_lidbg_notifier(&data1->fb_notif);
+	m_data->fb_notif = lidbg_notifier;
+	register_lidbg_notifier(&m_data->fb_notif);
 	if(0)
 #endif
 {
 #if defined(CONFIG_FB)
-    data1->fb_notif.notifier_call = fb_notifier_callback;
-    ret = fb_register_client(&data1->fb_notif);
+    m_data->fb_notif.notifier_call = fb_notifier_callback;
+    ret = fb_register_client(&m_data->fb_notif);
     if (ret) {
-        dev_err(&data1->client->dev, "Unable to register fb_notifier: %d\n", ret);
+        dev_err(&m_data->client->dev, "Unable to register fb_notifier: %d\n", ret);
 		goto exit_remove_sysfs_int;
 	}
 
 #elif defined(CONFIG_HAS_EARLYSUSPEND)
-	data1->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
-	data1->early_suspend.suspend = mc3xxx_early_suspend;
-	data1->early_suspend.resume = mc3xxx_early_resume;
-	register_early_suspend(&data1->early_suspend);
+	m_data->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN + 1;
+	m_data->early_suspend.suspend = mc3xxx_early_suspend;
+	m_data->early_suspend.resume = mc3xxx_early_resume;
+	register_early_suspend(&m_data->early_suspend);
 #endif
 }
-	data1->enabled = 1;
+	m_data->enabled = 1;
 
 	lidbg(KERN_ERR"%s mc3xxx probe ok \n", __func__);
 
@@ -2552,16 +2557,16 @@ static int mc3xxx_probe(struct i2c_client *client,
 	return 0;
 
 exit_remove_sysfs_int:
-	sysfs_remove_group(&data1->input_dev->dev.kobj, &mc3xxx_group);
+	sysfs_remove_group(&m_data->input_dev->dev.kobj, &mc3xxx_group);
 exit_misc_device_register_failed:
-	input_unregister_device(data1->input_dev);	
+	input_unregister_device(m_data->input_dev);	
 exit_input_register_device_failed:
-	input_free_device(data1->input_dev);
+	input_free_device(m_data->input_dev);
 err_chip_init_failed:
 exit_input_dev_alloc_failed:
-	destroy_workqueue(data1->mc3xxx_wq);	
+	destroy_workqueue(m_data->mc3xxx_wq);	
 err_create_workqueue_failed:
-	kfree(data1);	
+	kfree(m_data);	
 err_alloc_data_failed:
 err_check_functionality_failed:
 exit:
@@ -2574,7 +2579,7 @@ static int mc3xxx_remove(struct i2c_client *client)
 {
 	struct mc3xxx_data *data = i2c_get_clientdata(client);
 
-	hrtimer_cancel(&data->timer);
+	//hrtimer_cancel(&data->timer);
 	input_unregister_device(data->input_dev);	
 	misc_deregister(&mc3xxx_device);
 	sysfs_remove_group(&data->input_dev->dev.kobj, &mc3xxx_group);

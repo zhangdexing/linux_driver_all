@@ -6,6 +6,15 @@
 #define GSENSOR_NOTIFY_CHAIN                     _IO(GSENSOR,  0x11)
 static int isDebug = 1;
 
+#define GSENSOR_X_P_THRESHOLD					  700
+#define GSENSOR_X_N_THRESHOLD				-700
+#define GSENSOR_Y_P_THRESHOLD					  800
+#define GSENSOR_Y_N_THRESHOLD				-200
+#define GSENSOR_Z_P_THRESHOLD					1600
+#define GSENSOR_Z_N_THRESHOLD					-300
+#define GSENSOR_DEGREE_P_THRESHOLD		   40
+#define GSENSOR_DEGREE_N_THRESHOLD		 -40
+
 struct acceleration {
 	int x;
 	int y;
@@ -76,7 +85,7 @@ open_dev:
 		}
 		
 		/*Flat Ground No Move HYUNDAI:100,280,900*/
-		if(accel.x > 700 || accel.x < -700)
+		if(accel.x > GSENSOR_X_P_THRESHOLD || accel.x < GSENSOR_X_N_THRESHOLD)
 		{
 			lidbg("X axis Crash Warning____%d____\n",x_Cnt);
 			if(++x_Cnt >= 2) //filter
@@ -89,7 +98,7 @@ open_dev:
 				x_Cnt = 0;
 			}
 		}
-		else if(accel.y > 800 || accel.y < -200)
+		else if(accel.y > GSENSOR_Y_P_THRESHOLD || accel.y < GSENSOR_Y_N_THRESHOLD)
 		{
 			lidbg("Y axis Crash Warning____%d____\n",y_Cnt);
 			if(++y_Cnt >= 2) //filter
@@ -102,7 +111,7 @@ open_dev:
 				y_Cnt = 0;
 			}
 		}
-		else if(accel.z > 1600 || accel.z < -300)
+		else if(accel.z > GSENSOR_Z_P_THRESHOLD || accel.z < GSENSOR_Z_N_THRESHOLD)
 		{
 			lidbg("Z axis Crash Warning____%d____\n",z_Cnt);
 			if(++z_Cnt >= 2) //filter
@@ -115,7 +124,7 @@ open_dev:
 				z_Cnt = 0;
 			}
 		}
-		else if( degree > 40 || degree < -40)
+		else if( degree > GSENSOR_DEGREE_P_THRESHOLD || degree < GSENSOR_DEGREE_N_THRESHOLD)
 		{
 			lidbg("Roll Over Warning____%d____\n",rollOverCnt);
 			if(++rollOverCnt >= 2) //filter
