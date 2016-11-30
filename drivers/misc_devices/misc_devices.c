@@ -330,6 +330,10 @@ static int lidbg_dev_event(struct notifier_block *this,
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_ANDROID_UP):
 #if (defined DISABLE_USB_WHEN_ANDROID_DOWN) || (defined DISABLE_USB_WHEN_GOTO_SLEEP)
+#ifdef PLATFORM_ID_16
+	 lidbg("set usb a_host mode\n");
+        lidbg_readwrite_file("/sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode", NULL, "a_host", strlen("a_host"));
+#endif
  	  CREATE_KTHREAD(thread_usb_disk_enable_delay, NULL);
 #endif
         break;
@@ -346,6 +350,10 @@ static int lidbg_dev_event(struct notifier_block *this,
         SOC_IO_Config(g_hw.gpio_bt_rx, GPIOMUX_FUNC_2, GPIOMUX_OUT_HIGH, GPIOMUX_PULL_NONE, GPIOMUX_DRV_16MA);
 #endif
 #ifdef DISABLE_USB_WHEN_DEVICE_DOWN
+#ifdef PLATFORM_ID_16
+	 lidbg("set usb a_host mode\n");
+        lidbg_readwrite_file("/sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode", NULL, "a_host", strlen("a_host"));
+#endif
         CREATE_KTHREAD(thread_usb_disk_enable_delay, NULL);
 #endif
         break;
