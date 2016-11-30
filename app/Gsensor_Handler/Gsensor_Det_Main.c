@@ -56,37 +56,64 @@ open_dev:
 		rad = atan(accel.x/sqrt(accel.y*accel.y + accel.z*accel.z));
 		degree = (rad/3.14)*180;
 		//lidbg("GsensorData:%d,%d,%d====%f",accel.x,accel.y,accel.z,(rad/3.14)*180);
+
+		if(isDebug)
+		{
+			tt=time(NULL);
+		    strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
+		}
+
+		if(accel.x > 3000 && accel.y > 3000 && accel.z > 4000)
+		{
+			sprintf(logLine , "Error Data:%d,%d,%d\n",accel.x,accel.y,accel.z);
+			lidbg(logLine);
+			if(isDebug)
+				write(fd_txt,logLine, strlen(logLine));
+			continue;
+		}
 		
 		/*Flat Ground No Move HYUNDAI:100,280,900*/
 		if(accel.x > 700 || accel.x < -700)
 		{
-			sprintf(logLine , "X axis Crash Warning.\n");
-			lidbg(logLine);
-			if(isDebug)
-				write(fd_txt,logLine, strlen(logLine));
-			ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
+			if(rollOverCnt++ >= 4) //filter
+			{
+				sprintf(logLine , "X axis Crash Warning.%s\n",tmpbuf);
+				lidbg(logLine);
+				if(isDebug)
+					write(fd_txt,logLine, strlen(logLine));
+				ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
+				rollOverCnt = 0;
+			}
 		}
-		else if(accel.y > 750 || accel.y < -200)
+		else if(accel.y > 800 || accel.y < -200)
 		{
-			sprintf(logLine , "Y axis Crash Warning.\n");
-			lidbg(logLine);
-			if(isDebug)
-				write(fd_txt,logLine, strlen(logLine));
-			ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
+			if(rollOverCnt++ >= 4) //filter
+			{
+				sprintf(logLine , "Y axis Crash Warning.%s\n",tmpbuf);
+				lidbg(logLine);
+				if(isDebug)
+					write(fd_txt,logLine, strlen(logLine));
+				ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
+				rollOverCnt = 0;
+			}
 		}
-		else if(accel.z > 1400 || accel.z < -200)
+		else if(accel.z > 1600 || accel.z < -300)
 		{
-			sprintf(logLine , "Z axis Crash Warning.\n");
-			lidbg(logLine);
-			if(isDebug)
-				write(fd_txt,logLine, strlen(logLine));
-			ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
+			if(rollOverCnt++ >= 4) //filter
+			{
+				sprintf(logLine , "Z axis Crash Warning.%s\n",tmpbuf);
+				lidbg(logLine);
+				if(isDebug)
+					write(fd_txt,logLine, strlen(logLine));
+				ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
+				rollOverCnt = 0;
+			}
 		}
 		else if( degree > 40 || degree < -40)
 		{
-			if(rollOverCnt++ >= 2) //filter
+			if(rollOverCnt++ >= 4) //filter
 			{
-				sprintf(logLine , "Roll Over Warning.\n");
+				sprintf(logLine , "Roll Over Warning.%s\n",tmpbuf);
 				lidbg(logLine);
 				if(isDebug)
 					write(fd_txt,logLine, strlen(logLine));	
@@ -99,8 +126,6 @@ open_dev:
 		/*LogPrint*/
 		if(isDebug)
 		{
-			tt=time(NULL);
-		    strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
 			sprintf(logLine , "%d,%d,%d,%f,%s\n",accel.x,accel.y,accel.z,degree,tmpbuf);
 			write(fd_txt,logLine, strlen(logLine));
 		}
