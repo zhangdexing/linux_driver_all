@@ -50,23 +50,20 @@
 #include <linux/fs.h>*/
 #include	<linux/sensors.h>
 #include "lidbg.h"
+#include "lidbg_servicer.h"
 #include "lidbg_crash_detect.c"
 
 //=== CONFIGURATIONS ==========================================================
 #define DOT_CALI
-//#define _MC3XXX_DEBUG_ON_
+#define _MC3XXX_DEBUG_ON_
 
 //=============================================================================
 #ifdef _MC3XXX_DEBUG_ON_
     #define mclidbgreg(x...)     lidbg(x)
     #define mclidbgfunc(x...)    lidbg(x)
-    #define lidbg(x...) 	      lidbg(x)
-    #define lidbg(x...) 	      lidbg(x)
 #else
     #define mclidbgreg(x...)
     #define mclidbgfunc(x...)
-    #define lidbg(x...)
-    #define lidbg(x...)
 #endif
 
 //=============================================================================
@@ -231,6 +228,8 @@ static signed int offset_data[3] = { 0 };
 s16 G_RAW_DATA[3] = { 0 };
 static signed int gain_data[3] = { 0 };
 static signed int enable_RBM_calibration = 0;
+
+static int isACCON = 1;
 
 //=============================================================================
 #define SENSOR_DMARD_IOCTL_BASE          234
@@ -1523,7 +1522,7 @@ int MC3XXX_ReadData(struct i2c_client *client, s16 buffer[MC3XXX_AXES_NUM])
 			buffer[2] = (signed short)buf1[2];
 		}
 	
-		mclidbgreg("MC3XXX_ReadData: %d %d %d\n", buffer[0], buffer[1], buffer[2]);
+		//mclidbgreg("MC3XXX_ReadData: %d %d %d\n", buffer[0], buffer[1], buffer[2]);
 	}
 	else if (enable_RBM_calibration == 1)
 	{
@@ -2117,7 +2116,7 @@ ssize_t  mc3xxx_read(struct file *filp, char __user *buffer, size_t size, loff_t
 	char temp_cmd[200];
 	struct acceleration accel = { 0 };
 
-	mc3xxx_measure(data1->client, &accel);
+	if(isACCON) mc3xxx_measure(data1->client, &accel);
 	/*
 	sprintf(temp_cmd,"%4d,%4d,%4d",
 		accel.x,
@@ -2153,7 +2152,7 @@ static struct file_operations sensor_fops =
 static void mc3xxx_early_suspend(struct early_suspend *handler)
 {
 	struct mc3xxx_data *data = NULL;
-
+	
 	data = container_of(handler, struct mc3xxx_data, early_suspend);
 
 	hrtimer_cancel(&data->timer);
@@ -2188,6 +2187,9 @@ static int mc3xxx_acc_resume(struct mc3xxx_data *data)
     //struct mc3xxx_data *data = dev_get_drvdata(dev);
     hrtimer_cancel(&data->timer);
     mutex_lock(&data->lock);
+	mc3xxx_chip_init(data->client); 
+    MC3XXX_ResetCalibration(data->client); 
+    mcube_read_cali_file(data->client); 
     mc3xxx_set_mode(data->client, MC3XXX_WAKE); //MC3XXX_STANDBY
     mutex_unlock(&data->lock);
 	if(data->enabled == true)
@@ -2246,9 +2248,11 @@ static int mc3xxx_event(struct notifier_block *this,
     {
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON):
 		mc3xxx_acc_resume(mc_data);
+		isACCON = 1;
 		break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_OFF):
 		mc3xxx_acc_suspend(mc_data);
+		isACCON = 0;
 		break;
     default:
         break;
@@ -2261,6 +2265,7 @@ static struct notifier_block lidbg_notifier =
 {
     .notifier_call = mc3xxx_event,
 };
+
 #endif
 
 
@@ -2517,7 +2522,6 @@ static int mc3xxx_probe(struct i2c_client *client,
 			"class device create failed: %d\n", ret);
 		goto exit_remove_sysfs_int;
 	}
-
 #ifdef SUSPEND_ONLINE
 	data1->fb_notif = lidbg_notifier;
 	register_lidbg_notifier(&data1->fb_notif);
