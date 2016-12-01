@@ -106,8 +106,8 @@ function lidbg_menu()
 	echo [6] del lidbg loader'             '删除lidbg_loader.ko驱动
 	echo [7] open dbg_cfg.sh
 	echo [8] push out to /data'            'push驱动模块到/data加载,不影响ota
-	echo [9] change platformid'            '更换平台：ep: 9 16 更换到mtk平台
-	echo [10] push jar so  etc'            'adb push到机器.ep:10 /system/framework/framework.jar 
+	echo [9] change platformid'            'ep: 9 16 更换到mtk平台
+	echo [10] push jar so  etc'            'ep:10 /system/framework/framework.jar push此文件到机器
 
 	echo
 	soc_menu
@@ -149,9 +149,10 @@ function lidbg_handle()
 			find $DBG_ROOT_PATH/dbg_cfg.sh | xargs sed -i "s/$DBG_PLATFORM_ID/$2/g"
 			exit;;
 		10)
-			adb remount
 			adb root
-			adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM$2 $2;;
+			adb remount
+			adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM$2 $2
+			exit;;
 		*)
 			echo
 		esac
