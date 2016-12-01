@@ -107,6 +107,7 @@ function lidbg_menu()
 	echo [7] open dbg_cfg.sh
 	echo [8] push out to /data'            'push驱动模块到/data加载,不影响ota
 	echo [9] change platformid'            '更换平台：ep: 9 16 更换到mtk平台
+	echo [10] push jar so  etc'            'adb push到机器.ep:10 /system/framework/framework.jar 
 
 	echo
 	soc_menu
@@ -147,6 +148,10 @@ function lidbg_handle()
 		9)
 			find $DBG_ROOT_PATH/dbg_cfg.sh | xargs sed -i "s/$DBG_PLATFORM_ID/$2/g"
 			exit;;
+		10)
+			adb remount
+			adb root
+			adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM$2 $2;;
 		*)
 			echo
 		esac
