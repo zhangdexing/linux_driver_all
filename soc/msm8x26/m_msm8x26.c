@@ -41,6 +41,9 @@ int soc_temp_get(int num)
     lidbg("sensor3_temp=%d\n", temp);
     lidbg("\n");
 #endif
+#ifdef PLATFORM_msm8996
+    return (int)(temp/10);
+#endif
     return (int)temp;
 }
 

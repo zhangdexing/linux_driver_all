@@ -56,7 +56,7 @@ struct hw_version_specific g_hw_version_specific[] =
         .thermal_ctrl_en = 0,
         // msm8909.dtsi  qcom,sensor-information
         .cpu_sensor_num = 3,
-        .mem_sensor_num = 0,
+        .mem_sensor_num = 1,
 
         .cpu_freq_thermal =
         {
