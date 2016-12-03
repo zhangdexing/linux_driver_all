@@ -233,7 +233,7 @@ s16 G_RAW_DATA[3] = { 0 };
 static signed int gain_data[3] = { 0 };
 static signed int enable_RBM_calibration = 0;
 
-static int isACCON = 1;
+static bool isACCON = true;
 
 //=============================================================================
 #define SENSOR_DMARD_IOCTL_BASE          234
@@ -281,11 +281,31 @@ static int load_cali_flg = 0;
 //===============/*Flyaudio*/==================
 LIDBG_DEFINE;
 
+#ifdef PLATFORM_ID_16
+#define FLY_USE_SUSPEND_IRQ
+#endif
+
 #define MCONVERT_PARA		981 / 1024		//g = 9.81
 #define NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE	(130)
 #define NOTIFIER_MINOR_EXCEED_THRESHOLD 		(10)
 
+#define TAP_X_Thresh	(g_Tapthresh + 0x00)//0~0xff,0xff\u9600\u503c\u6700\u5927
+#define TAP_Y_Thresh	(g_Tapthresh + 0x00)
+#define TAP_Z_Thresh	(g_Tapthresh + 0x00)
+
+#define THRESH_VALUE	((12 << 1) + 1)//Level 20
+
+unsigned char g_Tapthresh = THRESH_VALUE;
+
+#ifdef FLY_USE_SUSPEND_IRQ
+static struct wake_lock irq_wakelock;
+#endif
+
 struct mc3xxx_data *m_data = NULL;
+
+bool isIRQWake = false;
+
+struct i2c_client* m_client;
 //==========================================
 
 
@@ -381,7 +401,9 @@ struct dev_data {
 
 static struct dev_data dev = { 0 };
 
-struct acceleration {
+struct acceleration_info {
+	bool isACCON;
+	bool isIRQCrash;
 	int x;
 	int y;
 	int z;
@@ -1000,7 +1022,28 @@ static int mc3xxx_chip_init(struct i2c_client *client)
     mc3xxx_set_sample_rate(client);
     mc3xxx_config_range(client);
     mc3xxx_set_gain();
+		
+#ifdef FLY_USE_SUSPEND_IRQ
+    _baDataBuf[0] = MC3XXX_TAP_DETECTION_ENABLE_REG;
+    _baDataBuf[1] = 0xff; //TAP_EN is off
+    my_i2c_master_send(client, _baDataBuf, 0x2);
     
+    _baDataBuf[0] = MC3XXX_INTERRUPT_ENABLE_REG;
+    _baDataBuf[1] = 0x3f;
+    my_i2c_master_send(client, _baDataBuf, 0x2);
+
+    _baDataBuf[0] = MC3XXX_TAP_DWELL_REJECT_REG;
+    _baDataBuf[1] = TAP_X_Thresh;
+    my_i2c_master_send(client, _baDataBuf, 0x2);
+
+    _baDataBuf[0] = MC3XXX_DROP_CONTROL_REG;
+    _baDataBuf[1] = TAP_Y_Thresh;
+    my_i2c_master_send(client, _baDataBuf, 0x2);
+
+    _baDataBuf[0] = MC3XXX_SHAKE_DEBOUNCE_REG;
+    _baDataBuf[1] = TAP_Z_Thresh;
+    my_i2c_master_send(client, _baDataBuf, 0x2);
+#else		
     _baDataBuf[0] = MC3XXX_TAP_DETECTION_ENABLE_REG;
     _baDataBuf[1] = 0x00;
     my_i2c_master_send(client, _baDataBuf, 0x2);
@@ -1008,6 +1051,7 @@ static int mc3xxx_chip_init(struct i2c_client *client)
     _baDataBuf[0] = MC3XXX_INTERRUPT_ENABLE_REG;
     _baDataBuf[1] = 0x00;
     my_i2c_master_send(client, _baDataBuf, 0x2);
+#endif
 
     _baDataBuf[0] = 0x2A;
     my_i2c_master_send(client, &(_baDataBuf[0]), 1);
@@ -1804,7 +1848,7 @@ int mc3xxx_read_accel_xyz(struct i2c_client *client, s16 *acc)
 }
 
 //=============================================================================
-static int mc3xxx_measure(struct i2c_client *client, struct acceleration *accel)
+static int mc3xxx_measure(struct i2c_client *client, struct acceleration_info *accel)
 {
 	s16 raw[3] = { 0 };
 	
@@ -1870,6 +1914,24 @@ static enum hrtimer_restart mc3xxx_timer_func(struct hrtimer *timer)
 	hrtimer_start(&data->timer, ktime_set(0, sensor_duration * 1000000), HRTIMER_MODE_REL);
 
 	return HRTIMER_NORESTART;
+}
+#endif
+
+#ifdef FLY_USE_SUSPEND_IRQ
+static irqreturn_t mc3xxx_irq_func(int irq, void *handle)
+{
+    struct mc3xxx_data *data = handle;
+	
+	wake_lock(&irq_wakelock);
+	lidbg("Tap Event Detected! \n");
+	if (data == NULL)
+		return IRQ_HANDLED;
+	if (data->client == NULL)
+		return IRQ_HANDLED;
+
+	isIRQWake = true;
+
+    return IRQ_HANDLED;
 }
 #endif
 //=============================================================================
@@ -2130,27 +2192,48 @@ static int mc3xxx_release(struct inode *inode, struct file *filp)
 
 ssize_t  mc3xxx_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
 {
-	struct acceleration accel = { 0 };
-
-	if(isACCON) mc3xxx_measure(m_data->client, &accel);
-	/*
-	sprintf(temp_cmd,"%4d,%4d,%4d",
-		accel.x,
-		accel.y,
-		accel.z);
-	*/
+	struct acceleration_info accel = { 0 };
+#ifdef FLY_USE_SUSPEND_IRQ			
+	u8 buff = 0, cnt = 10;
+#endif
 	
-	//get_gsensor_data(accel.x, accel.y, accel.z);
-
+	accel.isACCON = isACCON;
+	accel.isIRQCrash = isIRQWake;
+	
+	if(isACCON == true);
+		mc3xxx_measure(m_data->client, &accel);//measure when acc on
+	
+#ifdef FLY_USE_SUSPEND_IRQ		
+	if(isIRQWake == true)
+	{
+		my_i2c_smbus_read_i2c_block_data(m_data->client, MC3XXX_Tilt_Status_REG, 1, &buff);
+		if(!(buff & 0x80))
+		{
+			while(!(buff & 0x80) && cnt){
+				lidbg("Warning: mc3xxx failed to read Register[0x03] = 0x%x, by %d times \n", buff, 10 -cnt+1);
+				my_i2c_smbus_read_i2c_block_data(m_data->client, MC3XXX_Tilt_Status_REG, 1, &buff);
+				cnt--;
+				msleep(10);
+			}
+			if(!(buff & 0x80))
+				lidbg("ERROR: mc3xxx failed to read Register[0x03], can not works normally! \n");
+		}
+		else lidbg("%s:buff---0x%x\n",__func__,buff);
+	}
+#endif	
 	accel.x = -accel.x * MCONVERT_PARA;
 	accel.y = -accel.y * MCONVERT_PARA;
 	accel.z = -accel.z * MCONVERT_PARA;
 
-	if(copy_to_user(buffer, (char*)&accel, sizeof(struct acceleration)))
+	if(copy_to_user(buffer, (char*)&accel, sizeof(struct acceleration_info)))
     {
         return -1;
     }
-	return sizeof(struct acceleration);
+#ifdef FLY_USE_SUSPEND_IRQ
+	isIRQWake = false;//just one time notification
+	wake_unlock(&irq_wakelock);
+#endif	
+	return sizeof(struct acceleration_info);
 }
 
 //=============================================================================
@@ -2197,35 +2280,49 @@ static void mc3xxx_early_resume(struct early_suspend *handler)
 #else
 static int mc3xxx_acc_resume(struct mc3xxx_data *data)
 {
-	//char buf[1] = {0};
+#ifdef FLY_USE_SUSPEND_IRQ
+	char    _baDataBuf[3] = { 0 };
+#endif
 	MSM_ACCEL_POWER_ON;
 	lidbg("%s\n", __func__);
-    //struct mc3xxx_data *data = dev_get_drvdata(dev);
-    //hrtimer_cancel(&data->timer);
     mutex_lock(&data->lock);
+	
 	mc3xxx_chip_init(data->client); 
     MC3XXX_ResetCalibration(data->client); 
     mcube_read_cali_file(data->client); 
-    mc3xxx_set_mode(data->client, MC3XXX_WAKE); //MC3XXX_STANDBY
-    mutex_unlock(&data->lock);
-	if(data->enabled == true);
-		//hrtimer_start(&data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
+#ifdef FLY_USE_SUSPEND_IRQ
+    _baDataBuf[0] = MC3XXX_TAP_DETECTION_ENABLE_REG;
+    _baDataBuf[1] = 0xff; //TAP_EN is off
+    my_i2c_master_send(data->client, _baDataBuf, 0x2);
 
+	SOC_IO_ISR_Disable(ACCEL_INT1);
+#else
+    mc3xxx_set_mode(data->client, MC3XXX_WAKE); //MC3XXX_STANDBY
+#endif
+    mutex_unlock(&data->lock);
     return 0;
 }
 
 static int mc3xxx_acc_suspend(struct mc3xxx_data *data)
 {
-	//char buf[1] = {0};
-	MSM_ACCEL_POWER_OFF;
+#ifdef FLY_USE_SUSPEND_IRQ
+	char    _baDataBuf[3] = { 0 };
+#endif
 	lidbg("%s\n", __func__);
-    //struct mc3xxx_data *data = dev_get_drvdata(dev);
-    //hrtimer_cancel(&data->timer);
-	//input_sync(data->input_dev);
-    mutex_lock(&data->lock);
-    mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
-    mutex_unlock(&data->lock);
+	mutex_lock(&data->lock);
+	
+#ifdef FLY_USE_SUSPEND_IRQ
+    _baDataBuf[0] = MC3XXX_TAP_DETECTION_ENABLE_REG;
+    _baDataBuf[1] = 0xff;
+    my_i2c_master_send(data->client, _baDataBuf, 0x2);
 
+	SOC_IO_ISR_Enable(ACCEL_INT1);	
+#else
+	MSM_ACCEL_POWER_OFF;
+    mc3xxx_set_mode(data->client, MC3XXX_STANDBY);
+#endif		
+
+	mutex_unlock(&data->lock);
     return 0;
 }
 
@@ -2264,11 +2361,11 @@ static int mc3xxx_event(struct notifier_block *this,
     {
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON):
 		mc3xxx_acc_resume(mc_data);
-		isACCON = 1;
+		isACCON = true;
 		break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_OFF):
 		mc3xxx_acc_suspend(mc_data);
-		isACCON = 0;
+		isACCON = false;
 		break;
     default:
         break;
@@ -2521,6 +2618,15 @@ static int mc3xxx_probe(struct i2c_client *client,
 		hrtimer_start(&m_data->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
 	}
 #endif	
+
+#ifdef FLY_USE_SUSPEND_IRQ
+	mc3xxx_set_mode(client, MC3XXX_WAKE);
+	SOC_IO_Input(ACCEL_INT1, ACCEL_INT1, GPIO_CFG_NO_PULL);
+	SOC_IO_ISR_Add(ACCEL_INT1, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, mc3xxx_irq_func, m_data);
+	enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
+	SOC_IO_ISR_Disable(ACCEL_INT1);
+	wake_lock_init(&irq_wakelock, WAKE_LOCK_SUSPEND, "irq_wakelock");
+#endif
 
 	m_data->cdev = mc3xxx_acc_cdev;
 /*

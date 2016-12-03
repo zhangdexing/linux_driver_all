@@ -15,7 +15,9 @@
 #define GSENSOR_DEGREE_P_THRESHOLD		   40
 #define GSENSOR_DEGREE_N_THRESHOLD		 -40
 
-struct acceleration {
+struct acceleration_info {
+	bool isACCON;
+	bool isIRQCrash;
 	int x;
 	int y;
 	int z;
@@ -27,7 +29,7 @@ int main(int argc, char **argv)
 	char isDebug_String[PROPERTY_VALUE_MAX];
 	int fd = 0,fd_txt = 0;
   	int ret;
-	struct acceleration accel;
+	struct acceleration_info accel;
 	double rad;
 	double degree;
 	char logLine[200];
@@ -70,7 +72,18 @@ open_dev:
 	while(1)
 	{
 		usleep(100*1000);
-		read(fd, &accel, sizeof(struct acceleration));
+		read(fd, &accel, sizeof(struct acceleration_info));
+
+		if(accel.isACCON == false)
+		{
+			if(accel.isIRQCrash == true)
+			{
+				lidbg("%s:====IRQ recv====\n",__func__);
+				system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
+			}
+			continue;
+		}
+		
 		rad = atan(accel.x/sqrt(accel.y*accel.y + accel.z*accel.z));
 		degree = (rad/3.14)*180;
 		//lidbg("GsensorData:%d,%d,%d====%f",accel.x,accel.y,accel.z,(rad/3.14)*180);
@@ -101,6 +114,8 @@ open_dev:
 				if(isDebug)
 					write(fd_txt,logLine, strlen(logLine));
 				ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
+				system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
+				sleep(1);
 				x_Cnt = 0;
 			}
 		}
@@ -114,6 +129,8 @@ open_dev:
 				if(isDebug)
 					write(fd_txt,logLine, strlen(logLine));
 				ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
+				system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
+				sleep(1);
 				y_Cnt = 0;
 			}
 		}
@@ -127,6 +144,8 @@ open_dev:
 				if(isDebug)
 					write(fd_txt,logLine, strlen(logLine));
 				ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
+				system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
+				sleep(1);
 				z_Cnt = 0;
 			}
 		}
@@ -140,6 +159,8 @@ open_dev:
 				if(isDebug)
 					write(fd_txt,logLine, strlen(logLine));	
 				ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
+				system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
+				sleep(1);
 				rollOverCnt = 0;
 			}
 		}
