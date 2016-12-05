@@ -22,7 +22,7 @@ else
 $(warning 4.4===$(PLATFORM_SDK_VERSION))
 endif
 
-LOCAL_MULTILIB := first
+#LOCAL_MULTILIB := first
 
 LOCAL_SHARED_LIBRARIES :=  libutils liblog libcutils  libcamera_client 
 

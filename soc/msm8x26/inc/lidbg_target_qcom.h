@@ -158,7 +158,7 @@
 				SOC_IO_Suspend_Config(g_hw.gpio_usb_id,GPIOMUX_OUT_HIGH,GPIO_CFG_NO_PULL,GPIOMUX_DRV_2MA);\
 		}while(0)
 
-#ifdef PLATFORM_msm8909
+#if (defined(PLATFORM_msm8909) || defined(PLATFORM_msm8996))
 #define USB_POWER_FRONT_ENABLE do{\
 			lidbg("gpio_usb_front_en\n");\
 			check_gpio(g_hw.gpio_usb_front_en);\
