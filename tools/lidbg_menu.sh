@@ -146,7 +146,7 @@ function lidbg_handle()
 		8)
 			lidbg_pushfly_data;;
 		9)
-			find $DBG_ROOT_PATH/dbg_cfg.sh | xargs sed -i "s/$DBG_PLATFORM_ID/$2/g"
+			find $DBG_ROOT_PATH/dbg_cfg.sh | xargs sed -i "s/=$DBG_PLATFORM_ID/=$2/g"
 			exit;;
 		10)
 			adb root
