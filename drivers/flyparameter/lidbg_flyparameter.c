@@ -163,6 +163,7 @@ bool flyparameter_info_get(void)
 	                lidbg("fail to cpy car_type\n");
 	            }
 	            lidbg_shell_cmd( set_car_type );
+	            lidbg_shell_cmd( "chmod 777 /flyconfig" );
 	            lidbg_shell_cmd( "/flysystem/bin/decodeFlyconfig &" );
 	            lidbg("bring up:/flysystem/bin/decodeFlyconfig &\n");
 	            fs_mem_log("car_type=[%s]\n", g_var.car_type);
