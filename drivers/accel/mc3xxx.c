@@ -2753,15 +2753,21 @@ static struct i2c_driver mc3xxx_driver =
 //=============================================================================
 static int __init mc3xxx_init(void)
 {
-	int ret = 0;
+	int ret = 0,mc3xxx_disable = 0;
 	DUMP_BUILD_TIME;
 	LIDBG_GET;
 #if defined(PLATFORM_msm8974)
 	lidbg_shell_cmd("chmod 777 /sys/kernel/debug/regulator/8941_l18/enable");
 #endif
+	fs_get_intvalue(g_var.pflyhal_config_list, "mc3xxx.disable", &mc3xxx_disable, NULL);
 
+	if(mc3xxx_disable)
+	{
+		lidbg("mc3xxx: mc3xxx_disable=1.return \n");
+		return -1;
+	}
 	MSM_ACCEL_POWER_ON;
-	lidbg("mc3xxx: init\n");
+	lidbg("mc3xxx: init:%d\n",mc3xxx_disable);
 
 	if (gsensor_fetch_sysconfig_para())
 	{
