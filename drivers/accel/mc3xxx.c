@@ -2759,7 +2759,7 @@ static int __init mc3xxx_init(void)
 #if defined(PLATFORM_msm8974)
 	lidbg_shell_cmd("chmod 777 /sys/kernel/debug/regulator/8941_l18/enable");
 #endif
-	fs_get_intvalue(g_var.pflyhal_config_list, "mc3xxx.disable", &mc3xxx_disable, NULL);
+	fs_get_intvalue(g_var.pflyhal_config_list, "gsensor.disable", &mc3xxx_disable, NULL);
 
 	if(mc3xxx_disable)
 	{
