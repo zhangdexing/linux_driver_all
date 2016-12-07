@@ -1814,7 +1814,10 @@ try_open_again:
             if (-1 == r)
             {
                 if (EINTR == errno)
+                {
+                	sleep(1);
                     continue;
+                }						
                 ALOGE("%s: FDSelect error: %d", __func__, errno);
             }
 
@@ -1863,6 +1866,7 @@ try_open_again:
             {
                 ALOGE("%s: get_buf_from_display failed. Skipping the loop",
                       __func__);
+				sleep(1);
                 continue;
             }
 
