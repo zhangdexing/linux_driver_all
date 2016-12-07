@@ -102,7 +102,9 @@
 #endif
 
 #ifdef PLATFORM_msm8996	
-
+#define SUSPEND_ONLINE
+#define MUC_CONTROL_DSP
+#define MUC_DSP7741
 enum msm_gpiomux_setting {
 	GPIOMUX_ACTIVE = 0,
 	GPIOMUX_SUSPENDED,
