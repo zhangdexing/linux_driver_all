@@ -2626,6 +2626,9 @@ static int mc3xxx_probe(struct i2c_client *client,
 	enable_irq_wake(GPIO_TO_INT(ACCEL_INT1));
 	SOC_IO_ISR_Disable(ACCEL_INT1);
 	wake_lock_init(&irq_wakelock, WAKE_LOCK_SUSPEND, "irq_wakelock");
+#else
+        lidbg("SOC_IO_Output(0, ACCEL_INT1, 0):%d\n",ACCEL_INT1);
+        SOC_IO_Output(0, ACCEL_INT1, 0);
 #endif
 
 	m_data->cdev = mc3xxx_acc_cdev;
