@@ -286,7 +286,7 @@ static int lidbg_dev_event(struct notifier_block *this,
         //if(!g_var.is_fly)
     {
         LCD_OFF;
-#ifdef PLATFORM_ID_16
+#ifdef SOC_mt35x
 	disable_irq(GPIO_TO_INT(6));
 #endif
 	 if(g_var.is_fly == 0)
@@ -330,7 +330,7 @@ static int lidbg_dev_event(struct notifier_block *this,
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_ANDROID_UP):
 #if (defined DISABLE_USB_WHEN_ANDROID_DOWN) || (defined DISABLE_USB_WHEN_GOTO_SLEEP)
-#ifdef PLATFORM_ID_16
+#ifdef SOC_mt35x
 	 lidbg("set usb a_host mode\n");
         lidbg_readwrite_file("/sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode", NULL, "a_host", strlen("a_host"));
 #endif
@@ -350,7 +350,7 @@ static int lidbg_dev_event(struct notifier_block *this,
         SOC_IO_Config(g_hw.gpio_bt_rx, GPIOMUX_FUNC_2, GPIOMUX_OUT_HIGH, GPIOMUX_PULL_NONE, GPIOMUX_DRV_16MA);
 #endif
 #ifdef DISABLE_USB_WHEN_DEVICE_DOWN
-#ifdef PLATFORM_ID_16
+#ifdef SOC_mt35x
 	 lidbg("set usb a_host mode\n");
         lidbg_readwrite_file("/sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode", NULL, "a_host", strlen("a_host"));
 #endif
@@ -358,7 +358,7 @@ static int lidbg_dev_event(struct notifier_block *this,
 #endif
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_SCREEN_ON):
-#ifdef PLATFORM_ID_16
+#ifdef SOC_mt35x
 	enable_irq(GPIO_TO_INT(6));
 #endif
 	if(g_var.keep_lcd_on) LCD_ON;
@@ -703,7 +703,7 @@ static int soc_dev_probe(struct platform_device *pdev)
         CREATE_KTHREAD(thread_udisk_en, NULL);
     }
 #endif
-#ifdef PLATFORM_ID_16
+#ifdef SOC_mt35x
 	GPS_POWER_ON;
 #endif
     return 0;

@@ -7,9 +7,9 @@ function soc_make_kernelconfig()
 	if [ ! -d "$DBG_KERNEL_SRC_DIR/out" ]; then
 		mkdir "$DBG_KERNEL_SRC_DIR/out"
 	fi
-	ARCH=arm64 make O=out evb3561t_66_m0_defconfig
+	ARCH=arm64 make O=out $DBG_PLATFORM_defconfig
 	ARCH=arm64 make O=out menuconfig
-	cp out/.config arch/arm64/configs/evb3561t_66_m0_defconfig
+	cp out/.config arch/arm64/configs/$DBG_PLATFORM_defconfig
 	rm -rf out/source
 }
 
@@ -82,7 +82,7 @@ function soc_build_all()
 	echo $FUNCNAME
 	soc_prebuild
 	cd $DBG_SYSTEM_DIR
-	./allmake.sh -p evb3561t_66_m0
+	./allmake.sh -p $DBG_PLATFORM
 	soc_postbuild
 }
 
@@ -139,6 +139,7 @@ fi
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/ETC
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/EXECUTABLES/vold_intermediates
         rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/BOOTLOADER_OBJ
+	mkdir -p $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/arm2/system/lib64
 	set_env
 }
 

@@ -48,7 +48,7 @@
 //#include <mach/system.h>
 #include <mach/hardware.h>
 #include <linux/fs.h>*/
-#ifndef PLATFORM_ID_16
+#ifndef SOC_mt35x
 #include <linux/sensors.h>
 #endif
 #include "lidbg.h"
@@ -281,7 +281,7 @@ static int load_cali_flg = 0;
 //===============/*Flyaudio*/==================
 LIDBG_DEFINE;
 
-#ifdef PLATFORM_ID_16
+#ifdef SOC_mt35x
 #define FLY_USE_SUSPEND_IRQ
 #endif
 
@@ -1959,7 +1959,7 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	int ret = 0;
-	#ifndef PLATFORM_ID_16
+	#ifndef SOC_mt35x
 		float convert_para = 0.0f;
 	#endif
     #ifdef DOT_CALI
@@ -2014,7 +2014,7 @@ static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			lidbg("copy to error in %s.\n",__func__);
 		}     			
 		break;
-	#ifndef PLATFORM_ID_16
+	#ifndef SOC_mt35x
 	case IOCTL_SENSOR_GET_CONVERT_PARA:
 		convert_para = MC3XXX_CONVERT_PARAMETER;
 		if(copy_to_user((void __user *) arg,(const void *)&convert_para,sizeof(float))!=0){
@@ -2637,7 +2637,7 @@ static int mc3xxx_probe(struct i2c_client *client,
 	m_data->cdev.sensors_poll_delay = mc3xxx_acc_poll_delay_set;
 */	
 
-#ifndef PLATFORM_ID_16
+#ifndef SOC_mt35x
 	ret = sensors_classdev_register(&client->dev, &m_data->cdev);
 	if (ret) {
 		dev_err(&client->dev,

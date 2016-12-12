@@ -296,7 +296,7 @@ void lidbg_pm_step_call(fly_pm_stat_step step, void *data)
 #ifdef SOC_rk3x88
         grf_backup();
 #endif
-#ifdef PLATFORM_ID_16
+#ifdef SOC_mt35x
 		GPS_POWER_OFF;
 #endif
 
@@ -311,7 +311,7 @@ void lidbg_pm_step_call(fly_pm_stat_step step, void *data)
         SOC_System_Status(FLY_KERNEL_UP);
         SOC_IO_RESUME;
         MCU_WP_GPIO_ON;
-#ifdef PLATFORM_ID_16
+#ifdef SOC_mt35x
 		GPS_POWER_ON;
 #endif
         PM_SLEEP_DBG("WAKEUP9.1.suspend_enter.wakeup.MCU_WP_GPIO_ON;\n");

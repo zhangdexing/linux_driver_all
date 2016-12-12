@@ -96,6 +96,18 @@ void judgment_list_init(void)
 #ifdef PLATFORM_ID_20
     judgment_list[0].value = 20 ;
 #endif
+#ifdef PLATFORM_ID_21
+    judgment_list[0].value = 21 ;
+#endif
+#ifdef PLATFORM_ID_22
+    judgment_list[0].value = 22 ;
+#endif
+#ifdef PLATFORM_ID_23
+    judgment_list[0].value = 23 ;
+#endif
+#ifdef PLATFORM_ID_24
+    judgment_list[0].value = 24 ;
+#endif
     judgment_list[1].value = is_out_updated ;
     judgment_list[2].value = gboot_mode ;
     judgment_list[3].value = g_recovery_meg->bootParam.upName.val ;

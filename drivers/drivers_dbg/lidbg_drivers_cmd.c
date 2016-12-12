@@ -1253,34 +1253,36 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#105"))
         {
-            lidbg("*158#105--MTK USB HOST MODE\n");
-            if(g_var.platformid == 17)
-	    {
-		USB_VBUS_POWER_DISABLE;
-		msleep(500);
-		USB_VBUS_POWER_ENABLE;
-            }
-	     else if(g_var.platformid == 16)
+            lidbg("*158#105-- USB HOST MODE\n");
+#ifdef SOC_mt35x
             {
 		lidbg_shell_cmd("chmod 777 /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");
 		lidbg_shell_cmd("echo a_host > /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");
             }
-		lidbg_domineering_ack();
-        }
-        else if (!strcmp(argv[1], "*158#106"))
-        {
-            lidbg("*158#106--MTK USB SLAVE MODE\n");
-            if(g_var.platformid == 17)
+#else
 	    {
 		USB_VBUS_POWER_DISABLE;
 		msleep(500);
 		USB_VBUS_POWER_ENABLE;
             }
-	     else if(g_var.platformid == 16)
+#endif
+		lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#106"))
+        {
+            lidbg("*158#106-- USB SLAVE MODE\n");
+#ifdef SOC_mt35x
            {
 		lidbg_shell_cmd("chmod 777 /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");
 		lidbg_shell_cmd("echo b_peripheral > /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");
             }
+#else
+	    {
+		USB_VBUS_POWER_DISABLE;
+		msleep(500);
+		USB_VBUS_POWER_ENABLE;
+            }
+#endif
 	     lidbg_domineering_ack();
 
         }

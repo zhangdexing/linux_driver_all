@@ -146,7 +146,7 @@ void acc_status_handle(FLY_ACC_STATUS val)
 	static u32 acc_count = 0;
 	if(val == FLY_ACC_ON){
 		wake_lock(&rmtctrl_wakelock);
-		#ifdef PLATFORM_ID_16
+		#ifdef SOC_mt35x
 		dsi83_resume();
 		#endif
 		lidbg("acc_status_handle: FLY_ACC_ON:acc_count=%d\n",acc_count++);
