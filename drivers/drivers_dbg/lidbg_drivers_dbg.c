@@ -37,6 +37,11 @@ static  struct file_operations drivers_dbg_nod_fops =
 int thread_drivers_dbg_init(void *data)
 {
     lidbg_new_cdev(&drivers_dbg_nod_fops, "lidbg_drivers_dbg0");
+if(fs_is_file_exist("/sdcard/coldBootLogcat.txt"))
+{
+    lidbg("enable coldBootLogcat\n");
+    lidbg_shell_cmd("echo appcmd *158#001 > /dev/lidbg_drivers_dbg0");
+}
    if((!g_var.is_fly) && (g_var.recovery_mode == 0) )
    {
    	    set_wifi_adb_mode(true);
