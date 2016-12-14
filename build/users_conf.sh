@@ -61,6 +61,9 @@ case "$USERS_ID" in
                 18)
 		export DBG_SYSTEM_DIR=/home/msm/swlee/mt3561
 		export RELEASE_REPOSITORY=/home/swlee/flyaudio/mt3561-release;;
+                19)
+		export DBG_SYSTEM_DIR=/home/msm/swlee/mt3561
+		export RELEASE_REPOSITORY=/home/swlee/flyaudio/mt3561-release;;
 	esac;;
 	
    	1)

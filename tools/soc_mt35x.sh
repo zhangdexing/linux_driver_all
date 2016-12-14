@@ -2,14 +2,15 @@
 function soc_make_kernelconfig()
 {
 	echo $FUNCNAME
+	echo === ${DBG_PLATFORM}"_defconfig" ===
 	#soc_prebuild
 	cd $DBG_KERNEL_SRC_DIR
 	if [ ! -d "$DBG_KERNEL_SRC_DIR/out" ]; then
 		mkdir "$DBG_KERNEL_SRC_DIR/out"
 	fi
-	ARCH=arm64 make O=out $DBG_PLATFORM_defconfig
+	ARCH=arm64 make O=out ${DBG_PLATFORM}"_defconfig"
 	ARCH=arm64 make O=out menuconfig
-	cp out/.config arch/arm64/configs/$DBG_PLATFORM_defconfig
+	cp out/.config arch/arm64/configs/${DBG_PLATFORM}"_defconfig"
 	rm -rf out/source
 }
 
@@ -139,7 +140,7 @@ fi
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/ETC
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/EXECUTABLES/vold_intermediates
         rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/BOOTLOADER_OBJ
-	mkdir -p $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/arm2/system/lib64
+	#mkdir -p $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/arm2/system/lib64
 	set_env
 }
 
@@ -178,9 +179,10 @@ function soc_make_otapackage()
 function soc_build_origin_image()
 {
 	echo $FUNCNAME
-	lidbg_build_all
+	
 #	soc_build_recoveryimage
 	soc_build_all
+        lidbg_build_all
 if [ $ANDROID_VERSION -ge 600 ];then
 	cp $DBG_ROOT_PATH/conf/init.lidbg.new.rc        $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/root/init.lidbg.rc
 else

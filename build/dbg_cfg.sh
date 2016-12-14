@@ -15,9 +15,10 @@
 # 13--A80 Android_4.4
 # 14--msm8974 Android_6.0.0
 # 15--imx6q Android_5.1.1
-# 16--mt3561 Android_6.0.1
+# 16--mt3561(evb3561t_66_m0) Android_6.0.1 V1
 # 17--msm8996 Android_6.0.1
-# 18--mt3561 Android_6.0.1 V2
+# 18--mt3561(evb3561s_65_m0) Android_6.0.1 V2
+# 19--mt3561(evb3561sv_ct_66_m0) Android_6.0.1 V2
 
 ## USERS_ID ###
 # 0--root@192.168.9.222
