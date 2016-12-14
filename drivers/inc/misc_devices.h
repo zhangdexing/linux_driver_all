@@ -24,7 +24,7 @@ void set_system_performance(int type);
 int thread_sound_dsp_init(void *data);
 
 // PANNE_PEN
-#define LCD_ON  do{lidbg("LCD_ON\n");LPC_CMD_LCD_ON;}while(0)
+#define LCD_ON  do{if((g_var.led_hal_status == 0) || (g_var.led_app_status == 0)){lidbg("LCD_ON break\n"); break;}lidbg("LCD_ON\n");LPC_CMD_LCD_ON;}while(0)
 #define LCD_OFF do{if(g_var.keep_lcd_on) break;lidbg("LCD_OFF\n");LPC_CMD_LCD_OFF;}while(0)
 
 #endif
