@@ -618,7 +618,7 @@ case "$DBG_PLATFORM_ID" in
 
 
     18)
-        export DBG_PLATFORM=evb3561sv_ct_66_m0
+        export DBG_PLATFORM=evb3561s_65_m0
 	export SOC_ARCH=arm64
         export BOARD_VERSION=V2
         export ANDROID_VERSION=601
