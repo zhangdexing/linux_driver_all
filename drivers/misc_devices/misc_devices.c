@@ -274,7 +274,7 @@ int thread_shutdown_bt_power(void *data)
     return 0;
 }
 
-static int lidbg_dev_event(struct notifier_block *this,
+static int misc_dev_dev_event(struct notifier_block *this,
                        unsigned long event, void *ptr)
 {
     DUMP_FUN;
@@ -297,6 +297,7 @@ static int lidbg_dev_event(struct notifier_block *this,
     break;
 
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_DOWN):
+		DEVICE3_3_POWER_OFF;
 #ifdef DISABLE_USB_WHEN_DEVICE_DOWN
         CREATE_KTHREAD(thread_usb_disk_disable_delay, NULL);
 #endif
@@ -338,6 +339,7 @@ static int lidbg_dev_event(struct notifier_block *this,
 #endif
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_UP):
+	 DEVICE3_3_POWER_ON;
 	#ifdef MUC_CONTROL_DSP
 	  if(!g_var.recovery_mode && !g_var.is_fly)
 	    	CREATE_KTHREAD(thread_sound_dsp_init, NULL);
@@ -398,7 +400,7 @@ static int lidbg_dev_event(struct notifier_block *this,
 
 static struct notifier_block lidbg_notifier =
 {
-    .notifier_call = lidbg_dev_event,
+    .notifier_call = misc_dev_dev_event,
 };
 
 int dev_open(struct inode *inode, struct file *filp)

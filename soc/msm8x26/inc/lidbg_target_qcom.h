@@ -331,4 +331,7 @@
 #define HAL_NOT_READY   do{check_gpio(g_hw.gpio_mcu_app);SOC_IO_Output(0, g_hw.gpio_mcu_app, 1); }while(0)
 #define  SET_HAL_READY_SUSPEND  do{check_gpio(g_hw.gpio_mcu_app);SOC_IO_Suspend_Config(g_hw.gpio_mcu_app,GPIOMUX_OUT_HIGH,GPIO_CFG_NO_PULL,GPIOMUX_DRV_2MA);}while(0)
 
+#define DEVICE3_3_POWER_ON
+#define DEVICE3_3_POWER_OFF
+
 #endif

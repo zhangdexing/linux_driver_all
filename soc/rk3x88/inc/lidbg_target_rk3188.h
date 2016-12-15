@@ -106,5 +106,6 @@
 
 #define FLY_GPS_SO  "gps.msm8226.so"
 
-
+#define DEVICE3_3_POWER_ON
+#define DEVICE3_3_POWER_OFF
 #endif

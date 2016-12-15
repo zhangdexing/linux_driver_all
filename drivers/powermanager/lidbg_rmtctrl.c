@@ -147,6 +147,7 @@ void acc_status_handle(FLY_ACC_STATUS val)
 	if(val == FLY_ACC_ON){
 		wake_lock(&rmtctrl_wakelock);
 		#ifdef SOC_mt35x
+		MSM_DSI83_POWER_ON;
 		dsi83_resume();
 		#endif
 		lidbg("acc_status_handle: FLY_ACC_ON:acc_count=%d\n",acc_count++);
