@@ -363,8 +363,13 @@ static int thread_drivers_loader_analyze(void *data)
         ssleep(1);
     };
 
-    fs_fill_list(get_lidbg_file_path(buff, "flyaudio.init.rc.conf"), FS_CMD_FILE_LISTMODE, &flyaudio_list);
-    analyze_list_cmd(&flyaudio_list);
+    if(gboot_mode == MD_FLYSYSTEM)
+    {
+        fs_fill_list(get_lidbg_file_path(buff, "flyaudio.init.rc.conf"), FS_CMD_FILE_LISTMODE, &flyaudio_list);
+        analyze_list_cmd(&flyaudio_list);
+    }
+    else
+        LIDBG_WARN("<skip flyaudio.init.rc.conf:gboot_mode:%d>\n", gboot_mode);
 
     if(fs_is_file_exist("/persist/autoOps.txt"))
     {
