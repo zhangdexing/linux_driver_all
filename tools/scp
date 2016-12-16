@@ -4,7 +4,7 @@ set username [lindex $argv 0]
 set password [lindex $argv 1]
 set remote_path [lindex $argv 2]
 set local_patch [lindex $argv 3]
-spawn scp -r $username@192.168.9.57:$remote_path $local_patch
+spawn scp -r $username@172.168.1.94:$remote_path $local_patch
 expect "password"
 send "$password\r"
 expect eof
