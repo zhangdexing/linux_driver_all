@@ -540,7 +540,7 @@ int  boot_compare_lpc_version(void)
 //extern int fs_make_dir(const char *path);
 //extern int fs_write_file(filecookie fcookie, const void *buf, off_t offset, size_t len);
 //extern int fs_mount1212(const char *path, const char *device);
-
+#if 0
 int check_persist_partition()
 {
     int count = 0;
@@ -595,4 +595,4 @@ int check_persist_partition()
     free(temp);
     return 0xffff;
 }
-
+#endif
