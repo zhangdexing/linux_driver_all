@@ -27,6 +27,15 @@ struct acceleration_info {
 	int z;
 };
 
+static int x_p_threshold = GSENSOR_X_P_THRESHOLD;
+static int x_n_threshold = GSENSOR_X_N_THRESHOLD;
+static int y_p_threshold = GSENSOR_Y_P_THRESHOLD;
+static int y_n_threshold = GSENSOR_Y_N_THRESHOLD;
+static int z_p_threshold = GSENSOR_Z_P_THRESHOLD;
+static int z_n_threshold = GSENSOR_Z_N_THRESHOLD;
+static int d_p_threshold = GSENSOR_DEGREE_P_THRESHOLD;
+static int d_n_threshold = GSENSOR_DEGREE_N_THRESHOLD;
+
 int main(int argc, char **argv)
 {
 	int isDebug = 0;
@@ -74,6 +83,21 @@ open_dev:
 		}
 	}
 
+	/*reverse install*/
+	while(1)
+	{
+		usleep(100*1000);
+		read(fd, &accel, sizeof(struct acceleration_info));
+		if(	accel.z != 0) break;
+	}
+	if(	accel.z < -700)
+	{
+		lidbg("%s:====Z REVERSE INSTALL(z:%d)====\n",__func__,accel.z);
+		z_p_threshold = -GSENSOR_Z_N_THRESHOLD;
+		z_n_threshold = -GSENSOR_Z_P_THRESHOLD;
+	}
+	else lidbg("%s:====Z NORMAL INSTALL(z:%d)====\n",__func__,accel.z);
+	
 	while(1)
 	{
 		usleep(100*1000);
@@ -115,7 +139,7 @@ open_dev:
 
 			/*Three axis threshold: two times each crash warning*/
 			/*Flat Ground No Move HYUNDAI:100,280,900*/
-			if(accel.x > GSENSOR_X_P_THRESHOLD || accel.x < GSENSOR_X_N_THRESHOLD)
+			if(accel.x > x_p_threshold || accel.x < x_n_threshold)
 			{
 				lidbg("X axis Crash Warning____%d:%d,%d,%d,%f____\n",x_Cnt,accel.x,accel.y,accel.z,degree);
 				if(++x_Cnt >= 2) //filter
@@ -130,7 +154,7 @@ open_dev:
 					x_Cnt = 0;
 				}
 			}
-			else if(accel.y > GSENSOR_Y_P_THRESHOLD || accel.y < GSENSOR_Y_N_THRESHOLD)
+			else if(accel.y > y_p_threshold || accel.y < y_n_threshold)
 			{
 				lidbg("Y axis Crash Warning____%d:%d,%d,%d,%f____\n",y_Cnt,accel.x,accel.y,accel.z,degree);
 				if(++y_Cnt >= 2) //filter
@@ -145,7 +169,7 @@ open_dev:
 					y_Cnt = 0;
 				}
 			}
-			else if(accel.z > GSENSOR_Z_P_THRESHOLD || accel.z < GSENSOR_Z_N_THRESHOLD)
+			else if(accel.z > z_p_threshold || accel.z < z_n_threshold)
 			{
 				lidbg("Z axis Crash Warning____%d:%d,%d,%d,%f____\n",z_Cnt,accel.x,accel.y,accel.z,degree);
 				if(++z_Cnt >= 2) //filter
@@ -160,7 +184,7 @@ open_dev:
 					z_Cnt = 0;
 				}
 			}
-			else if( degree > GSENSOR_DEGREE_P_THRESHOLD || degree < GSENSOR_DEGREE_N_THRESHOLD)
+			else if( degree > d_p_threshold || degree < d_n_threshold)
 			{
 				lidbg("Roll Over Warning____%d:%d,%d,%d,%f____\n",rollOverCnt,accel.x,accel.y,accel.z,degree);
 				if(++rollOverCnt >= 2) //filter
