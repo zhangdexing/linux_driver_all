@@ -21,6 +21,7 @@ struct judgment judgment_list[] =
     {"car_type", -1, NULL},
     {"flylink.en", -1, NULL},
     {"baidu.carlife.en", -1, NULL},
+    {"soc_string", -1, NULL},
 };
 void judgment_list_print(void)
 {
@@ -121,7 +122,7 @@ void judgment_list_init(void)
     judgment_list[4].pvalue = g_var.car_type ;
     fs_get_intvalue(g_var.pflyhal_config_list, "flylink.en", &(judgment_list[5].value), NULL);
     fs_get_intvalue(g_var.pflyhal_config_list, "baidu.carlife.en", &(judgment_list[6].value), NULL);
-
+    judgment_list[7].pvalue = SOC_STRING;//kstrdup(SOC_STRING, GFP_ATOMIC);
     judgment_list_print();
 }
 struct judgment *get_judgment_list(char *key)
