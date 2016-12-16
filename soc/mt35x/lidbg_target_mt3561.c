@@ -116,7 +116,7 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_int_button_right1 = 1,
         .gpio_int_button_right2 = 2,
 
-        .gpio_led1 = 87,
+        .gpio_led1 = 42,
         .gpio_led2 = 87,
 
         .gpio_int_mcu_i2c_request = 6,
