@@ -262,20 +262,25 @@ int VolumeManager::start() {
     // directories that we own, in case we crashed.
     unmountAll();
 
+    #ifdef MTK_SHARED_SDCARD
     // Assume that we always have an emulated volume on internal
     // storage; the framework will decide if it should be mounted.
     CHECK(mInternalEmulated == nullptr);
     mInternalEmulated = std::shared_ptr<android::vold::VolumeBase>(
             new android::vold::EmulatedVolume("/data/media"));
     mInternalEmulated->create();
+    #endif
 
     return 0;
 }
 
 int VolumeManager::stop() {
+	#ifdef MTK_SHARED_SDCARD
     CHECK(mInternalEmulated != nullptr);
     mInternalEmulated->destroy();
     mInternalEmulated = nullptr;
+    #endif
+
     return 0;
 }
 
@@ -313,7 +318,7 @@ void VolumeManager::handleBlockEvent(NetlinkEvent *evt) {
         for (auto source : mDiskSources) {
             if (source->matches(eventPath)) {
                 #ifdef MTK_SHARED_SDCARD
-                if (major == kMajorBlockMmc && minor == kMinorBlockEMMC) {
+                if (major == kMajorBlockMmc && minor == kMinorBlockEMMC ) {
                     SLOGI("%s(): For MTK_SHARED_SDCARD, remove EMMC disk", __FUNCTION__);
                     break;
                 }
@@ -386,9 +391,12 @@ std::shared_ptr<android::vold::Disk> VolumeManager::findDisk(const std::string& 
 }
 
 std::shared_ptr<android::vold::VolumeBase> VolumeManager::findVolume(const std::string& id) {
+    #ifdef MTK_SHARED_SDCARD
     if (mInternalEmulated->getId() == id) {
         return mInternalEmulated;
     }
+    #endif
+
     for (auto disk : mDisks) {
         auto vol = disk->findVolume(id);
         if (vol != nullptr) {
@@ -656,11 +664,25 @@ next:
 int VolumeManager::reset() {
     // Tear down all existing disks/volumes and start from a blank slate so
     // newly connected framework hears all events.
-    mInternalEmulated->destroy();
-    mInternalEmulated->create();
+    #ifdef MTK_SHARED_SDCARD
+    if(mInternalEmulated->getCreated()){
+        mInternalEmulated->destroy();
+    }
+
+    if(!mInternalEmulated->getCreated()){
+        mInternalEmulated->create();
+    }
+    #endif
+
+
     for (auto disk : mDisks) {
-        disk->destroy();
-        disk->create();
+        if(disk->getCreated()){
+            disk->destroy();
+        }
+
+        if(!disk->getCreated()){
+            disk->create();
+        }
     }
     mAddedUsers.clear();
     mStartedUsers.clear();
@@ -668,7 +690,10 @@ int VolumeManager::reset() {
 }
 
 int VolumeManager::shutdown() {
+	#ifdef MTK_SHARED_SDCARD
     mInternalEmulated->destroy();
+    #endif
+    
     for (auto disk : mDisks) {
         disk->destroy();
     }
@@ -681,9 +706,12 @@ int VolumeManager::unmountAll() {
     std::lock_guard<std::mutex> lock(mLock);
 
     // First, try gracefully unmounting all known devices
+    #ifdef MTK_SHARED_SDCARD
     if (mInternalEmulated != nullptr) {
         mInternalEmulated->unmount();
     }
+    #endif
+
     for (auto disk : mDisks) {
         disk->unmountAll();
     }
@@ -1925,11 +1953,14 @@ void VolumeManager::mountallVolumes() {
    std::shared_ptr<android::vold::VolumeBase> primary = nullptr;
 
    reset();
-   if (mInternalEmulated != nullptr && mInternalEmulated->getState() != android::vold::VolumeBase::State::kMounted) {
-       SLOGI("%s: mInternalEmulated", __FUNCTION__);
-       mInternalEmulated->mount();
-       primary = mInternalEmulated;
-   }
+    #ifdef MTK_SHARED_SDCARD
+	if (mInternalEmulated != nullptr && mInternalEmulated->getState() != android::vold::VolumeBase::State::kMounted) {
+		SLOGI("%s: mInternalEmulated", __FUNCTION__);
+		mInternalEmulated->mount();
+		primary = mInternalEmulated;
+	}
+    #endif
+
 
    std::list<std::string> privateIds;
    listVolumes(android::vold::VolumeBase::Type::kPrivate, privateIds);
@@ -2144,7 +2175,12 @@ int VolumeManager::shareEnabled(const std::string& id, const char *method, bool 
 
 int VolumeManager::ipo(const char *cmd) {
     if (!strcmp(cmd, "startup")) {
-        mInternalEmulated->create();
+	    #ifdef MTK_SHARED_SDCARD
+        if(!mInternalEmulated->getCreated()){
+            mInternalEmulated->create();
+        }
+        #endif
+
         mHandleUevent = true;
         invoke_coldboot();
     }

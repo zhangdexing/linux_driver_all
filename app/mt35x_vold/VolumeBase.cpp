@@ -315,6 +315,10 @@ void VolumeBase::setStorageType(const StorageType type) {
     mStorageType = type;
 }
 
+bool VolumeBase::isStorageType(const StorageType type) {
+    return type == mStorageType;
+}
+
 void VolumeBase::createRemoveStorageTypeSettings(bool is_create) {
     userid_t userId = 0; /* create the link only for owner */
     char stoarge_path_prop[PROPERTY_VALUE_MAX];

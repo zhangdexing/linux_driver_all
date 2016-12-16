@@ -62,6 +62,7 @@ public:
     uint64_t getSize() { return mSize; }
     const std::string& getLabel() { return mLabel; }
     int getFlags() { return mFlags; }
+    bool getCreated() { return mCreated; }
 
     std::shared_ptr<VolumeBase> findVolume(const std::string& id);
 

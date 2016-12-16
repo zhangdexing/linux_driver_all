@@ -78,7 +78,9 @@ vold_conlyflags := -std=c11
 vold_cflags := -Werror -Wall -Wno-missing-field-initializers -Wno-unused-variable -Wno-unused-parameter
 
 include $(CLEAR_VARS)
+
 LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+
 LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
 LOCAL_MODULE:= vold
 LOCAL_CLANG := true

@@ -120,34 +120,94 @@ status_t PrepareDir(const std::string& path, mode_t mode, uid_t uid, gid_t gid) 
 
 status_t ForceUnmount(const std::string& path) {
     const char* cpath = path.c_str();
-    if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {
-        return OK;
+    char storage_path[PATH_MAX];
+    storage_path[0] = '\0';
+
+    if(!strncmp(cpath, "/mnt/runtime/default/", strlen("/mnt/runtime/default/"))){
+       sprintf(storage_path, "/storage/%s", cpath + strlen("/mnt/runtime/default/"));
     }
+    else if(!strncmp(cpath, "/mnt/runtime/read/", strlen("/mnt/runtime/read/"))){
+       sprintf(storage_path, "/storage/%s", cpath + strlen("/mnt/runtime/read/"));
+    }
+    else if(!strncmp(cpath, "/mnt/runtime/write/", strlen("/mnt/runtime/write/"))){
+       sprintf(storage_path, "/storage/%s", cpath + strlen("/mnt/runtime/write/"));
+    }
+    if(*storage_path) {
+       LOG(VERBOSE) << __FUNCTION__ << ": path=" << path << ", storage_path=" << storage_path;
+    }
+
+    for(int i = 0; i < 10; i++)
+	{
+	    if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {
+                 return OK;
+	    }
+
+            usleep(500000);
+    }
+    if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {
+            return OK;
+    }
+
     PLOG(WARNING) << "Failed to unmount " << path;
 
-    sleep(5);
+    // Apps might still be handling eject request, so wait before
+    // we start sending signals
+
+    if(*storage_path) {
+        Process::killProcessesWithOpenFiles(storage_path, SIGINT);
+    }
     Process::killProcessesWithOpenFiles(cpath, SIGINT);
+    for(int i = 0; i < 10; i++)
+	{
+	    if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {
+                 return OK;
+	    }
 
-    if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {
-        return OK;
+            usleep(500000);
     }
+    if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {
+            return OK;
+    }
+
+
     PLOG(WARNING) << "Failed to unmount " << path;
 
-    sleep(5);
+    if(*storage_path) {
+        Process::killProcessesWithOpenFiles(storage_path, SIGTERM);
+    }
     Process::killProcessesWithOpenFiles(cpath, SIGTERM);
+    for(int i = 0; i < 10; i++)
+	{
+	    if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {
+                 return OK;
+	    }
 
-    if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {
-        return OK;
+            usleep(500000);
     }
+    if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {
+            return OK;
+    }
+
     PLOG(WARNING) << "Failed to unmount " << path;
 
-    sleep(5);
-    Process::killProcessesWithOpenFiles(cpath, SIGKILL);
-
-    if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {
-        return OK;
+    if(*storage_path) {
+        Process::killProcessesWithOpenFiles(storage_path, SIGKILL);
     }
+    Process::killProcessesWithOpenFiles(cpath, SIGKILL);
+    for(int i = 0; i < 10; i++)
+	{
+	    if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {
+                return OK;
+	    }
+
+            usleep(500000);
+    }
+    if (!umount2(cpath, UMOUNT_NOFOLLOW) || errno == EINVAL || errno == ENOENT) {
+            return OK;
+    }
+
     PLOG(ERROR) << "Failed to unmount " << path;
+    PLOG(ERROR) << "Giving up on unmount " << path;
 
     return -errno;
 }
@@ -239,14 +299,129 @@ static status_t readMetadata(const std::string& path, std::string& fsType,
 
 	        }                
             }
-
+	    else {
+		/*For adoptable storage device, assign its uuid to adoptable_sdcard  --Barton Zhang*/
+		strcat(mountPoint,"adoptable_sdcard");
+	    }
             fsUuid = mountPoint;
         }
 
         start = strstr(cline, "LABEL=");
         if (start != nullptr && sscanf(start + 6, "\"%127[^\"]\"", value) == 1) {
-            if(!strstr(value,"M-")) {
-               fsLabel = value;
+			//not support the volume label, which has chinese
+            if((!strstr(value,"M-")) && (!strstr(value,"?"))) {
+				int i = 0;
+				for(; (i < 128) && (value[i] != '\0'); i++)
+				{
+					fsLabel = value;
+					break;
+				}
+               
+            }
+        }
+    }
+
+    return OK;
+}
+
+static status_t readMetadata(const std::string& path, std::string& fsType,
+        std::string& fsUuid, std::string& fsLabel, bool untrusted, dev_t disk_device) {
+    fsType.clear();
+    fsUuid.clear();
+    fsLabel.clear();
+
+    std::vector<std::string> cmd;
+    cmd.push_back(kBlkidPath);
+    cmd.push_back("-c");
+    cmd.push_back("/dev/null");
+    cmd.push_back("-s");
+    cmd.push_back("TYPE");
+    cmd.push_back("-s");
+    cmd.push_back("UUID");
+    cmd.push_back("-s");
+    cmd.push_back("LABEL");
+    cmd.push_back(path);
+
+    LOG(ERROR) << "[Chandler Han Chandler Han debug info]";
+    std::vector<std::string> output;
+    status_t res = ForkExecvp(cmd, output, untrusted ? sBlkidUntrustedContext : sBlkidContext);
+    if (res != OK) {
+        LOG(WARNING) << "blkid failed to identify " << path;
+        return res;
+    }
+
+    char value[128];
+    for (auto line : output) {
+        // Extract values from blkid output, if defined
+        const char* cline = line.c_str();
+        char* start = strstr(cline, "TYPE=");
+        if (start != nullptr && sscanf(start + 5, "\"%127[^\"]\"", value) == 1) {
+            fsType = value;
+        }
+
+        start = strstr(cline, "UUID=");
+        if (start != nullptr && sscanf(start + 5, "\"%127[^\"]\"", value) == 1) {
+	/*
+	* Change UUID name to UUID-Major-Minor  --by Barton Zhang
+	*/
+	    char devicenode[128] = "";
+	    char mountPoint[128] = "";
+
+	    int minorBase = minor(disk_device);  //get minor base value of sd card.
+	
+            char* pos = strstr(path.c_str(), "public:");
+            if (pos != nullptr) {    
+                int len = 0;
+                char* p = pos;
+                for (; *p; p++) {
+		    len++;
+                    if(*p == '-') {
+		        break;
+                    }
+                }
+
+	        int minor = atoi( pos + len);
+                if (strstr(cline, "179")) {
+	            strcat(mountPoint,"ext_sdcard");
+	            if(minor <= minorBase)
+		        minor = 1;
+		    else
+		        minor = minor - minorBase;
+		    char buff[8] = "";
+		    sprintf(buff, "%d", minor);
+		    strcat(mountPoint, buff);
+	        }
+
+	        else {
+		    //strcat(mountPoint, "udisk");
+		    strcat(mountPoint, "udisk-id-");
+                    strcat(mountPoint, value);
+/*
+		    if(*(pos + len) == '0')
+			strcat(mountPoint, "1");
+		    else
+		        strcat(mountPoint, pos + len);
+*/
+	        }                
+            }
+	    else {
+		/*For adoptable storage device, assign its uuid to adoptable_sdcard  --Barton Zhang*/
+		strcat(mountPoint,"adoptable_sdcard");
+	    }
+            fsUuid = mountPoint;
+        }
+
+        start = strstr(cline, "LABEL=");
+        if (start != nullptr && sscanf(start + 6, "\"%127[^\"]\"", value) == 1) {
+			//not support the volume label, which has chinese
+            if((!strstr(value,"M-")) && (!strstr(value,"?"))) {
+				int i = 0;
+				for(; (i < 128) && (value[i] != '\0'); i++)
+				{
+					fsLabel = value;
+					break;
+				}
+               
             }
         }
     }
@@ -262,6 +437,11 @@ status_t ReadMetadata(const std::string& path, std::string& fsType,
 status_t ReadMetadataUntrusted(const std::string& path, std::string& fsType,
         std::string& fsUuid, std::string& fsLabel) {
     return readMetadata(path, fsType, fsUuid, fsLabel, true);
+}
+
+status_t ReadMetadataUntrusted(const std::string& path, std::string& fsType,
+        std::string& fsUuid, std::string& fsLabel, dev_t disk_device) {
+    return readMetadata(path, fsType, fsUuid, fsLabel, true, disk_device);
 }
 
 status_t ForkExecvp(const std::vector<std::string>& args) {

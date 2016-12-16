@@ -194,6 +194,11 @@ static int keymaster_create_key(struct crypt_mnt_ftr *ftr)
     keymaster0_device_t *keymaster0_dev = 0;
     keymaster1_device_t *keymaster1_dev = 0;
 
+    if (ftr->keymaster_blob_size != 0) {
+        SLOGI("Key is already created");
+        return 0;
+    }
+
     if (keymaster_init(&keymaster0_dev, &keymaster1_dev)) {
         SLOGE("Failed to init keymaster");
         return -1;

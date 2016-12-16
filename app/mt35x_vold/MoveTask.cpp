@@ -208,13 +208,14 @@ void MoveTask::run() {
     // NOTE: MountService watches for this magic value to know
     // that move was successful
     notifyProgress(82);
-    bringOnline(mFrom);
-    bringOnline(mTo);
 
     // Step 4: clean up old data
     if (execRm(fromPath, 85, 15) != OK) {
         goto fail;
     }
+
+    bringOnline(mFrom);
+    bringOnline(mTo);
 
     notifyProgress(kMoveSucceeded);
     release_wake_lock(kWakeLock);

@@ -62,11 +62,26 @@ PublicVolume::PublicVolume(dev_t device) :
     LOG(DEBUG) << "PublicVolume(" << getId() << ") is newed";
 }
 
+PublicVolume::PublicVolume(dev_t device, dev_t disk_dev) :
+		VolumeBase(Type::kPublic),  mDevice(device), disk_Device(disk_dev),mFusePid(0) {
+		setId(StringPrintf("public:%u-%u", major(device), minor(device)));
+		mDevPath = StringPrintf("/dev/block/vold/%s", getId().c_str());
+		LOG(DEBUG) << "PublicVolume   123456789 (" << getId() << ") is newed";
+	}
+
 PublicVolume::~PublicVolume() {
 }
 
 status_t PublicVolume::readMetadata() {
-    status_t res = ReadMetadataUntrusted(mDevPath, mFsType, mFsUuid, mFsLabel);
+    status_t res = ReadMetadataUntrusted(mDevPath, mFsType, mFsUuid, mFsLabel, disk_Device);
+
+	if(isStorageType(android::vold::VolumeBase::StorageType::kPhoneStorage))
+	{
+		char intsd_uuid[128] = "";
+		strcat(intsd_uuid,"internal_sdcard");
+		mFsUuid = intsd_uuid;
+	}
+	
     notifyEvent(ResponseCode::VolumeFsTypeChanged, mFsType);
     notifyEvent(ResponseCode::VolumeFsUuidChanged, mFsUuid);
     notifyEvent(ResponseCode::VolumeFsLabelChanged, mFsLabel);
@@ -242,6 +257,25 @@ status_t PublicVolume::doMount() {
         LOG(VERBOSE) << "Waiting for FUSE to spin up...";
         usleep(50000); // 50ms
     }
+
+/**
+	#ifndef MTK_SHARED_SDCARD
+    if(!strcmp(stableName.c_str(), "internal_sdcard"))
+    {
+        const char *source = StringPrintf("/storage/%s", stableName.c_str()).c_str();
+		const char *target = "/sdcard";
+		if(unlink(target))
+		{
+		    LOG(ERROR) << "Failed to unlink " << target << strerror(errno)<< "\n";
+			return OK;
+		}
+        if (TEMP_FAILURE_RETRY(symlink(source, target))) {
+            LOG(ERROR) << "Failed to link " << source << " to " << target << ": " << strerror(errno);
+			return -errno;
+        }
+    }
+    #endif
+**/
 
     return OK;
 }

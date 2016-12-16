@@ -84,6 +84,7 @@ public:
     State getState() { return mState; }
     const std::string& getPath() { return mPath; }
     const std::string& getInternalPath() { return mInternalPath; }
+    bool getCreated() { return mCreated; }
 
     status_t setDiskId(const std::string& diskId);
     status_t setPartGuid(const std::string& partGuid);
@@ -157,6 +158,7 @@ public:
     };
     void listVolumes(VolumeBase::Type type, std::list<std::string>& list);
     void setStorageType(const StorageType type);
+	bool isStorageType(const StorageType type);
     void createRemoveStorageTypeSettings(bool is_create);
     status_t share();
     status_t unshare();

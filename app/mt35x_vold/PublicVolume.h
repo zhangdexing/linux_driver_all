@@ -40,6 +40,7 @@ namespace vold {
 class PublicVolume : public VolumeBase {
 public:
     explicit PublicVolume(dev_t device);
+	explicit PublicVolume(dev_t device, dev_t disk_dev);
     virtual ~PublicVolume();
     status_t mountVolumeByNtfs3g(std::string devpath, std::string mntpath);
     std::string getNtfsPath();
@@ -57,6 +58,8 @@ protected:
 private:
     /* Kernel device representing partition */
     dev_t mDevice;
+
+	dev_t disk_Device;
     /* Block device path */
     std::string mDevPath;
     /* Mount point of raw partition */

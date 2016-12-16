@@ -140,7 +140,7 @@ status_t Disk::destroy() {
 }
 
 void Disk::createPublicVolume(dev_t device) {
-    auto vol = std::shared_ptr<VolumeBase>(new PublicVolume(device));
+    auto vol = std::shared_ptr<VolumeBase>(new PublicVolume(device, mDevice));
     if (mJustPartitioned) {
         LOG(DEBUG) << "Device just partitioned; silently formatting";
         vol->setSilent(true);
@@ -409,7 +409,7 @@ else {
     }
 
     // Ugly last ditch effort, treat entire disk as partition
-    if (table == Table::kUnknown || !foundParts) {
+    if (table == Table::kUnknown || !foundParts || mVolumes.size() == 0) {
         LOG(WARNING) << mId << " has unknown partition table; trying entire device";
 
         std::string fsType;

@@ -143,6 +143,32 @@ CommandListener::VolumeCmd::VolumeCmd() :
                  VoldCommand("volume") {
 }
 
+static void do_mount_secondary_volume_when_boot(std::string id, SocketClient *cli) {
+    VolumeManager *vm = VolumeManager::Instance();
+    auto vol = vm->findVolume(id);
+    if (vol == nullptr) {
+       cli->sendMsg(ResponseCode::CommandSyntaxError, "Unknown volume", false);
+       return;
+    }
+
+    int cmdNum1 = cli->getCmdNum();
+    int res = vol->mount();
+
+    int cmdNum2 = cli->getCmdNum();
+    if (cmdNum1 != cmdNum2){
+        cli->setCmdNum(cmdNum1);
+    }
+    if (!res) {
+        cli->sendMsg(ResponseCode::CommandOkay, "Command succeeded", false);
+    } else {
+        cli->sendMsg(ResponseCode::OperationFailed, "Command failed", false);
+    }
+
+    if (cmdNum1 != cmdNum2){
+       cli->setCmdNum(cmdNum2);
+    }
+}
+
 int CommandListener::VolumeCmd::runCommand(SocketClient *cli,
                                            int argc, char **argv) {
     dumpArgs(argc, argv, -1);
@@ -224,6 +250,13 @@ int CommandListener::VolumeCmd::runCommand(SocketClient *cli,
 
         vol->setMountFlags(mountFlags);
         vol->setMountUserId(mountUserId);
+
+        static bool isMountSecondaryStorageWhenBoot = true;
+        if (isMountSecondaryStorageWhenBoot && !(mountFlags & android::vold::VolumeBase::MountFlags::kPrimary)) {
+            isMountSecondaryStorageWhenBoot = false;
+            std::thread(&do_mount_secondary_volume_when_boot, id, cli).detach();
+            return 0;
+        }
 
         int res = vol->mount();
         if (res) {

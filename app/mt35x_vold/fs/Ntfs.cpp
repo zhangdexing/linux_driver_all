@@ -145,7 +145,7 @@ status_t Mount(const std::string& source, const std::string& target, bool ro,
 
 retry:
     sprintf(mountData,
-            "nodev,nosuid,uid=%d,gid=%d,fmask=%o,dmask=%o%s%s",
+            "nodev,nosuid,noatime,nodiratime,uid=%d,gid=%d,fmask=%o,dmask=%o%s%s",
             ownerUid, ownerGid, permMask, permMask,
             ro?"ro,":"", executable?"":"noexec");
 
