@@ -23,14 +23,14 @@
 #define GPS_POWER_ON  do{SOC_IO_Output(0, g_hw.gpio_gps_lna_en, 1);SOC_IO_Output(0, g_hw.gpio_gps_ant_power, 1);}while(0)
 #define GPS_POWER_OFF do{SOC_IO_Output(0, g_hw.gpio_gps_lna_en, 0);SOC_IO_Output(0, g_hw.gpio_gps_ant_power, 0);}while(0)
 
-#define DEVICE3_3_POWER_ON
-#define DEVICE3_3_POWER_OFF
+#define DEVICE3_3_POWER_ON do{}while(0)
+#define DEVICE3_3_POWER_OFF do{}while(0)
 #else
-#define GPS_POWER_ON
-#define GPS_POWER_OFF
+#define GPS_POWER_ON  do{SOC_IO_Output(0, g_hw.gpio_gps_lna_en, 1);}while(0)
+#define GPS_POWER_OFF do{SOC_IO_Output(0, g_hw.gpio_gps_lna_en, 0);}while(0)
 
-#define DEVICE3_3_POWER_ON    do{SOC_IO_Output(0, g_hw.gpio_gps_lna_en, 1);SOC_IO_Output(0, g_hw.gpio_gps_ant_power, 1);}while(0)
-#define DEVICE3_3_POWER_OFF  do{SOC_IO_Output(0, g_hw.gpio_gps_lna_en, 0);SOC_IO_Output(0, g_hw.gpio_gps_ant_power, 0);}while(0)
+#define DEVICE3_3_POWER_ON    do{SOC_IO_Output(0, g_hw.gpio_gps_ant_power, 1);}while(0)
+#define DEVICE3_3_POWER_OFF  do{SOC_IO_Output(0, g_hw.gpio_gps_ant_power, 0);}while(0)
 
 #endif
 #define MSM_DSI83_POWER_ON do{}while(0)
