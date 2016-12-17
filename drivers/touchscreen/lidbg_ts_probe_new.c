@@ -14,7 +14,6 @@ u8 *flyts_hal_fifo_buffer;
 static struct kfifo flyts_hal_data_fifo;
 
 
-#define GTP_RST_PORT_ACTIVE (1)
 #define USE_TS_NUM (0)
 
 static LIST_HEAD(lidbg_ts_config_list);

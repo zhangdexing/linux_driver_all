@@ -2253,6 +2253,8 @@ static void goodix_ts_suspend(struct goodix_ts_data *ts)
      * delay 48 + 10ms to ensure reliability
      */
     msleep(58);
+    SOC_IO_Output(0, GTP_RST_PORT, !GTP_RST_PORT_ACTIVE);
+    lidbg( "gt911 GTP_RST_PORT.disable\n");
 }
 
 /*******************************************************
@@ -2270,6 +2272,9 @@ static int goodix_ts_resume_thread(void *data)
     int ret = -1;
     struct goodix_ts_data *ts = data;
     FUNCTION_IN;
+    lidbg( "gt911 GTP_RST_PORT.enable\n");
+    SOC_IO_Output(0, GTP_RST_PORT, GTP_RST_PORT_ACTIVE);
+    msleep(100);
     ret = gtp_wakeup_sleep(ts);
 
 #if GTP_SLIDE_WAKEUP
