@@ -33,6 +33,7 @@ function soc_build_recovery()
 {
 	echo $FUNCNAME
 	cd $DBG_SYSTEM_DIR
+	cp -rf $DBG_SOC_PATH/$DBG_SOC/misc/Android.mk.recovery $DBG_SYSTEM_DIR/bootable/recovery/Android.mk
 	soc_prebuild && soc_build_common 'make recovery -j16'
 }
 
@@ -50,6 +51,8 @@ function soc_build_recoveryimage()
         rm -rf $DBG_OUT_PATH/mount.ntfs $DBG_OUT_PATH/flysemdriver.ko $DBG_OUT_PATH/mkfs.ntfs $DBG_OUT_PATH/bootanimation $DBG_OUT_PATH/lidbg_gps.ko
         rm -rf $DBG_OUT_PATH/tef6638.ko $DBG_OUT_PATH/saf7741.ko $DBG_OUT_PATH/sound_det.ko
         rm -rf $DBG_OUT_PATH/mount.exfat $DBG_OUT_PATH/fsck.ntfs $DBG_OUT_PATH/lidbg_umount
+
+	cp -rf $DBG_SOC_PATH/$DBG_SOC/misc/Android.mk.recovery $DBG_SYSTEM_DIR/bootable/recovery/Android.mk
 
 	cd $DBG_SYSTEM_DIR
 	if [ ! -d "$DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/.git/" ]; then
@@ -228,6 +231,8 @@ fi
 function soc_build_bootloader()
 {
 	echo $FUNCNAME
+        cp -rf $DBG_SOC_PATH/$DBG_SOC/misc/Android.mk.lk $DBG_BOOTLOADER_DIR/Android.mk
+        cp -rf $DBG_SOC_PATH/$DBG_SOC/misc/AndroidBoot.mk.lk $DBG_BOOTLOADER_DIR/AndroidBoot.mk.lk
 	if [ ! -d "$DBG_BOOTLOADER_DIR/flyaudio" ]; then
 		mkdir "$DBG_BOOTLOADER_DIR/flyaudio"
 	else
