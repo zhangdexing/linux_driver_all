@@ -2,6 +2,7 @@
 LIDBG_DEFINE;
 
 #define DEV_NAME	 "/dev/lidbg_pm0"
+#define TAG	 "rmtctrlpower:"
 #define rmtctrl_FIFO_SIZE (512)
 
 #define SCREE_OFF_JIFF (30)
@@ -57,7 +58,7 @@ void check_airplane_mode(void)
         g_var.suspend_airplane_mode = true;
 	 g_var.alarmtimer_interval = 60 ;
     }
-        lidbg("<suspend_airplane_mode =%d>\n", g_var.suspend_airplane_mode);
+        lidbg(TAG"<suspend_airplane_mode =%d>\n", g_var.suspend_airplane_mode);
 }
 
 static long long ktime_get_ms(void)
@@ -80,7 +81,7 @@ void rmtctrl_fifo_in(void)
 
 irqreturn_t acc_state_isr(int irq, void *dev_id)
 {
-    lidbg("Acc state irq is coming \n");
+    lidbg(TAG"Acc state irq is coming \n");
     if(!work_pending(&work_acc_status))
         schedule_work(&work_acc_status);
     return IRQ_HANDLED;
@@ -93,7 +94,7 @@ static void work_acc_status_handle(struct work_struct *work)
 	g_var.acc_counter++;
 
 	val = SOC_IO_Input(MCU_ACC_STATE_IO, MCU_ACC_STATE_IO, GPIO_CFG_PULL_UP);
-	lidbg(">>>>> work_acc_status_handle =======>>>[%s]-(acc_counter:%d |sleep_counter:%d)\n",(val == FLY_ACC_OFF)?"ACC_OFF":"ACC_ON",g_var.acc_counter/2,g_var.sleep_counter);
+	lidbg(TAG">>>>> work_acc_status_handle =======>>>[%s]-(acc_counter:%d |sleep_counter:%d)\n",(val == FLY_ACC_OFF)?"ACC_OFF":"ACC_ON",g_var.acc_counter/2,g_var.sleep_counter);
 
 	if(val == FLY_ACC_OFF)
 	{
@@ -112,7 +113,7 @@ static void work_acc_status_handle(struct work_struct *work)
 
 static void send_app_status(FLY_SYSTEM_STATUS state)
 {
-		lidbg("send_app_status:%d\n", state);
+		lidbg(TAG"send_app_status:%d\n", state);
 		atomic_set(&status, state);
 		rmtctrl_fifo_in();
 		wake_up_interruptible(&wait_queue);
@@ -120,23 +121,28 @@ static void send_app_status(FLY_SYSTEM_STATUS state)
 static void rmtctrl_timer_func(unsigned long data)
 {
 	if((g_var.acc_flag == FLY_ACC_OFF)&&(is_fake_acc_off == 0)){
-       lidbg("rmtctrl_timer_func: goto_sleep %ds later...[usb_request:%d,usb_cam_request:%d]\n", GOTO_SLEEP_JIFF,g_var.usb_request,g_var.usb_cam_request);
+       lidbg(TAG"rmtctrl_timer_func: goto_sleep %ds later...[usb_request:%d,usb_cam_request:%d]\n", GOTO_SLEEP_JIFF,g_var.usb_request,g_var.usb_cam_request);
 	//if(( g_var.usb_request == 0)&&(g_var.usb_cam_request == 0))
        	send_app_status(FLY_GOTO_SLEEP);
        mod_timer(&rmtctrl_timer,GOTO_SLEEP_TIME_S);
 	}
 	else
 	{
-		lidbg("g_var.acc_flag=%d\n",g_var.acc_flag);
+		lidbg(TAG"g_var.acc_flag=%d\n",g_var.acc_flag);
 	}
 	return;
 }
 
 static void acc_detect_timer_func(unsigned long data)
 {
-	lidbg("acc_detect_timer completed\n");
+	lidbg(TAG"acc_detect_timer completed\n");
 	if(!work_pending(&acc_state_work))
-	schedule_work(&acc_state_work);
+	{
+		lidbg(TAG"acc_detect_timer schedule_work\n");
+		schedule_work(&acc_state_work);
+	}
+	else
+		lidbg(TAG"acc_detect_timer work_pending\n");
 
 	return;
 }
@@ -144,21 +150,22 @@ static void acc_detect_timer_func(unsigned long data)
 void acc_status_handle(FLY_ACC_STATUS val)
 {
 	static u32 acc_count = 0;
+	lidbg(TAG"acc_status_handle: in val:%d\n",val);
 	if(val == FLY_ACC_ON){
 		wake_lock(&rmtctrl_wakelock);
 		#ifdef SOC_mt35x
 		MSM_DSI83_POWER_ON;
 		dsi83_resume();
 		#endif
-		lidbg("acc_status_handle: FLY_ACC_ON:acc_count=%d\n",acc_count++);
+		lidbg(TAG"acc_status_handle: FLY_ACC_ON:acc_count=%d\n",acc_count++);
 		g_var.acc_flag = FLY_ACC_ON;
 
-		lidbg("acc_status_handle: clear unormal wakeup count.\n");
+		lidbg(TAG"acc_status_handle: clear unormal wakeup count.\n");
 		system_wakeup_ms = 0;
 		repeat_times = 0;
 		system_unormal_wakeup_cnt = 0;
 		system_unormal_wakeuped_ms = 0;
-		lidbg("acc_status_handle: set acc.status to 0\n");
+		lidbg(TAG"acc_status_handle: set acc.status to 0\n");
 		lidbg_shell_cmd("setprop persist.lidbg.acc.status 0");
 		send_app_status(FLY_KERNEL_UP);//wakeup
 		lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON));
@@ -167,15 +174,15 @@ void acc_status_handle(FLY_ACC_STATUS val)
 		//LCD_ON;
 		send_app_status(FLY_SCREEN_ON);
 		fs_file_write(DEV_NAME, false, SCREEN_ON, 0, strlen(SCREEN_ON));
-		lidbg("acc_status_handle: FLY_ACC_ON del rmtctrl timer.\n");
+		lidbg(TAG"acc_status_handle: FLY_ACC_ON del rmtctrl timer.\n");
 		del_timer(&rmtctrl_timer);
 	}else{
-		lidbg("acc_status_handle: FLY_ACC_OFF\n");
+		lidbg(TAG"acc_status_handle: FLY_ACC_OFF\n");
 		g_var.acc_flag = FLY_ACC_OFF;
 
 		system_unormal_wakeuped_ms = ktime_get_ms();
 
-		lidbg("acc_status_handle: set acc.status to 1\n");
+		lidbg(TAG"acc_status_handle: set acc.status to 1\n");
 		lidbg_shell_cmd("setprop persist.lidbg.acc.status 1");
 		//if(g_var.is_fly == 0)
 		//	USB_WORK_DISENABLE;
@@ -190,7 +197,7 @@ void acc_status_handle(FLY_ACC_STATUS val)
 			send_app_status(FLY_GOTO_SLEEP);
 		else
 		{
-			lidbg("acc_status_handle: FLY_ACC_OFF, add rmtctrl timer.\n");
+			lidbg(TAG"acc_status_handle: FLY_ACC_OFF, add rmtctrl timer.\n");
 			if(g_var.acc_goto_sleep_time == 0)
 				mod_timer(&rmtctrl_timer,SCREE_OFF_TIME_S);
 			else
@@ -199,6 +206,7 @@ void acc_status_handle(FLY_ACC_STATUS val)
 		}
 		wake_unlock(&rmtctrl_wakelock);	//ensure KERNEL_UP FB be called before sleep
 	}
+	lidbg(TAG"acc_status_handle: exit val:%d\n",val);
 }
 
 static void acc_state_work_func(struct work_struct *work)
@@ -208,13 +216,15 @@ static void acc_state_work_func(struct work_struct *work)
 	val = SOC_IO_Input(MCU_ACC_STATE_IO, MCU_ACC_STATE_IO, GPIO_CFG_PULL_UP);
 	if(val != g_var.acc_flag)
 		acc_status_handle(val);
+	else
+		lidbg(TAG"acc_status_handle.val[%d]=g_var.acc_flag[%d],FLY_ACC_ON[%d].skip\n",val,g_var.acc_flag,FLY_ACC_ON);
 }
 
 static void rmtctrl_suspend(void)
 {
-	lidbg("rmtctrl_suspend set MCU_APP_GPIO_OFF\n");
+	lidbg(TAG"rmtctrl_suspend set MCU_APP_GPIO_OFF\n");
 
-	lidbg("acc_state_work_func: FLY_ACC_OFF, set prop AccWakedupState false\n");
+	lidbg(TAG"acc_state_work_func: FLY_ACC_OFF, set prop AccWakedupState false\n");
 	lidbg_shell_cmd("setprop persist.lidbg.AccWakedupState false");
 
 	send_app_status(FLY_DEVICE_DOWN);
@@ -227,9 +237,9 @@ static void rmtctrl_suspend(void)
 
 static void rmtctrl_resume(void)
 {
-	lidbg("rmtctrl_resume fb\n");
+	lidbg(TAG"rmtctrl_resume fb\n");
 
-	lidbg("acc_state_work_func: FLY_ACC_ON, set prop AccWakedupState true\n");
+	lidbg(TAG"acc_state_work_func: FLY_ACC_ON, set prop AccWakedupState true\n");
 	lidbg_shell_cmd("setprop persist.lidbg.AccWakedupState true"); //prop for stopping kill_process when ACC_ON
 
 	send_app_status(FLY_ANDROID_UP);
@@ -245,7 +255,7 @@ static void rmtctrl_resume(void)
 	}
 	
 	if((g_var.acc_flag == FLY_ACC_OFF)&&(is_fake_acc_off == 0)){
-		lidbg("rmtctrl_resume, g_var.acc_flag is FLY_ACC_OFF, add rmtctrl timer.\n");
+		lidbg(TAG"rmtctrl_resume, g_var.acc_flag is FLY_ACC_OFF, add rmtctrl timer.\n");
 		mod_timer(&rmtctrl_timer,AUTO_SLEEP_TIME_S);
 	}
 	return;
@@ -285,7 +295,7 @@ ssize_t  rmtctrl_read(struct file *filp, char __user *buffer, size_t size, loff_
 	int bytes;
 	int rmtctrl_state;
 	
-	lidbg("rmtctrl_read\n");
+	lidbg(TAG"rmtctrl_read\n");
 	if(kfifo_is_empty(&rmtctrl_state_fifo))
 	{
 	    if(wait_event_interruptible(wait_queue, !kfifo_is_empty(&rmtctrl_state_fifo)))
@@ -294,7 +304,7 @@ ssize_t  rmtctrl_read(struct file *filp, char __user *buffer, size_t size, loff_
 
 	if( kfifo_len(&rmtctrl_state_fifo) == 0)
 	{
-	    lidbg("copy_to_user ERR\n");
+	    lidbg(TAG"copy_to_user ERR\n");
 	    return -1;
 	}
 	down(&rmtctrl_sem);
@@ -303,7 +313,7 @@ ssize_t  rmtctrl_read(struct file *filp, char __user *buffer, size_t size, loff_
 
 	if (copy_to_user(buffer, &rmtctrl_state,  4))
 	{
-		lidbg("copy_to_user ERR\n");
+		lidbg(TAG"copy_to_user ERR\n");
 	}
 	return size;
 }
@@ -335,7 +345,7 @@ static int unormal_wakeup_handle(void)
 		system_unormal_wakeup_cnt++;
 
 		system_wakeup_ms = ktime_get_ms() - system_unormal_wakeuped_ms;  //tics ms after acc_off
-		lidbg("*** system wakeup %u(%u) times in %d(%u) msec, repeat_times %d***\n", system_unormal_wakeup_cnt, UNORMAL_WAKEUP_CNT, system_wakeup_ms, (UNORMAL_WAKEUP_TIME_MINU * 60 * 1000), repeat_times);
+		lidbg(TAG"*** system wakeup %u(%u) times in %d(%u) msec, repeat_times %d***\n", system_unormal_wakeup_cnt, UNORMAL_WAKEUP_CNT, system_wakeup_ms, (UNORMAL_WAKEUP_TIME_MINU * 60 * 1000), repeat_times);
 		if(system_unormal_wakeup_cnt > UNORMAL_WAKEUP_CNT){
 
 			if(system_wakeup_ms < (UNORMAL_WAKEUP_TIME_MINU * 60 * 1000)){
@@ -360,7 +370,7 @@ static int unormal_wakeup_handle(void)
 					}
 				}
 			}else
-				lidbg("System wakeup %d times in %d(%u) msec,system tics %lld, normal\n", system_unormal_wakeup_cnt, system_wakeup_ms, (UNORMAL_WAKEUP_TIME_MINU * 60 * 1000), ktime_get_ms());
+				lidbg(TAG"System wakeup %d times in %d(%u) msec,system tics %lld, normal\n", system_unormal_wakeup_cnt, system_wakeup_ms, (UNORMAL_WAKEUP_TIME_MINU * 60 * 1000), ktime_get_ms());
 
 			//count again
 			system_wakeup_ms = 0;
@@ -391,12 +401,12 @@ void update_acc_status(void)
     g_var.acc_flag = SOC_IO_Input(MCU_ACC_STATE_IO, MCU_ACC_STATE_IO, GPIO_CFG_PULL_UP);
     if(g_var.acc_flag == FLY_ACC_OFF)
     {
-    	lidbg("%s: set acc.status to 1\n",__FUNCTION__);
+    	lidbg(TAG"%s: set acc.status to 1\n",__FUNCTION__);
     	lidbg_shell_cmd("setprop persist.lidbg.acc.status 1");
    }
     else
     {
-       lidbg("%s: set acc.status to 0\n",__FUNCTION__);
+       lidbg(TAG"%s: set acc.status to 0\n",__FUNCTION__);
     	lidbg_shell_cmd("setprop persist.lidbg.acc.status 0");
     }
 
@@ -411,7 +421,7 @@ static int thread_check_acc_and_response_acc_off_delay(void *data)
    while(0==g_var.android_boot_completed)
     {
         ssleep(1);
-	 lidbg("wait for android_boot_completed.\n");
+	 lidbg(TAG"wait for android_boot_completed.\n");
     }
     update_acc_status();
 
@@ -433,7 +443,7 @@ static int thread_check_acc_and_response_acc_off_delay(void *data)
 
 	SOC_IO_Input(MCU_ACC_STATE_IO, MCU_ACC_STATE_IO, GPIO_CFG_PULL_UP);
 	SOC_IO_ISR_Add(MCU_ACC_STATE_IO, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, acc_state_isr, NULL);
-	lidbg("rmtctrl probe: enable_irq_wake %d\n",GPIO_TO_INT(MCU_ACC_STATE_IO));
+	lidbg(TAG"rmtctrl probe: enable_irq_wake %d\n",GPIO_TO_INT(MCU_ACC_STATE_IO));
 	enable_irq_wake(GPIO_TO_INT(MCU_ACC_STATE_IO));
 	
      return 1;
@@ -452,13 +462,13 @@ static int lidbg_rmtctrl_probe(struct platform_device *pdev)
 	rmtctrl_state_buffer = (unsigned int *)kmalloc(rmtctrl_FIFO_SIZE, GFP_KERNEL);
 	if(rmtctrl_state_buffer == NULL)
 	{
-	    lidbg("rmtctrl kmalloc state buffer error.\n");
+	    lidbg(TAG"rmtctrl kmalloc state buffer error.\n");
 	    return 0;
 	}
 	INIT_WORK(&acc_state_work, acc_state_work_func);
 
 	MCU_APP_GPIO_ON;
-	lidbg("rmtctrl probe: MCU_APP_GPIO_ON\n");
+	lidbg(TAG"rmtctrl probe: MCU_APP_GPIO_ON\n");
 
 	init_timer(&acc_detect_timer);
 	acc_detect_timer.function = acc_detect_timer_func;
@@ -473,7 +483,7 @@ static int lidbg_rmtctrl_probe(struct platform_device *pdev)
 	register_lidbg_notifier(&lidbg_rmtctrl_notifier);
 
 	lidbg_shell_cmd("setprop persist.lidbg.acc.status 0");
-	lidbg("rmtctrl probe: init prop AccWakedupState\n");
+	lidbg(TAG"rmtctrl probe: init prop AccWakedupState\n");
 	lidbg_shell_cmd("setprop persist.lidbg.AccWakedupState false");
 
 	wake_lock_init(&rmtctrl_wakelock, WAKE_LOCK_SUSPEND, "lidbg_rmtctrl");
@@ -507,7 +517,7 @@ static int rmtctrl_pm_resume(struct device *dev)
 {
     DUMP_FUN;
 
-	lidbg("rmtctrl_pm_resume, acc_io_state is %s\n", (g_var.acc_flag == FLY_ACC_ON)?"FLY_ACC_ON":"FLY_ACC_OFF");
+	lidbg(TAG"rmtctrl_pm_resume, acc_io_state is %s\n", (g_var.acc_flag == FLY_ACC_ON)?"FLY_ACC_ON":"FLY_ACC_OFF");
 //	if(g_var.system_status == FLY_KERNEL_DOWN)
 //		send_app_status(FLY_KERNEL_UP);
 	if(g_var.acc_flag == FLY_ACC_OFF)
@@ -518,7 +528,7 @@ static int rmtctrl_pm_resume(struct device *dev)
 		lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON));
 	}
 	if((g_var.acc_flag == FLY_ACC_OFF)&&(is_fake_acc_off == 0)){
-		lidbg("rmtctrl_pm_resume, acc_io_state is FLY_ACC_OFF, add rmtctrl timer.\n");
+		lidbg(TAG"rmtctrl_pm_resume, acc_io_state is FLY_ACC_OFF, add rmtctrl timer.\n");
 		mod_timer(&rmtctrl_timer,AUTO_SLEEP_TIME_S);
 	}
     return 0;
