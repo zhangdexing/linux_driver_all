@@ -124,6 +124,7 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_mcu_wp = 55,  //ap_state1
         .gpio_mcu_app = 9, //ap_state2
 	.gpio_request_fastboot = 82, //ap_state3
+	.gpio_ready = 85,//LPC_MSM4       P0_15      qcom-->lpc:gpio ready=1,else 0
 
         .gpio_ts_int = 10,
         .gpio_ts_rst = 146,
