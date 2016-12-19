@@ -27,6 +27,8 @@ u8 *lpc_data_for_hal;
 static int lpc_resume(struct device *dev);
 static int lpc_suspend(struct device *dev);
 
+static struct wake_lock lpc_wakelock;
+
 struct lpc_device
 {
     char *name;
@@ -60,7 +62,7 @@ struct lpc_device *dev;
 //#define  MCU_ADDR_R  0xA1
 //7 bit i2c addr
 #define  MCU_ADDR ( 0x50)
-
+ 
 int lpc_ping_test = 0;
 int lpc_ctrl_by_app = 0;
 #define LPC_DEBUG_LOG
@@ -80,9 +82,9 @@ int thread_lpc(void *data)
 
     while(1)
     {
-        if((lpc_work_en) && (lpc_ctrl_by_app == 0))
+        if((lpc_work_en) && (lpc_ctrl_by_app == 0) && (g_var.acc_flag == FLY_ACC_ON))
             LPC_CMD_NO_RESET;
-        msleep(5000);
+        msleep(1000*10);
     }
     return 0;
 }
@@ -357,7 +359,7 @@ BOOL actualReadFromMCU(BYTE *p, UINT length)
         {
 
 #ifdef LPC_DEBUG_LOG
-            pr_debug("More ");
+            pr_debug("LPC Read len=%d\n",length);
 #endif
             return TRUE;
         }
@@ -374,6 +376,8 @@ irqreturn_t MCUIIC_isr(int irq, void *dev_id)
 {
     if(!lpc_work_en)
         return IRQ_HANDLED;
+    //SOC_IO_ISR_Disable(MCU_IIC_REQ_GPIO);
+    wake_lock(&lpc_wakelock);
     schedule_work(&pGlobalHardwareInfo->FlyIICInfo.iic_work);
     return IRQ_HANDLED;
 }
@@ -388,6 +392,8 @@ static void workFlyMCUIIC(struct work_struct *work)
         actualReadFromMCU(buff, iReadLen);
         iReadLen = 16;
     }
+    //SOC_IO_ISR_Enable(MCU_IIC_REQ_GPIO);
+    wake_unlock(&lpc_wakelock);
 }
 
 
@@ -429,7 +435,7 @@ void mcuFirstInit(void)
 void LPCSuspend(void)
 {
 
-    SOC_IO_ISR_Disable(MCU_IIC_REQ_GPIO);
+    //SOC_IO_ISR_Disable(MCU_IIC_REQ_GPIO);
 }
 
 void LPCResume(void)
@@ -437,8 +443,8 @@ void LPCResume(void)
     BYTE buff[16];
     BYTE iReadLen = 12;
 
-    SOC_IO_ISR_Enable(MCU_IIC_REQ_GPIO);
-
+    //SOC_IO_ISR_Enable(MCU_IIC_REQ_GPIO);
+    wake_lock(&lpc_wakelock);
     //clear lpc i2c buffer
     while (SOC_IO_Input(MCU_IIC_REQ_GPIO, MCU_IIC_REQ_GPIO, 0) == 0)
     {
@@ -446,6 +452,8 @@ void LPCResume(void)
         actualReadFromMCU(buff, iReadLen);
         iReadLen = 16;
     }
+     wake_unlock(&lpc_wakelock);
+
 }
 
 void lpc_linux_sync(bool print, int mint, char *extra_info)
@@ -589,6 +597,8 @@ static int  lpc_probe(struct platform_device *pdev)
 
     DUMP_FUN;
     FS_REGISTER_INT(lpc_ping_en, "lpc_ping_en", 0, NULL);
+	
+    wake_lock_init(&lpc_wakelock, WAKE_LOCK_SUSPEND, "lpc_wakelock");
 
     lpc_data_for_hal = (u8 *)kmalloc(HAL_BUF_SIZE, GFP_KERNEL);
     fifo_buffer = (u8 *)kmalloc(FIFO_SIZE, GFP_KERNEL);
@@ -651,7 +661,8 @@ static void lpc_late_resume(struct early_suspend *handler) {}
 static int lpc_suspend(struct device *dev)
 {
     DUMP_FUN;
-    lpc_work_en = false;
+    //lpc_work_en = false;
+    //LPCSuspend();
     return 0;
 }
 
@@ -662,6 +673,8 @@ static int lpc_resume(struct device *dev)
 #else
     lpc_work_en = true;
 #endif
+  if((!g_var.is_fly) && (g_var.recovery_mode == 0) )
+     LPCResume();
     return 0;
 }
 
