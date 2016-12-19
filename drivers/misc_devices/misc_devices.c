@@ -297,6 +297,7 @@ static int misc_dev_dev_event(struct notifier_block *this,
     break;
 
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_DOWN):
+		DEVICE3_3_POWER_OFF;
 #ifdef DISABLE_USB_WHEN_DEVICE_DOWN
         CREATE_KTHREAD(thread_usb_disk_disable_delay, NULL);
 #endif
@@ -338,6 +339,7 @@ static int misc_dev_dev_event(struct notifier_block *this,
 #endif
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_UP):
+	 DEVICE3_3_POWER_ON;
 	#ifdef MUC_CONTROL_DSP
 	  if(!g_var.recovery_mode && !g_var.is_fly)
 	    	CREATE_KTHREAD(thread_sound_dsp_init, NULL);
@@ -720,7 +722,7 @@ static int soc_dev_remove(struct platform_device *pdev)
 }
 static int  soc_dev_suspend(struct platform_device *pdev, pm_message_t state)
 {
-    lidbg("soc_dev_suspend.DEVICE3_3_POWER_OFF\n");
+    lidbg("soc_dev_suspend\n");
 
     if(!g_var.is_fly)
     {
@@ -731,14 +733,12 @@ static int  soc_dev_suspend(struct platform_device *pdev, pm_message_t state)
     HAL_NOT_READY;
     SET_GPIO_READY_SUSPEND;
     SET_HAL_READY_SUSPEND;
-    DEVICE3_3_POWER_OFF;
     return 0;
 
 }
 static int soc_dev_resume(struct platform_device *pdev)
 {
-    lidbg("soc_dev_resume .DEVICE3_3_POWER_ON\n");
-    DEVICE3_3_POWER_ON;
+    lidbg("soc_dev_resume \n");
     if(!g_var.is_fly)
     {
         //button_resume();
