@@ -150,8 +150,9 @@ static void acc_detect_timer_func(unsigned long data)
 void acc_status_handle(FLY_ACC_STATUS val)
 {
 	static u32 acc_count = 0;
-	lidbg(TAG"acc_status_handle: in val:%d\n",val);
+	lidbg(TAG"acc_status_handle: in val:%d,FLY_ACC_ON:%d\n",val,FLY_ACC_ON);
 	if(val == FLY_ACC_ON){
+		lidbg(TAG"acc_status_handle: FLY_ACC_ON\n");
 		wake_lock(&rmtctrl_wakelock);
 		#ifdef SOC_mt35x
 		MSM_DSI83_POWER_ON;
