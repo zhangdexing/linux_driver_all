@@ -697,6 +697,9 @@ static int soc_dev_probe(struct platform_device *pdev)
    
     GPIO_IS_READY;
     SET_GPIO_READY_SUSPEND;
+	
+    if((!g_var.is_fly) && (g_var.recovery_mode == 0) )
+	   HAL_IS_READY;
     //SET_HAL_READY_SUSPEND;
 #ifdef PLATFORM_ID_7
     if(0)
@@ -745,7 +748,12 @@ static int soc_dev_resume(struct platform_device *pdev)
         led_resume();
     }
     GPIO_IS_READY;
-    HAL_NOT_READY;
+
+    if((!g_var.is_fly) && (g_var.recovery_mode == 0) )
+	   HAL_IS_READY;
+    else
+          HAL_NOT_READY;
+
     return 0;
 }
 struct platform_device soc_devices =
