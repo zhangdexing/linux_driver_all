@@ -150,8 +150,6 @@ public class FlyBootService extends Service {
     private boolean isSimCardReady=false;
     private boolean isFirstBoot=true;
 
-    private BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-
     String mInternelBlackList[] = {
             "com.qti.cbwidget"
     };
@@ -279,11 +277,7 @@ public class FlyBootService extends Service {
 									enterAirplaneMode();
 								}else
 									LIDBG_PRINT("FlyBootService FBS_GOTO_SLEEP disable AirplaneMode\n");
-								if (mBtAdapter.isEnabled())
-								{
-									LIDBG_PRINT("FlyBootService bluetooth mBtAdapter.disable()\n");
-									mBtAdapter.disable();
-								}
+								setBlutetoothState(false);
 								LIDBG_PRINT("FlyBootService isWifiApEnabled:"+isWifiApEnabled+"/isWifiEnabled:"+isWifiEnabled+"\n");
 								if (isWifiApEnabled)
 								{
@@ -525,7 +519,10 @@ public class FlyBootService extends Service {
 				setLocationMode(false);
 			break;
 			case 24:
-				mBtAdapter.disable();
+				setBlutetoothState(false);
+			break;
+			case 25:
+				setBlutetoothState(true);
 			break;
 								
 			default:
@@ -1266,6 +1263,21 @@ public static void releaseBrightWakeLock()
 		return (mTelephonyManager.getSimState() == TelephonyManager.SIM_STATE_READY);
 	}
 ///////////////////////////////////
+	public boolean setBlutetoothState(boolean enable)
+	{
+		BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+		if (mBtAdapter.isEnabled())
+		{
+			LIDBG_PRINT("FlyBootService bluetooth mBtAdapter.disable()\n");
+			mBtAdapter.disable();
+		}
+		else
+		{
+			LIDBG_PRINT("FlyBootService bluetooth mBtAdapter.enable()\n");
+			mBtAdapter.enable();
+		}
+		return true;
+	}
 	public boolean setWifiApState(boolean enable)
 	{
 		String msg = "info:";
