@@ -209,7 +209,7 @@ void set_system_performance(int type)
 
 int thread_thermal(void *data)
 {
-    int cur_temp, i, max_freq,maxcpu,mincpu,cpu_temp;
+    int cur_temp, i, max_freq,maxcpu,mincpu,cpu_temp,cpufreq;
     DUMP_FUN;
     lidbg_shell_cmd("chmod 444 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq &");
     //set_cpu_governor(0);
@@ -280,13 +280,19 @@ int thread_thermal(void *data)
 
         log_temp();
         cur_temp = soc_temp_get(g_hw.mem_sensor_num);
-	 cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
+        cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
         maxcpu= get_file_int(CPU_MAX_NODE);
         mincpu= get_file_int(CPU_MIN_NODE);
-	 max_freq = get_scaling_max_freq();
+        max_freq = get_scaling_max_freq();
+	for(i = 0; i < 4; i++)
+	{
+	    cpufreq = cpufreq_get(i);
+	    if(cpufreq > 0)
+	        break;
+	}
 	if(0==g_var.android_boot_completed)
-        		lidbg("max_freq=%d,maxcpu=%d,mincpu=%d,mem_temp=%d,cpu_temp=%d,freq=%d,status=%s",max_freq,maxcpu,mincpu,cur_temp, cpu_temp, cpufreq_get(0), get_cpu_status());
-       pr_debug("max_freq=%d,maxcpu=%d,mincpu=%d,mem_temp=%d,cpu_temp=%d,freq=%d,status=%s",max_freq,maxcpu,mincpu,cur_temp, cpu_temp, cpufreq_get(0), get_cpu_status());
+        		lidbg("max_freq=%d,maxcpu=%d,mincpu=%d,mem_temp=%d,cpu_temp=%d,freq=%d,status=%s",max_freq,maxcpu,mincpu,cur_temp, cpu_temp, cpufreq, get_cpu_status());
+       pr_debug("max_freq=%d,maxcpu=%d,mincpu=%d,mem_temp=%d,cpu_temp=%d,freq=%d,status=%s",max_freq,maxcpu,mincpu,cur_temp, cpu_temp, cpufreq, get_cpu_status());
 		
 	if(0)
         //fan ctrl
