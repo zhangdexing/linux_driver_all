@@ -285,8 +285,8 @@ int thread_thermal(void *data)
         mincpu= get_file_int(CPU_MIN_NODE);
 	 max_freq = get_scaling_max_freq();
 	if(0==g_var.android_boot_completed)
-        		lidbg("mem_temp=%d,cpu_temp=%d,freq=%d,max_freq=%d,maxcpu=%d,mincpu=%d,status=%s",cur_temp, cpu_temp, cpufreq_get(0), max_freq,maxcpu,mincpu,get_cpu_status());
-       pr_debug("mem_temp=%d,cpu_temp=%d,freq=%d,max_freq=%d,maxcpu=%d,mincpu=%d,status=%s",cur_temp, cpu_temp, cpufreq_get(0), max_freq,maxcpu,mincpu,get_cpu_status());
+        		lidbg("max_freq=%d,maxcpu=%d,mincpu=%d,mem_temp=%d,cpu_temp=%d,freq=%d,status=%s",max_freq,maxcpu,mincpu,cur_temp, cpu_temp, cpufreq_get(0), get_cpu_status());
+       pr_debug("max_freq=%d,maxcpu=%d,mincpu=%d,mem_temp=%d,cpu_temp=%d,freq=%d,status=%s",max_freq,maxcpu,mincpu,cur_temp, cpu_temp, cpufreq_get(0), get_cpu_status());
 		
 	if(0)
         //fan ctrl
