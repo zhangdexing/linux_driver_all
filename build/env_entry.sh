@@ -677,7 +677,7 @@ case "$DBG_PLATFORM_ID" in
         export OTA_PACKAGE_NAME=msm8974-ota-eng.*.zip
         export DBG_SOC=mt35x
         export TEST_PACKAGE_PATH=//192.168.128.128/8974/升级包发布/专项测试包
-        export REPOSITORY_WORK_BRANCH=v3
+        export REPOSITORY_WORK_BRANCH=mt3561s_release
         export SYSTEM_WORK_BRANCH=mt3561s_release
         export MAKE_PAKG_NUM=19
         export NON_HLOS_FILE_PATH=$BP_SOURCE_PATH/common/build/bin/asic
