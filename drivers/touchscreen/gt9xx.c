@@ -2200,10 +2200,22 @@ static const struct dev_pm_ops goodix_ts_dev_pm_ops =
     .resume = goodix_ac_ts_resume,
 };
 #else
+
+static int goodix_ac_ts_suspend(struct device *dev)
+{
+    SOC_IO_Output(0, GTP_RST_PORT, !GTP_RST_PORT_ACTIVE);
+    return 0;
+}
+
+static int goodix_ac_ts_resume(struct device *dev)
+{
+    return 0;
+}
+
 static const struct dev_pm_ops goodix_ts_dev_pm_ops =
 {
-    .suspend = NULL,
-    .resume = NULL,
+    .suspend = goodix_ac_ts_suspend,
+    .resume = goodix_ac_ts_resume,
 };
 #endif
 
