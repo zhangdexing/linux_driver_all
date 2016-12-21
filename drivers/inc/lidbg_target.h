@@ -133,6 +133,9 @@ struct hw_version_specific
 	//accel
 	int gpio_accel_int1;
 
+	int gpio_level_conversion_en;
+
+
 };
 extern struct hw_version_specific g_hw_version_specific[];
 

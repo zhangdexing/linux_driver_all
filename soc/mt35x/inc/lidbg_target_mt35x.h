@@ -165,6 +165,16 @@
 			}while(0)
 
 
+#define LEVEL_CONVERSION_ENABLE do{\
+			check_gpio(g_hw.gpio_level_conversion_en);\
+			SOC_IO_Output(0, g_hw.gpio_level_conversion_en, 1);\
+	}while(0)
+
+#define LEVEL_CONVERSION_DISABLE do{\
+			check_gpio(g_hw.gpio_level_conversion_en);\
+			SOC_IO_Output(0, g_hw.gpio_level_conversion_en, 0);\
+	}while(0)
+	
 #define USB_FRONT_WORK_ENABLE
 
 #define MSM_DSI83_DISABLE

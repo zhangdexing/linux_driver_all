@@ -158,6 +158,17 @@
 				SOC_IO_Suspend_Config(g_hw.gpio_usb_id,GPIOMUX_OUT_HIGH,GPIO_CFG_NO_PULL,GPIOMUX_DRV_2MA);\
 		}while(0)
 
+#define LEVEL_CONVERSION_ENABLE do{\
+			check_gpio(g_hw.gpio_level_conversion_en);\
+			SOC_IO_Output(0, g_hw.gpio_level_conversion_en, 1);\
+	}while(0)
+
+#define LEVEL_CONVERSION_DISABLE do{\
+			check_gpio(g_hw.gpio_level_conversion_en);\
+			SOC_IO_Output(0, g_hw.gpio_level_conversion_en, 0);\
+	}while(0)
+
+
 #if (defined(PLATFORM_msm8909) || defined(PLATFORM_msm8996))
 #define USB_POWER_FRONT_ENABLE do{\
 			lidbg("gpio_usb_front_en\n");\

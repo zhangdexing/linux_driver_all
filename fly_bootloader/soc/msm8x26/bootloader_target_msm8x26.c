@@ -152,6 +152,7 @@ struct bootloader_hw_config g_hw_info[] =
 	.gpio_mcu_wp = 25,
         .gpio_ready = 28,
         .gpio_hal_ready = 26,
+	.gpio_level_conversion_en = 10,
         .dbg_uart_port = "console=ttyHSL1,115200,n8 androidboot.console=ttyHSL1 ",
     }
 };

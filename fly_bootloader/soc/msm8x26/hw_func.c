@@ -6,6 +6,10 @@ extern void dsi83_init();
 void flyaudio_hw_init(void)
 {
 	dprintf(INFO, "Flyaudio hardware init. \n");
+#ifdef BOOTLOADER_MSM8996
+	gpio_set_direction(g_bootloader_hw.gpio_level_conversion_en, GPIO_OUTPUT);
+	gpio_set_val(g_bootloader_hw.gpio_level_conversion_en, 1);
+#endif
 	gpio_set_direction(g_bootloader_hw.gpio_mcu_wp, GPIO_OUTPUT);
 	gpio_set_val(g_bootloader_hw.gpio_mcu_wp, 0);//set to alive
 

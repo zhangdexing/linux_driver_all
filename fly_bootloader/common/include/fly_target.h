@@ -53,6 +53,7 @@ struct bootloader_hw_config
     int gpio_mcu_wp;
     int gpio_ready;
     int gpio_hal_ready;
+    int gpio_level_conversion_en
     char *dbg_uart_port;
 };
 

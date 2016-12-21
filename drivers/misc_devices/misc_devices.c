@@ -726,7 +726,7 @@ static int soc_dev_remove(struct platform_device *pdev)
 static int  soc_dev_suspend(struct platform_device *pdev, pm_message_t state)
 {
     lidbg("soc_dev_suspend\n");
-
+    LEVEL_CONVERSION_DISABLE;
     if(!g_var.is_fly)
     {
         //button_suspend();
@@ -745,14 +745,16 @@ static int soc_dev_resume(struct platform_device *pdev)
     if(!g_var.is_fly)
     {
         //button_resume();
-        led_resume();
     }
+     led_resume();
     GPIO_IS_READY;
 
     if((!g_var.is_fly) && (g_var.recovery_mode == 0) )
 	   HAL_IS_READY;
     else
           HAL_NOT_READY;
+	
+    LEVEL_CONVERSION_ENABLE;
 
     return 0;
 }
