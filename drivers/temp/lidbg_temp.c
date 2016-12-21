@@ -34,7 +34,7 @@ int thread_limit_temp(void *data)
     	 mem_temp = soc_temp_get(g_hw.mem_sensor_num);
     	 cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
 
-        pr_debug( "%s:%d,%d,%d,%d,%s\n", __FUNCTION__,mem_temp, cpu_temp,get_scaling_max_freq(), cpufreq_get(0),get_cpu_status());
+        pr_debug( "%s:%d,%d,%d,%d,%s\n", __FUNCTION__,mem_temp, cpu_temp,get_scaling_max_freq(), SOC_Get_CpuFreq(),get_cpu_status());
 #ifdef PLATFORM_msm8226
         lidbg_readwrite_file(FREQ_MAX_NODE, NULL, "600000", strlen("600000"));
 #elif defined(PLATFORM_msm8909)
@@ -149,7 +149,7 @@ void log_temp(void)
     )
     {
 
-        lidbg_fs_log(TEMP_LOG_PATH, "%d,%d,%d\n", cur_temp, get_scaling_max_freq(), cpufreq_get(0));
+        lidbg_fs_log(TEMP_LOG_PATH, "%d,%d,%d\n", cur_temp, get_scaling_max_freq(), SOC_Get_CpuFreq());
         old_temp = cur_temp;
     }
 
@@ -161,7 +161,7 @@ int thread_show_temp(void *data)
     while(1)
     {
         int cur_temp = soc_temp_get(g_hw.mem_sensor_num);
-        lidbg( "%d,%d,%d,%s\n", cur_temp, get_scaling_max_freq(), cpufreq_get(0),get_cpu_status());
+        lidbg( "%d,%d,%d,%s\n", cur_temp, get_scaling_max_freq(), SOC_Get_CpuFreq(),get_cpu_status());
         msleep(1000);
     }
 }
@@ -221,7 +221,7 @@ int thread_thermal(void *data)
             //set_cpu_governor(1);
             max_freq = get_scaling_max_freq();
             cur_temp = soc_temp_get(g_hw.cpu_sensor_num);
-            lidbg("cpu_temp=%d,freq=%d,maxfreq=%d,%s\n", cur_temp, cpufreq_get(0),max_freq,get_cpu_status());
+            lidbg("cpu_temp=%d,freq=%d,maxfreq=%d,%s\n", cur_temp, SOC_Get_CpuFreq(),max_freq,get_cpu_status());
             ssleep(2);
         }
     }
@@ -284,12 +284,8 @@ int thread_thermal(void *data)
         maxcpu= get_file_int(CPU_MAX_NODE);
         mincpu= get_file_int(CPU_MIN_NODE);
         max_freq = get_scaling_max_freq();
-	for(i = 0; i < 4; i++)
-	{
-	    cpufreq = cpufreq_get(i);
-	    if(cpufreq > 0)
-	        break;
-	}
+	cpufreq=SOC_Get_CpuFreq();
+
 	if(0==g_var.android_boot_completed)
         		lidbg("max_freq=%d,maxcpu=%d,mincpu=%d,mem_temp=%d,cpu_temp=%d,freq=%d,status=%s",max_freq,maxcpu,mincpu,cur_temp, cpu_temp, cpufreq, get_cpu_status());
        pr_debug("max_freq=%d,maxcpu=%d,mincpu=%d,mem_temp=%d,cpu_temp=%d,freq=%d,status=%s",max_freq,maxcpu,mincpu,cur_temp, cpu_temp, cpufreq, get_cpu_status());
@@ -330,7 +326,7 @@ int thread_thermal(void *data)
         if(g_hw.thermal_ctrl_en == 0)
         {
             if(cpu_temp > 85)
-                lidbg("temp>85:%d,freq:%d,%s\n", cpu_temp, cpufreq_get(0),get_cpu_status());
+                lidbg("temp>85:temp:%d,freq:%d,cpu:%s\n", cpu_temp, SOC_Get_CpuFreq(),get_cpu_status());
             continue;
         }
 
@@ -353,7 +349,7 @@ thermal_ctrl:
 		                lidbg_readwrite_file(FREQ_MAX_NODE, NULL, g_hw.cpu_freq_thermal[i].limit_freq_string, strlen(g_hw.cpu_freq_thermal[i].limit_freq_string));
 		                if(g_hw.gpu_max_freq_node != NULL)
 		                    lidbg_readwrite_file(g_hw.gpu_max_freq_node, NULL, g_hw.cpu_freq_thermal[i].limit_gpu_freq_string, strlen(g_hw.cpu_freq_thermal[i].limit_gpu_freq_string));
-		                lidbg("set max freq to: %d,mem_temp:%d,cpu_temp:%d,temp_offset:%d,cpufreq=%d\n", g_hw.cpu_freq_thermal[i].limit_freq, cur_temp,cpu_temp, temp_offset,cpufreq_get(0));
+		                lidbg("set max freq to: %d,mem_temp:%d,cpu_temp:%d,temp_offset:%d,cpufreq=%d\n", g_hw.cpu_freq_thermal[i].limit_freq, cur_temp,cpu_temp, temp_offset,SOC_Get_CpuFreq());
 		}
 		if(g_hw.cpu_freq_thermal[i].max_cpu>0)
 		{
@@ -546,7 +542,7 @@ static int temp_ops_resume(struct device *dev)
 	mincpu= get_file_int(CPU_MIN_NODE);
 	max_freq = get_scaling_max_freq();
 
-	lidbg("mem_temp=%d,cpu_temp=%d,freq=%d,max_freq=%d,maxcpu=%d,mincpu=%d,status=%s",cur_temp, cpu_temp, cpufreq_get(0), max_freq,maxcpu,mincpu,get_cpu_status());
+	lidbg("mem_temp=%d,cpu_temp=%d,freq=%d,max_freq=%d,maxcpu=%d,mincpu=%d,status=%s",cur_temp, cpu_temp, SOC_Get_CpuFreq(), max_freq,maxcpu,mincpu,get_cpu_status());
 
 	return 0;
 }

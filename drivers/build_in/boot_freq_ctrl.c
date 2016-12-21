@@ -114,10 +114,15 @@ static int thread_freq_limit(void *data)
 
     while(ctrl_en)
     {
-        int tmp;
+        int tmp,i;
         long temp;
         u32 max_freq = 0;
-        tmp = cpufreq_get(0); //cpufreq.c
+	for(i = 0; i < 4; i++)
+	{
+	    tmp = cpufreq_get(i); //cpufreq.c
+	    if(tmp > 0)
+	        break;
+	}
 
         max_freq = get_file_int(FREQ_MAX_NODE);
 

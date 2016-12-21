@@ -7,9 +7,9 @@ int thread_log_temp(void *data)
     int tmp, cur_temp;
     while(1)
     {
-        tmp = cpufreq_get(0);
+        tmp = SOC_Get_CpuFreq();
         cur_temp = soc_temp_get(g_hw.cpu_sensor_num);
-        lidbg_fs_log(TEMP_LOG_PATH,  "%d,%d\n", cur_temp, cpufreq_get(0));
+        lidbg_fs_log(TEMP_LOG_PATH,  "%d,%d\n", cur_temp, tmp);
         msleep(1000);
     }
 }

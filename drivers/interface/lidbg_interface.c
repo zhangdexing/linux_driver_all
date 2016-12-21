@@ -291,15 +291,19 @@ void iSOC_System_Status(FLY_SYSTEM_STATUS status)
 
 int iSOC_Get_CpuFreq(void)
 {
-    int cpu_freq;
+    int cpu_freq, i;
     /*
     	char buf[16];
         lidbg_readwrite_file("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq", buf, NULL, 16);
         cpu_freq = simple_strtoul(buf, 0, 0);
         g_var.cpu_freq = cpu_freq;
     */
-    cpu_freq = cpufreq_get(0);
-
+    for(i = 0; i < 4; i++)
+    {
+        cpu_freq = cpufreq_get(i);
+        if(cpu_freq > 0)
+            break;
+    }
     return cpu_freq;
 }
 
