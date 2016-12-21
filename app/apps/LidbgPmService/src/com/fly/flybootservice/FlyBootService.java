@@ -524,7 +524,13 @@ public class FlyBootService extends Service {
 			case 25:
 				setBlutetoothState(true);
 			break;
-								
+			case 26:
+				LIDBG_PRINT("ACTION_BOOT_COMPLETED\n");
+				Intent intentBoot = new Intent(Intent.ACTION_BOOT_COMPLETED);
+				intentBoot.putExtra("flyauduio_accon", "accon");
+				sendBroadcast(intentBoot);
+			break;
+					
 			default:
 			LIDBG_PRINT("BroadcastReceiver.action:unkown"+action+"\n");
 			break;
