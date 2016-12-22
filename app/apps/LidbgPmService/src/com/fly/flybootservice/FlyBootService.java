@@ -1271,18 +1271,24 @@ public static void releaseBrightWakeLock()
 ///////////////////////////////////
 	public boolean setBlutetoothState(boolean enable)
 	{
-		BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
-		if (mBtAdapter.isEnabled())
-		{
-			LIDBG_PRINT("FlyBootService bluetooth mBtAdapter.disable()\n");
-			mBtAdapter.disable();
-		}
-		else
-		{
-			LIDBG_PRINT("FlyBootService bluetooth mBtAdapter.enable()\n");
-			mBtAdapter.enable();
-		}
-		return true;
+	    BluetoothAdapter mBtAdapter = BluetoothAdapter.getDefaultAdapter();
+	    if (enable)
+	    {
+	        if(!mBtAdapter.isEnabled())
+	        {
+	            LIDBG_PRINT("FlyBootService bluetooth mBtAdapter.enable():oldstate:" + mBtAdapter.isEnabled() + "\n");
+	            mBtAdapter.enable();
+	        }
+	    }
+	    else
+	    {
+	        if(mBtAdapter.isEnabled())
+	        {
+	            LIDBG_PRINT("FlyBootService bluetooth mBtAdapter.disable():oldstate:" + mBtAdapter.isEnabled()+ "\n");
+	            mBtAdapter.disable();
+	        }
+	    }
+	    return true;
 	}
 	public boolean setWifiApState(boolean enable)
 	{
