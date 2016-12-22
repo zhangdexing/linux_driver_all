@@ -34,6 +34,7 @@ import android.os.RemoteException;
 import android.hardware.usb.UsbAccessory;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.bluetooth.BluetoothAdapter;
 
 public class LidbgCommenLogicService extends Service
 {
@@ -63,6 +64,7 @@ public class LidbgCommenLogicService extends Service
         filter.addAction(Intent.ACTION_MEDIA_SCANNER_STARTED);
         filter.addAction(Intent.ACTION_MEDIA_SCANNER_FINISHED);
         filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         filter.setPriority(Integer.MAX_VALUE);
         mLidbgCommenLogicService.registerReceiver(myReceiver, filter);
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
@@ -295,6 +297,25 @@ public class LidbgCommenLogicService extends Service
                 printKernelMsg("airplaneModeEnabled="+intent.getBooleanExtra("state", false)+"\n");
                 return;
             }
+            else if (intent.getAction().equals(BluetoothAdapter.ACTION_STATE_CHANGED))
+            {
+                //printKernelMsg("BluetoothState="+intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0)+"\n");
+                switch(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0)){
+                case BluetoothAdapter.STATE_TURNING_ON:
+                    printKernelMsg("BluetoothState=STATE_TURNING_ON\n");
+                    break;
+                case BluetoothAdapter.STATE_ON:
+                    printKernelMsg("BluetoothState=STATE_ON\n");
+                    break;
+                case BluetoothAdapter.STATE_TURNING_OFF:
+                    printKernelMsg("BluetoothState=STATE_TURNING_OFF\n");
+                    break;
+                case BluetoothAdapter.STATE_OFF:
+                    printKernelMsg("BluetoothState=STATE_OFF\n");
+                    break;
+                }
+                return;
+            }
 
             if (!intent.hasExtra("action"))
             {
@@ -386,7 +407,7 @@ public class LidbgCommenLogicService extends Service
     public void printKernelMsg(String string)
     {
         FileWrite("/dev/lidbg_msg", false, false, "LidbgCommenLogic: " + string
-                  + "\n");
+                  + (string.endsWith("\n")?"":"\n"));
     }
 
     public boolean FileWrite(String file_path, boolean creatit, boolean append,
