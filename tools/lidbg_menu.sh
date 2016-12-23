@@ -68,7 +68,14 @@ fi
 	./build_cfg.sh $DBG_SOC $BUILD_VERSION $DBG_PLATFORM
 	cd $DBG_BUILD_PATH && ./clean.sh
 	cd $DBG_HAL_PATH   && ./build_all.sh
-	cd $DBG_BUILD_PATH && ./build.sh
+	if [ $? -eq 0 ];then
+		cd $DBG_BUILD_PATH && ./build.sh
+	else
+	  	echo "=================================="
+	  	echo "error：编译app时出现错误，停止已停止"
+	  	echo "=================================="
+	  	exit 
+	fi
 }
 
 
