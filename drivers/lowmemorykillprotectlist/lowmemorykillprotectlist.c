@@ -4,6 +4,8 @@ extern char **lmk_white_list;
 
 char *lmk_protect_list[] =
 {
+	".service:remote",
+	"chips.bluetooth",
 	"ice:pushservice",
 	"o.clientservice",
 	"d.process.acore",
