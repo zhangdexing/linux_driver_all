@@ -10,7 +10,42 @@ int ptn_read(char *ptn_name, unsigned int offset, unsigned long len, unsigned ch
     unsigned n = 0;
     int index = INVALID_PTN;
     unsigned long long ptn = 0;
+#ifdef BOOTLOADER_MSM8996
+    unsigned long long size = 0;
+    unsigned char lun = 0;
+    index = partition_get_index(ptn_name);
+    lun = partition_get_lun(index);
+    mmc_set_lun(lun);
+    size = partition_get_size(index);
+    ptn = partition_get_offset(index);
+    if(ptn == 0)
+    {
+	dprintf(CRITICAL, "partition %s doesn't exist\n", ptn_name);
+	return -1;
+    }
+    dprintf(INFO, "Partition %s index[0x%x],len[%lu]\n", ptn_name, index,len);
 
+    if(!strcmp(ptn_name, "flyparameter"))
+    {
+	unsigned char *data = memalign(CACHE_LINE, ROUNDUP(size, CACHE_LINE));
+	if(mmc_read((ptn+offset), (unsigned int *)data, size)) {
+		dprintf(CRITICAL, "mmc read failure %s %d\n", ptn_name, len);
+		return -1;
+	}
+	memcpy(buf, data, len);
+	free(data);
+	return 0;
+    }
+    else if(!strcmp(ptn_name, "logo"))
+    {
+        n = ROUND_TO_PAGE(len, page_mask);
+	if(mmc_read(ptn+offset, (unsigned int *)buf,n)) {
+		dprintf(CRITICAL, "mmc read failure %s %d\n", ptn_name, len);
+		return -1;
+	}
+	return 0;
+    }
+#else
     if(!strcmp(ptn_name, "flyparameter"))
     {
         unsigned int size =  2048;//ROUND_TO_PAGE(sizeof(*in),511);
@@ -69,5 +104,6 @@ int ptn_read(char *ptn_name, unsigned int offset, unsigned long len, unsigned ch
     }
     else
         dprintf(INFO, "Please ensure partition %s should be read\n", ptn_name);
+#endif
 }
 

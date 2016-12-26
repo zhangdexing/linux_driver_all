@@ -9,6 +9,7 @@ BUF_DMA_ALIGN(dt_buf, 4096);
 #endif
 
 static unsigned char buf[4096]; //Equal to max-supported pagesize
+bool boot_into_flyrecovery=false;
 
 int boot_flyrecovery_from_mmc()
 {
@@ -332,7 +333,8 @@ struct boot_img_hdr *hdr = (void*) buf;
 
 	if (boot_into_recovery && !device.is_unlocked && !device.is_tampered)
 		target_load_ssd_keystore();
-
+#elif defined(BOOTLOADER_MSM8996)
+	boot_into_flyrecovery=true;
 #else
 	unsigned *boot_into_recovery = 0;
 	struct boot_img_hdr *hdr = (void*) buf;
@@ -660,7 +662,10 @@ struct boot_img_hdr *hdr = (void*) buf;
 		target_load_ssd_keystore();
 #endif
 unified_boot:
-
+#if (defined BOOTLOADER_MSM8996)
+	boot_linux_from_mmc();
+	return 1;
+#else
 	cmdline = dbg_msg_en(hdr->cmdline, bp_meg);
 
 	boot_linux((void *)hdr->kernel_addr, (void *)hdr->tags_addr,
@@ -668,6 +673,7 @@ unified_boot:
 		   (void *)hdr->ramdisk_addr, hdr->ramdisk_size);
 
 	return 0;
+#endif
 }
 
 char *dbg_msg_en(const char *system_cmd, int dbg_msg_en)

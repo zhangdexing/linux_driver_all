@@ -222,7 +222,9 @@ void fly_setBcol(unsigned long int backcolor)
                 tem,
                 1024 * 3);
     }
-
+#ifdef BOOTLOADER_TYPE_LK
+	arch_clean_invalidate_cache_range((unsigned long)fb_base_get(), FBCON_WIDTH * FBCON_HEIGHT * 3);
+#endif
     free(tem);
 #elif(LOGO_FORMAT == ARGB8888)
     unsigned char *tem = malloc(1024 * 4);

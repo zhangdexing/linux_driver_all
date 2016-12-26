@@ -314,6 +314,7 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
     int count_down_time = 4;
     int bofore_recovery_time = 4;
     int hw_info = -1;
+    bool *boot_into_system=false;
     dprintf(INFO, "----- LK Build Time: %s %s -----\n", __DATE__, __TIME__);
 
     //send_hw_info(hw_info);//lpc i2c
@@ -445,6 +446,7 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
         dprintf(INFO, "Boot into LoaderModel\r\n");
         break;
     case 0:
+	boot_into_system=true;
         dprintf(INFO, "Boot into NormalModel\r\n");
         break;
     default:
@@ -462,9 +464,9 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
     }
     */
 
-    if(!*boot_into_recovery)
+    if(boot_into_system==true)
     {
-#if (defined BOOTLOADER_VENDOR_QCOM || defined BOOTLOADER_VENDOR_NXP)
+#if (defined BOOTLOADER_VENDOR_QCOM || defined BOOTLOADER_VENDOR_NXP) &&ifndef BOOTLOADER_MSM8996
         show_logo();
         backlight_enable();
 #else

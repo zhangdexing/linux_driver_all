@@ -150,6 +150,9 @@ static int i2c_outb(struct i2c_gpio_dev *dev, unsigned char c)
         scllo(dev);
     }
     sdahi(dev);
+#ifdef BOOTLOADER_MSM8996
+	setsda_in(dev);
+#endif
     if (sclhi(dev) < 0)   /* timeout */
     {
         dprintf(INFO, "i2c_outb: 0x%02x, "
@@ -187,6 +190,9 @@ static int i2c_inb(struct i2c_gpio_dev *dev)
     sdahi(dev);
     for (i = 0; i < 8; i++)
     {
+#ifdef BOOTLOADER_MSM8996
+       setsda_in(dev);
+#endif
         if (sclhi(dev) < 0)   /* timeout */
         {
             dprintf(INFO, "i2c_inb: timeout at bit #%d\n", 7 - i);

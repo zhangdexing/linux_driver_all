@@ -148,11 +148,11 @@ struct bootloader_hw_config g_hw_info[] =
             .lpc_scl = 3,
         },
 
-        .lk_wakeup_lpc_io = 11,
+        .lk_wakeup_lpc_io = 79,
 	.gpio_mcu_wp = 25,
         .gpio_ready = 28,
         .gpio_hal_ready = 26,
 	.gpio_level_conversion_en = 10,
-        .dbg_uart_port = "console=ttyHSL1,115200,n8 androidboot.console=ttyHSL1 ",
+        .dbg_uart_port = "console=ttyHSL0,115200,n8 androidboot.console=ttyHSL0 ",
     }
 };
