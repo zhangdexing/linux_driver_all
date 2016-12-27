@@ -711,6 +711,11 @@ static int soc_dev_probe(struct platform_device *pdev)
 #ifdef SOC_mt35x
 	GPS_POWER_ON;
 #endif
+#ifdef PLATFORM_msm8996
+	USB_VBUS_POWER_DISABLE;
+	msleep(500);
+	USB_VBUS_POWER_ENABLE;
+#endif
     return 0;
 
 }
