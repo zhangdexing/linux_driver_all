@@ -169,7 +169,7 @@ public class FlyBootService extends Service {
     public void onCreate() {
         super.onCreate();
 	mFlyBootService = this;
-        LIDBG_PRINT("flybootservice onCreate-->start LidbgCommenLogic\n");
+        LIDBG_PRINT("flybootservice onCreate-->start LidbgCommenLogic.2016-12-29 20:12:23\n");
         Intent mIntent = new Intent();
         mIntent.setComponent(new ComponentName("com.fly.lidbg.LidbgCommenLogic","com.fly.lidbg.LidbgCommenLogic.LidbgCommenLogicService"));
         this.startService(mIntent);
@@ -178,7 +178,6 @@ public class FlyBootService extends Service {
         mIntent2.setComponent(new ComponentName("com.flyaudio.lidbg.H264ToMp4","com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service"));
         this.startService(mIntent2);
         writeToFile("/dev/lidbg_pm0","flyaudio PmServiceStar");
-        writeToFile("/dev/log/lidbg_log.txt","\n2016-12-29 20:12:23\n");
 
 	acquireWakeLock();
 	mPackageManager = this.getPackageManager();
