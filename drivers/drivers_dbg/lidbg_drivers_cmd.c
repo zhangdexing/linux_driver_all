@@ -1302,11 +1302,15 @@ void parse_cmd(char *pt)
         else if (!strcmp(argv[1], "*158#109"))
         {
             lidbg("*158#109--en qualcomm display tun tools \n");
+#ifdef SOC_mt35x
+            lidbg_shell_cmd("am start -n com.mediatek.miravision.ui/.MiraVisionActivity &");
+#else
             lidbg_shell_cmd("mount -o remount /system");
             lidbg_shell_cmd("cp -rf /flysystem/lib/out/QDCMMobileApp.ko /system/app/QDCMMobileApp.apk");
             lidbg_shell_cmd("chmod 777 /system/app/QDCMMobileApp.apk");
             lidbg_shell_cmd("sync");
             lidbg_shell_cmd("reboot");
+#endif
             lidbg_domineering_ack();
         }
         else if (!strncmp(argv[1], "*158#110", 8))
