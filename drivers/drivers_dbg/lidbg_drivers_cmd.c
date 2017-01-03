@@ -849,11 +849,49 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#046"))
         {
+            lidbg("*158#046--set cpu run in performance mode\n");
+#ifdef SOC_mt35x
+            lidbg_shell_cmd("echo 0 > /proc/hps/enabled");
+            lidbg_shell_cmd("echo 1 > /sys/devices/system/cpu/cpu0/online");
+            lidbg_shell_cmd("echo 1 > /sys/devices/system/cpu/cpu1/online");
+            lidbg_shell_cmd("echo 1 > /sys/devices/system/cpu/cpu2/online");
+            lidbg_shell_cmd("echo 1 > /sys/devices/system/cpu/cpu3/online");
+            lidbg_shell_cmd("chmod 777 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 777 /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 777 /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 777 /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("echo 1248000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("echo 1248000 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("echo 1248000 > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("echo 1248000 > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 444 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 444 /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 444 /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 444 /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq");
+#else
             set_cpu_governor(1);
+#endif
         }
         else if (!strcmp(argv[1], "*158#047"))
         {
+            lidbg("*158#047--set cpu run in powersave mode\n");
+#ifdef SOC_mt35x
+            lidbg_shell_cmd("echo 1 > /proc/hps/enabled");
+            lidbg_shell_cmd("chmod 777 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 777 /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 777 /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 777 /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("echo 637000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("echo 637000 > /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("echo 637000 > /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("echo 637000 > /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 444 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 444 /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 444 /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq");
+            lidbg_shell_cmd("chmod 444 /sys/devices/system/cpu/cpu3/cpufreq/scaling_min_freq");
+#else
             set_cpu_governor(0);
+#endif
         }
         else if (!strcmp(argv[1], "*158#048"))
         {

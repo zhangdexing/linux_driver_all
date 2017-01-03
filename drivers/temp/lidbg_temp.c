@@ -13,6 +13,7 @@ int antutu_test = 0;
 int antutu_temp_offset = 0;
 int normal_temp_offset = 0;
 int ctrl_max_freq = 0;
+int mt35xx_old_state_cold = 0;
 bool fan_run_status = false;
 
 #define FREQ_MAX_NODE    "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"
@@ -327,6 +328,37 @@ int thread_thermal(void *data)
         {
             if(cpu_temp > 85)
                 lidbg("temp>85:temp:%d,freq:%d,cpu:%s\n", cpu_temp, SOC_Get_CpuFreq(), get_cpu_status());
+
+
+#ifdef SOC_mt35x
+            {
+                if( (0 == g_var.android_boot_completed))
+                    lidbg("mt3561temp:temp:%d,freq:%d,cpu:%s\n", cpu_temp, SOC_Get_CpuFreq(), get_cpu_status());
+                if( (1 == g_var.android_boot_completed))
+                {
+                    if(cpu_temp > 90)
+                    {
+                        if(mt35xx_old_state_cold)
+                        {
+                            //lidbg("*158#047--set cpu run in powersave mode\n");
+                            lidbg("mt3561temp.powersave:temp:%d,freq:%d,cpu:%s\n", cpu_temp, SOC_Get_CpuFreq(), get_cpu_status());
+                            lidbg_shell_cmd("echo appcmd *158#047 > /dev/lidbg_drivers_dbg0");
+                            mt35xx_old_state_cold = 0;
+                        }
+                    }
+                    if(cpu_temp < 85)
+                    {
+                        if(!mt35xx_old_state_cold)
+                        {
+                            lidbg("mt3561temp.performance:temp:%d,freq:%d,cpu:%s\n", cpu_temp, SOC_Get_CpuFreq(), get_cpu_status());
+                            lidbg_shell_cmd("echo appcmd *158#046 > /dev/lidbg_drivers_dbg0");
+                            mt35xx_old_state_cold = 1;
+                        }
+                    }
+                }
+            }
+#endif
+            //continue
             continue;
         }
 
