@@ -22,19 +22,19 @@ bool fan_run_status = false;
 #define TEMP_FREQ_TEST_RESULT LIDBG_LOG_DIR"lidbg_temp_freq.txt"
 #define TEMP_FREQ_COUNTER LIDBG_LOG_DIR"freq_tmp.txt"
 u32 get_scaling_max_freq(void);
-char* get_cpu_status(void);
+char *get_cpu_status(void);
 
 int thread_limit_temp(void *data)
 {
-    int mem_temp,cpu_temp;
+    int mem_temp, cpu_temp;
     lidbg_chmod(CPU_MAX_NODE);
 
     while(g_hw.thermal_ctrl_en == 0)
-   {
-    	 mem_temp = soc_temp_get(g_hw.mem_sensor_num);
-    	 cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
+    {
+        mem_temp = soc_temp_get(g_hw.mem_sensor_num);
+        cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
 
-        pr_debug( "%s:%d,%d,%d,%d,%s\n", __FUNCTION__,mem_temp, cpu_temp,get_scaling_max_freq(), SOC_Get_CpuFreq(),get_cpu_status());
+        pr_debug( "%s:%d,%d,%d,%d,%s\n", __FUNCTION__, mem_temp, cpu_temp, get_scaling_max_freq(), SOC_Get_CpuFreq(), get_cpu_status());
 #ifdef PLATFORM_msm8226
         lidbg_readwrite_file(FREQ_MAX_NODE, NULL, "600000", strlen("600000"));
 #elif defined(PLATFORM_msm8909)
@@ -44,43 +44,43 @@ int thread_limit_temp(void *data)
 #endif
         msleep(1000);
     }
-	return 0;
+    return 0;
 }
 
 
 
 static int lidbg_temp_event(struct notifier_block *this,
-                       unsigned long event, void *ptr)
+                            unsigned long event, void *ptr)
 {
     int cpu_temp;
     DUMP_FUN;
 
     cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
-	
+
 
     switch (event)
     {
 
-	    case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_SCREEN_OFF):
-	    {
-		//cpufreq_update_policy(0);	
-		    if(cpu_temp > 90)
-		    	 break;
+    case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_SCREEN_OFF):
+    {
+        //cpufreq_update_policy(0);
+        if(cpu_temp > 90)
+            break;
 
-		g_hw.thermal_ctrl_en = 0;
-		CREATE_KTHREAD(thread_limit_temp, NULL);
-	    	break;
+        g_hw.thermal_ctrl_en = 0;
+        CREATE_KTHREAD(thread_limit_temp, NULL);
+        break;
 
-	    }
-	    case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_SCREEN_ON):
-	    {
-		g_hw.thermal_ctrl_en = 1;
+    }
+    case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_SCREEN_ON):
+    {
+        g_hw.thermal_ctrl_en = 1;
 #ifdef PLATFORM_msm8974
         lidbg_readwrite_file(CPU_MAX_NODE, NULL, "2265600", strlen("2265600"));
 #endif
-		//cpufreq_update_policy(0);	
-	    	break;
-	    }
+        //cpufreq_update_policy(0);
+        break;
+    }
     }
 
     return NOTIFY_DONE;
@@ -117,17 +117,17 @@ u32 get_scaling_max_freq(void)
 {
     static char max_freq[32];
     static u32 tmp;
-    memset(max_freq,0,sizeof(max_freq));
+    memset(max_freq, 0, sizeof(max_freq));
     lidbg_readwrite_file(FREQ_MAX_NODE, max_freq, NULL, 32);
     tmp = simple_strtoul(max_freq, 0, 0);
     //lidbg("scaling_max_freq=%d,%s\n", tmp,max_freq);
     return tmp;
 }
 
-char* get_cpu_status(void)
+char *get_cpu_status(void)
 {
     static char cpu_status[16];
-    memset(cpu_status,0,sizeof(cpu_status));
+    memset(cpu_status, 0, sizeof(cpu_status));
     lidbg_readwrite_file("/sys/devices/system/cpu/online", cpu_status, NULL, 16);
     return cpu_status;
 }
@@ -161,7 +161,7 @@ int thread_show_temp(void *data)
     while(1)
     {
         int cur_temp = soc_temp_get(g_hw.mem_sensor_num);
-        lidbg( "%d,%d,%d,%s\n", cur_temp, get_scaling_max_freq(), SOC_Get_CpuFreq(),get_cpu_status());
+        lidbg( "%d,%d,%d,%s\n", cur_temp, get_scaling_max_freq(), SOC_Get_CpuFreq(), get_cpu_status());
         msleep(1000);
     }
 }
@@ -198,7 +198,7 @@ void set_system_performance(int type)
     else if(type == 1)//low performance
     {
 #ifdef PLATFORM_msm8974
-     //   lidbg_readwrite_file(FREQ_MAX_NODE, NULL, "2265600", strlen("2265600"));
+        //   lidbg_readwrite_file(FREQ_MAX_NODE, NULL, "2265600", strlen("2265600"));
 #endif
         set_cpu_governor(0);
         temp_offset = -normal_temp_offset;
@@ -209,7 +209,7 @@ void set_system_performance(int type)
 
 int thread_thermal(void *data)
 {
-    int cur_temp, i, max_freq,maxcpu,mincpu,cpu_temp,cpufreq;
+    int cur_temp, i, max_freq, maxcpu, mincpu, cpu_temp, cpufreq;
     DUMP_FUN;
     lidbg_shell_cmd("chmod 444 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq &");
     //set_cpu_governor(0);
@@ -221,7 +221,7 @@ int thread_thermal(void *data)
             //set_cpu_governor(1);
             max_freq = get_scaling_max_freq();
             cur_temp = soc_temp_get(g_hw.cpu_sensor_num);
-            lidbg("cpu_temp=%d,freq=%d,maxfreq=%d,%s\n", cur_temp, SOC_Get_CpuFreq(),max_freq,get_cpu_status());
+            lidbg("cpu_temp=%d,freq=%d,maxfreq=%d,%s\n", cur_temp, SOC_Get_CpuFreq(), max_freq, get_cpu_status());
             ssleep(2);
         }
     }
@@ -257,41 +257,41 @@ int thread_thermal(void *data)
     set_system_performance(2);
 #endif
 #else
-  temp_offset = 0;
+    temp_offset = 0;
 #endif
     //msleep(1000 * 40); //wait boot_freq_ctrl finish
     if(g_hw.thermal_ctrl_en == 1)
-    	lidbg_shell_cmd("cat /proc/freq_ctrl_stop &");
+        lidbg_shell_cmd("cat /proc/freq_ctrl_stop &");
     if(g_var.recovery_mode == 0)
-    	lidbg_shell_cmd("cat /proc/interrupt_mode_init &");
+        lidbg_shell_cmd("cat /proc/interrupt_mode_init &");
 
     cur_temp = soc_temp_get(g_hw.mem_sensor_num);
     lidbg("lidbg freq ctrl start,%d,%d\n", cur_temp, get_scaling_max_freq());
 
     if(cpu_temp_show == 1)
         CREATE_KTHREAD(thread_show_temp, NULL);
-	
+
     while(!kthread_should_stop())
     {
-     if(g_hw.thermal_ctrl_en == 1)
-        msleep(250);
-     else
-	 msleep(1000);
+        if(g_hw.thermal_ctrl_en == 1)
+            msleep(250);
+        else
+            msleep(1000);
 
         log_temp();
         cur_temp = soc_temp_get(g_hw.mem_sensor_num);
         cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
-        maxcpu= get_file_int(CPU_MAX_NODE);
-        mincpu= get_file_int(CPU_MIN_NODE);
+        maxcpu = get_file_int(CPU_MAX_NODE);
+        mincpu = get_file_int(CPU_MIN_NODE);
         max_freq = get_scaling_max_freq();
-	cpufreq=SOC_Get_CpuFreq();
+        cpufreq = SOC_Get_CpuFreq();
 
-	if(0==g_var.android_boot_completed)
-        		lidbg("max_freq=%d,maxcpu=%d,mincpu=%d,mem_temp=%d,cpu_temp=%d,freq=%d,status=%s",max_freq,maxcpu,mincpu,cur_temp, cpu_temp, cpufreq, get_cpu_status());
-       pr_debug("max_freq=%d,maxcpu=%d,mincpu=%d,mem_temp=%d,cpu_temp=%d,freq=%d,status=%s",max_freq,maxcpu,mincpu,cur_temp, cpu_temp, cpufreq, get_cpu_status());
-		
-	if(0)
-        //fan ctrl
+        if(0 == g_var.android_boot_completed)
+            lidbg("max_freq=%d,maxcpu=%d,mincpu=%d,mem_temp=%d,cpu_temp=%d,freq=%d,status=%s", max_freq, maxcpu, mincpu, cur_temp, cpu_temp, cpufreq, get_cpu_status());
+        pr_debug("max_freq=%d,maxcpu=%d,mincpu=%d,mem_temp=%d,cpu_temp=%d,freq=%d,status=%s", max_freq, maxcpu, mincpu, cur_temp, cpu_temp, cpufreq, get_cpu_status());
+
+        if(0)
+            //fan ctrl
         {
             if( (cur_temp > g_hw.fan_onoff_temp)  &&
                     (g_var.system_status != FLY_DEVICE_DOWN) &&
@@ -326,7 +326,7 @@ int thread_thermal(void *data)
         if(g_hw.thermal_ctrl_en == 0)
         {
             if(cpu_temp > 85)
-                lidbg("temp>85:temp:%d,freq:%d,cpu:%s\n", cpu_temp, SOC_Get_CpuFreq(),get_cpu_status());
+                lidbg("temp>85:temp:%d,freq:%d,cpu:%s\n", cpu_temp, SOC_Get_CpuFreq(), get_cpu_status());
             continue;
         }
 
@@ -338,37 +338,37 @@ thermal_ctrl:
         //max_freq = get_scaling_max_freq();
         //lidbg("MSM_THERM: %d\n",cur_temp);
         for(i = 0; i < SIZE_OF_ARRAY(g_hw.cpu_freq_thermal); i++)
-        {        
+        {
             if((g_hw.cpu_freq_thermal[i].temp_low == 0) || (g_hw.cpu_freq_thermal[i].temp_high == 0))
                 break;
 
             if((cur_temp >= (g_hw.cpu_freq_thermal[i].temp_low + temp_offset) ) && (cur_temp <= (g_hw.cpu_freq_thermal[i].temp_high + temp_offset) ))
             {
-		if(max_freq != g_hw.cpu_freq_thermal[i].limit_freq)
-		{
-		                lidbg_readwrite_file(FREQ_MAX_NODE, NULL, g_hw.cpu_freq_thermal[i].limit_freq_string, strlen(g_hw.cpu_freq_thermal[i].limit_freq_string));
-		                if(g_hw.gpu_max_freq_node != NULL)
-		                    lidbg_readwrite_file(g_hw.gpu_max_freq_node, NULL, g_hw.cpu_freq_thermal[i].limit_gpu_freq_string, strlen(g_hw.cpu_freq_thermal[i].limit_gpu_freq_string));
-		                lidbg("set max freq to: %d,mem_temp:%d,cpu_temp:%d,temp_offset:%d,cpufreq=%d\n", g_hw.cpu_freq_thermal[i].limit_freq, cur_temp,cpu_temp, temp_offset,SOC_Get_CpuFreq());
-		}
-		if(g_hw.cpu_freq_thermal[i].max_cpu>0)
-		{
-			if(maxcpu!=g_hw.cpu_freq_thermal[i].max_cpu)
-			{
-				char max_cpu[10];
-				sprintf(max_cpu,"%d",g_hw.cpu_freq_thermal[i].max_cpu);
-				lidbg_readwrite_file(CPU_MAX_NODE, NULL, max_cpu, strlen(max_cpu));
-				lidbg("set cpus max to:%d/%d\n",g_hw.cpu_freq_thermal[i].max_cpu,get_file_int(CPU_MAX_NODE));
-			}
-			if(mincpu!=g_hw.cpu_freq_thermal[i].max_cpu)
-			{
-				char max_cpu[10];
-				sprintf(max_cpu,"%d",g_hw.cpu_freq_thermal[i].max_cpu);
-				lidbg_readwrite_file(CPU_MIN_NODE, NULL, max_cpu, strlen(max_cpu));
-				lidbg("set cpus min to:%d/%d\n",g_hw.cpu_freq_thermal[i].max_cpu,get_file_int(CPU_MIN_NODE));
-			}
+                if(max_freq != g_hw.cpu_freq_thermal[i].limit_freq)
+                {
+                    lidbg_readwrite_file(FREQ_MAX_NODE, NULL, g_hw.cpu_freq_thermal[i].limit_freq_string, strlen(g_hw.cpu_freq_thermal[i].limit_freq_string));
+                    if(g_hw.gpu_max_freq_node != NULL)
+                        lidbg_readwrite_file(g_hw.gpu_max_freq_node, NULL, g_hw.cpu_freq_thermal[i].limit_gpu_freq_string, strlen(g_hw.cpu_freq_thermal[i].limit_gpu_freq_string));
+                    lidbg("set max freq to: %d,mem_temp:%d,cpu_temp:%d,temp_offset:%d,cpufreq=%d\n", g_hw.cpu_freq_thermal[i].limit_freq, cur_temp, cpu_temp, temp_offset, SOC_Get_CpuFreq());
+                }
+                if(g_hw.cpu_freq_thermal[i].max_cpu > 0)
+                {
+                    if(maxcpu != g_hw.cpu_freq_thermal[i].max_cpu)
+                    {
+                        char max_cpu[10];
+                        sprintf(max_cpu, "%d", g_hw.cpu_freq_thermal[i].max_cpu);
+                        lidbg_readwrite_file(CPU_MAX_NODE, NULL, max_cpu, strlen(max_cpu));
+                        lidbg("set cpus max to:%d/%d\n", g_hw.cpu_freq_thermal[i].max_cpu, get_file_int(CPU_MAX_NODE));
+                    }
+                    if(mincpu != g_hw.cpu_freq_thermal[i].max_cpu)
+                    {
+                        char max_cpu[10];
+                        sprintf(max_cpu, "%d", g_hw.cpu_freq_thermal[i].max_cpu);
+                        lidbg_readwrite_file(CPU_MIN_NODE, NULL, max_cpu, strlen(max_cpu));
+                        lidbg("set cpus min to:%d/%d\n", g_hw.cpu_freq_thermal[i].max_cpu, get_file_int(CPU_MIN_NODE));
+                    }
 
-		}
+                }
                 break;
             }
         }
@@ -411,7 +411,7 @@ int thread_start_cpu_tmp_test(void *data)
     fs_file_separator(TEMP_FREQ_TEST_RESULT);
 
     sprintf(buff, "[%s]%d,%d", group[freq_pos], freq_pos, group_num);
-    lidbg_toast_show("temp:",buff);
+    lidbg_toast_show("temp:", buff);
 
     while(1)
     {
@@ -429,7 +429,7 @@ int thread_start_cpu_tmp_test(void *data)
 err:
     is_cpu_temp_enabled = false;
     sprintf(buff, "cpu_tmp_test.stop:%d,%d", freq_pos, group_num);
-    lidbg_toast_show("temp:",buff);
+    lidbg_toast_show("temp:", buff);
     lidbg_rm(TEMP_FREQ_COUNTER);
     fs_string2file(100, TEMP_FREQ_TEST_RESULT, "-------stop-------\n");
     return 0;
@@ -533,18 +533,18 @@ static int temp_ops_suspend(struct device *dev)
 
 static int temp_ops_resume(struct device *dev)
 {
-	int cur_temp, max_freq,maxcpu,mincpu,cpu_temp;
-	DUMP_FUN;
+    int cur_temp, max_freq, maxcpu, mincpu, cpu_temp;
+    DUMP_FUN;
 
-	cur_temp = soc_temp_get(g_hw.mem_sensor_num);
-	cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
-	maxcpu= get_file_int(CPU_MAX_NODE);
-	mincpu= get_file_int(CPU_MIN_NODE);
-	max_freq = get_scaling_max_freq();
+    cur_temp = soc_temp_get(g_hw.mem_sensor_num);
+    cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
+    maxcpu = get_file_int(CPU_MAX_NODE);
+    mincpu = get_file_int(CPU_MIN_NODE);
+    max_freq = get_scaling_max_freq();
 
-	lidbg("mem_temp=%d,cpu_temp=%d,freq=%d,max_freq=%d,maxcpu=%d,mincpu=%d,status=%s",cur_temp, cpu_temp, SOC_Get_CpuFreq(), max_freq,maxcpu,mincpu,get_cpu_status());
+    lidbg("mem_temp=%d,cpu_temp=%d,freq=%d,max_freq=%d,maxcpu=%d,mincpu=%d,status=%s", cur_temp, cpu_temp, SOC_Get_CpuFreq(), max_freq, maxcpu, mincpu, get_cpu_status());
 
-	return 0;
+    return 0;
 }
 static struct dev_pm_ops temp_ops =
 {
@@ -591,13 +591,13 @@ static int temp_probe(struct platform_device *pdev)
     lidbg_new_cdev(&temp_nod_fops, "lidbg_temp0");
     if(g_hw.thermal_ctrl_en)
     {
-   	 register_lidbg_notifier(&lidbg_notifier);
-    ret = cpufreq_register_notifier(&cpufreq_notifier,
-                                    CPUFREQ_POLICY_NOTIFIER);
-    if (ret)
-        lidbg("%s: cannot register cpufreq notifier\n",
-               KBUILD_MODNAME);
-     }
+        register_lidbg_notifier(&lidbg_notifier);
+        ret = cpufreq_register_notifier(&cpufreq_notifier,
+                                        CPUFREQ_POLICY_NOTIFIER);
+        if (ret)
+            lidbg("%s: cannot register cpufreq notifier\n",
+                  KBUILD_MODNAME);
+    }
 
     return 0;
 }
