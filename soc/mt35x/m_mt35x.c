@@ -2,11 +2,14 @@
 ======================================================================*/
 #include "lidbg.h"
 
+#include <mt_thermal.h>
+#include <tscpu_settings.h>
+
 struct fly_smem *p_fly_smem = NULL;
 
 int soc_temp_get(int num)
 {
-    return 0;
+    return tscpu_get_cpu_temp_met(num)/1000;
 }
 
 void lidbg_soc_main(int argc, char **argv)

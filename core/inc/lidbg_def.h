@@ -136,10 +136,6 @@ static inline char * get_current_time(void)
 						x = x ^ y;		 \
 					}
 
-//求最大值和最小值
-#define  MAX( x, y ) ( ((x) > (y)) ? (x) : (y) )
-#define  MIN( x, y ) ( ((x) < (y)) ? (x) : (y) )
-
 //求绝对值
 #define ABS(a)      ((a)>=0?(a):(-(a)))
 

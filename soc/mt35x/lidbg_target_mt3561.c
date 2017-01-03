@@ -146,10 +146,14 @@ struct hw_version_specific g_hw_version_specific[] =
         .i2c_bus_lpc = 3,
         .i2c_bus_pca9634 = 0,
         .ad_val_mcu = 87,
+        .thermal_ctrl_en = 0,
+	//Mt_thermal.h (z:\home\wqrftf99\futengfei\work1_qucom\mt3561\kernel-3.18\drivers\misc\mediatek\include\mt-plat\mt3561\include\mach)	15834	8/15/2016
+        .cpu_sensor_num = 0,
+        .mem_sensor_num = 1,
         .fly_parameter_node = "/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/flyparameter",
         .cpu_freq_temp_node = "/sys/class/thermal/thermal_zone1/temp",
-	.ad_val_mcu = 1,
-	.ad_key =
+        .ad_val_mcu = 1,
+        .ad_key =
         {
             {
                 .ch = 39,
