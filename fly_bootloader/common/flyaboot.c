@@ -466,7 +466,7 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
 
     if(boot_into_system==true)
     {
-#if (defined BOOTLOADER_VENDOR_QCOM || defined BOOTLOADER_VENDOR_NXP) &&ifndef BOOTLOADER_MSM8996
+#if ((defined BOOTLOADER_VENDOR_QCOM || defined BOOTLOADER_VENDOR_NXP) && (!defined BOOTLOADER_MSM8996))
         show_logo();
         backlight_enable();
 #else
