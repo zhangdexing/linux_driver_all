@@ -645,6 +645,10 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
         else  if(!strcmp(cmd[1], "gotosleep"))
         {
             SOC_System_Status(FLY_GOTO_SLEEP);
+	    if(g_var.is_fly)
+           	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE &");
+            else
+               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
 #ifdef SOC_mt3360
             //ssleep(1);
             lidbg("fly power key gotosleep ++\n");
@@ -1079,7 +1083,11 @@ static int thread_observer(void *data)
                   case 13:
 			   // lidbg_shell_cmd("pm disable cld.navi.c2739.mainframe");
 			   //   lidbg_shell_cmd("pm disable cn.flyaudio.media");
-                    	    break;
+			    if(g_var.is_fly)
+		               lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE &");
+		           else
+		               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
+		   break;
 #ifdef SUSPEND_ONLINE
                 case 60*19:
 			if( g_var.suspend_timeout_protect  == 0) break;

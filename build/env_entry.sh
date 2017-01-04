@@ -76,7 +76,7 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_VENDOR=VENDOR_QCOM
 	export OTA_PACKAGE_NAME=msm8226-ota-eng.*.zip
 	export DBG_SOC=msm8x26
-	export TEST_PACKAGE_PATH=//192.168.128.128/8x28/升级包发布/专项测试包
+	export TEST_PACKAGE_PATH=//172.168.1.240/8x28/升级包发布/专项测试包
 	export REPOSITORY_WORK_BRANCH=8x28-release
 	export SYSTEM_WORK_BRANCH=master
         export MAKE_PAKG_NUM=1
@@ -117,7 +117,7 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_VENDOR=VENDOR_QCOM
 	export OTA_PACKAGE_NAME=msm8226-ota-eng.*.zip
 	export DBG_SOC=msm8x26
-	export TEST_PACKAGE_PATH=//192.168.128.128/8928/升级包发布/专项测试包
+	export TEST_PACKAGE_PATH=//172.168.1.240/8928/升级包发布/专项测试包
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=master
         export MAKE_PAKG_NUM=10
@@ -157,7 +157,7 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_VENDOR=VENDOR_QCOM
 	export OTA_PACKAGE_NAME=msm8974-ota-eng.*.zip
 	export DBG_SOC=msm8x26
-	export TEST_PACKAGE_PATH=//192.168.128.128/8974/升级包发布/专项测试包
+	export TEST_PACKAGE_PATH=//172.168.1.240/8974/升级包发布/专项测试包
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=master
         export MAKE_PAKG_NUM=6
@@ -216,7 +216,7 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_VENDOR=VENDOR_QCOM
 	export OTA_PACKAGE_NAME=msm8226-ota-eng.*.zip
 	export DBG_SOC=msm8x26
-	export TEST_PACKAGE_PATH=//192.168.128.128/8x28/升级包发布/专项测试包
+	export TEST_PACKAGE_PATH=//172.168.1.240/8x28/升级包发布/专项测试包
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=master
         export MAKE_PAKG_NUM=11
@@ -256,7 +256,7 @@ case "$DBG_PLATFORM_ID" in
         export DBG_VENDOR=VENDOR_QCOM
         export OTA_PACKAGE_NAME=msm8974-ota-eng.*.zip
         export DBG_SOC=msm8x26
-        export TEST_PACKAGE_PATH=//192.168.128.128/8974/升级包发布/专项测试包
+        export TEST_PACKAGE_PATH=//172.168.1.240/8974/升级包发布/专项测试包
         export REPOSITORY_WORK_BRANCH=master
         export SYSTEM_WORK_BRANCH=master
         export MAKE_PAKG_NUM=15
@@ -295,7 +295,7 @@ case "$DBG_PLATFORM_ID" in
         export DBG_VENDOR=VENDOR_ROCKCHIP
         export OTA_PACKAGE_NAME=msm8974-ota-eng.*.zip
         export DBG_SOC=rk3x88
-        export TEST_PACKAGE_PATH=//192.168.128.128/px3/升级包发布/专项测试包
+        export TEST_PACKAGE_PATH=//172.168.1.240/px3/升级包发布/专项测试包
         export REPOSITORY_WORK_BRANCH=master
         export SYSTEM_WORK_BRANCH=master
         export MAKE_PAKG_NUM=6;;
@@ -323,7 +323,7 @@ case "$DBG_PLATFORM_ID" in
         export DBG_VENDOR=VENDOR_ROCKCHIP
         export OTA_PACKAGE_NAME=rkpx3-ota-eng.*.zip
         export DBG_SOC=rk3x88
-        export TEST_PACKAGE_PATH=//192.168.128.128/px3/升级包发布/专项测试包
+        export TEST_PACKAGE_PATH=//172.168.1.240/px3/升级包发布/专项测试包
         export REPOSITORY_WORK_BRANCH=PX3
         export SYSTEM_WORK_BRANCH=master
         export MAKE_PAKG_NUM=17;;
@@ -348,7 +348,7 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_VENDOR=VENDOR_QCOM
 	export OTA_PACKAGE_NAME=msm8226-ota-eng.*.zip
 	export DBG_SOC=msm8x26
-	export TEST_PACKAGE_PATH=//192.168.128.128/8x28/升级包发布/专项测试包
+	export TEST_PACKAGE_PATH=//172.168.1.240/8x28/升级包发布/专项测试包
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=master
         export MAKE_PAKG_NUM=11
@@ -390,7 +390,7 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_VENDOR=VENDOR_QCOM
 	export OTA_PACKAGE_NAME=msm8909-ota-eng.*.zip
 	export DBG_SOC=msm8x26
-	export TEST_PACKAGE_PATH=//192.168.128.128/share/8909/升级包/测试升级包
+	export TEST_PACKAGE_PATH=//172.168.1.240/share/8909/升级包/测试升级包
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=msm8909-master
 	export RECOVERY_BUILD_BRANCH=msm8909-ota-recovery
@@ -426,7 +426,7 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_VENDOR=VENDOR_QCOM
 	export OTA_PACKAGE_NAME=msm8226-ota-eng.*.zip
 	export DBG_SOC=msm8x26
-	export TEST_PACKAGE_PATH=//192.168.128.128/8x28/升级包发布/专项测试包
+	export TEST_PACKAGE_PATH=//172.168.1.240/8x28/升级包发布/专项测试包
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=android4.4.4
         export MAKE_PAKG_NUM=17
@@ -465,7 +465,7 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_VENDOR=VENDOR_WINNER
 	export OTA_PACKAGE_NAME=msm8974-ota-eng.*.zip
 	export DBG_SOC=tx
-	export TEST_PACKAGE_PATH=//192.168.128.128/tx/升级包发布/专项测试包
+	export TEST_PACKAGE_PATH=//172.168.1.240/tx/升级包发布/专项测试包
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=master
 	export MAKE_PAKG_NUM= ;;
@@ -494,7 +494,7 @@ case "$DBG_PLATFORM_ID" in
         export DBG_VENDOR=VENDOR_QCOM
         export OTA_PACKAGE_NAME=msm8974-ota-eng.*.zip
         export DBG_SOC=msm8x26
-        export TEST_PACKAGE_PATH=//192.168.128.128/8974/升级包发布/专项测试包
+        export TEST_PACKAGE_PATH=//172.168.1.240/8974/升级包发布/专项测试包
         export REPOSITORY_WORK_BRANCH=dev-8974-6.0
         export SYSTEM_WORK_BRANCH=msm8974-6.0
 	export RECOVERY_BUILD_BRANCH=msm8974-6.0
@@ -535,7 +535,7 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_VENDOR=VENDOR_NXP
 	export OTA_PACKAGE_NAME=sabresd_6dq-ota-20151218-imx6q.zip
 	export DBG_SOC=imx6q
-	export TEST_PACKAGE_PATH=//192.168.128.128/tx/升级包发布/专项测试包
+	export TEST_PACKAGE_PATH=//172.168.1.240/tx/升级包发布/专项测试包
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=master
 	export MAKE_PAKG_NUM= ;;
@@ -565,7 +565,7 @@ case "$DBG_PLATFORM_ID" in
         export DBG_VENDOR=VENDOR_MTK
         export OTA_PACKAGE_NAME=msm8974-ota-eng.*.zip
         export DBG_SOC=mt35x
-        export TEST_PACKAGE_PATH=//192.168.128.128/8974/升级包发布/专项测试包
+        export TEST_PACKAGE_PATH=//172.168.1.240/8974/升级包发布/专项测试包
         export REPOSITORY_WORK_BRANCH=master
         export SYSTEM_WORK_BRANCH=master
         export MAKE_PAKG_NUM=19
@@ -600,7 +600,7 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_VENDOR=VENDOR_QCOM
 	export OTA_PACKAGE_NAME=msm8996-ota-eng.*.zip
 	export DBG_SOC=msm8x26
-	export TEST_PACKAGE_PATH=//192.168.128.128/share/8996/升级包/测试升级包
+	export TEST_PACKAGE_PATH=//172.168.1.240/share/8996/升级包/测试升级包
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=msm8996-master
 	export RECOVERY_BUILD_BRANCH=msm8996-recovery
@@ -642,7 +642,7 @@ case "$DBG_PLATFORM_ID" in
         export DBG_VENDOR=VENDOR_MTK
         export OTA_PACKAGE_NAME=msm8974-ota-eng.*.zip
         export DBG_SOC=mt35x
-        export TEST_PACKAGE_PATH=//192.168.128.128/8974/升级包发布/专项测试包
+        export TEST_PACKAGE_PATH=//172.168.1.240/8974/升级包发布/专项测试包
         export REPOSITORY_WORK_BRANCH=v2
         export SYSTEM_WORK_BRANCH=mt3561s
         export MAKE_PAKG_NUM=19
@@ -676,7 +676,7 @@ case "$DBG_PLATFORM_ID" in
         export DBG_VENDOR=VENDOR_MTK
         export OTA_PACKAGE_NAME=msm8974-ota-eng.*.zip
         export DBG_SOC=mt35x
-        export TEST_PACKAGE_PATH=//192.168.128.128/8974/升级包发布/专项测试包
+        export TEST_PACKAGE_PATH=//172.168.1.240/3561/升级包发布/专项测试包
         export REPOSITORY_WORK_BRANCH=mt3561s_release
         export SYSTEM_WORK_BRANCH=mt3561s_release
         export MAKE_PAKG_NUM=19
