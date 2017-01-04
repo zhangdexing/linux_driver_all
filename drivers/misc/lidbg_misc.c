@@ -548,16 +548,20 @@ void checkif_wifiap_error(void)
 void check_display_mode(void)
 {
     bool exist = fs_is_file_exist("/persist/display/pp_calib_data.bin");
-    int ret = fs_find_string(g_var.pflyhal_config_list, "HYFeatureDisplayon");
-    LIDBG_WARN("<lcd_type=%d HYFeatureDisplayon.in [%d,%d]>\n", g_var.hw_info.lcd_type, ret, exist);
-    if(ret > 0)
+    int HYFeature = fs_find_string(g_var.pflyhal_config_list, "HYFeatureDisplayon");
+    int Israel = fs_find_string(g_var.pflyhal_config_list, "IsraelFeatureDisplayon");
+    LIDBG_WARN("<lcd_type=%d HYFeatureDisplayon.in [%d,%d]Israel.%d>\n", g_var.hw_info.lcd_type, HYFeature, exist,Israel);
+    if(HYFeature > 0)
     {
-        if(!exist)
-        {
             LIDBG_WARN("<use HYFeatureDisplayon>\n");
             lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data.bin /persist/display/");
             lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
-        }
+    }
+    else if(Israel > 0)
+    {
+            LIDBG_WARN("<use IsraelFeatureDisplayon>\n");
+            lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data_Israel.bin /persist/display/pp_calib_data.bin");
+            lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
     }
     else
     {
