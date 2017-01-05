@@ -384,7 +384,9 @@ int main(int argc, char **argv)
     if(gAudioPolicyService != 0)
     {
         sp<IAudioPolicyService> &aps = gAudioPolicyService;
+#ifdef ANDROID_AT_LEAST_50
         phone_call_state = aps->getPhoneState();
+#endif
         if(phone_call_state < AUDIO_MODE_IN_CALL)
             phone_call_state_old = phone_call_state;
     }
@@ -395,8 +397,9 @@ int main(int argc, char **argv)
         {
             sp<IAudioPolicyService> &aps = gAudioPolicyService;
 
+#ifdef ANDROID_AT_LEAST_50
             phone_call_state = aps->getPhoneState();
-
+#endif
             playing = aps->isStreamActive(AUDIO_STREAM_VOICE_CALL, 0);
             if(1)
             {

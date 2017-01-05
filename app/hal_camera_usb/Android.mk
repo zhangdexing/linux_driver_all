@@ -14,7 +14,7 @@ LOCAL_C_INCLUDES += system/media/camera/include
 LOCAL_C_INCLUDES += hardware/qcom/display/libgralloc
 
 ifeq ($(call is-platform-sdk-version-at-least,21),true)
-$(warning 5.0===$(PLATFORM_SDK_VERSION))
+$(warning $(PLATFORM_VERSION)===$(PLATFORM_SDK_VERSION))
 LOCAL_CFLAGS += -DANDROID_AT_LEAST_50
 LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
 LOCAL_C_INCLUDES += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include/media
