@@ -2,6 +2,45 @@
 #define TEMP_LOG_PATH 	 LIDBG_LOG_DIR"log_ct.txt"
 void  fake_acc_off(void);
 
+
+
+
+void dump_sysinfo(void)
+{
+	lidbg_shell_cmd("chmod 777 /data/lidbg/*");
+	lidbg_shell_cmd("mkdir -p /data/lidbg/machine");
+	lidbg_shell_cmd("chmod 777 /data/lidbg/machine");
+	lidbg_shell_cmd("date > /data/lidbg/machine/machine.txt");
+	lidbg_shell_cmd("cat /proc/cmdline >> /data/lidbg/machine/machine.txt");
+	lidbg_shell_cmd("getprop fly.version.mcu >> /data/lidbg/machine/machine.txt");
+	lidbg_shell_cmd("getprop ro.release.version >> /data/lidbg/machine/machine.txt");
+	lidbg_shell_cmd("top -n 15 -t -d 1 -m 25 >/data/lidbg/machine/top.txt &");
+	lidbg_shell_cmd("procrank > /data/lidbg/machine/procrank.txt &");
+	lidbg_shell_cmd("ps > /data/lidbg/machine/ps.txt");
+	lidbg_shell_cmd("df > /data/lidbg/machine/df.txt");
+	lidbg_shell_cmd("getprop > /data/lidbg/machine/getprop.txt");
+	lidbg_shell_cmd("lsmod > /data/lidbg/machine/lsmod.txt");
+	lidbg_shell_cmd("cat /proc/buddyinfo > /data/lidbg/machine/buddyinfo.txt");
+
+	//power
+	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/wakeup_sources.txt");
+	lidbg_shell_cmd("cat /sys/kernel/debug/wakeup_sources >> /data/lidbg/pm_info/wakeup_sources.txt");
+	lidbg_shell_cmd("cat /proc/wakelocks >> /data/lidbg/pm_info/wakeup_sources.txt");
+
+	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/dumpsys_media.player.txt");
+	lidbg_shell_cmd("dumpsys media.player >> /data/lidbg/pm_info/dumpsys_media.player.txt");
+	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/dumpsys_power.txt");
+	lidbg_shell_cmd("dumpsys power >> /data/lidbg/pm_info/dumpsys_power.txt");
+	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/dumpsys_audio.txt");
+	lidbg_shell_cmd("dumpsys audio >> /data/lidbg/pm_info/dumpsys_audio.txt");
+	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/dumpsys_alarm.txt");
+	lidbg_shell_cmd("dumpsys alarm >> /data/lidbg/pm_info/dumpsys_alarm.txt");
+	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/location.txt");
+	lidbg_shell_cmd("dumpsys location >> /data/lidbg/pm_info/location.txt");
+	lidbg_shell_cmd("chmod 777 /data/lidbg/* -R");
+	lidbg_shell_cmd("chmod 777 /data/lidbg/*");
+
+}
 int thread_log_temp(void *data)
 {
     int tmp, cur_temp;
@@ -148,38 +187,7 @@ bool set_wifi_adb_mode(bool on)
 }
 int thread_dump_log_cp2_udisk(void *data)
 {
-	lidbg_shell_cmd("chmod 777 /data/lidbg/*");
-	lidbg_shell_cmd("mkdir -p /data/lidbg/machine");
-	lidbg_shell_cmd("chmod 777 /data/lidbg/machine");
-	lidbg_shell_cmd("date > /data/lidbg/machine/machine.txt");
-	lidbg_shell_cmd("cat /proc/cmdline >> /data/lidbg/machine/machine.txt");
-	lidbg_shell_cmd("getprop fly.version.mcu >> /data/lidbg/machine/machine.txt");
-	lidbg_shell_cmd("getprop ro.release.version >> /data/lidbg/machine/machine.txt");
-	lidbg_shell_cmd("top -n 15 -t -d 1 -m 25 >/data/lidbg/machine/top.txt &");
-	lidbg_shell_cmd("procrank > /data/lidbg/machine/procrank.txt &");
-	lidbg_shell_cmd("ps > /data/lidbg/machine/ps.txt");
-	lidbg_shell_cmd("df > /data/lidbg/machine/df.txt");
-	lidbg_shell_cmd("getprop > /data/lidbg/machine/getprop.txt");
-	lidbg_shell_cmd("lsmod > /data/lidbg/machine/lsmod.txt");
-	lidbg_shell_cmd("cat /proc/buddyinfo > /data/lidbg/machine/buddyinfo.txt");
-
-	//power
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/wakeup_sources.txt");
-	lidbg_shell_cmd("cat /sys/kernel/debug/wakeup_sources >> /data/lidbg/pm_info/wakeup_sources.txt");
-	lidbg_shell_cmd("cat /proc/wakelocks >> /data/lidbg/pm_info/wakeup_sources.txt");
-
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/dumpsys_media.player.txt");
-	lidbg_shell_cmd("dumpsys media.player >> /data/lidbg/pm_info/dumpsys_media.player.txt");
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/dumpsys_power.txt");
-	lidbg_shell_cmd("dumpsys power >> /data/lidbg/pm_info/dumpsys_power.txt");
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/dumpsys_audio.txt");
-	lidbg_shell_cmd("dumpsys audio >> /data/lidbg/pm_info/dumpsys_audio.txt");
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/dumpsys_alarm.txt");
-	lidbg_shell_cmd("dumpsys alarm >> /data/lidbg/pm_info/dumpsys_alarm.txt");
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/location.txt");
-	lidbg_shell_cmd("dumpsys location >> /data/lidbg/pm_info/location.txt");
-	lidbg_shell_cmd("chmod 777 /data/lidbg/* -R");
-	lidbg_shell_cmd("chmod 777 /data/lidbg/*");
+	dump_sysinfo();
 	ssleep(10);
 	lidbg_shell_cmd("am start -n com.mypftf.android.BugReport/.MainActivity &");
 	ssleep(50);
@@ -1257,6 +1265,7 @@ void parse_cmd(char *pt)
         {
             lidbg("dump log for app upload\n");
   	     lidbg_shell_cmd("echo appcmd *158#021 > /dev/lidbg_drivers_dbg0");
+	     dump_sysinfo();
 	     ssleep(3);
 	     lidbg_shell_cmd("chmod 777  /sdcard/FlyLog/DriBugReport");	
 	     lidbg_shell_cmd("mkdir  /sdcard/FlyLog/DriBugReport/drivers");	     
