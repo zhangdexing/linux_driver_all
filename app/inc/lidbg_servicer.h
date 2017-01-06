@@ -22,7 +22,7 @@
 #include <cutils/log.h>
 #include <malloc.h>
 #include <dirent.h>
-#include <syslog.h>
+//#include <syslog.h>
 #include <sys/klog.h>
 #include <signal.h>
 //#undef printf
