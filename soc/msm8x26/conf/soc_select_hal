@@ -25,7 +25,7 @@ export CONFIG_HAL_USB_CAMERA=y
         export CONFIG_HAL_VOLD_8x26_6_0=y
 	export CONFIG_HAL_BOOTANIMATION_6=y;;
     17)
-         ;;
+        export CONFIG_HAL_VOLD_8x26_6_0=y;;
     *)
         export CONFIG_HAL_VOLD_8x26_5_0=y;;
     esac
