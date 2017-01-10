@@ -2,7 +2,7 @@
 #include "lidbg_servicer.h"
 
 #define BUFSIZE (1024*512)
-#define MAXINUM (1024*1024*10)
+#define MAXINUM (1024*1024*15)
 #define PATH "/data/lidbg/reckmsg/"
 
 int openfd;
