@@ -133,6 +133,7 @@ bool flyparameter_info_get(void)
             lidbg_shell_cmd( parameter );
             fs_clear_file("/data/commenPersist/hwinfo.txt");
             fs_file_write2("/data/commenPersist/hwinfo.txt", g_recovery_meg->hwInfo.info);
+            lidbg_shell_cmd("chmod 777 /data/commenPersist/hwinfo.txt");
             lidbg("flyparameter=[%s]\n", g_recovery_meg->hwInfo.info);
             fs_mem_log("flyparameter=[%s]\n", g_recovery_meg->hwInfo.info);
 
