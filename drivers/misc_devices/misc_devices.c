@@ -731,7 +731,7 @@ static int soc_dev_remove(struct platform_device *pdev)
 static int  soc_dev_suspend(struct platform_device *pdev, pm_message_t state)
 {
     lidbg("soc_dev_suspend\n");
-    LEVEL_CONVERSION_DISABLE;
+    LEVEL_CONVERSION_ENABLE;
     if(!g_var.is_fly)
     {
         //button_suspend();
