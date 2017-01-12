@@ -175,8 +175,13 @@
 			SOC_IO_Output(0, g_hw.gpio_level_conversion_en, 0);\
 	}while(0)
 	
-#define USB_FRONT_WORK_ENABLE
-
+#define USB_FRONT_WORK_ENABLE  do{\
+				lidbg("USB_FRONT_WORK_ENABLE\n");\
+				USB_ID_LOW_HOST;\
+    				USB_POWER_ENABLE;\
+    				USB_POWER_FRONT_ENABLE;\
+			}while(0)
+			
 #define MSM_DSI83_DISABLE
 
 #define FLY_GPS_SO  "gps.mt3561.so"
