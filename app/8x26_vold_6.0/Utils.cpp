@@ -220,7 +220,7 @@ static status_t readMetadata(const std::string& path, std::string& fsType,
         int minor = atoi( pos + len);
         if (strstr(cline, "179"))
         {
-            strcat(mountPoint, "ext_sdcard");
+            strcat(mountPoint, "sdcard");
             if(minor <= minorBase)
                 minor = 1;
             else
@@ -232,7 +232,7 @@ static status_t readMetadata(const std::string& path, std::string& fsType,
 
         else
         {
-            strcat(mountPoint, "udisk-id-");
+            strcat(mountPoint, "udisk-");
             strcat(mountPoint, value);
             /*
             		    if(*(pos + len) == '0')
