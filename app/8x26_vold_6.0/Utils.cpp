@@ -196,7 +196,58 @@ static status_t readMetadata(const std::string& path, std::string& fsType,
 
         start = strstr(cline, "UUID=");
         if (start != nullptr && sscanf(start + 5, "\"%127[^\"]\"", value) == 1) {
-            fsUuid = value;
+{
+
+    char devicenode[128] = "";
+    char mountPoint[128] = "";
+
+    int minorBase = GetMinorofSD();  //get minor base value of sd card.
+
+    char *pos = strstr(path.c_str(), "public:");
+    if (pos != nullptr)
+    {
+        int len = 0;
+        char *p = pos;
+        for (; *p; p++)
+        {
+            len++;
+            if(*p == '-')
+            {
+                break;
+            }
+        }
+
+        int minor = atoi( pos + len);
+        if (strstr(cline, "179"))
+        {
+            strcat(mountPoint, "ext_sdcard");
+            if(minor <= minorBase)
+                minor = 1;
+            else
+                minor = minor - minorBase;
+            char buff[8] = "";
+            sprintf(buff, "%d", minor);
+            strcat(mountPoint, buff);
+        }
+
+        else
+        {
+            strcat(mountPoint, "udisk-id-");
+            strcat(mountPoint, value);
+            /*
+            		    if(*(pos + len) == '0')
+            			strcat(mountPoint, "1");
+            		    else
+            		        strcat(mountPoint, pos + len);
+            */
+        }
+    }
+    else {
+        strcat(mountPoint, "adoptable_sdcard");
+    }
+    fsUuid = mountPoint;
+}
+            //fsUuid = value;
         }
 
         start = strstr(cline, "LABEL=");
@@ -549,6 +600,38 @@ std::string DefaultFstabPath() {
     property_get("ro.hardware", hardware, "");
     return StringPrintf("/fstab.%s", hardware);
 }
+uint64_t GetMinorofSD() {
 
+    int minor = 0;
+    DIR *d;
+    struct dirent *de;
+
+    d = opendir("/dev/block/vold");
+    if (d == NULL) {
+        closedir(d);
+        return OK;
+    }
+
+    while ((de = readdir(d))) {
+        const char *name = de->d_name;
+        if (name[0] == '.') {
+            continue;
+        }
+	char* pos =strstr(name, "disk:179");
+	if( pos != nullptr) {
+		
+	    char* p = pos;
+	    int len = 0;
+	    for ( ; *p; p++) {
+		len++;
+		if (*p == ',' || *p == '-')
+	    	    break;
+	    }
+	    minor = atoi(pos+len);
+	}
+    }
+    closedir(d);
+    return minor;
+}
 }  // namespace vold
 }  // namespace android

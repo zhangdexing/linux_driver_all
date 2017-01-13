@@ -93,6 +93,7 @@ std::string BuildKeyPath(const std::string& partGuid);
 dev_t GetDevice(const std::string& path);
 
 std::string DefaultFstabPath();
+uint64_t GetMinorofSD();
 
 }  // namespace vold
 }  // namespace android
