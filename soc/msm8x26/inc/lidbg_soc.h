@@ -67,7 +67,7 @@
 #define DEFAULT_SUSPEND_NO_AIRPLANE_MODE
 #endif
 
-#ifdef PLATFORM_msm8909
+#if (defined PLATFORM_msm8909) || (defined PLATFORM_msm8996)
 #define FLY_USB_CAMERA_SUPPORT
 #endif
 
@@ -263,7 +263,7 @@ enum
 
 #if ANDROID_VERSION >= 600
 #define EMMC_MOUNT_POINT0  "/storage/emulated/0"
-#define EMMC_MOUNT_POINT1  "/storage/emulated/1"
+#define EMMC_MOUNT_POINT1  "/storage/sdcard1"
 #else
 #define EMMC_MOUNT_POINT0  "/storage/sdcard0"
 #define EMMC_MOUNT_POINT1  "/storage/sdcard1"

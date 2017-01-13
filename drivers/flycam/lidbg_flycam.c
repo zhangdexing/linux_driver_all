@@ -96,7 +96,7 @@ u8 *camStatus_data_for_hal;
 u8 *camStatus_fifo_buffer;
 static struct kfifo camStatus_data_fifo;
 
-u8 camera_DVR_fw_version[20] = {0};	
+u8 camera_DVR_fw_version[20] = "1603100001";	
 u8 camera_rear_fw_version[20] = {0};	
 
 u8 camera_rear_res[100] = {0};
@@ -656,72 +656,42 @@ static int thread_accon_start_rec(void *data)
 	return 0;
 }
 
-#if 0
 struct name_list
 {
     char name[33];
     struct list_head list;
 };
 
+#if(LINUX_VERSION_CODE > KERNEL_VERSION(3, 11, 0))
+struct lidbg_dir_ctx {
+        struct dir_context ctx;
+        struct list_head names;
+};
+#endif
+
 static int readdir_build_namelist(void *arg, const char *name, int namlen,	loff_t offset, u64 ino, unsigned int d_type)
 {
     if(!(name[0] == '.' || (name[0] == '.' && name[1] == '.'))) // ignore "." and ".."
     {
-        struct list_head *names = arg;
+#if(LINUX_VERSION_CODE > KERNEL_VERSION(3, 11, 0))
+		struct lidbg_dir_ctx *ctx = arg;
+#else
+		struct list_head *names = arg;
+#endif
         struct name_list *entry;
         entry = kzalloc(sizeof(struct name_list), GFP_KERNEL);
         if (entry == NULL)
             return -ENOMEM;
         memcpy(entry->name, name, namlen);
         entry->name[namlen] = '\0';
+#if(LINUX_VERSION_CODE > KERNEL_VERSION(3, 11, 0))
+        list_add(&entry->list, &ctx->names);
+#else
         list_add(&entry->list, names);
+#endif
     }
     return 0;
 }
-#else
-struct buffered_dirent {
-	u64		ino;
-	loff_t		offset;
-	int		namlen;
-	unsigned int	d_type;
-	char		name[];
-};
-
-struct readdir_data {
-	char		*dirent;
-	size_t		used;
-	int		cnt;
-	int		full;
-};
-
-static int lidbg_buffered_filldir(void *__buf, const char *name, int namlen,
-				 loff_t offset, u64 ino, unsigned int d_type)
-{
-	if(!(name[0] == '.' || (name[0] == '.' && name[1] == '.'))) // ignore "." and ".."
-    {
-		struct readdir_data *buf = __buf;
-		struct buffered_dirent *de = (void *)(buf->dirent + buf->used);
-		unsigned int reclen;
-
-		reclen = ALIGN(sizeof(struct buffered_dirent) + namlen, sizeof(u64));
-		if (buf->used + reclen > PAGE_SIZE) {
-			buf->full = 1;
-			return -EINVAL;
-		}
-
-		de->namlen = namlen;
-		de->offset = offset;
-		de->ino = ino;
-		de->d_type = d_type;
-		memcpy(de->name, name, namlen);
-		buf->used += reclen;
-		buf->cnt += 1;
-	}
-	return 0;
-}
-
-#endif
-
 
 /******************************************************************************
  * Function: lidbg_checkCam
@@ -738,18 +708,10 @@ static int lidbg_checkCam(void)
 	int back_charcnt = 0,front_charcnt = 0;
 	char back_hub_path[256],front_hub_path[256];
     struct file *dir_file, *f_dir, *b_dir;
-    //int status;
+    int status;
 	char insure_is_dir[50] = "/sys/bus/usb/drivers/usb/";
 	char f_videocnt = 0,b_videocnt = 0;
 	unsigned char retcode = 0;
-	char tmp_str[100];
-
-	struct readdir_data buf;
-	struct buffered_dirent *de;
-	int host_err;
-	int size;
-
-	
 #if 0
     if(!insure_is_dir )
    	{
@@ -768,71 +730,38 @@ static int lidbg_checkCam(void)
     }
     else
     {
-    	buf.dirent = (void *)__get_free_page(GFP_KERNEL);
-		if (!buf.dirent)
-			return -1;
-    	while(1)
-    	{
-			unsigned int reclen;
-			buf.used = 0;
-			buf.full = 0;
-			buf.cnt = 0;
-			
-			host_err = vfs_readdir(dir_file, lidbg_buffered_filldir, &buf);
-			if (buf.full)
-				host_err = 0;
-			
-			if (host_err < 0)
-				break;
-			
-			size = buf.used;
-
-			if (!size)
-				break;
-			
-			de = (struct buffered_dirent *)buf.dirent;
-			while (size > 0) 
-			{
-				//lidbg("de->name: %s\n",de->name);
-				if((!strncmp(de->name,  BACK_NODE , 5)) && (de->namlen >= back_charcnt) )
-				{
-					strncpy(tmp_str,de->name,de->namlen);
-					tmp_str[de->namlen] = '\0';
-					pr_debug("Back:tmp_str: %s\n",tmp_str);
-					back_charcnt = de->namlen;
-					sprintf(back_hub_path, "/sys/bus/usb/drivers/usb/%s/%s:1.0/video4linux/", tmp_str,tmp_str);//back cam
-				}
-				else if((!strncmp(de->name,  FRONT_NODE , 5)) && (de->namlen >= front_charcnt))
-				{
-					strncpy(tmp_str,de->name,de->namlen);
-					tmp_str[de->namlen] = '\0';
-					pr_debug("Front:tmp_str: %s\n",tmp_str);
-					front_charcnt = de->namlen;
-					sprintf(front_hub_path, "/sys/bus/usb/drivers/usb/%s/%s:1.0/video4linux/", tmp_str,tmp_str);//front cam
-				} 
-
-				reclen = ALIGN(sizeof(*de) + de->namlen,
-					       sizeof(u64));
-				size -= reclen;
-				de = (struct buffered_dirent *)((char *)de + reclen);
-			}
-		}
-		free_page((unsigned long)(buf.dirent));
-
-#if 0		
         struct name_list *entry;
         int count = 0;
+
+		#if(LINUX_VERSION_CODE > KERNEL_VERSION(3, 11, 0))
+		struct lidbg_dir_ctx ctx = {
+			.ctx.actor = readdir_build_namelist,
+			.names = LIST_HEAD_INIT(ctx.names)
+		};
+		#endif
+				
         //LIDBG_SUC("open:<%s,%s>\n", insure_is_dir, dir_file->f_path.dentry->d_name.name);
-        status = vfs_readdir(dir_file, readdir_build_namelist, &names);
+		#if(LINUX_VERSION_CODE > KERNEL_VERSION(3, 11, 0))
+			status = iterate_dir(dir_file,&ctx.ctx);
+	    #else
+	        status = vfs_readdir(dir_file, readdir_build_namelist, &names);
+		#endif
+
         if (dir_file)
             fput(dir_file);
-        while (!list_empty(&names))
+
+		#if(LINUX_VERSION_CODE > KERNEL_VERSION(3, 11, 0))
+        while (!list_empty(&ctx.names))
         {
-            entry = list_entry(names.next, struct name_list, list);
+            entry = list_entry(ctx.names.next, struct name_list, list);
+		#else
+	        while (!list_empty(&names))
+	        {
+	            entry = list_entry(names.next, struct name_list, list);
+		#endif	
             if (!status && entry)
             {
                 count++;
-				//lidbg("======5===%s==1==",entry->name);
 				if((!strncmp(entry->name,  BACK_NODE , 5)) && (strlen(entry->name) >= back_charcnt) )
 				{
 					back_charcnt = strlen(entry->name);
@@ -848,26 +777,35 @@ static int lidbg_checkCam(void)
             }
             entry = NULL;
         }
-#endif
+
 		
 		//check front Cam status:isPlugIn? isSonix?
 		if(front_charcnt == 0)
 		{
-			//lidbg("%s: can not found front cam plug in! ", __func__ );	
+			pr_debug("%s: can not found front cam plug in! ", __func__ );	
 		}
 		else
 		{
 			if(IS_ERR(f_dir = filp_open(front_hub_path, O_RDONLY | O_DIRECTORY, 0)))
 			{
-				pr_debug("%s: front_hub_path access wrong!\n ", __func__ );
+				lidbg("%s: front_hub_path access wrong!\n ", __func__ );
 			}
 			else
 			{
-#if 0			
+#if(LINUX_VERSION_CODE > KERNEL_VERSION(3, 11, 0))
+				status = iterate_dir(f_dir,&ctx.ctx);
+#else
 				status = vfs_readdir(f_dir, readdir_build_namelist, &names);
+#endif
+#if(LINUX_VERSION_CODE > KERNEL_VERSION(3, 11, 0))
+				while (!list_empty(&ctx.names))
+				{
+				    entry = list_entry(ctx.names.next, struct name_list, list);
+#else
 				while (!list_empty(&names))
-      		    {
-					entry = list_entry(names.next, struct name_list, list);
+				{
+				    entry = list_entry(names.next, struct name_list, list);
+#endif	
 					if(!strncmp(entry->name,  "video" , 5))
 					{
 						f_videocnt++;
@@ -876,17 +814,6 @@ static int lidbg_checkCam(void)
 					list_del(&entry->list);
                		kfree(entry);
 				}
-#endif		
-				buf.dirent = (void *)__get_free_page(GFP_KERNEL);
-				if (!buf.dirent)
-					return -1;
-				buf.used = 0;
-				buf.full = 0;
-				buf.cnt = 0;
-				host_err = vfs_readdir(f_dir, lidbg_buffered_filldir, &buf);
-				f_videocnt = buf.cnt;
-				pr_debug("f_videocnt = %d\n",f_videocnt);
-				free_page((unsigned long)(buf.dirent));
 				filp_close(f_dir, 0);
 			}
 		}
@@ -903,11 +830,20 @@ static int lidbg_checkCam(void)
 			}
 			else
 			{
-#if 0			
-				status = vfs_readdir(b_dir, readdir_build_namelist, &names);
-				while (!list_empty(&names))
-      		    {
-					entry = list_entry(names.next, struct name_list, list);
+				#if(LINUX_VERSION_CODE > KERNEL_VERSION(3, 11, 0))
+					status = iterate_dir(b_dir,&ctx.ctx);
+			    #else
+			        status = vfs_readdir(b_dir, readdir_build_namelist, &names);
+				#endif
+				#if(LINUX_VERSION_CODE > KERNEL_VERSION(3, 11, 0))
+			        while (!list_empty(&ctx.names))
+			        {
+			            entry = list_entry(ctx.names.next, struct name_list, list);
+				#else
+			        while (!list_empty(&names))
+			        {
+			            entry = list_entry(names.next, struct name_list, list);
+				#endif	
 					if(!strncmp(entry->name,  "video" , 5))
 					{
 						b_videocnt++;
@@ -916,21 +852,9 @@ static int lidbg_checkCam(void)
 					list_del(&entry->list);
                		kfree(entry);
 				}
-#endif
-				buf.dirent = (void *)__get_free_page(GFP_KERNEL);
-				if (!buf.dirent)
-					return -1;
-				buf.used = 0;
-				buf.full = 0;
-				buf.cnt = 0;
-				host_err = vfs_readdir(b_dir, lidbg_buffered_filldir, &buf);
-				b_videocnt = buf.cnt;
-				pr_debug("b_videocnt = %d\n",b_videocnt);
-				free_page((unsigned long)(buf.dirent));
 				filp_close(b_dir, 0);
 			}
 		}
-		
 		if(f_videocnt == 2)
 		{
 			lidbg("%s: front isSonixCam\n", __func__ );

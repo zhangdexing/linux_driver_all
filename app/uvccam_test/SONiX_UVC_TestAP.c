@@ -53,7 +53,7 @@
 
 static int lidbg_get_current_time(char isXUSet , char *time_string, struct rtc_time *ptm);
 static void send_driver_msg(char magic ,char nr,unsigned long arg);
-unsigned int find_earliest_file(char* Dir,char* minRecName);
+int find_earliest_file(char* Dir,char* minRecName);
 
 
 #define TESTAP_VERSION		"v1.0.21_SONiX_UVC_TestAP_Multi"
@@ -109,7 +109,7 @@ unsigned int find_earliest_file(char* Dir,char* minRecName);
 
 #if ANDROID_VERSION >= 600
 #define EMMC_MOUNT_POINT0  "/storage/emulated/0"
-#define EMMC_MOUNT_POINT1  "/storage/emulated/1"
+#define EMMC_MOUNT_POINT1  "/storage/sdcard1"
 #else
 #define EMMC_MOUNT_POINT0  "/storage/sdcard0"
 #define EMMC_MOUNT_POINT1  "/storage/sdcard1"
@@ -1816,7 +1816,7 @@ void *thread_bottom_count_frame(void *par)
 void *thread_del_tmp_emfile(void *par)
 {
 	char minRecName[100] = {0};
-	unsigned int filecnt = 0;
+	int filecnt = 0;
 	char minRecPath[200] = {0};
 	char tmp_cmd[300] = {0};
 	char isFormat_str[PROPERTY_VALUE_MAX];
@@ -2446,7 +2446,7 @@ int lidbg_del_days_file(char* Dir,int days)
 
 }
 
-unsigned int find_earliest_file(char* Dir,char* minRecName)
+int find_earliest_file(char* Dir,char* minRecName)
 {
 	DIR *pDir ;
 	struct dirent *ent; 
