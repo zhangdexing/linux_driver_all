@@ -2200,7 +2200,7 @@ ssize_t  mc3xxx_read(struct file *filp, char __user *buffer, size_t size, loff_t
 	accel.isACCON = isACCON;
 	accel.isIRQCrash = isIRQWake;
 	
-	if(isACCON == true);
+	if(isACCON == true)
 		mc3xxx_measure(m_data->client, &accel);//measure when acc on
 	
 #ifdef FLY_USE_SUSPEND_IRQ		
