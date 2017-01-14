@@ -115,6 +115,7 @@ function lidbg_menu()
 	echo [8] push out to /data'            'push驱动模块到/data加载,不影响ota
 	echo [9] change platformid'            'ep: 9 16 更换到mtk平台
 	echo [10] push jar so  etc'            'ep:10 /system/framework/framework.jar push此文件到机器
+	echo [11] build other branch all'	'fetch跳到指定分支编译lidbg所有文件
 
 	echo
 	soc_menu
@@ -163,6 +164,11 @@ function lidbg_handle()
 			adb remount
 			adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM$2 $2
 			exit;;
+		11)
+			expect $DBG_TOOLS_PATH/pull $2 l
+			git reset --hard origin/$2
+			chmod 777 ./* -R
+			lidbg_build_all;;
 		*)
 			echo
 		esac
