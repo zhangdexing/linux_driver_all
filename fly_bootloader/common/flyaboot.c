@@ -33,6 +33,16 @@ int fly_screen_h = 600;
 int fly_screen_w = 800;
 int fly_screen_h =  480;
 #endif
+int lcd_resolution=0;
+int dsi83_conf_num=0;
+enum lcd_resolution_type
+{
+    lcd_1024_600,
+    lcd_1024_768,
+    lcd_768_1024,
+    lcd_1280_400,
+    lcd_1280_720,
+};
 
 const char *model_message = "Press any key or touch screen to enter";
 const char *NO_SYS_MEG1 = "Found no system";
@@ -42,6 +52,7 @@ const char *INTO_FASTBOT = "fastboot model.......";
 const char *INTO_REC = "entering recovery.......";
 const char *INTO_FLYREC = "back_up_recovery model......";
 int bp_meg = 0;
+
 
 const char *open_system_print_message  = "console=ttyHSL0,115200,n8 androidboot.console=ttyHSL0 androidboot.hardware=qcom user_debug=31 msm_rtb.filter=0x37";
 const char *android_system_unprintf   = " androidboot.hardware=qcom loglevel=1";
@@ -306,6 +317,45 @@ char *dbg_msg_set(const char *system_cmd)
     return dbg_msg_en(system_cmd, bp_meg);
 }
 
+void  choose_lcd(int lcd_resolution)
+{
+    if(lcd_resolution==lcd_1024_600)
+    {
+	fly_screen_w  = 1024;
+	fly_screen_h  = 600;
+	dsi83_conf_num= 0;
+    }
+    else if(lcd_resolution==lcd_1024_768)
+    {
+	fly_screen_w  = 1024;
+	fly_screen_h  = 768;
+	dsi83_conf_num= 1;
+    }
+    else if(lcd_resolution==lcd_768_1024)
+    {
+	fly_screen_w  = 768;
+	fly_screen_h  = 1024;
+	dsi83_conf_num= 2;
+    }
+    else if(lcd_resolution==lcd_1280_400)
+    {
+	fly_screen_w  = 1280;
+	fly_screen_h  = 400;
+	dsi83_conf_num= 3;
+    }
+    else if(lcd_resolution==lcd_1280_720)
+    {
+	fly_screen_w  = 1280;
+	fly_screen_h  = 720;
+	dsi83_conf_num= 4;
+    }
+    else
+    {
+	fly_screen_w  = 1024;
+	fly_screen_h  = 600;
+	dsi83_conf_num= 0;
+    }
+}
 void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
 {
     int model = 0;
@@ -319,9 +369,6 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
 
     //send_hw_info(hw_info);//lpc i2c
     //backlight_disable();
-    flyaudio_hw_init();
-
-    fly_fbcon_clear();
     //if(get_extra_recovery_message(&RecoveryMeg))
     if(ptn_read("flyparameter", 0, sizeof(RecoveryMeg), &RecoveryMeg))
     {
@@ -365,6 +412,10 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
 
     bp_meg = RecoveryMeg.bootParam.upName.val;
     dprintf(INFO, "flyaboot init bp_meg = %d\n", bp_meg);
+    choose_lcd(lcd_resolution);
+    dprintf(INFO,"lcd_resolution %d*%d\n",fly_screen_w,fly_screen_h);
+    flyaudio_hw_init();
+    fly_fbcon_clear();
 
     send_hw_info(hw_info);
     backlight_disable();

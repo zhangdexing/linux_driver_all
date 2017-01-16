@@ -199,7 +199,7 @@ void fly_setBcol(unsigned long int backcolor)
     	}
     */
 #if (LOGO_FORMAT == RGB888)
-    unsigned char *tem = malloc(1024 * 3);
+    unsigned char *tem = malloc(FBCON_WIDTH * 3);
     int i = 0, m = 0;
 
     unsigned char R;
@@ -210,17 +210,17 @@ void fly_setBcol(unsigned long int backcolor)
     G = backcolor >> 8 & 0xff;
     B = backcolor & 0xff;
 
-    for(i = 0; i < 1024; i++)
+    for(i = 0; i < FBCON_WIDTH; i++)
     {
         tem[m++] = B;
         tem[m++] = G;
         tem[m++] = R;
     }
-    for (i = 0; i < 600; i++)
+    for (i = 0; i < FBCON_HEIGHT; i++)
     {
         memcpy (fb_base_get() + ((0 + (i * FBCON_WIDTH)) * 3),
                 tem,
-                1024 * 3);
+                FBCON_WIDTH * 3);
     }
 #ifdef BOOTLOADER_TYPE_LK
 	arch_clean_invalidate_cache_range((unsigned long)fb_base_get(), FBCON_WIDTH * FBCON_HEIGHT * 3);

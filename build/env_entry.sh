@@ -585,7 +585,7 @@ case "$DBG_PLATFORM_ID" in
 	export CLASSPATH=$JAVA_HOME/lib:$JRE_HOME/lib:$CLASSPATH
 	export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH
 	export SYSTEM_BUILD_TYPE=userdebug
-	export BOOTLOADER_BUILD_BRANCH=msm8996_lk
+	export BOOTLOADER_BUILD_BRANCH=msm8996-master
 	export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/bootable/bootloader/lk
         export DBG_BOOTLOADER_IMG=emmc_appsboot.mbn
         export DBG_BOOTLOADER_PARTITION_NAME=aboot
@@ -603,7 +603,7 @@ case "$DBG_PLATFORM_ID" in
 	export TEST_PACKAGE_PATH=//172.168.1.240/share/8996/升级包/测试升级包
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=msm8996-master
-	export RECOVERY_BUILD_BRANCH=msm8996-recovery
+	export RECOVERY_BUILD_BRANCH=msm8996-master
         export MAKE_PAKG_NUM=21
 
 	export NON_HLOS_FILE_PATH=$BP_SOURCE_PATH/common/build/bin/asic

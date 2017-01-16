@@ -1,6 +1,6 @@
 #include "dsi83.h"
 #include "fly_private.h"
-
+extern dsi83_conf_num;
 static struct i2c_gpio_dev *dsi83_dev = NULL;
 
 static void dsi83_i2c_config()
@@ -70,7 +70,10 @@ static int SN65_Sequence_seq4(void)
     int ret = 0, i;
     char buf2[2];
     char *buf_piont = NULL;
-    buf_piont = dsi83_conf;
+#if defined(TEST_PATTERN)
+    dsi83_conf_num++;
+#endif
+    buf_piont = dsi83_conf[2*dsi83_conf_num];
     buf2[0] = 0x00;
     buf2[1] = 0x00;
     dprintf(INFO, "dsi83:Sequence 4\n");
@@ -302,7 +305,6 @@ void dsi83_init()
     int cnt = 0;
     int init_cnt = 0;
     dprintf(INFO, "dsi83_init.\n");
-
     dsi83_i2c_config();
     dsi83_gpio_init();
 
@@ -343,7 +345,7 @@ dsi83_config_start:
             dprintf(INFO, "dsi83:DSI83 config failed, something wrong, cnt = %d !\n", cnt);
     }
     mdelay(100);
-#ifdef BOOTLOADER_MSM8909
+#if (defined BOOTLOADER_MSM8909) || (defined BOOTLOADER_MSM8996)
 	dprintf(INFO, "Display Init: +\n");
     	target_display_init(device.display_panel);
 	dprintf(INFO, "Display Init: -\n");
