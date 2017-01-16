@@ -9,6 +9,7 @@
 //#define FORCE_UMOUNT_UDISK
 
 LIDBG_DEFINE;
+static struct timer_list usb_release_timer;
 
 int udisk_stability_test = 0;
 #define LCD_ON_DELAY (1500)//acc_on-->lcd_on
@@ -294,6 +295,7 @@ static int misc_dev_dev_event(struct notifier_block *this,
         //lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_BL_LCD_STATUS_CHANGE, NOTIFIER_MINOR_BL_APP_OFF));
         //lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_BL_LCD_STATUS_CHANGE, NOTIFIER_MINOR_BL_HAL_OFF));
     }
+	mod_timer(&usb_release_timer,jiffies + 180*HZ);
     break;
 
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_DOWN):
@@ -360,6 +362,7 @@ static int misc_dev_dev_event(struct notifier_block *this,
 #endif
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_SCREEN_ON):
+	del_timer(&usb_release_timer);
 #ifdef SOC_mt35x
 	enable_irq(GPIO_TO_INT(6));
 #endif
@@ -472,7 +475,11 @@ static void parse_cmd(char *pt)
 #else
 		 g_var.usb_cam_request = 1;
 		if(g_var.acc_flag == FLY_ACC_OFF)
+		{
 		    usb_camera_enable(true);
+		    mod_timer(&usb_release_timer,jiffies + 180*HZ);
+		}
+
 #endif
 		
     }
@@ -654,6 +661,18 @@ int thread_udisk_en(void *data)
 }
 #endif
 
+static void usb_release_timer_func(unsigned long data)
+{
+	if(g_var.acc_flag == FLY_ACC_OFF)
+	{
+		lidbg("usb_release\n");
+		g_var.usb_cam_request= 0;
+		usb_camera_enable(false);
+	}
+
+	return;
+}
+
 
 static int soc_dev_probe(struct platform_device *pdev)
 {
@@ -661,6 +680,10 @@ static int soc_dev_probe(struct platform_device *pdev)
     devices_notif.notifier_call = devices_notifier_callback;
     fb_register_client(&devices_notif);
 #endif
+    init_timer(&usb_release_timer);
+    usb_release_timer.function = usb_release_timer_func;
+    usb_release_timer.data = 0;
+    usb_release_timer.expires = 0;
 
     register_lidbg_notifier(&lidbg_notifier);
 
