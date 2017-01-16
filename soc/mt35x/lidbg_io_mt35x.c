@@ -150,10 +150,10 @@ int soc_io_config(u32 index, int func, u32 direction, u32 pull, u32 drive_streng
         err = gpio_request(index, "lidbg_io");
         if (err)
         {
-            lidbg("\n\nerr: gpio request failed1 %d!!!!!!\n\n\n",index);
+            lidbg("err: gpio request failed1 %d!!!!!!\n",index);
             gpio_free(index);
             err = gpio_request(index, "lidbg_io");
-            lidbg("\n\nerr: gpio request failed2 %d!!!!!!\n\n\n",index);
+            lidbg("err: gpio request failed2 %d!!!!!!\n",index);
         }
 
         if(direction == GPIO_CFG_INPUT)
