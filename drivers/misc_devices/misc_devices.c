@@ -296,6 +296,7 @@ static int misc_dev_dev_event(struct notifier_block *this,
         //lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_BL_LCD_STATUS_CHANGE, NOTIFIER_MINOR_BL_HAL_OFF));
     }
 	mod_timer(&usb_release_timer,jiffies + 180*HZ);
+	lidbg_shell_cmd("echo backcar_type $(getprop fly.set.cvsb.swit) > /dev/flydev0");
     break;
 
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_DOWN):
@@ -523,6 +524,22 @@ static void parse_cmd(char *pt)
     			wake_unlock(&device_wakelock);
 		}
     }
+    else if (!strcmp(argv[0], "backcar_type"))
+    {
+		if((argv[1] != NULL ) && (!strcmp(argv[1], "1")))
+		{
+	        	lidbg("set backcar: usb\n");
+		       g_var.backcar_type = BACKCAR_TYPE_USB;
+
+		}
+		else
+		{
+	        	lidbg("set backcar: cvbs\n");
+		       g_var.backcar_type = BACKCAR_TYPE_CVBS;
+
+		}
+	}
+
     else if (!strcmp(argv[0], "flyaudio_reboot"))
     {
         g_var.flyaudio_reboot=1;

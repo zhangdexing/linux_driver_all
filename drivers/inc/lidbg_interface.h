@@ -243,6 +243,13 @@ typedef enum
 	FLY_ACC_ON,
 }FLY_ACC_STATUS;
 
+
+typedef enum
+{
+	BACKCAR_TYPE_CVBS,
+	BACKCAR_TYPE_USB,
+}FLY_BACKCAR_TYPE;
+
 typedef enum
 {
 	ID0_MSM7627A,
@@ -370,7 +377,9 @@ struct lidbg_pvar_t // var must add  at the end of the struct
     int keep_lcd_on;
     struct list_head *pflyhal_config_list;
     bool dvr_cam_ready;
-    bool rear_cam_ready;	
+    bool rear_cam_ready;
+    FLY_BACKCAR_TYPE  backcar_type;	
+
 };
 
 typedef struct

@@ -148,10 +148,12 @@
 			 lidbg("USB_WORK_ENABLE\n");\
 			 USB_ID_LOW_HOST;\
 			 USB_POWER_ENABLE;\
-			 USB_POWER_BACK_ENABLE;\
-			 USB_POWER_FRONT_ENABLE;\
+			 if(g_var.backcar_type == BACKCAR_TYPE_USB)\
+			 	{USB_POWER_BACK_ENABLE;USB_POWER_FRONT_ENABLE;}\
 			 msleep(1000);\
 			 USB_POWER_UDISK_ENABLE;\
+			 if(g_var.backcar_type == BACKCAR_TYPE_CVBS)\
+			 	{msleep(1000*10);USB_POWER_BACK_ENABLE;USB_POWER_FRONT_ENABLE;}\
 			}while(0)
 
 #define USB_WORK_DISENABLE  do{\

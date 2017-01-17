@@ -504,6 +504,11 @@ int fly_interface_init(void)
     g_var.usb_request = 0;
     g_var.usb_cam_request = 0;
     g_var.acc_goto_sleep_time = 0;
+    g_var.backcar_type = BACKCAR_TYPE_CVBS;
+#ifdef SOC_mt35x	
+    g_var.rear_cam_ready = 1;
+#endif
+
 #ifdef SUSPEND_ONLINE	
     g_var.suspend_timeout_protect = 0;
 #else
