@@ -663,7 +663,9 @@ static int dsi83_init(void)
     else if ((screen_x == 1024) && (screen_y == 768))
         dsi83_conf_num = 2;	
     else if ((screen_x == 768) && (screen_y == 1024))
-        dsi83_conf_num = 3;	
+        dsi83_conf_num = 3;
+    else if ((screen_x == 1280) && (screen_y == 720))
+        dsi83_conf_num = 4;
     else
         dsi83_conf_num = 0;		//1024x600 default
 
