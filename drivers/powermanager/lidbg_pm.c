@@ -452,7 +452,8 @@ static int test_task_flag(struct task_struct *p, int flag)
     while_each_thread(p, t);
     return 0;
 }
-struct task_struct *find_task_by_name_or_kill(bool enable_filter, bool enable_dbg, bool enable_kill, char *taskname)
+
+struct task_struct *find_task_or_kill(bool enable_filter, bool enable_dbg, bool enable_kill, char *taskname, int pid)
 {
     int total = 0;
     struct task_struct *p;
@@ -469,9 +470,14 @@ struct task_struct *find_task_by_name_or_kill(bool enable_filter, bool enable_db
         if(enable_dbg)
         {
             total++;
-            PM_WARN("<task%d:0x%x,%ld,[%s],%d>\n", total, p->flags, p->state, p->comm, p->pid);
+            PM_WARN("<task%d:0x%x,%ld,[%s],%d,%d>\n", total, p->flags, p->state, p->comm, p->pid, p->rt_priority);
         }
         if(taskname && (!strncmp(taskname, p->comm, strlen(taskname))))
+        {
+            selected = p;
+            break;
+        }
+        if(pid > 0 && pid == p->pid)
         {
             selected = p;
             break;
@@ -484,6 +490,44 @@ struct task_struct *find_task_by_name_or_kill(bool enable_filter, bool enable_db
     }
     return selected;
 }
+struct task_struct *find_task_by_name_or_kill(bool enable_filter, bool enable_dbg, bool enable_kill, char *taskname)
+{
+    return find_task_or_kill(enable_filter, enable_dbg, enable_kill, taskname, -1);
+}
+
+struct task_struct *find_task_by_pid_or_kill(bool enable_filter, bool enable_dbg, bool enable_kill, int pid)
+{
+    return find_task_or_kill(enable_filter, enable_dbg, enable_kill, NULL, pid);
+}
+int lidbg_set_task_state(int pid, int priority,int nice, int stop)
+{
+    struct task_struct *p = NULL;
+
+    struct sched_param param = {0};
+    param.sched_priority = priority;
+    p = find_task_by_pid_or_kill(false, false, false, pid);
+
+    if(p != NULL)
+    {
+        PM_WARN("<sched_setscheduler.%d/%d/%d/%d>\n",  pid, priority, nice, stop);
+        if(priority != 200)
+            sched_setscheduler(p, SCHED_RR, &param);
+        if(nice != 200)
+            set_user_nice(p, nice);
+        if(stop==1)
+        {
+            set_task_state(p, TASK_STOPPED);
+        }
+        if(stop==0)
+            set_task_state(p, TASK_RUNNING);
+        PM_WARN("<sched_setscheduler.success:0x%x,%ld,[%s],%d,%d>\n",  p->flags, p->state, p->comm, p->pid, p->rt_priority);
+        return 1;
+    }
+    else
+        PM_WARN("<sched_setscheduler.error:0x%x,%ld,[%s],%d,%d>\n",  p->flags, p->state, p->comm, p->pid, p->rt_priority);
+    return -1;
+}
+
 int pm_open (struct inode *inode, struct file *filp)
 {
     return 0;
@@ -843,6 +887,14 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
 			, cmd_num > 6 ? cmd[6] : "", cmd_num > 7 ? cmd[7] : "", cmd_num > 8 ? cmd[8] : "", cmd_num > 9 ? cmd[9] : "", cmd_num > 10 ? cmd[10] : "", cmd_num > 11 ? cmd[11] : "");
 		PM_WARN("<3rd.delay:%d  shell_head:%s>\n", delay_ms_3rd,shell_head);
 		complete(&pm_3rd_package_wait);
+        }
+        else  if(!strcmp(cmd[1], "priority"))
+        {
+		int pid= simple_strtoul(cmd[2], 0, 0);
+		int priority= simple_strtoul(cmd[3], 0, 0);
+		int nice= simple_strtoul(cmd[4], 0, 0);
+		int stop= simple_strtoul(cmd[5], 0, 0);
+		lidbg_set_task_state(pid, priority,nice,stop);
         }
     }
 #endif
