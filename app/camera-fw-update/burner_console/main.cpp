@@ -450,7 +450,7 @@ int main(int argc, char *argv[])
 	{
 	    lidbg("open lidbg_flycam0 fail\n");
 		close(flycam_fd);
-	    return 0;
+	    //return 0;
 	}
 
 	if (argc > 1)
