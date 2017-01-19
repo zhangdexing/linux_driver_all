@@ -44,17 +44,14 @@ ifeq ($(CONFIG_HAL_PARTED),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,lidbg_parted)
 endif
 
-ifeq ($(CONFIG_HAL_USB_CAMERA),y)
-SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,uvccam_test)
+ifeq ($(CONFIG_HAL_USB_CAMERA_PREVIEW),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,hal_camera_usb)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,hal_camera_study_v4l2)
 endif
 
 ifeq ($(CONFIG_HAL_USB_CAMERA),y)
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,uvccam_test)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,libusb01/android/jni)
-endif
-
-ifeq ($(CONFIG_HAL_USB_CAMERA),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,camera-fw-update)
 endif
 

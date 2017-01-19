@@ -4026,7 +4026,7 @@ int main(int argc, char *argv[])
 	{
 	    lidbg("open lidbg_flycam0 fail\n");
 		close(flycam_fd);
-	    return 0;
+	    //return 0;
 	}
 
 
@@ -4151,43 +4151,7 @@ openfd:
 	dev = video_open(devName);
 	
 	if (dev < 0)
-		return 1;
-
-	send_driver_msg(FLYCAM_STATUS_IOC_MAGIC,NR_STATUS,RET_DVR_START);
-	
-	if((do_save) || (do_record)) 
-		get_driver_prop(cam_id);
-
-	property_get("lidbg.uvccam.isDisableOSD", isDisableOSD_str, "0");
-	isDisableOSD = atoi(isDisableOSD_str);
-	
-	/*DVR enable OSD ,Rear control by camera.X.so*/
-	if(cam_id == DVR_ID)
-	{
-		if(isDisableOSD > 0) 
-		{
-			if(XU_OSD_Set_Enable(dev, 0, 0) <0)
-				lidbg( "XU_OSD_Set_Enable Failed\n");	
-		}
-		else
-		{
-			if(XU_OSD_Set_Enable(dev, 1, 1) <0)
-				lidbg( "XU_OSD_Set_Enable Failed\n");	
-		}
-	}
-	if(XU_OSD_Set_CarcamCtrl(dev, 0, 0, 0) < 0)
-			lidbg( "XU_OSD_Set_CarcamCtrl Failed\n");	
-
-	/*set OSD time*/
-	lidbg_get_current_time(1, time_buf, NULL);
-	
-	if(do_vendor_version_get)
-	{
-	 	char vendor_version[12];
-		get_vendor_verson(dev, vendor_version);
-		TestAp_Printf(TESTAP_DBG_FLOW, "Vendor Version : %s\n",vendor_version);
-		
-	}
+		return 1;	
 
 	if(do_ef_set)
 	{
@@ -4656,7 +4620,7 @@ openfd:
 		}
 		
 		if(XU_OSD_Set_Enable(dev, osd_show_line, osd_show_block) <0)
-			lidbg( "SONiX_UVC_TestAP @main : XU_OSD_Set_Enable Failed\n");	
+			lidbg( "SONiX_UVC_TestAP @main : XU_OSD_Set_Enable Failed\n");
 	}
 
 	if(do_osd_show_get)
@@ -5049,6 +5013,54 @@ openfd:
 
 	if (do_set_input)
 		video_set_input(dev, input);
+
+	if((!do_save) && (!do_record)) //XU set
+	{
+		if(flycam_fd > 0) close(flycam_fd);
+		if(dev > 0) close(dev);
+		return 0;
+	}
+	
+
+/**************************Start DVR******************************************/
+
+
+	send_driver_msg(FLYCAM_STATUS_IOC_MAGIC,NR_STATUS,RET_DVR_START);
+	
+	if((do_save) || (do_record)) 
+		get_driver_prop(cam_id);
+
+	property_get("lidbg.uvccam.isDisableOSD", isDisableOSD_str, "0");
+	isDisableOSD = atoi(isDisableOSD_str);
+	
+	/*DVR enable OSD ,Rear control by camera.X.so*/
+	if(cam_id == DVR_ID)
+	{
+		if(isDisableOSD > 0) 
+		{
+			if(XU_OSD_Set_Enable(dev, 0, 0) <0)
+				lidbg( "XU_OSD_Set_Enable Failed\n");	
+		}
+		else
+		{
+			if(XU_OSD_Set_Enable(dev, 1, 1) <0)
+				lidbg( "XU_OSD_Set_Enable Failed\n");	
+		}
+	}
+	if(XU_OSD_Set_CarcamCtrl(dev, 0, 0, 0) < 0)
+			lidbg( "XU_OSD_Set_CarcamCtrl Failed\n");	
+
+	/*set OSD time*/
+	lidbg_get_current_time(1, time_buf, NULL);
+	
+	if(do_vendor_version_get)
+	{
+	 	char vendor_version[12];
+		get_vendor_verson(dev, vendor_version);
+		TestAp_Printf(TESTAP_DBG_FLOW, "Vendor Version : %s\n",vendor_version);
+		
+	}
+	
 
 	//ret = video_get_input(dev);
 	//TestAp_Printf(TESTAP_DBG_FLOW, "Input %d selected\n", ret);

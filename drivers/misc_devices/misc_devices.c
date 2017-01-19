@@ -549,6 +549,43 @@ static void parse_cmd(char *pt)
 	 //MCU_WP_GPIO_OFF;
         lidbg("Misc devices ctrl: g_var.flyaudio_reboot=1\n");
     }
+	else if (!strncmp(argv[0], "rear_osd", 7))
+	{
+		char *keyval[2] = {NULL};//key-vals
+		int rear_osdVal;
+		lidbg_token_string(argv[0], "=", keyval) ;
+		rear_osdVal = simple_strtoul(keyval[1], 0, 0);
+		if (!strcmp(keyval[1], "1"))
+		{
+			lidbg("Rear OSD Enable!\n");
+			lidbg_shell_cmd("/flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --xuset-oe 1 1 ");
+			lidbg_shell_cmd("/flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --xuset-car 0 0 0&");
+		}
+		else if (!strcmp(keyval[1], "0"))
+		{
+			lidbg("Rear OSD Disable!\n");
+			lidbg_shell_cmd("/flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --xuset-oe 0 0&");
+		}
+		else lidbg("Rear OSD ERROR CMD!\n");
+	}
+	else if (!strncmp(argv[0], "rear_hmirror", 12))
+	{
+		char *keyval[2] = {NULL};//key-vals
+		int rear_hmirrorVal;
+		lidbg_token_string(argv[0], "=", keyval) ;
+		rear_hmirrorVal = simple_strtoul(keyval[1], 0, 0);
+		if (!strcmp(keyval[1], "1"))
+		{
+			lidbg("Rear Mirror Enable!\n");
+			lidbg_shell_cmd("/flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --xuset-mir 1&");
+		}
+		else if (!strcmp(keyval[1], "0"))
+		{
+			lidbg("Rear Mirror Disable!\n");
+			lidbg_shell_cmd("/flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --xuset-mir 0&");
+		}
+		else lidbg("Rear Mirror ERROR CMD!\n");
+	}
 }
 
 
