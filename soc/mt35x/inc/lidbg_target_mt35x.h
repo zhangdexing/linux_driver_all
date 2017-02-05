@@ -72,7 +72,6 @@
 	}while(0)
 
 #define USB_POWER_ENABLE do{\
-			LPC_CMD_USB5V_ON;\
 			g_var.usb_status = 1;\
 			check_gpio(g_hw.gpio_usb_power);\
 			SOC_IO_Output(0, g_hw.gpio_usb_power, 1);\
@@ -90,7 +89,6 @@
 	}while(0)
 
 #define USB_POWER_DISABLE do{\
-			LPC_CMD_USB5V_OFF;\
 			g_var.usb_status = 0;\
 			check_gpio(g_hw.gpio_usb_power);\
 			SOC_IO_Output(0, g_hw.gpio_usb_power, 0);\
@@ -148,12 +146,10 @@
 			 lidbg("USB_WORK_ENABLE\n");\
 			 USB_ID_LOW_HOST;\
 			 USB_POWER_ENABLE;\
-			 if(g_var.backcar_type == BACKCAR_TYPE_USB)\
-			 	{USB_POWER_BACK_ENABLE;USB_POWER_FRONT_ENABLE;}\
+			 USB_POWER_BACK_ENABLE;\
+			 USB_POWER_FRONT_ENABLE;\
 			 msleep(1000);\
 			 USB_POWER_UDISK_ENABLE;\
-			 if(g_var.backcar_type == BACKCAR_TYPE_CVBS)\
-			 	{msleep(1000*10);USB_POWER_BACK_ENABLE;USB_POWER_FRONT_ENABLE;}\
 			}while(0)
 
 #define USB_WORK_DISENABLE  do{\

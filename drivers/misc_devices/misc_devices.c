@@ -493,7 +493,10 @@ static void parse_cmd(char *pt)
 #else
 		  g_var.usb_cam_request= 0;
 		  if(g_var.acc_flag == FLY_ACC_OFF)
+		  {
 		 	usb_camera_enable(false);
+			del_timer(&usb_release_timer);
+		  }
 #endif
     }
     else if (!strcmp(argv[0], "usb_reboot"))

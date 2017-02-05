@@ -153,15 +153,15 @@ void acc_status_handle(FLY_ACC_STATUS val)
 	lidbg(TAG"acc_status_handle: in val:%d,FLY_ACC_ON:%d\n",val,FLY_ACC_ON);
 	if(val == FLY_ACC_ON){
 		lidbg(TAG"acc_status_handle: FLY_ACC_ON\n");
+		g_var.acc_flag = FLY_ACC_ON;
 		wake_lock(&rmtctrl_wakelock);
 		#ifdef SOC_mt35x
 		MSM_DSI83_POWER_ON;
 		dsi83_resume();
 		#endif
 		lidbg(TAG"acc_status_handle: FLY_ACC_ON:acc_count=%d\n",acc_count++);
-		g_var.acc_flag = FLY_ACC_ON;
 
-		lidbg(TAG"acc_status_handle: clear unormal wakeup count.\n");
+		//lidbg(TAG"acc_status_handle: clear unormal wakeup count.\n");
 		system_wakeup_ms = 0;
 		repeat_times = 0;
 		system_unormal_wakeup_cnt = 0;
