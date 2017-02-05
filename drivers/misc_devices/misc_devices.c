@@ -718,7 +718,8 @@ int thread_udisk_en(void *data)
 }
 #endif
 
-static void usb_release_timer_func(unsigned long data)
+
+int thread_usb_camera_enable(void *data)
 {
 	if(g_var.acc_flag == FLY_ACC_OFF)
 	{
@@ -726,7 +727,16 @@ static void usb_release_timer_func(unsigned long data)
 		g_var.usb_cam_request= 0;
 		usb_camera_enable(false);
 	}
+	return 0;
+}
 
+
+static void usb_release_timer_func(unsigned long data)
+{
+	if((g_var.acc_flag == FLY_ACC_OFF)&&(g_var.usb_cam_request ==1))
+	{
+	      CREATE_KTHREAD(thread_usb_camera_enable, NULL);
+	}
 	return;
 }
 
