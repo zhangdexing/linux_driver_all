@@ -330,7 +330,7 @@ int thread_thermal(void *data)
                 lidbg("temp>85:temp:%d,freq:%d,cpu:%s\n", cpu_temp, SOC_Get_CpuFreq(), get_cpu_status());
 
 
-#ifdef SOC_mt35x
+#ifdef PLATFORM_evb3561sv_w_65_m0
             {
                 if( (0 == g_var.android_boot_completed))
                     lidbg("mt3561temp:temp:%d,freq:%d,cpu:%s\n", cpu_temp, SOC_Get_CpuFreq(), get_cpu_status());
