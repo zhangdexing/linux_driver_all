@@ -217,6 +217,9 @@ case "$USERS_ID" in
 			18)
 		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/mt3561
 		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/mt3561-release;;
+			20)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/tmp/mt3561
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/mt3561/mt3561-release;;
 	esac;;
 
         4)  
