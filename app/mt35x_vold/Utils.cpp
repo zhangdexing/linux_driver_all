@@ -394,7 +394,7 @@ static status_t readMetadata(const std::string& path, std::string& fsType,
 
 	        else {
 		    //strcat(mountPoint, "udisk");
-		    strcat(mountPoint, "udisk-id-");
+		    strcat(mountPoint, "udisk-");
                     strcat(mountPoint, value);
 /*
 		    if(*(pos + len) == '0')
