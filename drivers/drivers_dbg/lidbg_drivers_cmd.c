@@ -864,6 +864,10 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("echo 1 > /sys/devices/system/cpu/cpu1/online");
             lidbg_shell_cmd("echo 1 > /sys/devices/system/cpu/cpu2/online");
             lidbg_shell_cmd("echo 1 > /sys/devices/system/cpu/cpu3/online");
+	    lidbg_shell_cmd("echo 1 > /sys/devices/system/cpu/cpu4/online");
+            lidbg_shell_cmd("echo 1 > /sys/devices/system/cpu/cpu5/online");
+            lidbg_shell_cmd("echo 1 > /sys/devices/system/cpu/cpu6/online");
+            lidbg_shell_cmd("echo 1 > /sys/devices/system/cpu/cpu7/online");
             lidbg_shell_cmd("chmod 777 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq");
             lidbg_shell_cmd("chmod 777 /sys/devices/system/cpu/cpu1/cpufreq/scaling_min_freq");
             lidbg_shell_cmd("chmod 777 /sys/devices/system/cpu/cpu2/cpufreq/scaling_min_freq");
