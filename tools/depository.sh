@@ -192,9 +192,15 @@ function make_ota_package()
         soc_prebuild
 	rm -rf   $DBG_SYSTEM_DIR/flyaudio/out
 	mkdir -p $DBG_SYSTEM_DIR/flyaudio/out
+if [ $DBG_PLATFORM = evb3561sv_w_65_m0 ];then
+        cp -f $DBG_TOOLS_PATH/parameters.sh $DBG_SYSTEM_DIR/flyaudio/out/parameters3.sh
+        cd $DBG_SYSTEM_DIR
+        ./make_new_v3.sh
+else
 	cp -f $DBG_TOOLS_PATH/parameters.sh $DBG_SYSTEM_DIR/flyaudio/out/parameters.sh
 	cd $DBG_SYSTEM_DIR
         ./make_new.sh
+fi
 	
 }
 
