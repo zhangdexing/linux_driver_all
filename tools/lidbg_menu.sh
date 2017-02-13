@@ -165,7 +165,7 @@ function lidbg_handle()
 			adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM$2 $2
 			exit;;
 		11)
-			expect $DBG_TOOLS_PATH/pull $2 l
+			expect $DBG_TOOLS_PATH/fetch $2 l
 			git reset --hard origin/$2
 			chmod 777 ./* -R
 			lidbg_build_all;;
