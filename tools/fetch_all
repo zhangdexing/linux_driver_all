@@ -1,0 +1,11 @@
+ #!/usr/bin/expect
+set timeout -1
+set branch [lindex $argv 0]
+set password [lindex $argv 1]
+spawn git fetch
+expect {
+    "password" { 
+		 send "$password\r"
+		}
+        }
+expect eof
