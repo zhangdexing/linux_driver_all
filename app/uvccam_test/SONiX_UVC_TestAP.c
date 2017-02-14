@@ -4230,11 +4230,23 @@ openfd:
 	// SONiX XU Ctrl ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 	// cjc +
-	ret = XU_Ctrl_ReadChipID(dev);
-	if(ret<0)
-		lidbg( "SONiX_UVC_TestAP @main : XU_Ctrl_ReadChipID Failed\n");
+	{
+		int cnt;
+		for(cnt = 0; cnt < 3; cnt++)
+		{
+			ret = XU_Ctrl_ReadChipID(dev);
+			if(ret<0)
+			{
+				lidbg( "SONiX_UVC_TestAP @main1 : XU_Ctrl_ReadChipID Failed\n");
+				usleep(100 * 1000);
+			}
+			else
+				break;
+		}
+		if(ret<0)
+			return 1;
 	// cjc -
-
+	}
 	/* Add XU ctrls */
 	if(do_add_xu_ctrl)
 	{
@@ -4259,9 +4271,22 @@ openfd:
 	
 	if(do_xu_get_chip)
 	{
-		ret = XU_Ctrl_ReadChipID(dev);
-		if(ret<0)
-			lidbg( "SONiX_UVC_TestAP @main : XU_Ctrl_ReadChipID Failed\n");
+		{
+			int cnt;
+			for(cnt = 0; cnt < 3; cnt++)
+			{
+				ret = XU_Ctrl_ReadChipID(dev);
+				if(ret<0)
+				{
+					lidbg( "SONiX_UVC_TestAP @main2 : XU_Ctrl_ReadChipID Failed\n");
+					usleep(100 * 1000);
+				}
+				else
+				        break;
+			}
+			if(ret<0)
+				return 1;
+		}
 	}
 
 	if(do_xu_get_fmt)
