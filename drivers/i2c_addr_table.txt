@@ -8,3 +8,4 @@ lpc-----0x50
 tef6638-0x63
 pca9634-0x70(all call)
 pca9634-0x03(soft reset)
+mc3xxx-0x4c
