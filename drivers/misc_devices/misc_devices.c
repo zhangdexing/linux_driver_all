@@ -135,13 +135,21 @@ static int thread_usb_hub_check(void *data)
      {
 	    if(!fs_is_file_exist("/sys/bus/usb/drivers/usb/1-1"))
 	    {
-	        lidbgerr("thread_usb_hub_check fail!\n");
+	    	lidbgerr("thread_usb_hub_check fail!\n");
+#ifdef SOC_msm8x26
 	        USB_POWER_DISABLE;
 		 msleep(500);
 		 USB_ID_HIGH_DEV;
 	        ssleep(2);
 		 USB_ID_LOW_HOST;
 		 USB_POWER_ENABLE;
+#endif
+
+#ifdef SOC_mt35x
+	 	lidbg("set usb a_host mode\n");
+       	lidbg_readwrite_file("/sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode", NULL, "a_host", strlen("a_host"));
+#endif
+
 	    }
 	    else
 	    {

@@ -185,6 +185,8 @@ struct gpiomux_setting {
 #define INTERFACE_KO  "lidbg_interface.ko"
 #define USB_MOUNT_POINT  "/storage/udisk"
 #define RECOVERY_USB_MOUNT_POINT "/usb"
+#define USB_HUB_SUPPORT
+
 
 #define TRACE_MSG_FROM_KMSG
 
