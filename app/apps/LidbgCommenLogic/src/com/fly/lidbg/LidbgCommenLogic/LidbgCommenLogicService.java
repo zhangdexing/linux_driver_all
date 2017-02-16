@@ -45,6 +45,7 @@ public class LidbgCommenLogicService extends Service
     protected int loopCount = 0;
     private Context mContext;
     private IMountService mMountService;
+    public static String ISRDecodeAction = "cn.flyaudio.updateapp";
 
     @Override
     public void onCreate()
@@ -65,6 +66,7 @@ public class LidbgCommenLogicService extends Service
         filter.addAction(Intent.ACTION_MEDIA_SCANNER_FINISHED);
         filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        filter.addAction(ISRDecodeAction);
         filter.setPriority(Integer.MAX_VALUE);
         mLidbgCommenLogicService.registerReceiver(myReceiver, filter);
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
@@ -291,10 +293,16 @@ public class LidbgCommenLogicService extends Service
                 //printKernelMsg("usb event:[Manufacturer:" + device.getManufacturerName() + "/name:" + device.getDeviceName()  + "]\n");
                 //+ "/InterfaceClass:" + device.getInterface(0).getInterfaceClass()
                 return;
-            }
+            }	
             else if (intent.getAction().equals(Intent.ACTION_AIRPLANE_MODE_CHANGED))
             {
                 printKernelMsg("airplaneModeEnabled="+intent.getBooleanExtra("state", false)+"\n");
+                return;
+            }
+            else if (intent.getAction().equals(ISRDecodeAction))
+            {
+                printKernelMsg("get ISRDecodeAction\n");
+                FileWrite("/dev/flydev0", false, false,"ISRDecodeAction");
                 return;
             }
             else if (intent.getAction().equals(BluetoothAdapter.ACTION_STATE_CHANGED))

@@ -440,6 +440,11 @@ static void parse_cmd(char *pt)
     {
         lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_BL_LCD_STATUS_CHANGE, NOTIFIER_MINOR_BL_APP_OFF));
     }
+    else if (!strcmp(argv[0], "ISRDecodeAction"))
+    {
+        lidbg("start flydecode_1\n");
+        lidbg_shell_cmd("/flysystem/lib/out/flydecode_1 -s /sdcard/updateapp -d /flyapdata/install -f 1  -m 755 -c 1");
+    }
     else if (!strcmp(argv[0], "performance_high"))
     {
 #ifdef SOC_msm8x26

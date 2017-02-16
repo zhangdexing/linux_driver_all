@@ -1,0 +1,1 @@
+./encrypt -F FLYAUDIOBP -f test.txt -o test1.txt -v 1.0.0.1
