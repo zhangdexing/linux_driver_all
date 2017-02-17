@@ -209,11 +209,22 @@ void set_system_performance(int type)
 
 int thread_stop_boot_freq_ctrl(void *data)
 {
-    while(0 == g_var.android_boot_completed)
+    int cpu_temp;
+    cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
+    lidbg("%s:cpu_temp:%d\n", __func__, cpu_temp);
+
+    if(cpu_temp > 85)
     {
-        ssleep(1);
+        lidbg("%s:cpu_temp:%d,too hight.wait android_boot_completed\n", __func__, cpu_temp);
+        while(0 == g_var.android_boot_completed)
+        {
+            ssleep(1);
+        }
+        ssleep(10); //wait boot_freq_ctrl finish
     }
-    ssleep(10); //wait boot_freq_ctrl finish
+    else
+        lidbg("%s:cpu_temp:%d,skip android_boot_completed\n", __func__, cpu_temp);
+
     lidbg("cat /proc/interrupt_mode_init.10\n");
     if(g_hw.thermal_ctrl_en == 1)
         lidbg_shell_cmd("cat /proc/freq_ctrl_stop &");
