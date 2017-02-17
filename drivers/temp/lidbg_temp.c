@@ -207,6 +207,19 @@ void set_system_performance(int type)
     }
 }
 
+int thread_stop_boot_freq_ctrl(void *data)
+{
+    while(0 == g_var.android_boot_completed)
+    {
+        ssleep(1);
+    }
+    ssleep(10); //wait boot_freq_ctrl finish
+    lidbg("cat /proc/interrupt_mode_init.10\n");
+    if(g_hw.thermal_ctrl_en == 1)
+        lidbg_shell_cmd("cat /proc/freq_ctrl_stop &");
+    if(g_var.recovery_mode == 0)
+        lidbg_shell_cmd("cat /proc/interrupt_mode_init &");
+}
 
 int thread_thermal(void *data)
 {
@@ -260,11 +273,8 @@ int thread_thermal(void *data)
 #else
     temp_offset = 0;
 #endif
-    //msleep(1000 * 40); //wait boot_freq_ctrl finish
-    if(g_hw.thermal_ctrl_en == 1)
-        lidbg_shell_cmd("cat /proc/freq_ctrl_stop &");
-    if(g_var.recovery_mode == 0)
-        lidbg_shell_cmd("cat /proc/interrupt_mode_init &");
+
+    CREATE_KTHREAD(thread_stop_boot_freq_ctrl, NULL);
 
     cur_temp = soc_temp_get(g_hw.mem_sensor_num);
     lidbg("lidbg freq ctrl start,%d,%d\n", cur_temp, get_scaling_max_freq());
