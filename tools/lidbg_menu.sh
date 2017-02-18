@@ -160,14 +160,18 @@ function lidbg_handle()
 			echo ==============current config==================
 			exit;;
 		10)
-			echo cp -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 $DBG_OUT_PATH/$2
-			echo adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM$2 $2
+			echo cp -f $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 $DBG_OUT_PATH/$2
+			echo cp -f $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 /media/*/
+			echo cp -f $DBG_OUT_PATH/$2 /media/*/
+			echo adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 /$2
 			echo adb push $DBG_OUT_PATH/$2 /system/bin/$2
 			echo adb shell "chmod 777 /system/bin/$2"
-			cp -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 $DBG_OUT_PATH/$2
+			cp -f $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 $DBG_OUT_PATH/$2
+			cp -f $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 /media/*/
+			cp -f $DBG_OUT_PATH/$2 /media/*/
 			adb root
 			adb remount
-			adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM$2 $2
+			adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 /$2
 			adb push $DBG_OUT_PATH/$2 /system/bin/$2
 			adb shell "chmod 777 /system/bin/$2"
 			exit;;
