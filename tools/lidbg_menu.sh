@@ -114,7 +114,7 @@ function lidbg_menu()
 	echo [7] open dbg_cfg.sh
 	echo [8] push out to /data'            'push驱动模块到/data加载,不影响ota
 	echo [9] change platformid'            'ep: 9 16 更换到mtk平台
-	echo [10] push jar so  etc'            'ep:10 /system/framework/framework.jar push此文件到机器 || 10 lidbg_load push到system/bin并修改权限
+	echo [10] push jar so  etc'            'ep:10 /system/framework/framework.jar push此文件到机器 ep:10 lidbg_load push到system/bin并修改权限 ep:cp to outdir
 	echo [11] build other branch all'	'fetch跳到指定分支编译lidbg所有文件
 
 	echo
@@ -160,13 +160,15 @@ function lidbg_handle()
 			echo ==============current config==================
 			exit;;
 		10)
+			echo cp -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 $DBG_OUT_PATH/$2
+			echo adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM$2 $2
+			echo adb push $DBG_OUT_PATH/$2 /system/bin/$2
+			echo adb shell "chmod 777 /system/bin/$2"
+			cp -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 $DBG_OUT_PATH/$2
 			adb root
 			adb remount
-			echo adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM$2 $2
 			adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM$2 $2
-			echo adb push $DBG_OUT_PATH/$2 /system/bin/$2
 			adb push $DBG_OUT_PATH/$2 /system/bin/$2
-			echo adb shell "chmod 777 /system/bin/$2"
 			adb shell "chmod 777 /system/bin/$2"
 			exit;;
 		11)
