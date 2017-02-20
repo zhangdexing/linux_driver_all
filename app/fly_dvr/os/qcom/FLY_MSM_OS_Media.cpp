@@ -332,3 +332,13 @@ int FLY_MSM_OS_DelDaysFile(char* Dir,int days)
 
 }
 
+bool FLY_MSM_OS_DelLostDir(char* mediaPath)
+{
+	char tmpPath[255] = {0};
+	if(mediaPath == NULL)
+		return false;
+	sprintf(tmpPath , "%s/LOST.DIR",mediaPath);
+	FLY_MSM_OS_ClearDir(tmpPath);
+	return true;
+}
+

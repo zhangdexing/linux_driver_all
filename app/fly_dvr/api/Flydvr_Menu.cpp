@@ -94,6 +94,7 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 				{
 					Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_CONN_SDCARD, NULL);
 					Flydvr_DelDaysFile(FLYDVR_MEDIA_MMC1, MenuSettingConfig()->uiEmergencySaveDays);
+					Flydvr_DelLostDir(FLYDVR_MEDIA_MMC1);
 				}
 			}
         break;

@@ -26,3 +26,4 @@ int FLY_MSM_OS_GetVRFileInfo(char* Dir,char* minRecName, unsigned int* filecnt);
 int FLY_MSM_OS_DelDaysFile(char* Dir,int days);
 int FLY_MSM_OS_SetFirstDelProtectFile(char* protectVRFileName);
 int FLY_MSM_OS_SetSecondDelProtectFile(char* protectVRFileName);
+bool FLY_MSM_OS_DelLostDir(char* mediaPath);

@@ -141,6 +141,23 @@ FLY_BOOL Flydvr_DelDaysFile(UINT8 byMediaID ,UINT32 days)
 	return FLY_TRUE;
 }
 
+FLY_BOOL Flydvr_DelLostDir(UINT8 byMediaID)
+{
+	INT8 storagePath[255];
+	switch(byMediaID) {
+	    case FLYDVR_MEDIA_MMC0:
+			strcpy(storagePath, MMC0_STORAGE_PATH);
+	        break;
+	    case FLYDVR_MEDIA_MMC1:
+	        strcpy(storagePath, MMC1_STORAGE_PATH);
+	        break;
+	    default:
+	        return FLY_FALSE;
+    }
+	FLY_MSM_OS_DelLostDir(storagePath);
+	return FLY_TRUE;
+}
+
 FLY_BOOL Flydvr_CheckVRPath(UINT8 byMediaID)
 {
 	bool ret;

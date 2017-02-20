@@ -55,3 +55,4 @@ FLY_BOOL Flydvr_CheckOnlineVRPath();
 FLY_BOOL Flydvr_MkOnlineVRPath();
 FLY_BOOL Flydvr_SetFirstDelProtectFile(INT8* protectVRFileName);
 FLY_BOOL Flydvr_SetSecondDelProtectFile(INT8* protectVRFileName);
+FLY_BOOL Flydvr_DelLostDir(UINT8 byMediaID);

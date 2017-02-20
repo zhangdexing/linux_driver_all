@@ -20,12 +20,12 @@ typedef void (*callback_t)(void);
 static UINT8 m_bFlydvrGeneralInit;
 
 FLY_OS_PIPE m_msg_pipe;
-static FLYDVR_QUEUE_MESSAGE            m_MessageQueue[FLYDVR_MSG_QUEUE_SIZE] = {0};
+static FLYDVR_QUEUE_MESSAGE            m_MessageQueue[FLYDVR_MSG_QUEUE_SIZE];
 static UINT32                    m_MessageQueueIndex_W;
 static UINT32                    m_MessageQueueIndex_R;
 
 FLY_OS_PIPE m_msg_lp_pipe;
-static FLYDVR_QUEUE_MESSAGE            m_MessageQueueLP[FLYDVR_MSG_QUEUE_SIZE] = {0};
+static FLYDVR_QUEUE_MESSAGE            m_MessageQueueLP[FLYDVR_MSG_QUEUE_SIZE];
 static UINT32                    m_MessageQueueLPIndex_W;
 static UINT32                    m_MessageQueueLPIndex_R;
 
@@ -168,9 +168,9 @@ FLY_BOOL Flydvr_GetMessage(UINT32* ulMsgID, UINT32* ulParam1, UINT32* ulParam2)
 	FLYDVR_QUEUE_MESSAGE q_msg;
 	if (Flydvr_OS_GetMessage(&m_msg_pipe, &q_msg, 0x10) != 0)
 	{
-		*ulMsgID = NULL;
-        *ulParam1 = NULL;
-        *ulParam2 = NULL;
+		*ulMsgID = 0;
+        *ulParam1 = 0;
+        *ulParam2 = 0;
         return FLY_FALSE;
 	}
 	else
@@ -244,9 +244,9 @@ FLY_BOOL Flydvr_GetMessage_LP(UINT32* ulMsgID, UINT32* ulParam1, UINT32* ulParam
 	FLYDVR_QUEUE_MESSAGE q_msg;
 	if (Flydvr_OS_GetMessage(&m_msg_lp_pipe, &q_msg, 0x10) != 0)
 	{
-		*ulMsgID = NULL;
-        *ulParam1 = NULL;
-        *ulParam2 = NULL;
+		*ulMsgID = 0;
+        *ulParam1 = 0;
+        *ulParam2 = 0;
         return FLY_FALSE;
 	}
 	else
@@ -285,8 +285,8 @@ int Flydvr_SendDriverIoctl(const char *who, char magic , char nr, unsigned long 
 void *thread_driver_daemon(void* data)
 {
 	struct status_info info,tmp_info;
-	FLY_BOOL b_old_frontStatus, b_frontStatus;
-	FLY_BOOL b_old_rearStatus, b_rearStatus;
+	FLY_BOOL b_old_frontStatus = FLY_FALSE, b_frontStatus = FLY_FALSE;
+	FLY_BOOL b_old_rearStatus = FLY_FALSE, b_rearStatus = FLY_FALSE;
 	/*driver args init*/
 	tmp_info.emergencySaveDays = MenuSettingConfig()->uiEmergencySaveDays;
 	tmp_info.emergencySwitch= MenuSettingConfig()->uiEmergencySwitch;

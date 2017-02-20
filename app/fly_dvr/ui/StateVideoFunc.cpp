@@ -257,6 +257,7 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 				Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_PAUSE , 0);
 				Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE , 0);
 			}
+			Flydvr_DelLostDir(FLYDVR_MEDIA_MMC1);
             break;
 
         case EVENT_MMC1_REMOVED:

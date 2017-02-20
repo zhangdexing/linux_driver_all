@@ -97,3 +97,13 @@ bool FLY_MSM_OS_MkDir(const char *dir_path)
 		return true;
 	return false;
 }
+
+bool FLY_MSM_OS_ClearDir(const char *dir_path)
+{ 
+	char tmpCMD[255] = {0};
+	if(dir_path == NULL)
+		return false;
+	sprintf(tmpCMD , "rm -rf %s/*&",dir_path);
+	system(tmpCMD);
+	return true;
+}
