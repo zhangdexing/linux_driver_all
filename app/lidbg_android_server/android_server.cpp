@@ -84,7 +84,7 @@ int first_mute_stream_id = -1;
 bool navi_policy_en = false;
 int max_volume = -1;
 int  sound_on = 0;
-
+int count_num = 0;
 
 int music_level ;
 int music_max_level ;
@@ -345,8 +345,8 @@ void init_para(bool dbg)
 }
 void print_para(void)
 {
-    lidbg(TAG"mypid:%d,delay_step_on_music:[%dms],delay_off_volume_policy:[%dms],music_max_level:%d,music_level:%d,navi_policy_en:[%d],max_volume[%d]\n",
-          mypid, delay_step_on_music, delay_off_volume_policy, music_max_level, music_level, navi_policy_en, max_volume);
+    lidbg(TAG"mypid:%d,delay_step_on_music:[%dms],delay_off_volume_policy:[%dms],music_max_level:%d,music_level:%d,navi_policy_en:[%d],max_volume[%d]count_num[%d]\n",
+          mypid, delay_step_on_music, delay_off_volume_policy, music_max_level, music_level, navi_policy_en, max_volume, count_num);
 }
 int handle_sound_state(const char *who, int sound)
 {
@@ -391,6 +391,20 @@ int main(int argc, char **argv)
             phone_call_state_old = phone_call_state;
     }
 
+    if(0)//test cpu useage
+    {
+        while(1)
+        {
+            usleep(100000);//100ms
+            loop_count++;
+            if(loop_count > 100)
+            {
+                loop_count = 0;
+                print_para();
+            }
+        }
+    }
+
     while(1)
     {
         if(gAudioPolicyService != 0 && gAudioFlingerService != 0)
@@ -401,10 +415,14 @@ int main(int argc, char **argv)
             phone_call_state = aps->getPhoneState();
 #endif
             playing = aps->isStreamActive(AUDIO_STREAM_VOICE_CALL, 0);
+            count_num = 1;
             if(1)
             {
-                for (int i = 0; i < AUDIO_STREAM_CNT; i++)
+                for (int i = 1; i < AUDIO_STREAM_CNT; i++)
                 {
+                    if((i >= AUDIO_STREAM_BLUETOOTH_SCO && i <= AUDIO_STREAM_TTS && i != AUDIO_STREAM_DTMF) || (i >= AUDIO_STREAM_ACCESSIBILITY && i <= AUDIO_STREAM_CNT))
+                        continue;
+                    count_num++;
                     if( get_stream_volume(false, (audio_stream_type_t)i) == 0)
                     {
                         playing |=  false;
@@ -427,7 +445,6 @@ int main(int argc, char **argv)
                             recheck_navi_policy = true;
                         }
                     }
-
                 }
             }
             else
@@ -442,7 +459,6 @@ int main(int argc, char **argv)
                 if(get_stream_volume(dbg_music, AUDIO_STREAM_MUSIC) > 0)
                     playing = aps->isStreamActive(AUDIO_STREAM_MUSIC, 0) | playing;
             }
-
 
             if(dbg_music)
                 lidbg(TAG"playing=%d/phone_call_state=%d\n", playing, phone_call_state);
@@ -491,7 +507,7 @@ int main(int argc, char **argv)
             GetAudioFlingerService(false);
             loop_count = 0;
         }
-        if(!(loop_count % 20))//per 2 s
+        if(!(loop_count % 30))//per 3s
         {
             char value[PROPERTY_VALUE_MAX];
             property_get("persist.lidbg.sound.dbg", value, "n");
