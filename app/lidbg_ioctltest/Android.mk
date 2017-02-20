@@ -7,6 +7,7 @@ LOCAL_SHARED_LIBRARIES += libcutils libutils
 LOCAL_LDLIBS += -llog
 LOCAL_SRC_FILES:= \/par    lidbg_ioctltest.c
 include $(DBG_BUILD_PATH)/build_cfg.mk
+LOCAL_MULTILIB := first
 LOCAL_MODULE_TAGS:= optional
 LOCAL_MODULE := lidbg_ioctltest
 include $(BUILD_EXECUTABLE)

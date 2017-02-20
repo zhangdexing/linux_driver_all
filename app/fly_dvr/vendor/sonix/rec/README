@@ -1,0 +1,8 @@
+--------------------------------usb摄像头驱动----------------------------------------
+针对松翰提供的V4L驱动和录像APP进行了如下整合：
+1，使用原厂提供的V4L驱动代替内核的V4L驱动（应首先修改kernal/arch/arm/configs屏蔽内核驱动：CONFIG_USB_VIDEO_CLASS=n）；
+2，提供lidbg_drivers_dbg0节点操作，直接写节点：
+	echo "recordenable" > /dev/lidbg_drivers_dbg0
+	echo "recorddisable" > /dev/lidbg_drivers_dbg0
+   可直接开启或关闭录像功能（默认录制格式为H264，储存路径为sdcard根目录）。
+

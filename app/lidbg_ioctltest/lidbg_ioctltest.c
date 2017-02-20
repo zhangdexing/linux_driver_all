@@ -1,221 +1,240 @@
+/*************************************************************************
+	> File Name: test.c
+	> Author: lizhu
+	> Mail: 1489306911@qq.com
+	> Created Time: 2015?11?28? ??? 11?05?05?
+ ************************************************************************/
 
-#include "lidbg_servicer.h"
-#include "../../drivers/inc/lidbg_flycam_par.h" /*flycam parameter*/
 
-#include <math.h>
+#include<stdio.h>
+#include<unistd.h>
+#include<string.h>
+#include<stdlib.h>
+#include<sys/stat.h>
+#define DEVTYPE_DISK 2
+#define DEVTYPE_U    3
 
-pthread_t thread_checkStatus_id;
-int fd = 0,fd_txt = 0;
-struct pollfd fds;
+#define bzero(a, b)             memset(a, 0, b)
 
-//ioctl
-#define READ_CAM_PROP(magic , nr) _IOR(magic, nr ,int) 
-#define WRITE_CAM_PROP(magic , nr) _IOW(magic, nr ,int)
-
-struct acceleration {
-	int x;
-	int y;
-	int z;
-};
-
-void startRec(void)
+typedef struct tagDevParam_T
 {
-	int ret;
-	ret = ioctl(fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_START_REC), NULL);
-	if (ret == RET_NOTVALID)
-      	lidbg("@@=========Camera not valid !!=======\n");
-	else if (ret == RET_NOTSONIX)
-		lidbg("@@=========Camera not sonix !!=======\n");
-	else if (ret == RET_IGNORE)
-		lidbg("@@=========cmd ignore !!=======\n");
+    unsigned char  devname[12];
+    unsigned char  devtype;
+    unsigned char  partition_count;
+    unsigned int dev_totalspace;//KB
+    unsigned int partition_size[50];/*???????KB*/
+} tagDevParam_t, *ptagDevParam_t;
+
+typedef struct tagDevinfo_T
+{
+    tagDevParam_t dev[8];
+    int     devcount; /*???????*/
+    int     disk_num;
+} tagDevinfo_t, *ptagDevinfo_t;
+
+
+int DvrCpFile(char *srcFile, char *targetFile, int findString, char *string)
+    {
+        int ret = 0;
+        FILE *srcfp = NULL;
+        FILE *targetfp = NULL;
+        int length = 0;
+        ssize_t size;
+        size_t len = 0;
+        char *p = NULL;
+        char *line = NULL;
+
+        if(access(srcFile, F_OK) != 0)
+        {
+            printf("ERROR: src file is not exist!");
+            return -1;
+        }
+        if(ret == 0)
+        {
+            srcfp = fopen(srcFile, "r");
+            targetfp = fopen(targetFile, "w+");
+            if((targetfp != NULL) && (srcfp != NULL))
+            {
+                while((size = getline(&line, &len, srcfp)) != -1)
+                {
+                    if(size > 0)
+                    {
+                        if(findString == 1)
+                        {
+                            p = strstr(line, string);
+                            if(p != NULL)
+                            {
+                                length = fwrite(line, size, 1, targetfp);
+                            }
+                        }
+                        else
+                        {
+                            length = fwrite(line, size, 1, targetfp);
+                        }
+                    }
+                }
+                fclose(srcfp);
+                fclose(targetfp);
+                if(line)
+                {
+                    free(line);
+                }
+                ret = 0;
+            }
+            else
+            {
+                if(srcfp)
+                {
+                    printf("ERROR: open flie %s", targetFile);
+                    fclose(srcfp);
+                }
+                if(targetfp)
+                {
+                    printf("ERROR: open flie %s", srcFile);
+                    fclose(targetfp);
+                }
+                ret = -1;
+            }
+        }
+        return ret;
+}
+
+int CheckIsDiskOrUsbDisk(unsigned char *devname)
+{
+    FILE *fp;
+    int  ret = -1;
+    char buffer[80], * line = NULL;
+    ssize_t size;
+    size_t len = 0;
+    int fal=0;
+
+    memset(buffer, 0, 80);
+    char tmpfilename[64];
+	char tmpfilename2[64];
+    if(tmpnam(tmpfilename2) == NULL)
+    {
+        sprintf(tmpfilename, "%s", "/dev/tmp/check_dev_type.txt");
+    }
 	else
-		lidbg("@@========Camera rec done ===%d====\n",ret);
-	return 0;
-}
-
-void *thread_checkStatus(void *par)
-{
-	unsigned char cam_status;
-	fds.fd     = fd;
-   	fds.events = POLLIN;
-	int ret;
-	while(1)
 	{
-		fds.revents = 0;
-		ret = poll(&fds, 1, -1);
-		if (ret <= 0)
-		{
-			lidbg("time out\n");
-			continue;
-		}
-		if(fds.revents&POLLIN)
-		{
-			read(fd, &cam_status, 1);
-			//printf("[knob0]knob_val=>%x\n",knob_val);
-			lidbg("====[cam]cam_status =>0x%x====\n",cam_status);
-		}
-	}
-	return 0;
-}
-int main(int argc, char **argv)
-{
-	int i = 0,count = 5;
-  	int ret;
-	char fw_version[256];
-	char testCMD[200];
-	char logLine[200];
-	lidbg("@@lidbg_ioctl start\n");
-
-open_dev:
-	fd = open("/dev/mc3xxx", O_RDWR);
-	if((fd == 0xfffffffe) || (fd == 0) || (fd == 0xffffffff))
-	{
-	    lidbg("@@open mc3xxx fail\n");
-	    goto open_dev;
+		if(access("/dev/tmp", F_OK) != 0)
+			mkdir("/dev/tmp",S_IRWXU|S_IRWXG|S_IRWXO);
+		sprintf(tmpfilename, "%s%s", "/dev/",tmpfilename2);
 	}
 
-	lidbg("@@open mc3xxx ok\n");
-
-	system("chmod 0777 /dev/mc3xxx");
-	sleep(1);
-
-	fd_txt= open("/sdcard/gsensor_angle.txt",  O_RDWR|O_CREAT|O_TRUNC, 0777);
-	if((fd == 0xfffffffe) || (fd == 0) || (fd == 0xffffffff))
-	{
-	    lidbg("@@open gsensor_angle fail\n");
-	}
-
+	printf("tmpfilename =%s\n",tmpfilename);
 	
-
-
-#if 0
-	ret = pthread_create(&thread_checkStatus_id,NULL,thread_checkStatus,NULL);
-	if(ret != 0)
-	{
-		lidbg( "@@Create pthread error!\n");
-		return 1;
-	}
-#endif
-/*
-	testCMD[0] = CMD_DUAL_CAM;
-	testCMD[1] = 0x0;
-	ret = ioctl(fd,_IO(FLYCAM_REC_MAGIC, NR_CMD), testCMD);
-*/
-
-	//testCMD[0] = CMD_SET_RESOLUTION;
-	//strcpy(testCMD + 1,"1280x720");
-
-	struct acceleration accel;
-	double rad;
-	while(1)
-	{
-		sleep(1);
-		read(fd, &accel, sizeof(struct acceleration));
-		rad = atan(accel.x/sqrt(accel.y*accel.y + accel.z*accel.z));
-		lidbg("GsensorData:%d,%d,%d====%f",accel.x,accel.y,accel.z,(rad/3.14)*180);
-		sprintf(logLine , "%d,%d,%d,%f\n",accel.x,accel.y,accel.z,(rad/3.14)*180);
-		write(fd_txt,logLine, strlen(logLine));
-	}
-
-#if 0
-	testCMD[0] = CMD_TIME_SEC;
-	testCMD[1] = 0x1;
-	testCMD[2] = 0x90;
-	ret = ioctl(fd,_IO(FLYCAM_REC_MAGIC, NR_CMD), testCMD);
-	lidbg("@@==CMD_TIME_SEC==0:0x%x,1:%d,2:%d,3:%d,4:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3],testCMD[4]);
-
-	testCMD[0] = CMD_FW_VER;
-	testCMD[1] = 0x00;
-	ret = ioctl(fd,_IO(FLYCAM_REC_MAGIC, NR_CMD), testCMD);
-	lidbg("@@==CMD_FW_VER==0:0x%x,1:%d,2:%d,3:%s\n",testCMD[0],testCMD[1],testCMD[2],testCMD + 3);
-
-	testCMD[0] = CMD_TOTALSIZE;
-	testCMD[1] = 0x0;
-	testCMD[2] = 0x0;
-	testCMD[3] = 0x14;
-	testCMD[4] = 0x1;
-	ret = ioctl(fd,_IO(FLYCAM_REC_MAGIC, NR_CMD), testCMD);
-	lidbg("@@==CMD_TOTALSIZE==0:0x%x,1:%d,2:%d,3:%d,4:%d,5:%d,6:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3],testCMD[4],testCMD[5],testCMD[6]);
-
-	testCMD[0] = CMD_PATH;
-	strcpy(testCMD + 1,"/storage/sdcard0/era_rec/");
-	ret = ioctl(fd,_IO(FLYCAM_REC_MAGIC, NR_CMD), testCMD);
-	lidbg("@@==CMD_PATH==0:0x%x,1:%d,2:%d,3:%s\n",testCMD[0],testCMD[1],testCMD[2],testCMD + 3);
-
-	testCMD[0] = CMD_GET_RES;
-	testCMD[1] = 0x00;
-	ret = ioctl(fd,_IO(FLYCAM_REC_MAGIC, NR_CMD), testCMD);
-	lidbg("@@==CMD_GET_RES==0:0x%x,1:%d,2:%d,3:%s\n",testCMD[0],testCMD[1],testCMD[2],testCMD + 3);
-
-	testCMD[0] = CMD_RECORD;
-	testCMD[1] = 0x1;
-	ret = ioctl(fd,_IO(FLYCAM_REC_MAGIC, NR_CMD), testCMD);
-
-	lidbg("@@==CMD_RECORD==0:0x%x,1:%d,2:%d,3:%d\n",testCMD[0],testCMD[1],testCMD[2],testCMD[3]);
-	lidbg("@@==CMD_RECORD==4:0x%x,5:%d,6:%d,7:%d\n",testCMD[4],testCMD[5],testCMD[6],testCMD[7]);
-
-	sleep(10);
-	testCMD[0] = CMD_DUAL_CAM;
-	testCMD[1] = 0x1;
-	ret = ioctl(fd,_IO(FLYCAM_REC_MAGIC, NR_CMD), testCMD);
-	
-	testCMD[0] = CMD_SET_PAR;
-	ret = ioctl(fd,_IO(FLYCAM_REC_MAGIC, NR_CMD), testCMD);
-
-	sleep(30);
-	/*
-	if (ret != 0)
-      {
-      	lidbg("@@NR_PATH ioctl fail===%d===\n",ret);
-	}
-	lidbg("@@FW Version ===> %s\n" , fw_version);
-	*/
-	testCMD[0] = CMD_RECORD;
-	testCMD[1] = 0x0;
-	ret = ioctl(fd,_IO(FLYCAM_REC_MAGIC, NR_CMD), testCMD);
-
-#endif
-
-#if 0
-	while(count--)
-	{
-		ret = ioctl(fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_PATH), "/storage/sdcard0/camera_rec/");
-		if (ret != 0)
-        {
-        	lidbg("@@NR_PATH ioctl fail===%d===\n",ret);
-		}
-		ret = ioctl(fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_RESOLUTION), "1280x720");
-		if (ret != 0)
-        {
-        	lidbg("@@NR_RESOLUTION ioctl fail====%d===\n",ret);
-		}
-		ret = ioctl(fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_TIME), 300); 
-		if (ret != 0)
-        {
-        	lidbg("@@NR_TIME ioctl fail====%d===\n",ret);
-		}
-		
-		ret = ioctl(fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_SET_PAR), NULL); 
-		if (ret != 0)
-        {
-        	lidbg("@@NR_SET_PAR ioctl fail====%d===\n",ret);
-		}
-		
-		/*start recording*/
-		lidbg("@@========START========\n");
-		startRec();
-		sleep(500);
-		/*stop recording*/
-		if (ioctl(fd,_IO(FLYCAM_REAR_REC_IOC_MAGIC, NR_STOP_REC), NULL) < 0)
-	    {
-	      	lidbg("@@NR_STOP_REC ioctl fail=======\n");
-		}
-		lidbg("@@========STOP========\n");
-		//check_status();
-		//sleep(1);
-	}
-#endif
-	lidbg("@@=======DONE=========");
-	return 0;
+    fp = fopen(tmpfilename, "w+");
+    sprintf(buffer, "/sys/block/%s/removable", devname);
+    DvrCpFile(buffer, tmpfilename, fal, NULL);
+    size = getline(&line, &len, fp);
+    fclose(fp);
+    ret = atoi(line);
+    switch(ret)
+    {
+        case 0:
+            ret = DEVTYPE_DISK;
+            break;
+        case 1:
+            ret = DEVTYPE_U;
+            break;
+        default:
+            ret = -1;
+            break;
+    }
+    if(line)
+    {
+        free(line);
+    }
+    remove(tmpfilename);
+    return ret;
 }
+int main(){
+
+    int           xx=1,i=0,dev_tpye;
+    ssize_t       size;
+    size_t        len = 0;
+    unsigned char k;
+    tagDevinfo_t  devinfo;
+    char          tmp_devname[12];
+    char          *line = NULL;
+    char          *pname;
+    char          *token;
+    char          seps[] = " ";
+    FILE          *fp = NULL;
+	char			storage_name[50] = "sd";
+	
+    bzero(tmp_devname, 12);
+    bzero(&devinfo, sizeof(devinfo));
+   printf("-------1-------\n");
+    DvrCpFile("/proc/partitions", "/dev/log/partitions.txt", xx, storage_name);
+	printf("-------2-------\n");
+    
+    fp = fopen("/dev/log/partitions.txt", "r");
+    /*???? ?? ????????*/
+    while((size = getline(&line, &len, fp)) != -1)
+    {
+        pname = strrchr(line, ' ');
+        if(pname == NULL)
+            continue;
+        pname++;
+        if(memcmp(pname, tmp_devname, strlen(storage_name) + 1) == 0) //???
+        {
+        	printf("-------3-------\n");
+            i = 0;
+            token = strtok(line, seps);
+            while(token != NULL)
+            {
+                if(i == 2)
+                {
+                    k=devinfo.dev[devinfo.devcount-1].partition_count;
+                    devinfo.dev[devinfo.devcount-1].partition_size[k]=atoi(token);
+                }
+                i++;
+                token = strtok(NULL, seps);
+            }
+            devinfo.dev[devinfo.devcount-1].partition_count++;
+        }
+        else//???
+        {
+        	printf("-------4-------\n");
+            memcpy(devinfo.dev[devinfo.devcount].devname, pname, strlen(storage_name) + 1);
+			printf("-------5-------\n");
+            i = 0;
+            token = strtok(line, seps);
+            while(token != NULL)
+            {
+                if(i == 2)
+                {
+                    devinfo.dev[devinfo.devcount].dev_totalspace = atoi(token); 
+                }
+                i++;
+                token = strtok(NULL, seps);
+            }
+            devinfo.devcount++;
+        }
+        memcpy(tmp_devname, pname, strlen(storage_name) + 1);
+    }
+    
+	printf("dve count =%d\n",devinfo.devcount);
+	for(i = 0; i < devinfo.devcount; i++){
+			printf("dev name=%s, total space = %d, partcount = %d\n",devinfo.dev[i].devname,devinfo.dev[i].dev_totalspace,devinfo.dev[i].partition_count);
+			
+				dev_tpye = CheckIsDiskOrUsbDisk(devinfo.dev[i].devname);
+				devinfo.dev[i].devtype = dev_tpye;
+				if(devinfo.dev[i].devtype == DEVTYPE_U)
+				{
+					printf("this is USB drive\n");
+				}
+				if(devinfo.dev[i].devtype == DEVTYPE_DISK)
+				{
+					printf("this is  hard drive\n");
+				}
+			
+	}
+
+    return 0;
+}
+
+
 

@@ -1,0 +1,228 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <usb.h>
+#include "my_type.h"
+#include "debug.h"
+#include "BurnerMgr.h"
+
+
+#define	STR_INTRO		"program : SONiX F/W Update Tool on Linux"
+#define	STR_VERSION		"version : v1.0.0.1"
+#define	STR_DATE		"date    : 2008/09/08"
+
+
+void dump_cam_array(CAM_HANDLE hCamArray[MAX_CAM_NUM], int nCamCnt);
+
+
+void dump_cam_array(CAM_HANDLE hCamArray[MAX_CAM_NUM], int nCamCnt)
+{
+	CAM_INFO	ci;
+	int		i;
+	
+	printf("# of webcam found = %d\n", nCamCnt);
+	for (i=0; i<nCamCnt; i++)
+	{
+		Cam_GetInfo(hCamArray[i], ci);
+		// printf("%3d: hCam = 0x%.4x, vid = 0x%.4x, pid = 0x%.4x, Manufacturer = %s\n", 
+  		//	    i, hCamArray[i], ci.vid, ci.pid, ci.szMfg);
+  		printf("%3d: vid = 0x%.4x, pid = 0x%.4x, Manufacturer = %s\n", 
+  			    i, ci.vid, ci.pid, ci.szMfg);
+	}
+}
+
+bool Burn_To_File(char szTarget[256])
+{
+	Set_Target_File(true);
+	Set_Save_FileName(szTarget);
+	Set_Save_All(true);
+	Set_Save_ROM(true);
+	Set_Save_Des(true);
+	Set_Save_Param(true);
+	Set_Save_ISP(true);
+	 
+	printf("target : burn to FILE - %s\n", szTarget);
+	printf("start the burning process ...\n");	
+	printf("Init ---------------------> ");
+	if (!Load_Source_Data())
+	{
+		DBG_Print("Burn_To_File : Load_Source_Data() - Fail!\n");
+		printf("Fail!\n");
+		return false;
+	}
+	printf("Pass!\n");
+	
+	printf("Save Des -----------------> ");
+	if (!Burn_Save_Des())
+	{
+		printf("Fail!\n");
+		goto fail_quit;
+	}
+	printf("Pass!\n");
+
+	printf("Save Param ---------------> ");
+	if (!Burn_Save_Param())
+	{
+		printf("Fail!\n");
+		goto fail_quit;
+	}
+	printf("Pass!\n");
+
+	printf("Save ISP -----------------> ");
+	if (!Burn_Save_ISP())
+	{
+		printf("Fail!\n");
+		goto fail_quit;
+	}
+	printf("Pass!\n");
+
+	printf("Save All -----------------> ");
+	if (!Burn_Save_All())
+	{
+		printf("Fail!\n");
+		goto fail_quit;
+	}
+	printf("Pass!\n");
+	printf("Burn to File : Success!\n");
+	return true;
+	
+fail_quit:
+	return false;
+}
+
+bool Burn_To_Flash(void)
+{
+	Set_Target_Flash(true);
+	printf("target : burn to FLASH\n");
+	printf("start the burning process ...\n");
+	// ----------------- Step 0 : INIT -----------------
+	printf("step 0 : INIT ------------> ");
+	if (!Burn_Init())
+	{
+		printf("Fail!\n");
+		goto fail_quit;
+	}
+
+	if (!Load_Source_Data())
+	{
+		DBG_Print("Burn_To_Flash : Load_Source_Data() - Fail!\n");
+		return false;
+	}
+	printf("Pass!\n");
+	
+	// ----------------- Step 1 : ERASE -----------------	
+	printf("step 1 : ERASE -----------> ");
+	if (!Burn_Erase())
+	{
+		printf("Fail!\n");
+		goto fail_quit;
+	}
+	printf("Pass!\n");
+	// ----------------- Step 2 : CHECK -----------------
+	printf("step 2 : CHECK -----------> ");
+	if (!Burn_Check())
+	{
+		printf("Fail!\n");
+		goto fail_quit;
+	}
+	printf("Pass!\n");
+	// ----------------- Step 3 : PROGRAM -----------------	
+	printf("step 3 : PROGRAM ---------> ");
+	if (!Burn_Program())
+	{
+		printf("Fail!\n");
+		goto fail_quit;
+	}
+	printf("Pass!\n");
+	// ----------------- Step 4 : VERIFY -----------------	
+	printf("step 4 : VERIFY ----------> ");
+	if (!Burn_Verify())
+	{
+		printf("Fail!\n");
+		goto fail_quit;
+	}	
+	printf("Pass!\n");
+	// ----------------- Step 5 : END PROCESS -----------------
+	printf("step 5 : END PROCESS -----> ");
+	if (!Burn_EndProc(true))
+	{
+		printf("Fail!\n");
+	}	
+	printf("Pass!\n");
+	printf("Burn to Flash : Success!\n");
+	return true;
+
+fail_quit:	
+	Burn_EndProc(false);
+	return false;
+}
+
+int main(void)
+{
+	struct usb_device* hCamArray[MAX_CAM_NUM];
+	int 	nCamCnt;
+	FILE	*fp;
+	char	szRomFile[256];
+	char	szParamFile[256];
+	char	szISPFile[256];
+	
+	DEBUG_INIT();
+	
+	printf("\n%s\n%s\n%s\n\n", STR_INTRO, STR_VERSION, STR_DATE);
+
+	Set_XferMode(1);
+	printf("enumerate webcam ...\n");
+	Cam_Enum(hCamArray, nCamCnt);
+	if (nCamCnt == 0)
+	{
+		printf("NO webcam is found!\n");
+		goto exit;
+	}
+	dump_cam_array(hCamArray, nCamCnt);
+	printf("\n");
+		
+	if (!Cam_Select(hCamArray[0]))
+	{
+		fprintf(stderr, "main : Select_Cam() - Fail!\n");
+		goto exit;
+	}
+
+	if ((fp = fopen("FilePath.ini", "r")) == NULL)
+	{
+		fprintf(stderr, "main : open FilePath.ini - Fail!\n");
+		goto exit;
+	}
+	fscanf(fp, "%s", szRomFile);
+	fscanf(fp, "%s", szParamFile);
+	fscanf(fp, "%s", szISPFile);
+	fclose(fp);
+
+	Set_Source_ROM(SOURCE_FILE, szRomFile);
+	printf("source : ROM from FILE - %s\n", szRomFile);
+	// printf("source : ROM from FLASH\n");
+	
+	Set_Source_Param(SOURCE_FILE, szParamFile);
+	printf("source : Parameter from FILE - %s\n", szParamFile);
+	// printf("source : Parameter from FLASH\n");
+	
+	Set_Source_ISP(SOURCE_FILE, szISPFile);
+	printf("source : Init Sensor Parameter from FILE - %s\n", szISPFile);
+	// printf("source : Init Sensor Parameter from FLASH\n");
+
+	/*
+	printf("\n");	
+	Burn_To_File();	
+	*/
+	
+	printf("\n");
+	Burn_To_Flash();	
+
+	Cam_DeSelect();
+	printf("exit program!\n");
+	return 0;
+	
+exit:
+	printf("exit program!\n");
+	return 0;
+}
+

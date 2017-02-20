@@ -1,0 +1,19 @@
+1. make sure that you have "root" privilege
+
+2. edit the FilePath.ini
+   
+   3 files:
+   1) the first line is the ROM file path.
+   2) the second line is the Parameter file path.
+   3) the third line is the Sensor Init Table file path.
+   
+   1 64k files:
+   1) the first line is the ROM file path.
+
+3. run the fw_update program.
+
+   3 files:
+   ./fw_update -3
+
+   1 files:
+   ./fw_update -1

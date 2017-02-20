@@ -53,6 +53,10 @@ endif
 ifeq ($(CONFIG_HAL_USB_CAMERA),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,uvccam_test)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,libusb01/android/jni)
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,fly_dvr)
+endif
+
+ifeq ($(CONFIG_HAL_USB_CAMERA),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,camera-fw-update)
 endif
 
