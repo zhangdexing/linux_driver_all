@@ -37,6 +37,7 @@ bail:
 
 int init_module(void *module_image, unsigned long len,
                 const char *param_values);
+int module_insmod(char *file);
 inline int module_insmod(char *file)
 {
     void *module = NULL;

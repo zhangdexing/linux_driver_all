@@ -563,7 +563,7 @@ static void nmea_call_nmea_cb( NmeaReader  *r )
     gettimeofday(&tv, (struct timezone *) NULL);
     int64_t now = tv.tv_sec * 1000LL + tv.tv_usec / 1000;
 
-    if (r != NULL  && r->in != NULL && r->callbacks.nmea_cb != NULL)
+    if (r != NULL && r->callbacks.nmea_cb != NULL)
     {
         D("[gpsdata]Received==2222=====:%d[%.*s]",  r->pos, r->pos, r->in);
         r->in[r->pos] = '\0';

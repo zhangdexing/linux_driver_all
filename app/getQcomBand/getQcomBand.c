@@ -89,10 +89,8 @@ int getQcomBand(int para)
 }
 static int band_old = -1 ;
 static int loop = 0;
-int main( int argc, char *argv[] )
+int main( void )
 {
-    argc = argc;
-    argv = argv;
     while(1)
     {
         int band = getQcomBand(loop % 10 == 0);

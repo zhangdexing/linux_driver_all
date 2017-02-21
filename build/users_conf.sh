@@ -168,6 +168,7 @@ case "$USERS_ID" in
 	export DBG_PLATFORM_PATH=~
 	export PATHJAVA1P6=/usr/lib/jvm/jdk1.6.0_45
 	export PATHJAVA1P7=/opt/JDK/java-7-openjdk-amd64
+	export PATHJAVA1P8=/opt/JDK/java-8-openjdk-amd64
 	export WORK_REMOTE=0
 	export WORK_REMOTE_USERNAME=wuerwen
 	export WORK_REMOTE_PASSWORD=wuerwen
@@ -229,6 +230,7 @@ case "$USERS_ID" in
         export DBG_PLATFORM_PATH=/home/ctb/wu
         export PATHJAVA1P6=/usr/lib/jvm/jdk1.6.0_45
         export PATHJAVA1P7=/opt/JDK/java-7-openjdk-amd64
+	export PATHJAVA1P8=/opt/JDK/java-8-openjdk-amd64
         case "$DBG_PLATFORM_ID" in
                         0)  
                 export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/R8625SSNSKQLYA10145451;;
@@ -273,6 +275,9 @@ case "$USERS_ID" in
 			19)
 		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/mt3561/
 		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH//mt3561-release;;
+			22)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/src
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/820/8996-release;;
 	 esac;;
 	5) 
 	export DBG_PLATFORM_PATH=/home/ccs/work

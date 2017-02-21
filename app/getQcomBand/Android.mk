@@ -7,6 +7,7 @@ LOCAL_CFLAGS += -Werror -Wall -Wextra
 LOCAL_MODULE := getQcomBand
 LOCAL_C_INCLUDES :=  \
 		     $(DBG_SYSTEM_DIR)/vendor/qcom/proprietary/qmi/services \
+		     $(DBG_SYSTEM_DIR)/vendor/qcom/proprietary/qcril-qmi-services \
 		     $(DBG_SYSTEM_DIR)/vendor/qcom/proprietary/qmi/core/lib/inc \
 		     $(DBG_SYSTEM_DIR)/vendor/qcom/proprietary/qmi/src \
 		     $(DBG_SYSTEM_DIR)/vendor/qcom/proprietary/qmi/platform \

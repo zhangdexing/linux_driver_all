@@ -1,6 +1,7 @@
 
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
+LOCAL_CFLAGS += -Wno-error=date-time
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../inc
 LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
 LOCAL_SHARED_LIBRARIES += libcutils libutils
