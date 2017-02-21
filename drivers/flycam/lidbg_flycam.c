@@ -35,6 +35,7 @@ struct fly_UsbCamInfo
 	wait_queue_head_t DVR_ready_wait_queue;
 	wait_queue_head_t Rear_ready_wait_queue;
 	struct semaphore sem;
+	struct semaphore notify_sem;
 };
 
 struct fly_UsbCamInfo *pfly_UsbCamInfo;
@@ -93,6 +94,12 @@ u8 *camStatus_data_for_hal;
 u8 *camStatus_fifo_buffer;
 static struct kfifo camStatus_data_fifo;
 
+u8 notify_data_buf;
+
+#define NOTIFY_FIFO_SIZE (10)
+u8 *notify_fifo_buffer;
+static struct kfifo notify_data_fifo;
+
 u8 camera_DVR_fw_version[20] = {0};	
 u8 camera_rear_fw_version[20] = {0};	
 
@@ -120,7 +127,7 @@ struct status_info s_info;
 
 static void notify_online(int arg)
 {
-	lidbg("%s:====notify_online => %d====\n",__func__,arg);
+	lidbg("%s:====[%d]====\n",__func__,arg);
 	pfly_UsbCamInfo->onlineNotify_status = arg;
 	isOnlineNotifyReady = 1;
 	wake_up_interruptible(&pfly_UsbCamInfo->onlineNotify_wait_queue);
@@ -129,10 +136,27 @@ static void notify_online(int arg)
 
 static void notify_newDVR(unsigned char msg)
 {
-	lidbg("%s:====notify_newDVR ====\n",__func__);
+	unsigned char tmpval;
+	lidbg("%s:====[%d]====\n",__func__,msg);
 	//s_info = *info;
-	pfly_UsbCamInfo->onlineNotify_status = msg;
+	//pfly_UsbCamInfo->newdvr_status = msg;
+	tmpval = msg;
 	isNewDvrNotifyReady = 1;
+
+	down(&pfly_UsbCamInfo->notify_sem);
+	
+	if(kfifo_is_full(&notify_data_fifo))
+    {
+        u8 temp_reset_data;
+        int tempbyte;
+        //kfifo_reset(&knob_data_fifo);
+        tempbyte = kfifo_out(&notify_data_fifo, &temp_reset_data, 1);
+        lidbg("%s: kfifo clear!!!!!\n",__func__);
+    }
+	
+	kfifo_in(&notify_data_fifo, &tmpval, 1);
+	up(&pfly_UsbCamInfo->notify_sem);
+	
 	wake_up_interruptible(&pfly_UsbCamInfo->newdvr_wait_queue);
 	return;
 }
@@ -1939,9 +1963,19 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				notify_online(arg);
 		        break;
 			case NR_NEW_DVR_NOTIFY:
+				if(kfifo_is_empty(&notify_data_fifo))
+			    {
+			        if(wait_event_interruptible(pfly_UsbCamInfo->newdvr_wait_queue, !kfifo_is_empty(&notify_data_fifo)))
+			            return -ERESTARTSYS;
+			    }
+				down(&pfly_UsbCamInfo->notify_sem);
+				ret = kfifo_out(&notify_data_fifo, &notify_data_buf, 1);
+				up(&pfly_UsbCamInfo->notify_sem);
+				/*
 				 if(wait_event_interruptible(pfly_UsbCamInfo->newdvr_wait_queue, isNewDvrNotifyReady == 1))
 	        		return -ERESTARTSYS;
-				lidbg("%s:NR_NEW_DVR_NOTIFY ,%d, isNewDvrNotifyReady: %d\n",__func__,pfly_UsbCamInfo->onlineNotify_status,isNewDvrNotifyReady);
+	        	*/
+				lidbg("%s:NR_NEW_DVR_NOTIFY ,%d, isNewDvrNotifyReady: %d\n",__func__,notify_data_buf, isNewDvrNotifyReady);
 
 				if(copy_to_user((char*)arg, (char*)&s_info, sizeof(struct status_info)))
 			     {
@@ -1949,7 +1983,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			     }
 				
 				isNewDvrNotifyReady = 0;
-				return pfly_UsbCamInfo->onlineNotify_status;
+				return notify_data_buf;
 		        break;
 			case NR_NEW_DVR_IO:
 				lidbg("%s:NR_NEW_DVR_IO  \n",__func__ );
@@ -3494,6 +3528,10 @@ int thread_flycam_init(void *data)
     camStatus_data_for_hal = (u8 *)kmalloc(HAL_BUF_SIZE , GFP_KERNEL);
 	sema_init(&pfly_UsbCamInfo->sem, 1);
     kfifo_init(&camStatus_data_fifo, camStatus_fifo_buffer, FIFO_SIZE);
+
+	notify_fifo_buffer = (u8 *)kmalloc(NOTIFY_FIFO_SIZE , GFP_KERNEL);
+	sema_init(&pfly_UsbCamInfo->notify_sem, 1);
+    kfifo_init(&notify_data_fifo, notify_fifo_buffer, NOTIFY_FIFO_SIZE);
 
 	//init_waitqueue_head(&wait_queue);
 	init_waitqueue_head(&pfly_UsbCamInfo->camStatus_wait_queue);/*camera status wait queue*/
