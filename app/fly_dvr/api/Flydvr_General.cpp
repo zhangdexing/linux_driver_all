@@ -439,7 +439,9 @@ void* thread_media_daemon(void* data)
 				lastStatus = FLY_TRUE;
 
 				if(freeSpace < MMC1_REVERSE_SIZE)
-				isMMC1Full = FLY_TRUE;
+					isMMC1Full = FLY_TRUE;
+
+				sync();
 			}
 		}
 		else 
