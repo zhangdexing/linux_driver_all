@@ -6,6 +6,7 @@ case "$USERS_ID" in
 	export DBG_PLATFORM_PATH=/home/swlee/flyaudio
 	export PATHJAVA1P6=/home/flyaudio/jdk1.6.0_31
 	export PATHJAVA1P7=/home/flyaudio/java-7-openjdk-amd64
+	export PATHJAVA1P8=/home/flyaudio/java-8-openjdk-amd64
 	export WORK_REMOTE=0
 	case "$DBG_PLATFORM_ID" in
 	   	0)
@@ -67,6 +68,8 @@ case "$USERS_ID" in
                 21)
 		export DBG_SYSTEM_DIR=/home/msm/swlee/mt3561
 		export RELEASE_REPOSITORY=/home/swlee/flyaudio/mt3561-release;;
+                22)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/M8974AAAAANLYD4275;;
 	esac;;
 	
    	1)
