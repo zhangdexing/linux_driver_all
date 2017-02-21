@@ -83,7 +83,11 @@ int thread_dumpsys_meminfo(void *data)
 
 int thread_format_sdcard1(void *data)
 {
+#ifdef PLATFORM_msm8996
+    char *pdevices="/dev/block/mmcblk0p1";
+#else
     char *pdevices="/dev/block/mmcblk1p1";
+#endif
     lidbg_shell_cmd("echo ==thread_format_sdcard1.start==== > /dev/lidbg_msg");
     if(fs_is_file_exist(pdevices))
     {
