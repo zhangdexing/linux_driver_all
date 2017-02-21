@@ -1498,6 +1498,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 	                {
 	                    //front_hw.lock.unlock();
 						lidbg("%s: Exiting coz VR_CMD_EXIT\n", __func__);
+						Flydvr_ISP_IF_LIB_CloseOnlineFileAccess();
 						if(front_online_hw.rec_fp > 0) 
 							fclose(front_online_hw.rec_fp);
 						front_online_hw.rec_fp = 0;

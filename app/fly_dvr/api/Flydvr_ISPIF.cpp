@@ -103,6 +103,7 @@ FLY_BOOL Flydvr_ISP_IF_LIB_RemoveOnlineFile()
 
 FLY_BOOL Flydvr_ISP_IF_LIB_StartFrontOnlineVR()
 {
+	Flydvr_ISP_IF_LIB_CloseOnlineFileAccess();
 	Flydvr_ISP_IF_LIB_RemoveOnlineFile();
 	if(Sonix_ISP_IF_LIB_StartFrontOnlineVR() == 0)
 	{
