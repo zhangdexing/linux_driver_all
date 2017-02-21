@@ -125,11 +125,13 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 						Flydvr_MkVRPath(FLYDVR_MEDIA_MMC1);
 					}
 					lidbg("%s: ======Format => Video!======\n", __func__);
-					if(Flydvr_CheckVRPath(FLYDVR_MEDIA_MMC1)== FLY_FALSE)
-					if(Flydvr_IsFrontCameraConnect() == FLY_TRUE)
-						Flydvr_ISP_IF_LIB_StartFrontVR();
-					if(Flydvr_IsRearCameraConnect() == FLY_TRUE)
-						Flydvr_ISP_IF_LIB_StartRearVR();
+					if(Flydvr_CheckVRPath(FLYDVR_MEDIA_MMC1)== FLY_TRUE)
+					{
+						if(Flydvr_IsFrontCameraConnect() == FLY_TRUE)
+							Flydvr_ISP_IF_LIB_StartFrontVR();
+						if(Flydvr_IsRearCameraConnect() == FLY_TRUE)
+							Flydvr_ISP_IF_LIB_StartRearVR();
+					}
 				}
 			}
         break;

@@ -28,11 +28,18 @@ typedef enum{
 #define MMC0_VOLUME_NAME	"sda"
 #define MMC1_VOLUME_NAME	"mmcblk0"
 #define UDISK_VOLUME_NAME	"sdf"
+
+#define MMC0_STORAGE_PATH 	"/storage/emulated/0/"
+#define MMC1_STORAGE_PATH 	"/storage/sdcard1"
+#define UDISK_STORAGE_PATH 	"/storage/udisk"
+
+#define MMC0_VR_PATH 	"/storage/emulated/0/camera_rec"
+#define MMC1_VR_PATH 	"/storage/sdcard1/camera_rec"
+#define MMC0_ONLINE_VR_PATH 	"/storage/emulated/0/preview_cache"
 #else
 #define MMC0_VOLUME_NAME	"mmcblk0"
 #define MMC1_VOLUME_NAME	"mmcblk1"
 #define UDISK_VOLUME_NAME	"sdb"
-#endif
 
 #define MMC0_STORAGE_PATH 	"/storage/emulated/0/"
 #define MMC1_STORAGE_PATH 	"/storage/sdcard1"
@@ -41,6 +48,9 @@ typedef enum{
 #define MMC0_VR_PATH 	"/storage/sdcard0/camera_rec"
 #define MMC1_VR_PATH 	"/storage/sdcard1/camera_rec"
 #define MMC0_ONLINE_VR_PATH 	"/storage/sdcard0/preview_cache"
+#endif
+
+
 #endif
 
 FLY_BOOL Flydvr_GetStorageMediaGeometry(UINT8 byMediaID, UINT8* devtype, UINT32* partition_count,UINT32* totalspace);
