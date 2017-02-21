@@ -447,7 +447,7 @@ void* thread_media_daemon(void* data)
 			if(lastStatus == FLY_TRUE) isMMC1DisConn = FLY_TRUE;
 			lastStatus = FLY_FALSE;
 		}
-		sleep(2);
+		sleep(5);
 	}
 	return (void*)0;
 }

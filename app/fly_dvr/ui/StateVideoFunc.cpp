@@ -282,7 +282,12 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 					sprintf(totalPathVRFileName, "%s/%s", MMC1_VR_PATH, minVRFileName);
 					remove(totalPathVRFileName);
 				}
-				else lidbg("%s: ======No File left to delete!======\n", __func__);	
+				else 
+				{
+					lidbg("%s: ======No File left to delete!======\n", __func__);	
+					Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_PAUSE , 0);
+					Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE , 0);
+				}
 				//Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_VRCB_MEDIA_FULL , 0);
 			}
 			break;
