@@ -273,21 +273,27 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 				UINT8 byMediaID = FLYDVR_MEDIA_MMC1;
 				INT8 minVRFileName[255];
 				INT8 totalPathVRFileName[255];
-				UINT32 filecnt;
-				Flydvr_GetVRFileInfo(byMediaID, minVRFileName, &filecnt);
+				UINT32 filecnt, freeSpace;
+				do
+				{
+					Flydvr_GetVRFileInfo(byMediaID, minVRFileName, &filecnt);
+					lidbg("%s: ======[remove:%s]======\n", __func__,minVRFileName);	
+					if(filecnt > 0)
+					{
+						sprintf(totalPathVRFileName, "%s/%s", MMC1_VR_PATH, minVRFileName);
+						remove(totalPathVRFileName);
+					}
+					else 
+					{
+						lidbg("%s: ======No File left to delete!======\n", __func__);	
+						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_PAUSE , 0);
+						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE , 0);
+						break;
+					}
+					Flydvr_GetPathFreeSpace(byMediaID, &freeSpace);	
+				}while(freeSpace < MMC1_REVERSE_SIZE);
+				
 				lidbg("%s: ======[VRFile:total %d files; mini:%s]======\n", __func__,filecnt,minVRFileName);
-				lidbg("%s: ======[remove:%s]======\n", __func__,minVRFileName);	
-				if(filecnt > 0)
-				{
-					sprintf(totalPathVRFileName, "%s/%s", MMC1_VR_PATH, minVRFileName);
-					remove(totalPathVRFileName);
-				}
-				else 
-				{
-					lidbg("%s: ======No File left to delete!======\n", __func__);	
-					Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_PAUSE , 0);
-					Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE , 0);
-				}
 				//Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_VRCB_MEDIA_FULL , 0);
 			}
 			break;

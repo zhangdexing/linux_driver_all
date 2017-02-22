@@ -10,7 +10,7 @@ typedef enum{
     SDMMC_IN
 }SDMMC_STATE;
 
-
+#define MMC1_REVERSE_SIZE		    		1024
 
 #if 0
 #define MMC0_VOLUME_NAME	"mmcblk0"

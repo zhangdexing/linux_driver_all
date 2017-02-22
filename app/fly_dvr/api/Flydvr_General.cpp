@@ -51,8 +51,6 @@ FLY_BOOL		isMMC1DisConn;
 FLY_BOOL		isMMC1Full;
 FLY_BOOL		isGsensorCrash;
 
-#define MMC1_REVERSE_SIZE		    		1024
-
 static FLY_BOOL Flydvr_InitGeneralFunc(void)
 {
     memset(m_MessageQueue, 0, sizeof(m_MessageQueue));
