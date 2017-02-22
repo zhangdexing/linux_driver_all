@@ -29,6 +29,13 @@ bool isFrontOnlineWriteEnable = false;
 
 unsigned int singleFileVRTime = 300;
 
+#ifdef VERBOSE_DEBUG
+#define vdbg lidbg
+#else
+#define vdbg(fmt, args...) \
+	do { } while (0)
+#endif /* DEBUG */
+
 ISP_IF_VERSION Sonix_ISP_IF_LIB_LibVer_Init(INT32 cam_id)
 {
 	ISP_IF_VERSION m_isp_if;
@@ -278,7 +285,7 @@ static int sonix_video_open(const char *devname)
 	return dev;
 }
 
-static int GetFreeRam(int* freeram)
+static int GetFreeRam(unsigned int* freeram)
 {
     FILE *meminfo = fopen("/proc/meminfo", "r");
 	char line[256];
@@ -655,7 +662,7 @@ int query_length(camera_q_node* mhead)
 
 int dequeue(void* data, camera_q_node* mhead)
 {
-	int ret;
+	int ret = 0;
     camera_q_node* node = NULL;
     //void* data = NULL;
     struct cam_list *head = NULL;
@@ -684,7 +691,7 @@ int dequeue(void* data, camera_q_node* mhead)
 
 int queue_flush(camera_q_node* mhead)
 {
-	int ret;
+	int ret = 0;
     camera_q_node* node = NULL;
     struct cam_list *head = NULL;
     struct cam_list *pos = NULL;
@@ -716,14 +723,14 @@ void dequeue_to_fp(int count , FILE * rec_fp, bool* isPermitted, camera_q_node* 
 	unsigned int totalLength = 0,diffMs = 0,kbPerSec = 0;
 	struct timespec start_sp, stop_sp ;
 	bool isFirstIFrame = false;
-	
-	lidbg("%s:E===totally [%d] , dequeue count :[%d]==\n",__func__,mhead->msize,count);
 
 	if(mhead->msize < count)
 	{
-		lidbg("%s:===msize:%d, count:%d, not enough for dequeue!!==\n",__func__,mhead->msize,count);
+		vdbg("%s:===msize:%d, count:%d, not enough for dequeue!!==\n",__func__,mhead->msize,count);
 		return;
 	}
+	
+	vdbg("%s:E===totally [%d] , dequeue count :[%d]==\n",__func__,mhead->msize,count);
 
 	clock_gettime(CLOCK_MONOTONIC, &start_sp);
 
@@ -787,26 +794,30 @@ void dequeue_to_fp(int count , FILE * rec_fp, bool* isPermitted, camera_q_node* 
 	clock_gettime(CLOCK_MONOTONIC, &stop_sp);
 	diffMs = (stop_sp.tv_sec * 1000 + stop_sp.tv_nsec / 1000000) - (start_sp.tv_sec * 1000 + start_sp.tv_nsec / 1000000);
 	kbPerSec = totalLength/diffMs;
-	lidbg("(Write Speed: %dMBytes/Sec)\n",kbPerSec);
-	lidbg("%s:X====\n",__func__,count);
+	
+	vdbg("(Write Speed: %dMBytes/Sec)\n",kbPerSec);
+	if(kbPerSec < 10)
+		lidbg("%s:Write speed warning![%d] \n",__func__,kbPerSec);
+	
+	vdbg("%s:X====\n",__func__,count);
 	return;
 }
 
 void dequeue_flush(int count , camera_q_node* mhead)
 {
-	lidbg("%s:E===count => %d==\n",__func__,count);
-
 	if(mhead->msize < count)
 	{
-		lidbg("%s:===msize:%d, count:%d, not enough for flush!!==\n",__func__,mhead->msize,count);
+		vdbg("%s:===msize:%d, count:%d, not enough for flush!!==\n",__func__,mhead->msize,count);
 		return;
 	}
+	
+	vdbg("%s:E===count => %d==\n",__func__,count);
 
 	while((count --) > 0)
 	{
 		queue_flush(mhead);
 	}
-	lidbg("%s:X===count => %d==\n",__func__,count);
+	vdbg("%s:X===count => %d==\n",__func__,count);
 	return;
 }
 
@@ -819,7 +830,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
         int                 buffer_id   = 0;
         pid_t               tid         = 0;
         int                 msgType     = 0;
-		char ret;
+		int ret;
 		unsigned int i;
 		unsigned int delay = 0, nframes = (unsigned int)-1;
 		struct timeval start, end, ts;
@@ -856,7 +867,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 
         while(1)
         {
-        	int FPS;
+        	int FPS = 0;
 			for (i = 0; i < nframes; ++i) {
 
 				/*Counting current framerate*/
@@ -873,7 +884,8 @@ void dequeue_flush(int count , camera_q_node* mhead)
 	                clock_gettime(CLOCK_MONOTONIC, &stop_sp);
 	                diff = (stop_sp.tv_sec * 1000 + stop_sp.tv_nsec / 1000000) - (start_sp.tv_sec * 1000 + start_sp.tv_nsec / 1000000);
 	                FPS = 1000 * loop_count / diff;
-	                lidbg("%s.%d: FPS.%d,[%d,%d ms]\n", __func__, threadPriority, FPS, loop_count, diff);
+	                lidbg("%s:PRI.%d, FPS.%d,WritePermit.%d,totalFrames.%d,EMHandle.%d\n",
+										__func__, threadPriority, FPS, front_hw.iswritePermitted,front_mhead.msize,front_hw.isEMHandling);
 	                loop_count = 0;
 	                clock_gettime(CLOCK_MONOTONIC, &start_sp);
 	                //usleep(670 * 1000);
@@ -1079,7 +1091,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 				{
 					if((front_mhead.msize >= 600) && (front_mhead.msize % 100 == 0)) //dequeue_to_fp(300, front_hw.rec_fp);
 					{
-						lidbg("Dequeue!.%d\n",front_mhead.msize);
+						vdbg("Dequeue!.%d\n",front_mhead.msize);
 						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_CAM_DEQUEUE, 300);
 					}
 				}
@@ -1089,7 +1101,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 					{
 						if((front_mhead.msize >= 600) && (front_mhead.msize % 100 == 0)) //dequeue_to_fp(300, front_hw.rec_fp);
 						{
-							lidbg("Dequeue!.%d\n",front_mhead.msize);
+							vdbg("Dequeue!.%d\n",front_mhead.msize);
 							Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_CAM_DEQUEUE, 300);
 						}
 					}
@@ -1097,7 +1109,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 					{
 						if((front_mhead.msize >= 600) && (front_mhead.msize % 100 == 0))  //dequeue_to_fp(300, front_hw.rec_fp);
 						{
-							lidbg("Flush!.%d\n",front_mhead.msize);
+							vdbg("Flush!.%d\n",front_mhead.msize);
 							Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_CAM_FLUSH, 300);
 						}
 					}
@@ -1124,7 +1136,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
         int                 buffer_id   = 0;
         pid_t               tid         = 0;
         int                 msgType     = 0;
-		char ret;
+		int ret;
 		unsigned int i;
 		unsigned int delay = 0, nframes = (unsigned int)-1;
 		struct timeval start, end, ts;
@@ -1161,7 +1173,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 
         while(1)
         {
-        	int FPS;
+        	int FPS = 0;
 			for (i = 0; i < nframes; ++i) {
 
 				/*Counting current framerate*/
@@ -1178,7 +1190,8 @@ void dequeue_flush(int count , camera_q_node* mhead)
 	                clock_gettime(CLOCK_MONOTONIC, &stop_sp);
 	                diff = (stop_sp.tv_sec * 1000 + stop_sp.tv_nsec / 1000000) - (start_sp.tv_sec * 1000 + start_sp.tv_nsec / 1000000);
 	                FPS = 1000 * loop_count / diff;
-	                lidbg("%s:%d: FPS.%d,[%d,%d ms]\n", __func__, threadPriority, FPS, loop_count, diff);
+	                lidbg("%s:PRI.%d, FPS.%d,WritePermit.%d,totalFrames.%d,EMHandle.%d\n",
+										__func__, threadPriority, FPS, rear_hw.iswritePermitted,rear_mhead.msize,rear_hw.isEMHandling);
 	                loop_count = 0;
 	                clock_gettime(CLOCK_MONOTONIC, &start_sp);
 	                //usleep(670 * 1000);
@@ -1382,7 +1395,10 @@ void dequeue_flush(int count , camera_q_node* mhead)
 				if(rear_hw.iswritePermitted == true)
 				{
 					if((rear_mhead.msize >= 600) && (rear_mhead.msize % 100 == 0))  //dequeue_to_fp(300, front_hw.rec_fp);
+					{
+						vdbg("Dequeue!.%d\n",rear_mhead.msize);
 						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_CAM_DEQUEUE, 300);
+					}
 				}
 				else
 				{
@@ -1390,7 +1406,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 					{
 						if((rear_mhead.msize >= 600) && (rear_mhead.msize % 100 == 0)) //dequeue_to_fp(300, front_hw.rec_fp);
 						{
-							lidbg("Dequeue!.%d\n",rear_mhead.msize);
+							vdbg("Dequeue!.%d\n",rear_mhead.msize);
 							Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_CAM_DEQUEUE, 300);
 						}
 					}
@@ -1398,7 +1414,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 					{
 						if((rear_mhead.msize >= 600) && (rear_mhead.msize % 100 == 0))  //dequeue_to_fp(300, front_hw.rec_fp);
 						{
-							lidbg("Flush!.%d\n",rear_mhead.msize);
+							vdbg("Flush!.%d\n",rear_mhead.msize);
 							Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_CAM_FLUSH, 300);
 						}
 					}
@@ -1425,7 +1441,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
         int                 buffer_id   = 0;
         pid_t               tid         = 0;
         int                 msgType     = 0;
-		char ret;
+		int ret;
 		unsigned int i;
 		unsigned int delay = 0, nframes = (unsigned int)-1;
 		struct timeval start, end, ts;
@@ -1463,7 +1479,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 
         while(1)
         {
-        	int FPS;
+        	int FPS = 0;
 			for (i = 0; i < nframes; ++i) {
 
 				/*Counting current framerate*/
@@ -1644,32 +1660,32 @@ void dequeue_flush(int count , camera_q_node* mhead)
 		switch( uiParam1 )
 	    {
 			case EVENT_FRONT_CAM_DEQUEUE:
-				lidbg("=======EVENT_FRONT_CAM_DEQUEUE=======\n");
+				vdbg("=======EVENT_FRONT_CAM_DEQUEUE=======\n");
 				dequeue_to_fp(uiParam2, front_hw.rec_fp,&front_hw.iswritePermitted,&front_mhead);
 	        break;
 			case EVENT_FRONT_CAM_DEQUEUE_OLDFP:
-				lidbg("=======EVENT_FRONT_CAM_DEQUEUE_OLDFP=======\n");
+				vdbg("=======EVENT_FRONT_CAM_DEQUEUE_OLDFP=======\n");
 				dequeue_to_fp(uiParam2, front_hw.old_rec_fp,&front_hw.iswritePermitted, &front_mhead);
 				if(front_hw.old_rec_fp > 0)
 					fclose(front_hw.old_rec_fp);
 	        break;
 			case EVENT_FRONT_CAM_FLUSH:
-				lidbg("=======EVENT_FRONT_CAM_FLUSH=======\n");
+				vdbg("=======EVENT_FRONT_CAM_FLUSH=======\n");
 				dequeue_flush(uiParam2, &front_mhead);
 	        break;
 					//dequeue_flush
 			case EVENT_REAR_CAM_DEQUEUE:
-				lidbg("=======EVENT_REAR_CAM_DEQUEUE=======\n");
+				vdbg("=======EVENT_REAR_CAM_DEQUEUE=======\n");
 				dequeue_to_fp(uiParam2, rear_hw.rec_fp,&rear_hw.iswritePermitted,&rear_mhead);
 	        break;
 			case EVENT_REAR_CAM_DEQUEUE_OLDFP:
-				lidbg("=======EVENT_REAR_CAM_DEQUEUE_OLDFP=======\n");
+				vdbg("=======EVENT_REAR_CAM_DEQUEUE_OLDFP=======\n");
 				dequeue_to_fp(uiParam2, rear_hw.old_rec_fp,&rear_hw.iswritePermitted, &rear_mhead);
 				if(rear_hw.old_rec_fp > 0)
 					fclose(rear_hw.old_rec_fp);
 	        break;
 			case EVENT_REAR_CAM_FLUSH:
-				lidbg("=======EVENT_REAR_CAM_FLUSH=======\n");
+				vdbg("=======EVENT_REAR_CAM_FLUSH=======\n");
 				dequeue_flush(uiParam2, &rear_mhead);
 	        break;
 			case EVENT_FRONT_CAM_OSD_SYNC:
@@ -1928,27 +1944,17 @@ INT32 Sonix_ISP_IF_LIB_StartLPDaemon()
 
 INT32 Sonix_ISP_IF_LIB_StartFrontVR()
 {
-	int freeram;
+	unsigned int freeram;
 	double m_BitRate;
 	
 	unsigned int i;
-	char ret;
-	int rc = 0;
+	int ret = 0;
 	char dev_name[255];
 
 	lidbg("%s: E\n", __func__);
 
 	sonixInitFrontDefaultParameters();
 	
-/*
-	rc = lidbg_get_hub_uvc_device(RECORD_MODE,devName,cam_id,0);
-    if((rc == -1)  || (*devName == '\0'))
-    {
-        lidbg("%s: No UVC node found \n", __func__);
-		//return 1;
-		goto try_open_again; 
-    }
-*/	
 	/* Open the video device. */
 	if(Sonix_ISP_IF_LIB_GetFrontCamDevName(dev_name) == FLY_FALSE)
 		return 1;
@@ -2042,9 +2048,9 @@ INT32 Sonix_ISP_IF_LIB_StartFrontVR()
 
 	cam_list_init(&front_mhead.list);
 	
-	rc = sonix_launch_FrontVR_thread();
+	ret = sonix_launch_FrontVR_thread();
 
-    if(!rc)
+    if(!ret)
             front_hw.VREnabledFlag = 1;
 
 	lidbg("%s: X\n", __func__);
@@ -2078,27 +2084,17 @@ INT32 Sonix_ISP_IF_LIB_PauseFrontVR()
 
 INT32 Sonix_ISP_IF_LIB_StartRearVR()
 {
-	int freeram;
+	unsigned int freeram;
 	double m_BitRate;
 	
 	unsigned int i;
-	char ret;
-	int rc = 0;
+	int ret = 0;
 	char dev_name[255];
 
 	lidbg("%s: E\n", __func__);
 
 	sonixInitRearDefaultParameters();
 	
-/*
-	rc = lidbg_get_hub_uvc_device(RECORD_MODE,devName,cam_id,0);
-    if((rc == -1)  || (*devName == '\0'))
-    {
-        lidbg("%s: No UVC node found \n", __func__);
-		//return 1;
-		goto try_open_again; 
-    }
-*/	
 	/* Open the video device. */
 	if(Sonix_ISP_IF_LIB_GetRearCamDevName(dev_name) == FLY_FALSE)
 		return 1;
@@ -2192,9 +2188,9 @@ INT32 Sonix_ISP_IF_LIB_StartRearVR()
 
 	cam_list_init(&rear_mhead.list);
 	
-	rc = sonix_launch_RearVR_thread();
+	ret = sonix_launch_RearVR_thread();
 
-    if(!rc)
+    if(!ret)
             rear_hw.VREnabledFlag = 1;
 
 	lidbg("%s: X\n", __func__);
@@ -2228,27 +2224,17 @@ INT32 Sonix_ISP_IF_LIB_PauseRearVR()
 
 INT32 Sonix_ISP_IF_LIB_StartFrontOnlineVR()
 {
-	int freeram;
+	unsigned int freeram;
 	double m_BitRate;
 	
 	unsigned int i;
-	char ret;
-	int rc = 0;
+	int ret = 0;
 	char dev_name[255];
 
 	lidbg("%s: E\n", __func__);
 
 	sonixInitFrontOnlineDefaultParameters();
 	
-/*
-	rc = lidbg_get_hub_uvc_device(RECORD_MODE,devName,cam_id,0);
-    if((rc == -1)  || (*devName == '\0'))
-    {
-        lidbg("%s: No UVC node found \n", __func__);
-		//return 1;
-		goto try_open_again; 
-    }
-*/	
 	/* Open the video device. */
 	if(Sonix_ISP_IF_LIB_GetFrontCamDevName(dev_name) == FLY_FALSE)
 		return 1;
@@ -2342,9 +2328,9 @@ INT32 Sonix_ISP_IF_LIB_StartFrontOnlineVR()
 
 	//cam_list_init(&front_mhead.list);
 	
-	rc = sonix_launch_FrontOnlineVR_thread();
+	ret = sonix_launch_FrontOnlineVR_thread();
 
-    if(!rc)
+    if(!ret)
             front_online_hw.VREnabledFlag = 1;
 
 	lidbg("%s: X\n", __func__);
