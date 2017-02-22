@@ -713,6 +713,8 @@ void dequeue_to_fp(int count , FILE * rec_fp, bool* isPermitted, camera_q_node* 
 {
 	FILE *fp1 = NULL;
 	FILE *fp2 = NULL;
+	unsigned int totalLength = 0,diffMs = 0,kbPerSec = 0;
+	struct timespec start_sp, stop_sp ;
 	bool isFirstIFrame = false;
 	
 	lidbg("%s:E===totally [%d] , dequeue count :[%d]==\n",__func__,mhead->msize,count);
@@ -723,10 +725,12 @@ void dequeue_to_fp(int count , FILE * rec_fp, bool* isPermitted, camera_q_node* 
 		return;
 	}
 
+	clock_gettime(CLOCK_MONOTONIC, &start_sp);
+
 	while((count --) > 0)
 	{
 		void* tempa;
-		int lengtha;
+		unsigned int lengtha;
 		lengtha = query_length(mhead);
 		if(lengtha == 0) 
 		{
@@ -773,11 +777,18 @@ void dequeue_to_fp(int count , FILE * rec_fp, bool* isPermitted, camera_q_node* 
 			//lidbg("%s:force return!!!count => %d\n",__func__,count);
 		
 		if(isFirstIFrame && rec_fp > 0)
+		{
 			fwrite(tempa, lengtha, 1, rec_fp);//write data to the output files
+			totalLength += (lengtha/1000);
+		}
 
 		if(tempa != NULL) free(tempa);
 	}
-	lidbg("%s:X===count => %d==\n",__func__,count);
+	clock_gettime(CLOCK_MONOTONIC, &stop_sp);
+	diffMs = (stop_sp.tv_sec * 1000 + stop_sp.tv_nsec / 1000000) - (start_sp.tv_sec * 1000 + start_sp.tv_nsec / 1000000);
+	kbPerSec = totalLength/diffMs;
+	lidbg("(Write Speed: %dMBytes/Sec)\n",kbPerSec);
+	lidbg("%s:X====\n",__func__,count);
 	return;
 }
 
