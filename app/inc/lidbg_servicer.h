@@ -32,11 +32,7 @@
 
 
 
-#define DUMP_BUILD_TIME_FILE do{\
-	char string[256];\
-	sprintf(string, "echo %s build time:%s,%s >> /dev/log/lidbg_log.txt", __FILE__,__DATE__,__TIME__);\
-	system(string);\
-}while(0)
+#define DUMP_BUILD_TIME_FILE
 
 static inline bool is_file_exist(const char *file)
 {
