@@ -273,15 +273,16 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 				UINT8 byMediaID = FLYDVR_MEDIA_MMC1;
 				INT8 minVRFileName[255];
 				INT8 totalPathVRFileName[255];
-				UINT32 filecnt, freeSpace;
+				UINT32 filecnt, freeSpace, delFileCnt;
 				do
 				{
 					Flydvr_GetVRFileInfo(byMediaID, minVRFileName, &filecnt);
-					lidbg("%s: ======[remove:%s]======\n", __func__,minVRFileName);	
+					vdbg("%s: ======[remove:%s]======\n", __func__,minVRFileName);	
 					if(filecnt > 0)
 					{
 						sprintf(totalPathVRFileName, "%s/%s", MMC1_VR_PATH, minVRFileName);
 						remove(totalPathVRFileName);
+						delFileCnt++;
 					}
 					else 
 					{
@@ -293,8 +294,7 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 					Flydvr_GetPathFreeSpace(byMediaID, &freeSpace);	
 				}while(freeSpace < MMC1_REVERSE_SIZE);
 				
-				lidbg("%s: ======[VRFile:total %d files; mini:%s]======\n", __func__,filecnt,minVRFileName);
-				//Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_VRCB_MEDIA_FULL , 0);
+				lidbg("%s: ======[VRFile:total %d files; %d files has been delete.]======\n", __func__,filecnt,delFileCnt);
 			}
 			break;
 		case EVENT_GSENSOR_CRASH:

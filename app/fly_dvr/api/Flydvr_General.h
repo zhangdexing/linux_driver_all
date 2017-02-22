@@ -3,6 +3,13 @@
 
 #define DRIVER_NODE   "/dev/lidbg_flycam0"
 
+#ifdef VERBOSE_DEBUG
+#define vdbg lidbg
+#else
+#define vdbg(fmt, args...) \
+	do { } while (0)
+#endif /* DEBUG */
+
 /// Video Event
 typedef enum _FLY_VIDEO_EVENT {
     FLY_VIDEO_EVENT_NONE = 0,

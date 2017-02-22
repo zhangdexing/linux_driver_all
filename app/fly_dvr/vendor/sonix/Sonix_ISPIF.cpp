@@ -29,13 +29,6 @@ bool isFrontOnlineWriteEnable = false;
 
 unsigned int singleFileVRTime = 300;
 
-#ifdef VERBOSE_DEBUG
-#define vdbg lidbg
-#else
-#define vdbg(fmt, args...) \
-	do { } while (0)
-#endif /* DEBUG */
-
 ISP_IF_VERSION Sonix_ISP_IF_LIB_LibVer_Init(INT32 cam_id)
 {
 	ISP_IF_VERSION m_isp_if;
