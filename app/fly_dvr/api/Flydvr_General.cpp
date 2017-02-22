@@ -439,7 +439,7 @@ void* thread_media_daemon(void* data)
 				if(freeSpace < MMC1_REVERSE_SIZE)
 					isMMC1Full = FLY_TRUE;
 
-				sync();
+				//sync();
 			}
 		}
 		else 

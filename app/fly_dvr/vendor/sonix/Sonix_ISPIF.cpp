@@ -790,7 +790,7 @@ void dequeue_to_fp(int count , FILE * rec_fp, bool* isPermitted, camera_q_node* 
 	
 	vdbg("(Write Speed: %dMBytes/Sec)\n",kbPerSec);
 	if(kbPerSec < 10)
-		lidbg("%s:Write speed warning![%d] \n",__func__,kbPerSec);
+		lidbg("%s:Write speed warning![%dMB/s] \n",__func__,kbPerSec);
 	
 	vdbg("%s:X====\n",__func__,count);
 	return;
@@ -1082,7 +1082,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 				//	usleep(delay * 1000);
 				if(front_hw.iswritePermitted == true)
 				{
-					if((front_mhead.msize >= 600) && (front_mhead.msize % 100 == 0)) //dequeue_to_fp(300, front_hw.rec_fp);
+					if((front_mhead.msize >= 600) && (i % 100 == 0)) //dequeue_to_fp(300, front_hw.rec_fp);
 					{
 						vdbg("Dequeue!.%d\n",front_mhead.msize);
 						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_CAM_DEQUEUE, 300);
@@ -1092,7 +1092,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 				{
 					if(front_hw.isEMHandling == true)
 					{
-						if((front_mhead.msize >= 600) && (front_mhead.msize % 100 == 0)) //dequeue_to_fp(300, front_hw.rec_fp);
+						if((front_mhead.msize >= 600) && (i % 100 == 0)) //dequeue_to_fp(300, front_hw.rec_fp);
 						{
 							vdbg("Dequeue!.%d\n",front_mhead.msize);
 							Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_CAM_DEQUEUE, 300);
@@ -1100,7 +1100,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 					}
 					else
 					{
-						if((front_mhead.msize >= 600) && (front_mhead.msize % 100 == 0))  //dequeue_to_fp(300, front_hw.rec_fp);
+						if((front_mhead.msize >= 600) && (i % 100 == 0))  //dequeue_to_fp(300, front_hw.rec_fp);
 						{
 							vdbg("Flush!.%d\n",front_mhead.msize);
 							Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_CAM_FLUSH, 300);
@@ -1387,7 +1387,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 				//	usleep(delay * 1000);
 				if(rear_hw.iswritePermitted == true)
 				{
-					if((rear_mhead.msize >= 600) && (rear_mhead.msize % 100 == 0))  //dequeue_to_fp(300, front_hw.rec_fp);
+					if((rear_mhead.msize >= 600) && (i % 100 == 0))  //dequeue_to_fp(300, front_hw.rec_fp);
 					{
 						vdbg("Dequeue!.%d\n",rear_mhead.msize);
 						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_CAM_DEQUEUE, 300);
@@ -1397,7 +1397,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 				{
 					if(rear_hw.isEMHandling == true)
 					{
-						if((rear_mhead.msize >= 600) && (rear_mhead.msize % 100 == 0)) //dequeue_to_fp(300, front_hw.rec_fp);
+						if((rear_mhead.msize >= 600) && (i % 100 == 0)) //dequeue_to_fp(300, front_hw.rec_fp);
 						{
 							vdbg("Dequeue!.%d\n",rear_mhead.msize);
 							Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_CAM_DEQUEUE, 300);
@@ -1405,7 +1405,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 					}
 					else
 					{
-						if((rear_mhead.msize >= 600) && (rear_mhead.msize % 100 == 0))  //dequeue_to_fp(300, front_hw.rec_fp);
+						if((rear_mhead.msize >= 600) && (i % 100 == 0))  //dequeue_to_fp(300, front_hw.rec_fp);
 						{
 							vdbg("Flush!.%d\n",rear_mhead.msize);
 							Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_CAM_FLUSH, 300);
@@ -1660,7 +1660,10 @@ void dequeue_flush(int count , camera_q_node* mhead)
 				vdbg("=======EVENT_FRONT_CAM_DEQUEUE_OLDFP=======\n");
 				dequeue_to_fp(uiParam2, front_hw.old_rec_fp,&front_hw.iswritePermitted, &front_mhead);
 				if(front_hw.old_rec_fp > 0)
+				{
+					fflush(front_hw.old_rec_fp);
 					fclose(front_hw.old_rec_fp);
+				}
 	        break;
 			case EVENT_FRONT_CAM_FLUSH:
 				vdbg("=======EVENT_FRONT_CAM_FLUSH=======\n");
@@ -1675,7 +1678,10 @@ void dequeue_flush(int count , camera_q_node* mhead)
 				vdbg("=======EVENT_REAR_CAM_DEQUEUE_OLDFP=======\n");
 				dequeue_to_fp(uiParam2, rear_hw.old_rec_fp,&rear_hw.iswritePermitted, &rear_mhead);
 				if(rear_hw.old_rec_fp > 0)
+				{
+					fflush(rear_hw.old_rec_fp);
 					fclose(rear_hw.old_rec_fp);
+				}
 	        break;
 			case EVENT_REAR_CAM_FLUSH:
 				vdbg("=======EVENT_REAR_CAM_FLUSH=======\n");
