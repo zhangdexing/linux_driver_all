@@ -1959,7 +1959,8 @@ static int mc3xxx_enable(struct mc3xxx_data *data, int enable)
 static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	int ret = 0;
-	#ifndef SOC_mt35x
+	//#ifndef SOC_mt35x
+	#if 0
 		float convert_para = 0.0f;
 	#endif
     #ifdef DOT_CALI
@@ -2014,7 +2015,8 @@ static long mc3xxx_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			lidbg("copy to error in %s.\n",__func__);
 		}     			
 		break;
-	#ifndef SOC_mt35x
+	//#ifndef SOC_mt35x
+	#if 0
 	case IOCTL_SENSOR_GET_CONVERT_PARA:
 		convert_para = MC3XXX_CONVERT_PARAMETER;
 		if(copy_to_user((void __user *) arg,(const void *)&convert_para,sizeof(float))!=0){
@@ -2603,11 +2605,13 @@ static int mc3xxx_probe(struct i2c_client *client,
 	}
 	
     mc3xxx_device.parent = &client->dev;
- 
+ /*
 	ret = misc_register(&mc3xxx_device);
 	if (ret) {
 		goto exit_misc_device_register_failed;
 	}
+*/
+	lidbg_new_cdev(&sensor_fops, "mc3xxx");
 
 	ret = sysfs_create_group(&m_data->input_dev->dev.kobj, &mc3xxx_group);
 	
@@ -2637,7 +2641,8 @@ static int mc3xxx_probe(struct i2c_client *client,
 	m_data->cdev.sensors_poll_delay = mc3xxx_acc_poll_delay_set;
 */	
 
-#ifndef SOC_mt35x
+//#ifndef SOC_mt35x
+#if 0
 	ret = sensors_classdev_register(&client->dev, &m_data->cdev);
 	if (ret) {
 		dev_err(&client->dev,
@@ -2677,8 +2682,8 @@ static int mc3xxx_probe(struct i2c_client *client,
 
 exit_remove_sysfs_int:
 	sysfs_remove_group(&m_data->input_dev->dev.kobj, &mc3xxx_group);
-exit_misc_device_register_failed:
-	input_unregister_device(m_data->input_dev);	
+//exit_misc_device_register_failed:
+//	input_unregister_device(m_data->input_dev);	
 exit_input_register_device_failed:
 	input_free_device(m_data->input_dev);
 err_chip_init_failed:
