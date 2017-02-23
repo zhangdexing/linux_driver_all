@@ -211,6 +211,13 @@ static int iframe_diff_val,iframe_threshold_val;
 struct v4l2_buffer buf0;
 struct v4l2_buffer buf1;
 
+unsigned char isExceed = 0;
+unsigned long totalSize = 0;
+
+char flyh264_filename[100] = {0};
+
+unsigned int total_frame_cnt;
+
 //lidbg("CAMID[%d] :",cam_id);
 #define camdbg(msg...) do{\
 	lidbg(msg);\
@@ -1626,6 +1633,12 @@ void dequeue_buf(int count , FILE * rec_fp)
 			if(isBeginTopDeq && rec_fp != NULL) fwrite(tempa, lengtha, 1, rec_fp);//write data to the output files
 			//else lidbg("****[%d]throw*****\n",cam_id);
 		}
+		else
+		{
+			if(rec_fp1 != NULL) fclose(rec_fp1);
+			if(old_rec_fp1 != NULL) fclose(old_rec_fp1);	
+		}
+		
 		if(isBlackBoxTopRec) 
 		{
 			if(isBeginTopDeq && fp1 != NULL) fwrite(tempa, lengtha, 1, fp1);
@@ -2376,7 +2389,7 @@ int lidbg_del_days_file(char* Dir,int days)
 	char filepath[200] = {0};
 	DIR *pDir ;
 	struct dirent *ent; 
-	unsigned char filecnt = 0;
+	unsigned int filecnt = 0;
 	int ret;
 	char *date_time_key[5] = {NULL};
 	char *date_key[3] = {NULL};
@@ -2437,7 +2450,7 @@ int find_earliest_file(char* Dir,char* minRecName)
 {
 	DIR *pDir ;
 	struct dirent *ent; 
-	unsigned char filecnt = 0;
+	unsigned int filecnt = 0;
 	int ret;
 	char *date_time_key[5] = {NULL};
 	char *date_key[3] = {NULL};
@@ -2449,10 +2462,15 @@ int find_earliest_file(char* Dir,char* minRecName)
 	char tmpDName[100] = {0};
 	struct tm prevTm,curTm;
 	time_t prevtimep = 0,curtimep;
-	
+
+	//lidbg("========find_earliest_file:%s=======\n",Dir);
 	/*find the earliest rec file and del*/
 	pDir=opendir(Dir);  
-	if(pDir == NULL) return -1;
+	if(pDir == NULL) 
+	{
+		lidbg("========pDir NULL=======\n");
+		return -1;
+	}
 	while((ent=readdir(pDir))!=NULL)  
 	{  
 	        if(!(ent->d_type & DT_DIR))  
@@ -2679,12 +2697,237 @@ static void get_driver_prop(int camID)
 
 static int get_path_free_space(char* path)
 {
-	struct statfs diskInfo;  
+	struct statfs diskInfo;
 	statfs(path, &diskInfo);  
 	unsigned long long totalBlocks = diskInfo.f_bsize;  
 	unsigned long long freeDisk = diskInfo.f_bfree*totalBlocks;  
 	size_t mbFreedisk = freeDisk>>20; 
 	return mbFreedisk;
+}
+
+
+void check_total_file_size()
+{
+	/*DVR Check save Dir size:whether change file name*/
+	DIR *pDir ;
+	struct dirent *ent;
+	struct stat buf; 
+	char path[100] = {0};
+	totalSize = 0;
+	pDir=opendir(Rec_Save_Dir);  
+	if(pDir != NULL) 
+	{
+		while((ent=readdir(pDir))!=NULL)  
+		{
+			 if(!(ent->d_type & DT_DIR))  
+	         {  
+	                //if((strcmp(ent->d_name,".") == 0) || (strcmp(ent->d_name,"..") == 0) || (ent->d_reclen != 48) ) 
+	                //        continue; 
+					if((!strncmp(ent->d_name, "F", 1))  ||(!strncmp(ent->d_name, "R", 1)) )
+					{
+						sprintf(path , "%s%s",Rec_Save_Dir,ent->d_name);
+						if (stat(path,&buf) == -1)
+					    {
+						      lidbg ("Get stat on %s Error?%s\n", ent->d_name, strerror (errno));
+						      //return (-1);
+					    }
+						//lidbg("%s -> size = %d , ent->d_reclen = %ld/n",ent->d_name,buf.st_size,ent->d_reclen); 
+						totalSize += buf.st_size/1000000;
+					}
+		 	 }
+		}
+		if((totalSize%50) == 0 && totalSize > 0) lidbg("total file size = %dMB\n",totalSize); 
+		if(totalSize >= Rec_File_Size)	
+		{
+			//isExceed = 1;
+			//send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_EXCEED_UPPER_LIMIT);
+		}
+		closedir(pDir);
+	}
+}
+
+void check_storage_file_size()
+{
+	/*reserve for storage*/
+		if(!strncmp(Rec_Save_Dir, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)) )
+		{
+#if 0					
+			struct statfs diskInfo;  
+			statfs(EMMC_MOUNT_POINT0, &diskInfo);  
+			unsigned long long totalBlocks = diskInfo.f_bsize;  
+			unsigned long long stotalSize = totalBlocks * diskInfo.f_blocks;  
+			size_t mbTotalsize = stotalSize>>20;  
+			unsigned long long freeDisk = diskInfo.f_bfree*totalBlocks;  
+			size_t mbFreedisk = freeDisk>>20;  
+#endif
+			size_t mbFreedisk;
+			mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT0);
+			//lidbg(EMMC_MOUNT_POINT0"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
+			if(!isPreview)
+			{
+				if(mbFreedisk < 300 && !isOldFp && (cam_id == DVR_ID))
+				{
+					lidbg("======DVR:EMMC Free space less than 300MB!![%dMB]======\n",mbFreedisk);
+					if(total_frame_cnt == 0)
+					{
+						lidbg("======Init Free space less than 300MB!!Force quit![%dMB]======\n",mbFreedisk);
+						send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
+#if 0									
+						close(dev);
+						close(flycam_fd);
+						return 0;
+#else
+						isVideoLoop = 0;
+						property_set("persist.uvccam.isDVRVideoLoop", "0");
+						property_set("persist.uvccam.isRearVideoLoop", "0");
+#endif
+					}
+					isExceed = 1;
+					send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INSUFFICIENT_SPACE_CIRC);
+				}
+				if(mbFreedisk < 10 && total_frame_cnt > 300)
+				{
+					lidbg("======Recording Protect![%dMB]======\n",mbFreedisk);
+					send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
+#if 0									
+					close(dev);
+					close(flycam_fd);
+					return 0;
+#else
+					isVideoLoop = 0;
+					property_set("persist.uvccam.isDVRVideoLoop", "0");
+					property_set("persist.uvccam.isRearVideoLoop", "0");
+#endif
+				}
+			}
+			else
+			{
+				if(mbFreedisk < 50)
+				{
+					lidbg("======ONLINE:EMMC Free space less than 50MB!!Force quit!======\n");
+					send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_ONLINE_INVOKE_NOTIFY, RET_ONLINE_INSUFFICIENT_SPACE_STOP);
+					close(dev);
+					close(flycam_fd);
+					return 0;
+				}
+			}
+		}
+		else if(!strncmp(Rec_Save_Dir, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)) )
+		{
+#if 0					
+			struct statfs diskInfo;  
+			statfs(EMMC_MOUNT_POINT1, &diskInfo);  
+			unsigned long long totalBlocks = diskInfo.f_bsize;  
+			unsigned long long stotalSize = totalBlocks * diskInfo.f_blocks;  
+			size_t mbTotalsize = stotalSize>>20;  
+			unsigned long long freeDisk = diskInfo.f_bfree*totalBlocks;  
+			size_t mbFreedisk = freeDisk>>20;  
+#endif
+			size_t mbFreedisk;
+			mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT1);
+			//lidbg(EMMC_MOUNT_POINT1"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
+			if(!isPreview)
+			{
+				if(mbFreedisk < 1024 && !isOldFp && (cam_id == DVR_ID))
+				{
+					lidbg("======DVR: Free space less than 1024MB!![%dMB]======\n",mbFreedisk);
+#if 0								
+					if(i == 0)
+					{
+						lidbg("======Init Free space less than 1024MB!!Force quit![%dMB]======\n",mbFreedisk);
+						send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
+						close(dev);
+						close(flycam_fd);
+						return 0;
+					}
+#endif
+					isExceed = 1;
+					send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INSUFFICIENT_SPACE_CIRC);
+				}
+				if(mbFreedisk < 10 && total_frame_cnt > 300)
+				{
+					lidbg("[%d]:======Recording Protect![%dMB]======\n",cam_id,mbFreedisk);
+					send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
+#if 0									
+					close(dev);
+					close(flycam_fd);
+					return 0;
+#else
+					isVideoLoop = 0;
+					property_set("persist.uvccam.isDVRVideoLoop", "0");
+					property_set("persist.uvccam.isRearVideoLoop", "0");
+#endif
+				}
+			}
+			else
+			{
+				if(mbFreedisk < 10)
+				{
+					lidbg("======ONLINE: Free space less than 10MB!!======\n");
+					send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_ONLINE_INVOKE_NOTIFY, RET_ONLINE_INSUFFICIENT_SPACE_STOP);
+					close(dev);
+					close(flycam_fd);
+					return 0;
+				}
+			}
+		}
+}
+
+void del_earliest_file()
+{
+	char minRecName[100] = EMMC_MOUNT_POINT0"/camera_rec/1111.mp4";//error for del
+	unsigned int filecnt = 0;
+	struct stat filebuf; 
+	char filepath[200] = {0};
+	filecnt = find_earliest_file(Rec_Save_Dir,minRecName);
+	lidbg("====== totally %d files.======\n",filecnt);
+
+	//lidbg("current cnt------>%d\n",filecnt);
+	sprintf(filepath , "%s%s",Rec_Save_Dir,minRecName);
+	if (stat(filepath,&filebuf) == -1)
+    {
+	      lidbg ("Get stat on %s Error?%s\n", filepath, strerror (errno));
+    }
+	if(strcmp(filepath,flyh264_filename) == 0 || filecnt == 0)
+	{
+		lidbg("======Can not del processing file!Stop!======\n");
+#if 0
+		lidbg_get_current_time(time_buf, NULL);
+		sprintf(flyh264_filename, "%s%s.h264", Rec_Save_Dir, time_buf);
+		lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);
+		rec_fp1 = fopen(flyh264_filename, "wb");
+#endif
+		send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INSUFFICIENT_SPACE_STOP);
+#if 0									
+		close(dev);
+		close(flycam_fd);
+		return 0;
+#else
+		isVideoLoop = 0;
+		property_set("persist.uvccam.isDVRVideoLoop", "0");
+		property_set("persist.uvccam.isRearVideoLoop", "0");
+#endif
+	}
+	lidbg("====== oldest rec file will be del:%s (%d MB).======\n",minRecName,filebuf.st_size/1000000);
+#if 0						
+	sprintf(tmpCMD , "rm -f %s&",filepath);
+	system(tmpCMD);
+#endif				
+	remove(filepath);  
+	if((totalSize - filebuf.st_size/1000000) > Rec_File_Size)
+		lidbg("rec file exceed!still has %d MB .\n",(totalSize - filebuf.st_size/1000000));
+}
+
+
+void *thread_free_space(void *par)
+{
+	while(1)
+	{
+		sleep(5);
+		//check_total_file_size();
+		check_storage_file_size();	
+		if(isExceed && isVideoLoop) del_earliest_file();
+	}
 }
 
 
@@ -2703,7 +2946,7 @@ int main(int argc, char *argv[])
 								EMMC_MOUNT_POINT0"/flytmp4.h264",
 								EMMC_MOUNT_POINT0"/flytmp5.h264"};
 */						    
-	char flyh264_filename[100] = {0};
+	
 	char old_flyh264_filename[100] = {0};
 	char flypreview_filename[100] = {0};
 	char flypreview_prevcnt[20] = {0};
@@ -2967,6 +3210,7 @@ int main(int argc, char *argv[])
 	pthread_t thread_top_dequeue_id;
 	pthread_t thread_count_top_frame_dequeue_id;
 	pthread_t thread_count_bottom_frame_dequeue_id;
+	pthread_t thread_free_space_id;
 	pthread_t thread_del_tmp_emfile_id;
 	//pthread_t thread_switch_id;
 	//pthread_t thread_nightMode_id;
@@ -2974,8 +3218,6 @@ int main(int argc, char *argv[])
 	char devName[256];
 	char time_buf[100] = {0};
 	char tmpCMD[100] = {0};
-	unsigned char isExceed = 0;
-	unsigned long totalSize = 0;
 	unsigned char tryopencnt = 20;
 
 	char isDisableOSD_str[PROPERTY_VALUE_MAX];
@@ -4954,14 +5196,18 @@ openfd:
 	//XU_H264_Set_GOP(dev, 10);
 	property_set("lidbg.uvccam.isdequeue", "0");
 	
-	pthread_create(&thread_top_dequeue_id,NULL,thread_top_dequeue,NULL);
-	pthread_create(&thread_dequeue_id,NULL,thread_dequeue,NULL);
-	pthread_create(&thread_count_top_frame_dequeue_id,NULL,thread_top_count_frame,NULL);
-	pthread_create(&thread_count_bottom_frame_dequeue_id,NULL,thread_bottom_count_frame,NULL);
-#if 1
-	if(cam_id == DVR_ID)
-		pthread_create(&thread_del_tmp_emfile_id,NULL,thread_del_tmp_emfile,NULL);
-#endif	
+	if(!isPreview)
+	{
+		pthread_create(&thread_top_dequeue_id,NULL,thread_top_dequeue,NULL);
+		pthread_create(&thread_dequeue_id,NULL,thread_dequeue,NULL);
+		pthread_create(&thread_count_top_frame_dequeue_id,NULL,thread_top_count_frame,NULL);
+		pthread_create(&thread_count_bottom_frame_dequeue_id,NULL,thread_bottom_count_frame,NULL);
+		pthread_create(&thread_free_space_id,NULL,thread_free_space,NULL);
+		if (cam_id == DVR_ID)
+		{
+			pthread_create(&thread_del_tmp_emfile_id,NULL,thread_del_tmp_emfile,NULL);
+		}
+	}
 
 	top_lastFrames = Emergency_Top_Sec * 30;
 	bottom_lastFrames = Emergency_Bottom_Sec * 30;
@@ -5212,6 +5458,8 @@ openfd:
 
 	for (i = 0; i < nframes; ++i) {
 
+		total_frame_cnt++;
+
 		/*read prop:whether stop recoding*/
     	switch_scan();
 
@@ -5371,7 +5619,7 @@ openfd:
 			if(!isPreview && i == 0) 
 				lidbg("[%d]:prevent init stop rec!\n",cam_id);
 			
-			if((!isPreview && i > 3000) || isPreview)//prevent ACCON setprop slow issue
+			if((!isPreview && i > 60) || isPreview)//prevent ACCON setprop slow issue
 			{
 				lidbg("[%d]:-------eho---------uvccam stop recording! -----------\n",cam_id);
 #if 0
@@ -5561,172 +5809,7 @@ openfd:
 					rec_fp1 = fopen(flyh264_filename[flytmpcnt], "wb");
 				}
 				*/
-				/*DVR Check save Dir size:whether change file name*/
-				if((i % 30 == 0) && !isPreview && (cam_id == DVR_ID))
-				{
-					DIR *pDir ;
-					struct dirent *ent;
-					struct stat buf; 
-					char path[100] = {0};
-					totalSize = 0;
-					pDir=opendir(Rec_Save_Dir);  
-					if(pDir != NULL) 
-					{
-						while((ent=readdir(pDir))!=NULL)  
-						{
-							 if(!(ent->d_type & DT_DIR))  
-					         {  
-					                //if((strcmp(ent->d_name,".") == 0) || (strcmp(ent->d_name,"..") == 0) || (ent->d_reclen != 48) ) 
-					                //        continue; 
-									if((!strncmp(ent->d_name, "F", 1))  ||(!strncmp(ent->d_name, "R", 1)) )
-									{
-										sprintf(path , "%s%s",Rec_Save_Dir,ent->d_name);
-										if (stat(path,&buf) == -1)
-									    {
-										      lidbg ("Get stat on %s Error?%s\n", ent->d_name, strerror (errno));
-										      //return (-1);
-									    }
-										//lidbg("%s -> size = %d , ent->d_reclen = %ld/n",ent->d_name,buf.st_size,ent->d_reclen); 
-										totalSize += buf.st_size/1000000;
-									}
-						 	 }
-						}
-						if((totalSize%50) == 0 && totalSize > 0) lidbg("total file size = %dMB\n",totalSize); 
-						if(totalSize >= Rec_File_Size)	
-						{
-							//isExceed = 1;
-							//send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_EXCEED_UPPER_LIMIT);
-						}
-						closedir(pDir);
-					}
-				}
 				
-				/*reserve for storage*/
-				if(i % 30 == 0 && isVideoLoop)
-				{
-					if(!strncmp(Rec_Save_Dir, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)) )
-					{
-#if 0					
-						struct statfs diskInfo;  
-						statfs(EMMC_MOUNT_POINT0, &diskInfo);  
-						unsigned long long totalBlocks = diskInfo.f_bsize;  
-						unsigned long long stotalSize = totalBlocks * diskInfo.f_blocks;  
-						size_t mbTotalsize = stotalSize>>20;  
-						unsigned long long freeDisk = diskInfo.f_bfree*totalBlocks;  
-						size_t mbFreedisk = freeDisk>>20;  
-#endif
-						size_t mbFreedisk;
-						mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT0);
-						//lidbg(EMMC_MOUNT_POINT0"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
-						if(!isPreview)
-						{
-							if(mbFreedisk < 300 && !isOldFp && (cam_id == DVR_ID))
-							{
-								lidbg("======DVR:EMMC Free space less than 300MB!![%dMB]======\n",mbFreedisk);
-								if(i == 0)
-								{
-									lidbg("======Init Free space less than 300MB!!Force quit![%dMB]======\n",mbFreedisk);
-									send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
-#if 0									
-									close(dev);
-									close(flycam_fd);
-									return 0;
-#else
-									isVideoLoop = 0;
-									property_set("persist.uvccam.isDVRVideoLoop", "0");
-									property_set("persist.uvccam.isRearVideoLoop", "0");
-#endif
-								}
-								isExceed = 1;
-								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INSUFFICIENT_SPACE_CIRC);
-							}
-							if(mbFreedisk < 10 && i > 300)
-							{
-								lidbg("======Recording Protect![%dMB]======\n",mbFreedisk);
-								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
-#if 0									
-								close(dev);
-								close(flycam_fd);
-								return 0;
-#else
-								isVideoLoop = 0;
-								property_set("persist.uvccam.isDVRVideoLoop", "0");
-								property_set("persist.uvccam.isRearVideoLoop", "0");
-#endif
-							}
-						}
-						else
-						{
-							if(mbFreedisk < 50)
-							{
-								lidbg("======ONLINE:EMMC Free space less than 50MB!!Force quit!======\n");
-								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_ONLINE_INVOKE_NOTIFY, RET_ONLINE_INSUFFICIENT_SPACE_STOP);
-								close(dev);
-								close(flycam_fd);
-								return 0;
-							}
-						}
-					}
-					else if(!strncmp(Rec_Save_Dir, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)) )
-					{
-#if 0					
-						struct statfs diskInfo;  
-						statfs(EMMC_MOUNT_POINT1, &diskInfo);  
-						unsigned long long totalBlocks = diskInfo.f_bsize;  
-						unsigned long long stotalSize = totalBlocks * diskInfo.f_blocks;  
-						size_t mbTotalsize = stotalSize>>20;  
-						unsigned long long freeDisk = diskInfo.f_bfree*totalBlocks;  
-						size_t mbFreedisk = freeDisk>>20;  
-#endif
-						size_t mbFreedisk;
-						mbFreedisk = get_path_free_space(EMMC_MOUNT_POINT1);
-						//lidbg(EMMC_MOUNT_POINT1"  total=%dMB, free=%dMB\n", mbTotalsize, mbFreedisk);  
-						if(!isPreview)
-						{
-							if(mbFreedisk < 1024 && !isOldFp && (cam_id == DVR_ID))
-							{
-								lidbg("======DVR: Free space less than 1024MB!![%dMB]======\n",mbFreedisk);
-#if 0								
-								if(i == 0)
-								{
-									lidbg("======Init Free space less than 1024MB!!Force quit![%dMB]======\n",mbFreedisk);
-									send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
-									close(dev);
-									close(flycam_fd);
-									return 0;
-								}
-#endif
-								isExceed = 1;
-								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INSUFFICIENT_SPACE_CIRC);
-							}
-							if(mbFreedisk < 10 && i > 300)
-							{
-								lidbg("======Recording Protect![%dMB]======\n",mbFreedisk);
-								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INIT_INSUFFICIENT_SPACE_STOP);
-#if 0									
-								close(dev);
-								close(flycam_fd);
-								return 0;
-#else
-								isVideoLoop = 0;
-								property_set("persist.uvccam.isDVRVideoLoop", "0");
-								property_set("persist.uvccam.isRearVideoLoop", "0");
-#endif
-							}
-						}
-						else
-						{
-							if(mbFreedisk < 10)
-							{
-								lidbg("======ONLINE: Free space less than 10MB!!======\n");
-								send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_ONLINE_INVOKE_NOTIFY, RET_ONLINE_INSUFFICIENT_SPACE_STOP);
-								close(dev);
-								close(flycam_fd);
-								return 0;
-							}
-						}
-					}
-				}
 
 				//lidbg("****buf0:%d,originRecsec:%d,oldRecsec:%d***\n",buf0.timestamp.tv_sec,originRecsec,oldRecsec);
 				/*
@@ -5764,172 +5847,49 @@ openfd:
 					change file name.(current time)
 				*/
 				else if((((buf0.timestamp.tv_sec - originRecsec) % Rec_Sec == 0)
-					&&(oldRecsec != (buf0.timestamp.tv_sec - originRecsec)) || isExceed) && isVideoLoop)
+					&&(oldRecsec != (buf0.timestamp.tv_sec - originRecsec))) && isVideoLoop)
 				{
-					char minRecName[100] = EMMC_MOUNT_POINT0"/camera_rec/1111.mp4";//error for del
-					unsigned char filecnt = 0;
 					int ret;
-#if 0				
-					DIR *pDir ;
-					struct dirent *ent; 
-					int ret;
-					char *date_time_key[5] = {NULL};
-					char *date_key[3] = {NULL};
-					char *time_key[3] = {NULL};
-					int cur_date[3] = {0,0,0};
-					int cur_time[3] = {0,0,0};
-					int min_date[3] = {5000,13,50};
-					int min_time[3] = {13,100,100};
-					char minRecName[100] = EMMC_MOUNT_POINT0"/camera_rec/1111.h264";//error for del
-					char tmpDName[100] = {0};
-					unsigned char filecnt = 0;
-					unsigned char memcpyFlag = 0;
 
-					struct tm prevTm,curTm;
-					time_t prevtimep = 0,curtimep;
-#endif
 					/*get last timeval: prevent from repetition*/
-					if(!isExceed) oldRecsec = buf0.timestamp.tv_sec - originRecsec;
+					oldRecsec = buf0.timestamp.tv_sec - originRecsec;
 					
-					#if 0
-					if(i > 0)
-					{
-						if(flytmpcnt < Max_Rec_Num - 1) flytmpcnt++;
-						else flytmpcnt = 0;
-					}
-					#endif
-#if 0			
-					/*find the earliest rec file and del*/
-					pDir=opendir(Rec_Save_Dir);  
-					while((ent=readdir(pDir))!=NULL)  
-					{  
-					        if(!(ent->d_type & DT_DIR))  
-					        {  
-					                if((strcmp(ent->d_name,".") == 0) || (strcmp(ent->d_name,"..") == 0) || (ent->d_reclen != 48) ) 
-					                        continue;  
-									//if((!strncmp(ent->d_name, "F", 1) && (cam_id == DVR_ID)) ||(!strncmp(ent->d_name, "R", 1) && (cam_id == REARVIEW_ID)) )
-									//{
-										filecnt++;
-						                //lidbg("ent->d_name:%s====ent->d_reclen:%d=====\n", ent->d_name,ent->d_reclen); 
-
-										strcpy(tmpDName, ent->d_name + 1);
-										lidbg_token_string(tmpDName, "__", date_time_key);
-										//lidbg("date_time_key0:%s====date_time_key1:%s=====", date_time_key[0],date_time_key[2]);	
-										lidbg_token_string(date_time_key[0], "-", date_key);
-										//lidbg("date_key:%s====%s===%s==", date_key[0],date_key[1],date_key[2]);	
-										lidbg_token_string(date_time_key[2], ".", time_key);
-										//lidbg("time_key:%s====%s===%s==", time_key[0],time_key[1],time_key[2]);	
-										
-										curTm.tm_year = atoi(date_key[0]) -1900;
-										curTm.tm_mon = atoi(date_key[1]) -1;
-										curTm.tm_mday = atoi(date_key[2]);
-										curTm.tm_hour = atoi(time_key[0]);
-										curTm.tm_min = atoi(time_key[1]);
-										curTm.tm_sec	 = atoi(time_key[2]);	
-										curtimep = mktime(&curTm);
-										
-										#if 0
-										lidbg("prevtimep=======%d========",  prevtimep);
-										lidbg("curtimep=======%d========",  curtimep);
-										lidbg("difftime=======%d========", difftime(curtimep, prevtimep));
-										#endif
-										if((curtimep < prevtimep) || (prevtimep == 0))
-										{
-											prevtimep = curtimep;
-											strcpy(minRecName, ent->d_name);
-											//lidbg("minRecName---%d--->%s\n",filecnt,minRecName);
-										}
-									//}
-					        }  
-					}
-					closedir(pDir);
-					//lidbg("minRecName end------>%s\n",minRecName);
-#endif
-					lidbg("====== find_earliest_file======\n",filecnt);
-
-					filecnt = find_earliest_file(Rec_Save_Dir,minRecName);
-					/*
-						1.storage exceed process:del the oldest rec file,keep writing last file;if filecnt < 2,create new file.
-						2.time exceed process:write a new file.
-					*/
-					struct stat filebuf; 
-					char filepath[200] = {0};
-					lidbg("====== totally %d files.======\n",filecnt);
-					if(isExceed)
-					{
-						//lidbg("current cnt------>%d\n",filecnt);
-						sprintf(filepath , "%s%s",Rec_Save_Dir,minRecName);
-						if (stat(filepath,&filebuf) == -1)
-					    {
-						      lidbg ("Get stat on %s Error?%s\n", filepath, strerror (errno));
-					    }
-						if(strcmp(filepath,flyh264_filename) == 0 || filecnt == 0)
-						{
-							lidbg("======Can not del processing file!Stop!======\n");
-#if 0
-							lidbg_get_current_time(time_buf, NULL);
-							sprintf(flyh264_filename, "%s%s.h264", Rec_Save_Dir, time_buf);
-							lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);
-							rec_fp1 = fopen(flyh264_filename, "wb");
-#endif
-							send_driver_msg(FLYCAM_STATUS_IOC_MAGIC, NR_STATUS, RET_DVR_INSUFFICIENT_SPACE_STOP);
-#if 0									
-							close(dev);
-							close(flycam_fd);
-							return 0;
-#else
-							isVideoLoop = 0;
-							property_set("persist.uvccam.isDVRVideoLoop", "0");
-							property_set("persist.uvccam.isRearVideoLoop", "0");
-#endif
-						}
-						lidbg("====== oldest rec file will be del:%s (%d MB).======\n",minRecName,filebuf.st_size/1000000);
-#if 0						
-						sprintf(tmpCMD , "rm -f %s&",filepath);
-						system(tmpCMD);
-#endif				
-						remove(filepath);  
-						if((totalSize - filebuf.st_size/1000000) > Rec_File_Size)
-							lidbg("rec file exceed!still has %d MB .\n",(totalSize - filebuf.st_size/1000000));
-					}
-					else
-					{
-						//tmp_count = msize;
-						//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize);
-						//pthread_join(thread_capture_id,NULL);
-						
-						//while(isDequeue) usleep(100*1000);
-						//dequeue_buf(msize,rec_fp1);
+					//tmp_count = msize;
+					//pthread_create(&thread_dequeue_id,NULL,thread_dequeue,msize);
+					//pthread_join(thread_capture_id,NULL);
+					
+					//while(isDequeue) usleep(100*1000);
+					//dequeue_buf(msize,rec_fp1);
 #if 1
-						if(rec_fp1 != NULL) 
-						{
-							//lidbg("****<%d>start feeding  %s****\n",cam_id,flyh264_filename);
-							fclose(rec_fp1);
-							strcpy(old_flyh264_filename, flyh264_filename);
-							old_rec_fp1 = fopen(old_flyh264_filename, "ab+");
-							isOldFp = 1;
-							isNormDequeue = 1;	
-						}
+					if(rec_fp1 != NULL) 
+					{
+						//lidbg("****<%d>start feeding  %s****\n",cam_id,flyh264_filename);
+						fclose(rec_fp1);
+						strcpy(old_flyh264_filename, flyh264_filename);
+						old_rec_fp1 = fopen(old_flyh264_filename, "ab+");
+						isOldFp = 1;
+						isNormDequeue = 1;	
+					}
 #else
-						if(rec_fp1 != NULL) fclose(rec_fp1);
+					if(rec_fp1 != NULL) fclose(rec_fp1);
 #endif
 #if 0
-						isIframe = 1;
-						XU_H264_Set_IFRAME(dev);
+					isIframe = 1;
+					XU_H264_Set_IFRAME(dev);
 #endif
-						isNewFile = 1;
+					isNewFile = 1;
 
-						lidbg_get_current_time(0 , time_buf, NULL);
+					lidbg_get_current_time(0 , time_buf, NULL);
 
-						if(cam_id == DVR_ID)
-							sprintf(flyh264_filename, "%sF%s.h264", Rec_Save_Dir, time_buf);
-						else if(cam_id == REARVIEW_ID)
-							sprintf(flyh264_filename, "%sR%s.h264", Rec_Save_Dir, time_buf);
-						
-						lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);		
-						rec_fp1 = fopen(flyh264_filename, "wb");
-						//if(i > 0) fwrite(iFrameData, iframe_length , 1, rec_fp1);
-					}
+					if(cam_id == DVR_ID)
+						sprintf(flyh264_filename, "%sF%s.h264", Rec_Save_Dir, time_buf);
+					else if(cam_id == REARVIEW_ID)
+						sprintf(flyh264_filename, "%sR%s.h264", Rec_Save_Dir, time_buf);
+					
+					lidbg("=========new flyh264_filename : %s===========\n", flyh264_filename);		
+					rec_fp1 = fopen(flyh264_filename, "wb");
+					//if(i > 0) fwrite(iFrameData, iframe_length , 1, rec_fp1);
+					
 					#if 0
 					/*only if within Rec_File_Size,otherwise del oldest file again.*/
 					if(((totalSize - filebuf.st_size) /1000000) < Rec_File_Size)
