@@ -137,12 +137,18 @@ static int thread_usb_hub_check(void *data)
 	    {
 	    	lidbgerr("thread_usb_hub_check fail!\n");
 #ifdef SOC_msm8x26
-	        USB_POWER_DISABLE;
+	#ifdef PLATFORM_msm8996
+		 USB_POWER_FRONT_DISABLE;
+		 ssleep(2);
+		 USB_POWER_FRONT_ENABLE;
+	#else
+	         USB_POWER_DISABLE;
 		 msleep(500);
 		 USB_ID_HIGH_DEV;
-	        ssleep(2);
+	         ssleep(2);
 		 USB_ID_LOW_HOST;
 		 USB_POWER_ENABLE;
+	#endif
 #endif
 
 #ifdef SOC_mt35x

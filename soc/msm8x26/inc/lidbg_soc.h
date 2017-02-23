@@ -101,7 +101,8 @@
 
 #endif
 
-#ifdef PLATFORM_msm8996	
+#ifdef PLATFORM_msm8996
+#define USB_HUB_SUPPORT
 #define SUSPEND_ONLINE
 #define MUC_CONTROL_DSP
 #define MUC_DSP7741
