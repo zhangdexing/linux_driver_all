@@ -2748,7 +2748,8 @@ void check_total_file_size()
 
 void check_storage_file_size()
 {
-	/*reserve for storage*/
+		isExceed = 0;
+		/*reserve for storage*/
 		if(!strncmp(Rec_Save_Dir, EMMC_MOUNT_POINT0, strlen(EMMC_MOUNT_POINT0)) )
 		{
 #if 0					
@@ -2925,8 +2926,12 @@ void *thread_free_space(void *par)
 	{
 		sleep(5);
 		//check_total_file_size();
-		check_storage_file_size();	
-		if(isExceed && isVideoLoop) del_earliest_file();
+		do
+		{
+			check_storage_file_size();	
+			usleep(100*1000);
+			if(isExceed && isVideoLoop) del_earliest_file();
+		}while(isExceed);
 	}
 }
 
@@ -6001,7 +6006,7 @@ openfd:
 						else isNormDequeue = 1;
 					}
 				}
-				isExceed = 0;
+				//isExceed = 0;
 			}
 		}
 
