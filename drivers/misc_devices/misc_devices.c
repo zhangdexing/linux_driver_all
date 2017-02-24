@@ -806,7 +806,13 @@ static int soc_dev_probe(struct platform_device *pdev)
    
     GPIO_IS_READY;
     SET_GPIO_READY_SUSPEND;
-	
+
+    if( g_recovery_meg->bootParam.upName.val == 2)
+    {
+		lidbg("disable printk uart\n");
+		lidbg_shell_cmd("echo appcmd *158#041 > /dev/lidbg_drivers_dbg0");
+    }
+
     if((!g_var.is_fly) && (g_var.recovery_mode == 0) )
 	   HAL_IS_READY;
     //SET_HAL_READY_SUSPEND;
