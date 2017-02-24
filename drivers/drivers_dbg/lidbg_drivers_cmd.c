@@ -209,6 +209,8 @@ int thread_dump_log_cp2_udisk(void *data)
     lidbg_shell_cmd(shell_cmd);
     sprintf(shell_cmd, "cp -rf /sdcard/logcat*.txt /sdcard/ID-%d-%s", get_machine_id() , tbuff);
     lidbg_shell_cmd(shell_cmd);
+    sprintf(shell_cmd, "cp -rf /sdcard/kmsg*.txt /sdcard/ID-%d-%s", get_machine_id() , tbuff);
+    lidbg_shell_cmd(shell_cmd);
 
 //for udisk
     sprintf(shell_cmd, "cp -rf /sdcard/ID-%d-%s "USB_MOUNT_POINT, get_machine_id() , tbuff);
