@@ -537,6 +537,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#122--delete logcat black list conf \n");
             fs_mem_log("*158#123--gsensor debug switch \n");
             fs_mem_log("*158#124--enable logcat when coldboot \n");
+            fs_mem_log("*158#125--enable kmsg print \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1515,6 +1516,12 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("echo coldBootLogcat > /sdcard/coldBootLogcat.txt");
             lidbg_shell_cmd("chmod 777  /sdcard/coldBootLogcat.txt");
             lidbg_shell_cmd("sync");
+            lidbg_domineering_ack();
+        }
+        else if (!strncmp(argv[1], "*158#125", 8))
+        {
+            lidbg("*158#125--enable kmsg print \n");
+            lidbg_shell_cmd("echo 8 > /proc/sys/kernel/printk");
             lidbg_domineering_ack();
         }
 
