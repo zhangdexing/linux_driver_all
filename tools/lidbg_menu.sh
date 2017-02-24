@@ -179,12 +179,6 @@ function lidbg_handle()
 			expect $DBG_TOOLS_PATH/fetch_all $2 l
 			git reset --hard origin/$2
 			chmod 777 ./* -R
-			if [[ $3 -eq "2" ]];then
-				lidbg_build
-			fi
-			if [[ $3 -eq "3" ]];then
-				lidbg_build_all
-			fi
 			;;
 		*)
 			echo
