@@ -179,7 +179,13 @@ function lidbg_handle()
 			expect $DBG_TOOLS_PATH/fetch_all $2 l
 			git reset --hard origin/$2
 			chmod 777 ./* -R
-			lidbg_build_all;;
+			if [[ $3 -eq "2" ]];then
+				lidbg_build
+			fi
+			if [[ $3 -eq "3" ]];then
+				lidbg_build_all
+			fi
+			;;
 		*)
 			echo
 		esac
@@ -190,7 +196,7 @@ function menu_do()
 {
 	chmod 777 $DBG_ROOT_PATH -R
 	if [[ $1 -le 20 ]] ;then
-		lidbg_handle $1 $2
+		lidbg_handle $1 $2 $3
 	elif [[ $1 -le 40 ]] ;then
 		soc_handle $1 $2 $3 $4
 	elif [[ $1 -le 50 ]] ;then
