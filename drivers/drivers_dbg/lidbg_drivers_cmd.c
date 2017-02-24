@@ -538,6 +538,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#123--gsensor debug switch \n");
             fs_mem_log("*158#124--enable logcat when coldboot \n");
             fs_mem_log("*158#125--enable kmsg print \n");
+            fs_mem_log("*158#126--cp logcat kmsg to Udisk \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1524,6 +1525,19 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("echo 8 > /proc/sys/kernel/printk");
             lidbg_domineering_ack();
         }
+        else if (!strncmp(argv[1], "*158#126", 8))
+		{
+		  lidbg("*158#126--cp logcat kmsg to Udisk \n");
+		  lidbg_shell_cmd("mkdir -p /storage/udisk/LogcatKmsg");
+		  lidbg_shell_cmd("rm -rf /storage/udisk/LogcatKmsg/*");
+		  lidbg_shell_cmd("cp -rf /sdcard/logcat* /storage/udisk/LogcatKmsg");
+		  lidbg_shell_cmd("cp -rf /sdcard/kmsg* /storage/udisk/LogcatKmsg");
+		  lidbg_shell_cmd("cp -rf /data/anr/* /storage/udisk/LogcatKmsg");
+		  lidbg_shell_cmd("echo ws toast Copy.Completely 1 > /dev/lidbg_pm0");
+		  lidbg_domineering_ack();
+		}
+
+
 
     }
     else if(!strcmp(argv[0], "monkey") )
