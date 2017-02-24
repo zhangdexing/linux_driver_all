@@ -57,7 +57,7 @@ case "$USERS_ID" in
 		export DBG_SYSTEM_DIR=/home/msm/swlee/mt3561
 		export RELEASE_REPOSITORY=/home/swlee/flyaudio/mt3561-release;;
                 17)
-		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/M8974AAAAANLYD4275
+		export DBG_SYSTEM_DIR=/home/msm/swlee/msm8996_6.0/M8974AAAAANLYD4275
 		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8996-release;;
                 18)
 		export DBG_SYSTEM_DIR=/home/msm/swlee/mt3561
