@@ -4,7 +4,12 @@ function soc_make_kernelconfig()
 	echo $FUNCNAME
 	cd $DBG_SYSTEM_DIR
 	soc_prebuild
+if [[ $DBG_PLATFORM = msm8996 && $ANDROID_VERSION = 711 ]];then
+	make -C kernel/msm-3.18 O=../../out/target/product/msm8996/obj/kernel/msm-3.18 ARCH=arm64 CROSS_COMPILE=aarch64-linux-android- KCFLAGS=-mno-android msm_defconfig menuconfig
+	cp $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ/.config $DBG_SYSTEM_DIR/kernel/msm-3.18/arch/arm64/configs/msm_defconfig
+else
 	make kernelconfig
+fi
 }
 
 function soc_build_system()

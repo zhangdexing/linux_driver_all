@@ -768,7 +768,7 @@ case "$DBG_PLATFORM_ID" in
         export DBG_BOOTLOADER_IMG=emmc_appsboot.mbn
         export DBG_BOOTLOADER_PARTITION_NAME=aboot
 	export DBG_BOOTLOADER_TYPE=LK
-	export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
+	export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel/msm-3.18
 	export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/KERNEL_OBJ
 	export UPDATA_BIN_PLATFORM_DIR=$RELEASE_REPOSITORY
 	export UPDATA_BIN_DIR=$UPDATA_BIN_PLATFORM_DIR/driver
@@ -780,8 +780,8 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_SOC=msm8x26
 	export TEST_PACKAGE_PATH=//172.168.1.240/share/8996/升级包/测试升级包
 	export REPOSITORY_WORK_BRANCH=master
-	export SYSTEM_WORK_BRANCH=msm8996-master
-	export RECOVERY_BUILD_BRANCH=msm8996-master
+	export SYSTEM_WORK_BRANCH=msm8996-master-7.0
+	export RECOVERY_BUILD_BRANCH=msm8996-master-7.0
         export MAKE_PAKG_NUM=22
 
 	export NON_HLOS_FILE_PATH=$BP_SOURCE_PATH/common/build/bin/asic
