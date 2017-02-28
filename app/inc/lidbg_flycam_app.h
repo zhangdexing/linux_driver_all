@@ -79,7 +79,7 @@ static inline int lidbg_get_hub_uvc_device(int mode,char *devname,int cam_id,int
 				sprintf(hub_path, "/sys/bus/usb/drivers/usb/%s/%s:1.0/video4linux/", ent->d_name,ent->d_name);//front cam
 			} 
 	}
-	closedir(pDir);
+	if(pDir != NULL) closedir(pDir);
 
 	if((front_charcnt == 0) && (back_charcnt == 0))
 	{
@@ -120,6 +120,9 @@ static inline int lidbg_get_hub_uvc_device(int mode,char *devname,int cam_id,int
 						sprintf(temp_devname2,"/dev/%s", ent->d_name);  
 	        }  
 	}
+
+	if(pDir != NULL) closedir(pDir);
+	
 	lidbg("%s:First node Path:%s\n",__func__ ,temp_devname);      
 
 	lidbg("%s: This Camera [%d] has %d video node.\n", __func__ ,cam_id, fcnt - 2);
