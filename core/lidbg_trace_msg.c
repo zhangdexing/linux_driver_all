@@ -49,7 +49,8 @@ void kmsg_fifo_collect(char *buff, int buff_len)
 void kmsg_fifo_save(void)
 {
     int ret;
-
+    if( pdev->disable_flag ==  1)
+		   return ;
     if(p_kmsg_collect && !kfifo_is_empty(p_kmsg_collect))
     {
         char *file_ptr = NULL;
@@ -105,7 +106,8 @@ EXPORT_SYMBOL(lidbg_trace_msg_disable);
 bool lidbg_trace_msg_cb_register(char *key_word, void *data, void (*cb_func)(char *key_word, void *data))
 {
     struct lidbg_trace_msg_cb_list *cb_list = NULL;
-
+    if( pdev->disable_flag ==  1)
+		   return true;
     cb_list = kzalloc(sizeof(struct lidbg_trace_msg_cb_list), GFP_KERNEL);
     if(!cb_list)
         lidbg("[%s]: Kzalloc mem for lidbg_trace_msg_cb_list faild !\n", __func__);
@@ -340,6 +342,10 @@ static int  lidbg_trace_msg_probe(struct platform_device *ppdev)
         lidbg("Kmalloc space for lidbg msg failed.\n");
         return ret;
     }
+	
+    pdev->disable_flag = 1;
+    return 0;
+	
     ret = kfifo_alloc(&pdev->fifo, LIDBG_TRACE_MSG_FIFO_SIZE, GFP_KERNEL);
     if(ret)
     {
