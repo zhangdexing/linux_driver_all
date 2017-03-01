@@ -7,26 +7,9 @@
 static LIST_HEAD(lidbg_trace_msg_string_list);
 static LIST_HEAD(lidbg_trace_msg_cb_list_head);
 
-struct lidbg_trace_message_device
-{
-    char *name;
-    int disable_flag;
-    struct kfifo fifo;
-    struct semaphore sem;
-};
-
-struct lidbg_trace_msg_cb_list
-{
-    struct list_head tmp_list;
-    char *key_word;
-    void *data;
-    void (*cb_func)(char *key_word, void *data);
-};
 struct kfifo fifo_kmsg_collect, *p_kmsg_collect = NULL;
 spinlock_t spinlock_kmsg_collect;
 struct mutex mutex_kmsg_collect;
-static struct lidbg_trace_message_device *pdev;
-
 void kmsg_fifo_collect(char *buff, int buff_len)
 {
     if(p_kmsg_collect == NULL)
@@ -92,6 +75,26 @@ void kmsg_fifo_save(void)
     else
         lidbg("[%s]:skip: %d  %d\n", __func__, p_kmsg_collect == NULL, p_kmsg_collect != NULL ? kfifo_is_empty(p_kmsg_collect) : -1);
 }
+
+
+
+struct lidbg_trace_message_device
+{
+    char *name;
+    int disable_flag;
+    struct kfifo fifo;
+    struct semaphore sem;
+};
+
+struct lidbg_trace_msg_cb_list
+{
+    struct list_head tmp_list;
+    char *key_word;
+    void *data;
+    void (*cb_func)(char *key_word, void *data);
+};
+
+static struct lidbg_trace_message_device *pdev;
 
 void lidbg_trace_msg_disable(int flag)
 {
