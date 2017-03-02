@@ -652,7 +652,6 @@ void parse_cmd(char *pt)
         else if (!strcmp(argv[1], "*158#012"))
         {
             lidbg_trace_msg_disable(1);
-            lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#013"))
         	{
