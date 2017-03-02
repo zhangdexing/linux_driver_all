@@ -36,6 +36,23 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.bluetooth.BluetoothAdapter;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.util.List;
+import java.io.IOException;
+import java.util.List;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PermissionInfo;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.ResolveInfo;
+
+import java.util.ArrayList;
+
 public class LidbgCommenLogicService extends Service
 {
 
@@ -46,6 +63,8 @@ public class LidbgCommenLogicService extends Service
     private Context mContext;
     private IMountService mMountService;
     public static String ISRDecodeAction = "cn.flyaudio.updateapp";
+    private String[] mWhitePermissionList = null;
+
 
     @Override
     public void onCreate()
@@ -55,6 +74,10 @@ public class LidbgCommenLogicService extends Service
         printKernelMsg("onCreate");
 
         mLidbgCommenLogicService = this;
+        mWhitePermissionList = FileReadList("/flysystem/lib/out/appWhitePermissionList.conf", "\n");
+        DUMP();
+        grantWhiteListPermissions();
+        //grantPackagePermissions("com.baidu.BaiduMap",	PermissionInfo.PROTECTION_DANGEROUS);
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.intent.action.BOOT_COMPLETED");
         filter.addAction("com.fly.lidbg.LidbgCommenLogic");
@@ -92,6 +115,18 @@ public class LidbgCommenLogicService extends Service
             }
         }
     };
+    public void DUMP()
+    {
+        if (mWhitePermissionList != null)
+        {
+            for (int i = 0; i < mWhitePermissionList.length; i++)
+            {
+                printKernelMsg(i + ".PEM->" + mWhitePermissionList[i] + "\n");
+            }
+        }
+        else
+            printKernelMsg("mWhitePermissionList = null\n");
+    }
     protected void msleep(int i)
     {
         // TODO Auto-generated method stub
@@ -293,22 +328,23 @@ public class LidbgCommenLogicService extends Service
                 //printKernelMsg("usb event:[Manufacturer:" + device.getManufacturerName() + "/name:" + device.getDeviceName()  + "]\n");
                 //+ "/InterfaceClass:" + device.getInterface(0).getInterfaceClass()
                 return;
-            }	
+            }
             else if (intent.getAction().equals(Intent.ACTION_AIRPLANE_MODE_CHANGED))
             {
-                printKernelMsg("airplaneModeEnabled="+intent.getBooleanExtra("state", false)+"\n");
+                printKernelMsg("airplaneModeEnabled=" + intent.getBooleanExtra("state", false) + "\n");
                 return;
             }
             else if (intent.getAction().equals(ISRDecodeAction))
             {
                 printKernelMsg("get ISRDecodeAction\n");
-                FileWrite("/dev/flydev0", false, false,"ISRDecodeAction");
+                FileWrite("/dev/flydev0", false, false, "ISRDecodeAction");
                 return;
             }
             else if (intent.getAction().equals(BluetoothAdapter.ACTION_STATE_CHANGED))
             {
                 //printKernelMsg("BluetoothState="+intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0)+"\n");
-                switch(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0)){
+                switch(intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, 0))
+                {
                 case BluetoothAdapter.STATE_TURNING_ON:
                     printKernelMsg("BluetoothState=STATE_TURNING_ON\n");
                     break;
@@ -415,7 +451,7 @@ public class LidbgCommenLogicService extends Service
     public void printKernelMsg(String string)
     {
         FileWrite("/dev/lidbg_msg", false, false, "LidbgCommenLogic: " + string
-                  + (string.endsWith("\n")?"":"\n"));
+                  + (string.endsWith("\n") ? "" : "\n"));
     }
 
     public boolean FileWrite(String file_path, boolean creatit, boolean append,
@@ -465,6 +501,153 @@ public class LidbgCommenLogicService extends Service
     {
         File kmsgfiFile = new File(file);
         return kmsgfiFile.exists();
+    }
+
+    private boolean grantWhiteListPermissions()
+    {
+        // TODO Auto-generated method stub
+        if (mWhitePermissionList != null)
+        {
+            FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:echo LidbgCommenLogic:grant_start > /dev/lidbg_msg");
+            for (int i = 0; i < mWhitePermissionList.length; i++)
+            {
+                grantPackagePermissions(mWhitePermissionList[i], PermissionInfo.PROTECTION_DANGEROUS);
+            }
+            FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:echo LidbgCommenLogic:grant_stop > /dev/lidbg_msg");
+        }
+        return false;
+    }
+
+    private boolean grantPackagePermissions(String pkg, int protectionDangerous)
+    {
+        // TODO Auto-generated method stub
+        String[] permission = getPackagePermissions(pkg, protectionDangerous);
+        if (permission != null)
+        {
+            for (int i = 0; i < permission.length; i++)
+            {
+                String cmd = "pm grant " + pkg + " " + permission[i];
+                printKernelMsg(i + "/" + permission.length + "=" + cmd);
+                FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:" + cmd);
+            }
+            return true;
+        }
+        return false;
+    }
+    public boolean isPermissionLevel(String permission, int PermissionLevel)
+    {
+        try
+        {
+            PermissionInfo info = mContext.getPackageManager()
+                                  .getPermissionInfo(permission, 0);
+            return info.protectionLevel == PermissionLevel;
+        }
+        catch (NameNotFoundException nnfe)
+        {
+            printKernelMsg("No such permission: " + permission + "/"
+                           + nnfe.getMessage());
+        }
+        return false;
+    }
+
+    public String[] getPackagePermissions(String name, int PermissionLevel)
+    {
+        // TODO Auto-generated method stub
+        PackageManager pm = mContext.getPackageManager();
+        PackageInfo installedPackages;
+        try
+        {
+            installedPackages = pm.getPackageInfo(name,
+                                                  PackageManager.GET_PERMISSIONS);
+            String[] requestedPermissions = installedPackages.requestedPermissions;
+            if (requestedPermissions != null)
+            {
+                if (PermissionLevel == -1)
+                {
+                    return requestedPermissions;
+                }
+                ArrayList<String> NewStrings = new ArrayList<String>();
+                for (String requestedPermission : requestedPermissions)
+                {
+                    if (isPermissionLevel(requestedPermission, PermissionLevel))
+                    {
+                        NewStrings.add(requestedPermission);
+                    }
+                }
+                String[] resultStrings = new String[NewStrings.size()];
+                for (int i = 0; i < NewStrings.size(); i++)
+                {
+                    resultStrings[i] = NewStrings.get(i);
+                }
+                if (NewStrings.size() > 0)
+                {
+                    return resultStrings;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            // TODO Auto-generated catch block
+            printKernelMsg("getPackagePermissions-error:" + e.getMessage());
+        }
+        return null;
+    }
+    public String[] FileReadList(String fileName, String split)
+    {
+        // TODO Auto-generated method stub
+        String[] mList = null;
+        String tempString = FileRead(fileName);
+        if (tempString != null && tempString.length() > 2)
+        {
+            mList = tempString.trim().split(split);
+        }
+        return mList;
+    }
+    public String FileRead(String fileName)
+    {
+        String res = null;
+        File mFile = new File(fileName);
+        if (!mFile.exists() || !mFile.canRead())
+        {
+            return res;
+        }
+
+        try
+        {
+            FileInputStream inputStream = new FileInputStream(mFile);
+            int len = inputStream.available();
+            byte[] buffer = new byte[len];
+            inputStream.read(buffer);
+            res = new String(buffer, "UTF-8");
+            // toast_show("resString="+fineString);
+            inputStream.close();
+        }
+        catch (FileNotFoundException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        catch (IOException e)
+        {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        return res;
+    }
+    public String printStringArray(String[] items, String head)
+    {
+        String logString = "";
+        for (int i = 0; i < items.length; i++)
+        {
+            logString += i + head + items[i] + "\n";
+            printKernelMsg(logString);
+        }
+        return logString;
     }
 }
 
