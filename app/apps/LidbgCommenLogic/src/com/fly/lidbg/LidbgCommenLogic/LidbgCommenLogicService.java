@@ -57,6 +57,7 @@ public class LidbgCommenLogicService extends Service
 {
 
     protected static final String ACCProperties = "persist.lidbg.acc.status";
+    protected static final String GrantDone = "persist.lidbg.grant.done";
     private LidbgCommenLogicService mLidbgCommenLogicService;
     private PendingIntent peration;
     protected int loopCount = 0;
@@ -74,10 +75,20 @@ public class LidbgCommenLogicService extends Service
         printKernelMsg("onCreate");
 
         mLidbgCommenLogicService = this;
-        mWhitePermissionList = FileReadList("/flysystem/lib/out/appWhitePermissionList.conf", "\n");
+
+        if(isFileExist("/flysystem/flytheme/config/appWhitePermissionList.conf"))
+        {
+            mWhitePermissionList = FileReadList("/flysystem/flytheme/config/appWhitePermissionList.conf", "\n");
+            printKernelMsg("use flytheme");
+        }
+        else
+        {
+            mWhitePermissionList = FileReadList("/flysystem/lib/out/appWhitePermissionList.conf", "\n");
+            printKernelMsg("use default");
+        }
+
         DUMP();
-        grantWhiteListPermissions();
-        //grantPackagePermissions("com.baidu.BaiduMap",	PermissionInfo.PROTECTION_DANGEROUS);
+
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.intent.action.BOOT_COMPLETED");
         filter.addAction("com.fly.lidbg.LidbgCommenLogic");
@@ -92,6 +103,15 @@ public class LidbgCommenLogicService extends Service
         filter.addAction(ISRDecodeAction);
         filter.setPriority(Integer.MAX_VALUE);
         mLidbgCommenLogicService.registerReceiver(myReceiver, filter);
+
+        IntentFilter mIntentFilter = new IntentFilter();
+        mIntentFilter.addDataScheme("package");
+        mIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
+        mIntentFilter.addAction(Intent.ACTION_PACKAGE_REPLACED);
+        //mIntentFilter.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        mIntentFilter.setPriority(Integer.MAX_VALUE);
+        mLidbgCommenLogicService.registerReceiver(mPackageReceiver, mIntentFilter);
+
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
         mStorageManager.registerListener(mStorageEventListener);
     }
@@ -303,6 +323,30 @@ public class LidbgCommenLogicService extends Service
         return df.format(curDate);
     }
 
+    private BroadcastReceiver mPackageReceiver = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            if (intent == null)
+            {
+                printKernelMsg("err.return:intent == null \n");
+                return;
+            }
+            printKernelMsg("mPackageReceiver:[" + intent.getAction() + "]\n");
+            if (intent.getAction().equals(Intent.ACTION_PACKAGE_ADDED) || intent.getAction().equals(Intent.ACTION_PACKAGE_REPLACED))
+            {
+                String packageName = intent.getData().getSchemeSpecificPart();
+                if(isInList(mWhitePermissionList, packageName))
+                    grantPackagePermissions(packageName, PermissionInfo.PROTECTION_DANGEROUS);
+                else
+                    printKernelMsg("ignore:" + packageName);
+                return;
+            }
+        }
+    };
+
+
     // am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 0
     private BroadcastReceiver myReceiver = new BroadcastReceiver()
     {
@@ -320,6 +364,11 @@ public class LidbgCommenLogicService extends Service
             if (intent.getAction().equals(
                         "android.intent.action.BOOT_COMPLETED"))
             {
+                int mGrantDone = SystemProperties.getInt(GrantDone, 0);
+                if(mGrantDone == 0)
+                    grantWhiteListPermissions();
+                else
+                    printKernelMsg("ignore grantWhiteListPermissions\n");
                 return;
             }
             else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED) || intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED))
@@ -407,6 +456,22 @@ public class LidbgCommenLogicService extends Service
                 else
                 {
                     printKernelMsg("start app fail");
+                }
+                break;
+            case 8:
+                printKernelMsg("grantWhiteListPermissions:");
+                grantWhiteListPermissions();
+                break;
+            case 9:
+                if (intent.hasExtra("paraString"))
+                {
+                    mparaString = intent.getExtras().getString("paraString");
+                    printKernelMsg("grantPackagePermissions:" + mparaString);
+                    grantPackagePermissions("com.baidu.BaiduMap",	PermissionInfo.PROTECTION_DANGEROUS);
+                }
+                else
+                {
+                    printKernelMsg("grantPackagePermissions: fail");
                 }
                 break;
 
@@ -508,12 +573,14 @@ public class LidbgCommenLogicService extends Service
         // TODO Auto-generated method stub
         if (mWhitePermissionList != null)
         {
-            FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:echo LidbgCommenLogic:grant_start > /dev/lidbg_msg");
+            printKernelMsg("grantWhiteListPermissions");
+            FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:echo LidbgCommenLogic.grant_start > /dev/lidbg_msg");
             for (int i = 0; i < mWhitePermissionList.length; i++)
             {
                 grantPackagePermissions(mWhitePermissionList[i], PermissionInfo.PROTECTION_DANGEROUS);
             }
-            FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:echo LidbgCommenLogic:grant_stop > /dev/lidbg_msg");
+            FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:echo LidbgCommenLogic.grant_stop > /dev/lidbg_msg");
+            FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:setprop persist.lidbg.grant.done 1");
         }
         return false;
     }
@@ -544,8 +611,7 @@ public class LidbgCommenLogicService extends Service
         }
         catch (NameNotFoundException nnfe)
         {
-            printKernelMsg("No such permission: " + permission + "/"
-                           + nnfe.getMessage());
+            // printKernelMsg("No such permission: " + permission + "/"+ nnfe.getMessage());
         }
         return false;
     }
@@ -648,6 +714,20 @@ public class LidbgCommenLogicService extends Service
             printKernelMsg(logString);
         }
         return logString;
+    }
+    private boolean isInList( String[] mList, String packageName)
+    {
+        if ((mList != null))
+        {
+            for (String processName : mList)
+            {
+                if (processName.equals(packageName))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
 
