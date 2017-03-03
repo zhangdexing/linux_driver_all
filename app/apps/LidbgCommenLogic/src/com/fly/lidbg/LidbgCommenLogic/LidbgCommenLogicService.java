@@ -594,7 +594,7 @@ public class LidbgCommenLogicService extends Service
             for (int i = 0; i < permission.length; i++)
             {
                 String cmd = "pm grant " + pkg + " " + permission[i];
-                printKernelMsg(i + "/" + permission.length + "=" + cmd);
+                printKernelMsg(i + "/" + permission.length + "=" + pkg + " " + permission[i]);
                 FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:" + cmd);
             }
             return true;
