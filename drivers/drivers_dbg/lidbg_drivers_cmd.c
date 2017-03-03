@@ -539,6 +539,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#124--enable logcat when coldboot \n");
             fs_mem_log("*158#125--enable kmsg print \n");
             fs_mem_log("*158#126--cp logcat kmsg to Udisk \n");
+            fs_mem_log("*158#127--grantWhiteListPermissions \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1533,6 +1534,12 @@ void parse_cmd(char *pt)
 		  lidbg_shell_cmd("cp -rf /sdcard/kmsg* /storage/udisk/LogcatKmsg");
 		  lidbg_shell_cmd("cp -rf /data/anr/* /storage/udisk/LogcatKmsg");
 		  lidbg_shell_cmd("echo ws toast Copy.Completely 1 > /dev/lidbg_pm0");
+		  lidbg_domineering_ack();
+		}
+        else if (!strncmp(argv[1], "*158#127", 8))
+		{
+		  lidbg("*158#127--grantWhiteListPermissions \n");
+		  lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 8 &");
 		  lidbg_domineering_ack();
 		}
 
