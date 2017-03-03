@@ -392,12 +392,19 @@ void callback_func_test_readdir(char *dirname, char *filename)
 }
 
 static bool fan_enable = false;
+static bool cmd_enable = true;
 void parse_cmd(char *pt)
 {
     int argc = 0;
     int i = 0;
 
     char *argv[32] = {NULL};
+    if (!cmd_enable)
+    	{
+		lidbg("cmd_enable==0.return");
+		return;
+	}
+
     argc = lidbg_token_string(pt, " ", argv);
 
     lidbg("cmd:");
@@ -1546,6 +1553,14 @@ void parse_cmd(char *pt)
 
 
 
+    }
+    else if(!strcmp(argv[0], "flyaudio.code.disable") )
+    {
+        cmd_enable = false;
+    }
+    else if(!strcmp(argv[0], "flyaudio.code.enable") )
+    {
+        cmd_enable = true;
     }
     else if(!strcmp(argv[0], "monkey") )
     {
