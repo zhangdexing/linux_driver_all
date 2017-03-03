@@ -399,12 +399,6 @@ void parse_cmd(char *pt)
     int i = 0;
 
     char *argv[32] = {NULL};
-    if (!cmd_enable)
-    	{
-		lidbg("cmd_enable==0.return");
-		return;
-	}
-
     argc = lidbg_token_string(pt, " ", argv);
 
     lidbg("cmd:");
@@ -415,7 +409,7 @@ void parse_cmd(char *pt)
     }
     lidbg("\n");
 
-    if (!strcmp(argv[0], "appcmd"))
+    if (!strcmp(argv[0], "appcmd")&&cmd_enable)
     {
         lidbg("%s:[%s]\n", argv[0], argv[1]);
         lidbg_chmod("/data");
