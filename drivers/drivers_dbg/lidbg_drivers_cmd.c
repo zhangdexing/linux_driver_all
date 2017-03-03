@@ -614,7 +614,8 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("rm /data/logcat*");
             lidbg_shell_cmd("rm /data/kmsg*");
 #endif
-            lidbg("clear-logcat*&&kmsg*\n");
+            lidbg_shell_cmd("echo appcmd *158#093 > /dev/lidbg_drivers_dbg0");
+            lidbg("clear-logcat*&&kmsg*,IDfile\n");
 #endif
             lidbg_domineering_ack();
         }
