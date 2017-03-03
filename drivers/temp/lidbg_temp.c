@@ -215,7 +215,7 @@ int thread_stop_boot_freq_ctrl(void *data)
     cpu_temp = soc_temp_get(g_hw.cpu_sensor_num);
     lidbg(TAG"%s:cpu_temp:%d\n", __func__, cpu_temp);
 
-    if(cpu_temp > 85)
+    if(cpu_temp > 65)
     {
         lidbg(TAG"%s:cpu_temp:%d,too hight.wait android_boot_completed\n", __func__, cpu_temp);
         while(0 == g_var.android_boot_completed)
@@ -232,6 +232,7 @@ int thread_stop_boot_freq_ctrl(void *data)
         lidbg_shell_cmd("cat /proc/freq_ctrl_stop &");
     if(g_var.recovery_mode == 0)
         lidbg_shell_cmd("cat /proc/interrupt_mode_init &");
+	return 0;
 }
 
 int thread_thermal(void *data)
