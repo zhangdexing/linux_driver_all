@@ -538,7 +538,7 @@ int main(int argc, char **argv)
                     break;
                 case 3 :
                     navi_policy_en = (para[1] == 1);
-                    if(navi_policy_en == 0)
+                    if(navi_policy_en == false)
                     {
                         lidbg(TAG"restore music to max:[%d]\n", max_volume);
                         set_all_stream_volume(max_volume);
@@ -547,6 +547,11 @@ int main(int argc, char **argv)
                     lidbg(TAG"force disable navi_policy_en\n");
                     navi_policy_en = false;
 #endif
+                    if(navi_policy_en == true)//skip set VENDOR_MTK 
+                    {
+                        lidbg(TAG"init all Stream to max:[%d]\n", max_volume);
+                        set_all_stream_volume(max_volume);
+                    }
                     print_para();
                     break;
                 case 4 :
