@@ -483,12 +483,6 @@ int main(int argc, char **argv)
             {
                 sound_on = 1;
                 handle_sound_state("vote", sound_on);
-                if(max_volume == -1)
-                {
-                    lidbg(TAG"init_para\n");
-                    init_para(true);
-                    print_para();
-                }
             }
         }
         else
@@ -538,6 +532,13 @@ int main(int argc, char **argv)
                     break;
                 case 3 :
                     navi_policy_en = (para[1] == 1);
+		if(max_volume == -1)
+		{
+		    lidbg(TAG"init_para\n");
+		    init_para(true);
+		    print_para();
+		}
+
                     if(navi_policy_en == false)
                     {
                         lidbg(TAG"restore music to max:[%d]\n", max_volume);
