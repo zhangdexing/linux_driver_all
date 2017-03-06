@@ -65,6 +65,11 @@ static void lidbg_hal_thread( void *arg)
             {
                 jni_call_backs.driver_abnormal_cb(ret);
                 lidbg(DEBG_TAG"[%s].call driver_abnormal_cb:ret=%d\n", __FUNCTION__, ret );
+                if(flycam_fd < 0)
+                {
+					lidbg(DEBG_TAG"[%s].flycam_fd < 0 more delay sleep(5)\n", __FUNCTION__ );
+					sleep(5);
+                }
             }
         }
         continue;
