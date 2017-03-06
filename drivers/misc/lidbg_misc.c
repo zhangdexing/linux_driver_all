@@ -282,7 +282,7 @@ int thread_reboot(void *data)
         if(!fs_is_file_exist(REBOOT_SIG_FILE))
         {
             lidbg("<reb.succeed.%d>\n", reboot_delay_s);
-            lidbg_shell_cmd("reboot");
+            lidbg_shell_cmd("reboot lidbg_reboot_test");
             ssleep(2);
             //if above way failed ,try the way below again.
             lidbg_shell_cmd("sync");
