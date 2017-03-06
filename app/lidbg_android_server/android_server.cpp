@@ -553,6 +553,7 @@ int main(int argc, char **argv)
                         lidbg(TAG"init all Stream to max:[%d]\n", max_volume);
                         set_all_stream_volume(max_volume);
                     }
+                    print_stream_volume();
                     print_para();
                     break;
                 case 4 :
