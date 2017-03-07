@@ -435,7 +435,6 @@ static int sonixStopVRInternal(isp_hardware_t* hw)
 
         /* yield lock while waiting for the preview thread to exit */
         //hw->lock.unlock();
-        
         if(pthread_join(hw->VRThread, NULL))
         {
             lidbg("%s: Error in pthread_join VR thread\n", __func__);
@@ -453,7 +452,7 @@ static int sonixStopVRInternal(isp_hardware_t* hw)
             lidbg("%s: Error in stopUsbCamCapture\n", __func__);
             rc = -1;
         }
-        
+				
         hw->VREnabledFlag = 0;
     }
 
@@ -614,7 +613,7 @@ pthread_mutex_t alock;
 
 bool enqueue(void *data,int count, camera_q_node* mhead)
 {
-	void *tmpData;
+	void *tmpData = NULL;
 	tmpData = malloc(count);  
 	memcpy(tmpData, data, count);
     camera_q_node *node =
@@ -637,7 +636,7 @@ bool enqueue(void *data,int count, camera_q_node* mhead)
 
 int query_length(camera_q_node* mhead)
 {
-	int length;
+	int length = 0;
 	camera_q_node* node = NULL;
     //void* data = NULL;
     struct cam_list *head = NULL;
@@ -677,7 +676,7 @@ int dequeue(void* data, camera_q_node* mhead)
         //data = node->data;
         memcpy(data, node->data, node->length);
 		ret =  node->length;
-        free(node->data);
+        if (NULL != node->data) free(node->data);
 		free(node);
     }
 
@@ -704,7 +703,7 @@ int queue_flush(camera_q_node* mhead)
     if (NULL != node) {
         //data = node->data;
 		ret =  node->length;
-        free(node->data);
+        if (NULL != node->data) free(node->data);
 		free(node);
     }
 

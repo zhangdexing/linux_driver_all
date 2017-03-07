@@ -100,7 +100,7 @@ char tm_cmd[100] = {0};
 static int dvr_osd_fail_times,rear_osd_fail_times;
 static char isDVROSDFail,isRearOSDFail;
 
-static int isDVRVideoLoop = 1,isRearVideoLoop = 1,isEmRecPermitted = 1;
+static int isEmRecPermitted = 1;
 static int delDays = 6, CVBSMode = 0;
 
 bool isOnlineRunning = false;
@@ -207,7 +207,6 @@ static void status_fifo_in(unsigned char status)
 	else if(status == RET_REAR_DISCONNECT || status == RET_REAR_INIT_INSUFFICIENT_SPACE_STOP)
 	{
 		isRearRec = 0;
-		isRearVideoLoop = 0;
 	}
 	lidbg("%s:====fifo in => %d====\n",__func__,status);
 	down(&pfly_UsbCamInfo->sem);
@@ -959,18 +958,26 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				if(arg == RET_DVR_SONIX)
 				{
 					s_info.isFrontCamReady = true;
+					g_var.dvr_cam_ready = 1;
 					wake_up_interruptible(&pfly_UsbCamInfo->DVR_ready_wait_queue);
 				}
 				else if(arg == RET_DVR_DISCONNECT)
+				{
 					s_info.isFrontCamReady = false;
+					g_var.dvr_cam_ready = 0;
+				}
 
 				if(arg == RET_REAR_SONIX)
 				{
 					s_info.isRearCamReady = true;
+					g_var.rear_cam_ready = 1;
 					wake_up_interruptible(&pfly_UsbCamInfo->Rear_ready_wait_queue);
 				}
 				else if(arg == RET_REAR_DISCONNECT)
+				{
 					s_info.isRearCamReady = false;
+					g_var.rear_cam_ready = 0;
+				}
 
 				status_fifo_in(arg);	
 				return 0;
@@ -1257,8 +1264,8 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						length++;
 						dvrRespond[0] = CMD_RECORD;
 						rearRespond[0] = CMD_RECORD;
-						dvrRespond[3] = isDVRVideoLoop;
-						rearRespond[3] = isRearVideoLoop;
+						dvrRespond[3] = s_info.recordSwitch;
+						rearRespond[3] = 0;
 						
 						memcpy(initMsg + length,dvrRespond,4);
 						length += 4;
@@ -1271,6 +1278,8 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						/*------msgTAIL------*/
 						initMsg[length] = ';';
 						length++;
+
+						f_rec_time = s_info.singleFileRecordTime * 60;
 
 						dvrRespond[0] = CMD_TIME_SEC;
 						rearRespond[0] = CMD_TIME_SEC;
@@ -1334,7 +1343,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 						initMsg[length] = CMD_DUAL_CAM;
 						length++;
-						initMsg[length] = isDualCam;
+						initMsg[length] = s_info.recordMode;
 						length++;
 						/*------msgTAIL------*/
 						initMsg[length] = ';';

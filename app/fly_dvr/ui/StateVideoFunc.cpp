@@ -275,7 +275,7 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 				UINT8 byMediaID = FLYDVR_MEDIA_MMC1;
 				INT8 minVRFileName[255];
 				INT8 totalPathVRFileName[255];
-				UINT32 filecnt, freeSpace, delFileCnt;
+				UINT32 filecnt, freeSpace, delFileCnt = 0;
 				do
 				{
 					Flydvr_GetVRFileInfo(byMediaID, minVRFileName, &filecnt);
