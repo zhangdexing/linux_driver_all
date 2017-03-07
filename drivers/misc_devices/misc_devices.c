@@ -798,6 +798,8 @@ static int soc_dev_probe(struct platform_device *pdev)
 
     FS_REGISTER_INT(udisk_stability_test, "udisk_stability_test", 0, NULL);
 
+	USB_POWER_FRONT_ENABLE;
+
   //  if(udisk_stability_test == 1)
     {
         CREATE_KTHREAD(thread_udisk_stability_test, NULL);
