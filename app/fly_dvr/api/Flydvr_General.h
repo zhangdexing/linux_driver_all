@@ -2,6 +2,7 @@
 #define _FLYDVR_GENERAL_H_
 
 #define DRIVER_NODE   "/dev/lidbg_flycam0"
+#define LOG_PATH			"/dev/log/DVRERR.txt"
 
 #ifdef VERBOSE_DEBUG
 #define vdbg lidbg
@@ -9,6 +10,23 @@
 #define vdbg(fmt, args...) \
 	do { } while (0)
 #endif /* DEBUG */
+
+
+#define wdbg(msg...) do{\
+	FILE *log_fp;\
+	time_t time_p;\
+	struct tm *tm_p; \
+	time (&time_p);\
+	tm_p = localtime(&time_p);\
+	if(log_fp <= 0)\
+	{\
+		log_fp = fopen(LOG_PATH, "a+");\
+		chmod(LOG_PATH,0777);\
+	}\
+	fprintf(log_fp,"%d-%02d-%02d__%02d.%02d.%02d: ",(1900+tm_p->tm_year), (1+tm_p->tm_mon), tm_p->tm_mday,tm_p->tm_hour , tm_p->tm_min,tm_p->tm_sec);\
+	fprintf(log_fp,msg);\
+	if(log_fp > 0) fclose(log_fp);\
+}while(0)
 
 /// Video Event
 typedef enum _FLY_VIDEO_EVENT {

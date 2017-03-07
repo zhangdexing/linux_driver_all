@@ -48,6 +48,7 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 			if( uiSysState.CurrentState != mState )
 			{   
 				uiSysState.LastState = uiSysState.CurrentState;
+				wdbg("UI_ACCOFF_STATE\n");
 				Flydvr_ISP_IF_LIB_StopFrontVR();
 				Flydvr_ISP_IF_LIB_StopRearVR();
 				Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_DISABLE_CAM_POWER, NULL);
@@ -58,11 +59,12 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 			if( uiSysState.CurrentState != mState )
 			{   
 				uiSysState.LastState = uiSysState.CurrentState;
-				
+				wdbg("UI_ACCON_STATE\n");
 				/*Close online*/
 				if(Flydvr_ISP_IF_LIB_GetFrontCamVRState() == VR_ONLINE)
 				{
 					lidbg("%s: ======ACCON front force close online!======\n", __func__);
+					wdbg("ACCON front force close online!\n");
 					Flydvr_ISP_IF_LIB_StopFrontOnlineVR();
 				}
 
@@ -72,6 +74,7 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 					&& Flydvr_ISP_IF_LIB_GetFrontCamVRState() == VR_STOP) //In case accon and no power state switch
 				{
 					lidbg("%s: ======ACCON front restore!======\n", __func__);
+					wdbg("ACCON front restore!\n");
 					Flydvr_ISP_IF_LIB_StartFrontVR();
 				}
 				
@@ -79,6 +82,7 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 					&& Flydvr_ISP_IF_LIB_GetRearCamVRState() == VR_STOP) //In case accon and no power state switch
 				{
 					lidbg("%s: ======ACCON rear restore!======\n", __func__);
+					wdbg("ACCON rear restore!\n");
 					Flydvr_ISP_IF_LIB_StartRearVR();
 				}
 
@@ -88,10 +92,12 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 				/*Reinit: SD State*/
 				if(FLY_FALSE == Flydvr_SDMMC_GetMountState())
 				{
+					wdbg("ACCON SD NOT FOUND!\n");
 					Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_DISCONN_SDCARD, NULL);
 				}
 				else
 				{
+					wdbg("ACCON SD DETECT!\n");
 					Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_CONN_SDCARD, NULL);
 					Flydvr_DelDaysFile(FLYDVR_MEDIA_MMC1, MenuSettingConfig()->uiEmergencySaveDays);
 					Flydvr_DelLostDir(FLYDVR_MEDIA_MMC1);

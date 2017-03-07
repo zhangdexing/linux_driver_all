@@ -23,6 +23,7 @@ VideoRecordStatus VideoFunc_Record(void)
 	if(SDMMC_OUT == Flydvr_SDMMC_GetMountState())
     {
         lidbg("%s:No Card: Mount Fail !!!!!!\r\n",__func__);
+		wdbg("VIDEO_REC_NO_SD_CARD!\n");
 		Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_PAUSE , 0);
 		Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE, 0);
         return VIDEO_REC_NO_SD_CARD;
@@ -288,6 +289,7 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 					else 
 					{
 						lidbg("%s: ======No File left to delete!======\n", __func__);	
+						wdbg("No File left to delete!\n");
 						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_PAUSE , 0);
 						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE , 0);
 						break;
