@@ -598,7 +598,7 @@ case "$DBG_PLATFORM_ID" in
 	export DBG_PASSWORD=git
 	export DBG_REPO_PASSWORD=git
 	export DBG_VENDOR=VENDOR_QCOM
-	export OTA_PACKAGE_NAME=msm8996-ota-eng.*.zip
+	export OTA_PACKAGE_NAME=msm8996-ota.zip
 	export DBG_SOC=msm8x26
 	export TEST_PACKAGE_PATH=//172.168.1.240/share/8996/升级包/测试升级包
 	export REPOSITORY_WORK_BRANCH=master

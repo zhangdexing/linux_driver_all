@@ -164,9 +164,9 @@ function soc_make_otapackage()
 	#cp -u $RELEASE_REPOSITORY/radio/* 	        $DBG_SYSTEM_DIR/device/qcom/msm8226/radio/
 	cd $DBG_SYSTEM_DIR
 
-	if [ -d "$DBG_BOOTLOADER_DIR/flyaudio" ]; then
-		rm -rf "$DBG_BOOTLOADER_DIR/flyaudio"
-	fi
+	#if [ -d "$DBG_BOOTLOADER_DIR/flyaudio" ]; then
+		#rm -rf "$DBG_BOOTLOADER_DIR/flyaudio"
+	#fi
 
 	if [[ $TARGET_PRODUCT = "" ]];then
 		source build/envsetup.sh&&choosecombo release $DBG_PLATFORM $SYSTEM_BUILD_TYPE

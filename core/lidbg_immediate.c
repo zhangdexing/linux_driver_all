@@ -76,8 +76,8 @@ int thread_set_screen_active_area(void *data)
 {
     int loop = 0;
     LIDBG_WARN("in");
-    while(set_screen_active_area() == -1 && loop++ < 100)
-        msleep(100);
+    while(set_screen_active_area() == -1 && loop++ < 50)
+        msleep(1000);
     return 0;
 }
 
