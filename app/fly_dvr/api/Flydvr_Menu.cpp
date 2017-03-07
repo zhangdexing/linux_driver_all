@@ -41,6 +41,8 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 			if( uiSysState.CurrentState != mState )
 			{   
 				uiSysState.LastState = uiSysState.CurrentState;
+				lidbg("UI_POWERON_STATE\n");
+				wdbg("UI_POWERON_STATE\n");
 			}
         break;
 
@@ -48,6 +50,7 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 			if( uiSysState.CurrentState != mState )
 			{   
 				uiSysState.LastState = uiSysState.CurrentState;
+				lidbg("UI_ACCOFF_STATE\n");
 				wdbg("UI_ACCOFF_STATE\n");
 				Flydvr_ISP_IF_LIB_StopFrontVR();
 				Flydvr_ISP_IF_LIB_StopRearVR();
@@ -59,6 +62,7 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 			if( uiSysState.CurrentState != mState )
 			{   
 				uiSysState.LastState = uiSysState.CurrentState;
+				lidbg("UI_ACCON_STATE\n");
 				wdbg("UI_ACCON_STATE\n");
 				/*Close online*/
 				if(Flydvr_ISP_IF_LIB_GetFrontCamVRState() == VR_ONLINE)
@@ -123,6 +127,8 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 			if( uiSysState.CurrentState != mState )
 			{   
 				uiSysState.LastState = uiSysState.CurrentState;
+				lidbg("UI_VIDEO_STATE\n");
+				wdbg("UI_VIDEO_STATE\n");
 				if(uiSysState.LastState == UI_SD_FORMAT_STATE)
 				{
 					if(Flydvr_CheckVRPath(FLYDVR_MEDIA_MMC1)== FLY_FALSE)
@@ -146,6 +152,8 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 			if( uiSysState.CurrentState != mState )
 			{   
 				uiSysState.LastState = uiSysState.CurrentState;
+				lidbg("UI_SD_FORMAT_STATE\n");
+				wdbg("UI_SD_FORMAT_STATE\n");
 				if(Flydvr_IsFrontCameraConnect() == FLY_TRUE)
 					Flydvr_ISP_IF_LIB_StopFrontVR();
 				if(Flydvr_IsRearCameraConnect() == FLY_TRUE)

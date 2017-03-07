@@ -101,11 +101,13 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 
 		case EVENT_VIDEO_VR_INIT:
 			lidbg("@@@ EVENT_VIDEO_VR_INIT -\r\n");
+			wdbg("@@@ EVENT_VIDEO_VR_INIT\n");
 			Flydvr_ISP_IF_LIB_StartLPDaemon();
 
 			if(Flydvr_SDMMC_GetMountState() == SDMMC_OUT)
 			{
 				lidbg("EVENT_VIDEO_VR_INIT:No Card: Mount Fail !!!!!!\r\n");
+				wdbg("EVENT_VIDEO_VR_INIT:No Card\n");
 				Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_PAUSE , 0);
 				Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE , 0);
 			}
@@ -171,6 +173,7 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 			if(Flydvr_SDMMC_GetMountState() == SDMMC_OUT)
 			{
 				lidbg("EVENT_VIDEO_KEY_RECORD_MODE:No Card: Mount Fail !!!!!!\r\n");
+				wdbg("EVENT_VIDEO_KEY_RECORD_MODE:No Card\n");
 				Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_PAUSE , 0);
 				Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE , 0);
 			}
