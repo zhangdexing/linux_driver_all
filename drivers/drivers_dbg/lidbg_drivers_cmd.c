@@ -1556,6 +1556,7 @@ void parse_cmd(char *pt)
     {
         cmd_enable = true;
     }
+	/*
     else if(!strcmp(argv[0], "monkey") )
     {
         int enable, gpio, on_en, off_en, on_ms, off_ms;
@@ -1568,6 +1569,7 @@ void parse_cmd(char *pt)
         monkey_run(enable);
         monkey_config(gpio, on_en, off_en, on_ms, off_ms);
     }
+   */
     else if(!strcmp(argv[0], "recordenable") )
     {
         lidbg("-------uvccam recording -----");

@@ -9,10 +9,10 @@
 #include <lidbg_drivers_loader.h>
 #include <lidbg_target.h>
 #include <misc_devices.h>
-#include <lidbg_bpmsg.h>
+//#include <lidbg_bpmsg.h>
 #include <lidbg_ts_probe.h>
 #include <lidbg_flyparameter.h>
-#include <lidbg_monkey.h>
+//#include <lidbg_monkey.h>
 #include <lidbg_lpc.h>
 #else
 #include <linux/interrupt.h>
