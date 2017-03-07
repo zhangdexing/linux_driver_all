@@ -302,6 +302,11 @@ public class LidbgCommenLogicService extends Service
         printKernelMsg("goToSleep");
         fbPm.goToSleep(SystemClock.uptimeMillis());
     }
+    protected void reboot()
+    {
+        PowerManager fbPm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        fbPm.reboot("lidbg_logic_reboot_test");
+    }
 
     protected void resetNetWork()
     {
@@ -474,7 +479,10 @@ public class LidbgCommenLogicService extends Service
                     printKernelMsg("grantPackagePermissions: fail");
                 }
                 break;
-
+            case 10:
+                printKernelMsg("reboot");
+                reboot();
+                break;
             default:
                 printKernelMsg("unkown:" + action + "\n");
                 break;
