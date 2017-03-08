@@ -798,7 +798,7 @@ static int soc_dev_probe(struct platform_device *pdev)
 
     FS_REGISTER_INT(udisk_stability_test, "udisk_stability_test", 0, NULL);
 
-	USB_POWER_FRONT_ENABLE;
+	USB_FRONT_WORK_ENABLE;
 
   //  if(udisk_stability_test == 1)
     {
