@@ -541,6 +541,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#125--enable kmsg print \n");
             fs_mem_log("*158#126--cp logcat kmsg to Udisk \n");
             fs_mem_log("*158#127--grantWhiteListPermissions \n");
+            fs_mem_log("*158#128--trigger conf check \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1544,7 +1545,12 @@ void parse_cmd(char *pt)
 		  lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 8 &");
 		  lidbg_domineering_ack();
 		}
-
+        else if (!strncmp(argv[1], "*158#128", 8))
+		{
+		  lidbg("*158#128--trigger conf check \n");
+		  lidbg_shell_cmd("echo conf_check:/storage/udisk > /dev/lidbg_misc0");
+		  lidbg_domineering_ack();
+		}
 
 
     }

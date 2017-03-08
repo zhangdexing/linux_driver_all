@@ -405,47 +405,54 @@ static int thread_udisk_misc(void *data)
     while(!kthread_should_stop())
     {
         if(!wait_for_completion_interruptible(&udisk_misc_wait))
-        {
-            int i = 0;
+		{
+		    int i = 0;
 
-            if((g_var.recovery_mode == 1) && !fs_is_file_exist("recovery.conf"))
-            {
+		    if((g_var.recovery_mode == 1) && !fs_is_file_exist("recovery.conf"))
+		    {
 #if 0
-                ssleep(2);
-                lidbg("mount /usb \n");
-                lidbg_shell_cmd("umount /usb");
-                lidbg_shell_cmd("mkdir -m 777 /usb");
+		        ssleep(2);
+		        lidbg("mount /usb \n");
+		        lidbg_shell_cmd("umount /usb");
+		        lidbg_shell_cmd("mkdir -m 777 /usb");
 
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*1 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*2 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*3 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*4 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*5 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*6 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*7 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*8 /usb");
+		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*1 /usb");
+		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*2 /usb");
+		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*3 /usb");
+		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*4 /usb");
+		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*5 /usb");
+		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*6 /usb");
+		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*7 /usb");
+		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*8 /usb");
 #endif
-            }
-            else
-            {
-                while(i < 8 && !fs_is_file_exist(USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf"))
-                {
-                    ssleep(3);
-                    i++;
-                }
+		    }
+		    else
+		    {
+		        int pos = 0;
+		        char *pPah[] = {USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf", "/sdcard1/conf/lidbg_udisk_shell.conf","/sdcard/conf/lidbg_udisk_shell.conf", NULL,};
+		        while(i < 3 )
+		        {
+		            for(pos = 0; pPah[pos] != NULL; pos++)
+		            {
+		                if(fs_is_file_exist(pPah[pos]))
+		                    break;
+		            }
+		            ssleep(1);
+		            i++;
+		        }
 
-                if(fs_is_file_exist(USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf"))
-                {
-                    LIST_HEAD(lidbg_udisk_shell_list);
-                    LIDBG_WARN("use:conf/lidbg_udisk_shell.conf\n" );
-                    fs_fill_list(USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf", FS_CMD_FILE_LISTMODE, &lidbg_udisk_shell_list);
-                    if(analyze_list_cmd(&lidbg_udisk_shell_list))
-                        LIDBG_WARN("exe success\n" );
-                }
-                else
-                    LIDBG_ERR("miss:lidbg_udisk_shell\n" );
-            }
-        }
+		        if(pPah[pos] && fs_is_file_exist(pPah[pos]))
+		        {
+		            LIST_HEAD(lidbg_udisk_shell_list);
+		            LIDBG_WARN("use:%s\n", pPah[pos] );
+		            fs_fill_list(pPah[pos], FS_CMD_FILE_LISTMODE, &lidbg_udisk_shell_list);
+		            if(analyze_list_cmd(&lidbg_udisk_shell_list))
+		                LIDBG_WARN("exe success\n" );
+		        }
+		        else
+		            LIDBG_ERR("miss:lidbg_udisk_shell\n" );
+		    }
+		}
     }
     return 1;
 }
@@ -457,7 +464,7 @@ static int usb_nb_misc_func(struct notifier_block *nb, unsigned long action, voi
     switch (action)
     {
     case USB_DEVICE_ADD:
-        usb_class = lidbg_get_usb_device_type(dev);
+        usb_class = lidbg_get_usb_device_type(dev);//USB_CLASS_MASS_STORAGE
         if(dev && dev->product && dev->descriptor.idVendor && dev->descriptor.idProduct)
         {
             if(strstr(dev->product, "troller") == NULL && udiskvender[0] != dev->descriptor.idVendor && udiskvender[1] != dev->descriptor.idProduct)
@@ -467,8 +474,6 @@ static int usb_nb_misc_func(struct notifier_block *nb, unsigned long action, voi
                 udiskvender[1] = dev->descriptor.idProduct;
             }
         }
-        if(usb_class == USB_CLASS_MASS_STORAGE)
-            complete(&udisk_misc_wait);
         break;
     case USB_DEVICE_REMOVE:
         if(g_var.recovery_mode == 1)
@@ -514,6 +519,11 @@ ssize_t misc_write (struct file *filp, const char __user *buf, size_t size, loff
     if(argc >= 2 && argv[1] != NULL && (!strcmp(argv[0], "flyaudio")))
     {
         lidbg_shell_cmd(argv[1]);
+    }
+    else if(argc >= 2 && argv[1] != NULL && (!strcmp(argv[0], "conf_check")))
+    {
+        lidbg("conf.check\n");
+        complete(&udisk_misc_wait);
     }
     else
         LIDBG_ERR("%d\n", argc);
