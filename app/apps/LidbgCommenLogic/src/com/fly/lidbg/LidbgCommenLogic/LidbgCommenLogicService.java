@@ -596,6 +596,8 @@ public class LidbgCommenLogicService extends Service
     private boolean grantPackagePermissions(String pkg, int protectionDangerous)
     {
         // TODO Auto-generated method stub
+        if(Build.VERSION.SDK_INT < 23)
+                return false;
         String[] permission = getPackagePermissions(pkg, protectionDangerous);
         if (permission != null)
         {
