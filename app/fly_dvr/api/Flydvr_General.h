@@ -13,10 +13,10 @@
 
 
 #define wdbg(msg...) do{\
-	FILE *log_fp;\
+	FILE *log_fp = NULL;\
 	time_t time_p;\
 	struct tm *tm_p; \
-	time (&time_p);\
+	time(&time_p);\
 	tm_p = localtime(&time_p);\
 	if(log_fp <= 0)\
 	{\
@@ -39,6 +39,8 @@ typedef enum _FLY_VIDEO_EVENT {
 	FLY_VIDEO_EVENT_MEDIA_CONN,
 	FLY_VIDEO_EVENT_MEDIA_DISCONN,
     FLY_VIDEO_EVENT_MEDIA_FULL,
+    FLY_VIDEO_EVENT_MEDIA_ABNORMAL_FULL,
+    FLY_VIDEO_EVENT_MEDIA_ABNORMAL_FULL_RESTORE,
     FLY_VIDEO_EVENT_FILE_FULL,
     FLY_VIDEO_EVENT_MEDIA_SLOW,
     FLY_VIDEO_EVENT_SEAMLESS,

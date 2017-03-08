@@ -74,6 +74,9 @@ typedef enum _KeyEventID {
 
 	EVENT_VRCB_MEDIA_FULL                      ,
 
+	EVENT_VRCB_MEDIA_ABNORMAL_FULL                      ,
+	EVENT_VRCB_MEDIA_ABNORMAL_FULL_RESTORE                      ,
+
     EVENT_VRCB_RECDSTOP_CARDSLOW               ,
     EVENT_VRCB_AP_STOP_VIDEO_RECD              ,
     EVENT_VRCB_FILE_FULL                       ,

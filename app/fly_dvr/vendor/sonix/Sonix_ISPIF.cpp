@@ -862,6 +862,11 @@ void dequeue_flush(int count , camera_q_node* mhead)
 
 		lidbg("%s: isFrontWriteEnable: %d", __func__, isFrontWriteEnable);
 
+		if(front_hw.iswritePermitted == true)
+			Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_RECORD_START);
+		else
+			Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_RECORD_STOP);
+
 		lidbg("%s: E\n", __func__);
 
 		//if(Flydvr_SDMMC_GetMountState() == SDMMC_IN)
@@ -933,6 +938,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 							fclose(front_hw.rec_fp);
 						front_hw.rec_fp = 0;
 						dequeue_flush(front_mhead.msize, &front_mhead);
+						Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_RECORD_STOP);
 	                    return (void *)0;
 	                }
 					else if(VR_CMD_PAUSE == front_hw.VRCmd)
@@ -943,6 +949,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 							if(front_hw.rec_fp > 0) 
 								fclose(front_hw.rec_fp);
 							front_hw.iswritePermitted = false;
+							Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_RECORD_STOP);
 						}
 					}
 					else if(VR_CMD_RESUME == front_hw.VRCmd)
@@ -961,6 +968,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 								originRecSec = front_hw.buf0.timestamp.tv_sec;
 							}
 							front_hw.iswritePermitted = true;
+							Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_RECORD_START);
 						}
 					}
 					else if(VR_CMD_GSENSOR_CRASH == front_hw.VRCmd)

@@ -37,6 +37,7 @@ pthread_t thread_cb_media_connect_id;
 pthread_t thread_cb_media_disconnect_id;
 pthread_t thread_cb_media_full_id;
 pthread_t thread_cb_gsensor_crash_id;
+pthread_t thread_cb_media_abnormal_full_restore_id;
 pthread_t thread_driver_daemon_id;
 pthread_t thread_media_daemon_id;
 
@@ -50,6 +51,7 @@ FLY_BOOL		isMMC1Conn;
 FLY_BOOL		isMMC1DisConn;
 FLY_BOOL		isMMC1Full;
 FLY_BOOL		isGsensorCrash;
+FLY_BOOL		isMediaAbnormalFullRestore;
 
 static FLY_BOOL Flydvr_InitGeneralFunc(void)
 {
@@ -433,12 +435,27 @@ void* thread_media_daemon(void* data)
 			else
 			{
 				//lidbg("%s: ======OK======\n", __func__,totalspace,freeSpace);	
+				/*SD connect/disconnect*/
 				if(lastStatus == FLY_FALSE)  isMMC1Conn = FLY_TRUE;
 				lastStatus = FLY_TRUE;
 
+				/*SD Full*/
 				if(freeSpace < MMC1_REVERSE_SIZE)
 					isMMC1Full = FLY_TRUE;
-
+				
+				/*SD Not Full*/
+				if(freeSpace > MMC1_REVERSE_SIZE + 200)
+				{
+					if(Flydvr_Get_IsSDMMCFull() == FLY_TRUE)
+					{
+						lidbg("%s: ======SD space restore!======\n", __func__);	
+						wdbg("SD space restore!\n");
+						Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_SD_NOT_FULL);
+						isMediaAbnormalFullRestore = FLY_TRUE;
+						Flydvr_Set_IsSDMMCFull(FLY_FALSE);
+					}
+				}
+				
 				//sync();
 			}
 		}
@@ -582,6 +599,22 @@ void *thread_cb_gsensor_crash(void* cb_tmp)
 	return (void*)0;
 }
 
+void *thread_cb_media_abnormal_full_restore(void* cb_tmp)
+{
+	callback_t cb;
+	cb = callback_t(cb_tmp);
+	while(1)
+	{
+		if(isMediaAbnormalFullRestore== FLY_TRUE) 
+		{
+			cb();
+			isMediaAbnormalFullRestore = FLY_FALSE;
+		}
+		else usleep(100*1000);
+	}
+	return (void*)0;
+}
+
 void VRFrontCamConnCB(void)
 {
     lidbg("%s\n",__func__);
@@ -624,6 +657,7 @@ void VRMediaConnCB(void)
 	wdbg("%s\n",__func__);
 	Flydvr_SDMMC_SetMountState(SDMMC_IN);
 	Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_CONN_SDCARD, NULL);
+	Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_SD_PLUG_IN);
 	Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_MMC1_DETECT, 0);
 	return;
 }
@@ -634,6 +668,7 @@ void VRMediaDisConnCB(void)
 	wdbg("%s\n",__func__);
 	Flydvr_SDMMC_SetMountState(SDMMC_OUT);
 	Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_DISCONN_SDCARD, NULL);
+	Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_SD_PLUG_OUT);
 	Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_MMC1_REMOVED, 0);
 	return;
 }
@@ -649,6 +684,13 @@ void VRGsensorCrashCB(void)
 {
     lidbg("%s\n",__func__);
 	Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_GSENSOR_CRASH, 0);
+	return;
+}
+
+void VRMediaAbnormalFullRestoreCB(void)
+{
+    lidbg("%s\n",__func__);
+	Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_VRCB_MEDIA_ABNORMAL_FULL_RESTORE, 0);
 	return;
 }
 
@@ -709,6 +751,12 @@ FLY_BOOL Flydvr_RegisterCallback(UINT32 id, callback_t cb)
 				lidbg ("thread_cb_front_cam_disconnect: Create pthread error!\n");
 			}
        		break;
+		case FLY_VIDEO_EVENT_MEDIA_ABNORMAL_FULL_RESTORE:
+			ret=pthread_create(&thread_cb_media_abnormal_full_restore_id,NULL,thread_cb_media_abnormal_full_restore, (void*)cb);
+			if(ret !=0){
+				lidbg ("thread_cb_media_abnormal_full_restore: Create pthread error!\n");
+			}
+			break;
     }
 	 return FLY_TRUE;
 }
@@ -752,6 +800,7 @@ FLY_BOOL Flydvr_Initialize(void)
 		Flydvr_RegisterCallback(FLY_VIDEO_EVENT_MEDIA_DISCONN,  VRMediaDisConnCB);
 		Flydvr_RegisterCallback(FLY_VIDEO_EVENT_MEDIA_FULL,  VRMediaFullCB);
 		Flydvr_RegisterCallback(FLY_VIDEO_EVENT_GSENSOR_CRASH,  VRGsensorCrashCB);
+		Flydvr_RegisterCallback(FLY_VIDEO_EVENT_MEDIA_ABNORMAL_FULL_RESTORE,  VRMediaAbnormalFullRestoreCB);
 		Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_VIDEO_VR_INIT, 0);//Before driver
 		Flydvr_RegisterDriverDaemon();
 		Flydvr_RegisterMediaDaemon();

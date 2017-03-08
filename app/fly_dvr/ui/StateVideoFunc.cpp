@@ -291,10 +291,15 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 					}
 					else 
 					{
-						lidbg("%s: ======No File left to delete!======\n", __func__);	
-						wdbg("No File left to delete!\n");
 						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_PAUSE , 0);
 						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE , 0);
+						if(Flydvr_Get_IsSDMMCFull() == FLY_FALSE)
+						{
+							lidbg("%s: ======No File left to delete!======\n", __func__);	
+							wdbg("No File left to delete!\n");
+							Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_SD_FULL);
+							Flydvr_Set_IsSDMMCFull(FLY_TRUE);
+						}
 						break;
 					}
 					Flydvr_GetPathFreeSpace(byMediaID, &freeSpace);	
@@ -312,6 +317,32 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 			else
 			{
 				lidbg("@@@ EVENT_GSENSOR_CRASH REJECT!-\r\n");
+			}
+			break;
+		case EVENT_VRCB_MEDIA_ABNORMAL_FULL_RESTORE:
+			lidbg("@@@ EVENT_VRCB_MEDIA_ABNORMAL_FULL_RESTORE -\r\n");
+			if(Flydvr_SDMMC_GetMountState() == SDMMC_OUT)
+			{
+				lidbg("EVENT_VIDEO_KEY_RECORD_MODE:No Card: Mount Fail !!!!!!\r\n");
+				wdbg("EVENT_VIDEO_KEY_RECORD_MODE:No Card\n");
+				Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_PAUSE , 0);
+				Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE , 0);
+			}
+			else
+			{
+				if(MenuSettingConfig()->uiRecordSwitch == RECORD_START)
+				{
+					if(MenuSettingConfig()->uiRecordMode == RECORD_SINGLE_MODE)
+					{
+						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_RESUME , 0);
+						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE, 0);
+					}
+					else if(MenuSettingConfig()->uiRecordMode == RECORD_DUAL_MODE)
+					{
+						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_RESUME , 0);
+						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_RESUME , 0);
+					}
+				}
 			}
 			break;
         default:

@@ -59,6 +59,8 @@ FLY_BOOL Flydvr_GetVRFileInfo(UINT8 byMediaID ,INT8* minVRFileName,UINT32* filec
 FLY_BOOL Flydvr_DelDaysFile(UINT8 byMediaID ,UINT32 days);
 SDMMC_STATE Flydvr_SDMMC_GetMountState(void);
 void Flydvr_SDMMC_SetMountState(SDMMC_STATE val);
+FLY_BOOL Flydvr_Get_IsSDMMCFull(void);
+void Flydvr_Set_IsSDMMCFull(FLY_BOOL val);
 FLY_BOOL Flydvr_CheckVRPath(UINT8 byMediaID);
 FLY_BOOL Flydvr_MkVRPath(UINT8 byMediaID);
 FLY_BOOL Flydvr_CheckOnlineVRPath();

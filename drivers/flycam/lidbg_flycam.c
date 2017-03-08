@@ -69,8 +69,8 @@ static struct timer_list stop_thinkware_em_timer;
 #define STOP_THINKNAVI_EM_WAIT_TIME   (jiffies + 30*HZ) 
 
 /*bool var*/
-static char isDVRRec,isOnlineRec,isRearRec,isOnlineNotifyReady,isDualCam;
-static char isSuspend,isUpdating,isKSuspend,isDVRReady,isRearReady;
+static char isDVRRec,isRearRec,isOnlineNotifyReady,isDualCam;
+static char isUpdating,isKSuspend,isDVRReady,isRearReady;
 static char isEMDVRStartRec,isEMRearStartRec;
 static char isNewDvrNotifyReady;
 
@@ -95,10 +95,6 @@ u8 camera_rear_res[100] = {0};
 u8 camera_DVR_res[100] = {0};
 
 char tm_cmd[100] = {0};
-
-
-static int dvr_osd_fail_times,rear_osd_fail_times;
-static char isDVROSDFail,isRearOSDFail;
 
 static int isEmRecPermitted = 1;
 static int delDays = 6, CVBSMode = 0;
@@ -169,45 +165,7 @@ static void status_fifo_in(unsigned char status)
 		wake_up_interruptible(&pfly_UsbCamInfo->camStatus_wait_queue);
 		return;
 	}
-	else if(status == RET_DVR_OSD_FAIL)
-	{
-		lidbg("%s:===DVR_OSD_FAIL==%d===\n",__func__,g_var.android_boot_completed);
-		if(1==g_var.android_boot_completed)  
-		{
-			isDVROSDFail = 1;
-			dvr_osd_fail_times++;
-		}
-		if(isDVROSDFail && (dvr_osd_fail_times < 5))// 1 per 2 real times
-		{
-			if(!isSuspend) lidbg_shell_cmd("echo 'usb_reboot' > /dev/flydev0");
-			isDVROSDFail = 0;
-		}
-		return;
-	}
-	else if(status == RET_REAR_OSD_FAIL)
-	{
-		lidbg("%s:===REAR_OSD_FAIL==%d===\n",__func__,g_var.android_boot_completed);
-		if(1==g_var.android_boot_completed) 	
-		{
-			isRearOSDFail = 1;
-			rear_osd_fail_times++;
-		}
-		if(isRearOSDFail && (rear_osd_fail_times < 5))// 1 per 2 real times
-		{
-			if(!isSuspend) lidbg_shell_cmd("echo 'usb_reboot' > /dev/flydev0");
-			isRearOSDFail = 0;
-		}
-		return;
-	}
-	else if(status == RET_DVR_DISCONNECT || status == RET_DVR_INIT_INSUFFICIENT_SPACE_STOP)
-	{
-		isDVRRec = 0;
-		isOnlineRec = 0;
-	}
-	else if(status == RET_REAR_DISCONNECT || status == RET_REAR_INIT_INSUFFICIENT_SPACE_STOP)
-	{
-		isRearRec = 0;
-	}
+    
 	lidbg("%s:====fifo in => %d====\n",__func__,status);
 	down(&pfly_UsbCamInfo->sem);
 	//if(kfifo_is_full(&camStatus_data_fifo));

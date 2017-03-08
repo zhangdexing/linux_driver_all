@@ -5,6 +5,7 @@
 #include "FLY_MSM_OS_Media.h"
 
 SDMMC_STATE m_bSDMMCMountState;
+FLY_BOOL	 b_isSDMMCFull;
 
 #if (1)
 
@@ -16,6 +17,16 @@ SDMMC_STATE Flydvr_SDMMC_GetMountState(void)
 void Flydvr_SDMMC_SetMountState(SDMMC_STATE val)
 {
     m_bSDMMCMountState = val;
+}
+
+FLY_BOOL Flydvr_Get_IsSDMMCFull(void)
+{
+    return b_isSDMMCFull;
+}
+
+void Flydvr_Set_IsSDMMCFull(FLY_BOOL val)
+{
+    b_isSDMMCFull = val;
 }
 
 #endif
