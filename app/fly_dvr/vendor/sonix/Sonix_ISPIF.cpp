@@ -938,7 +938,6 @@ void dequeue_flush(int count , camera_q_node* mhead)
 							fclose(front_hw.rec_fp);
 						front_hw.rec_fp = 0;
 						dequeue_flush(front_mhead.msize, &front_mhead);
-						Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_RECORD_STOP);
 	                    return (void *)0;
 	                }
 					else if(VR_CMD_PAUSE == front_hw.VRCmd)
@@ -2096,6 +2095,7 @@ INT32 Sonix_ISP_IF_LIB_StopFrontVR()
 {
 	lidbg("%s: E\n", __func__);
 	sonix_stop_VR(&front_hw);
+	Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_RECORD_STOP);
 	lidbg("%s: X\n", __func__);
 	return 0;
 }
