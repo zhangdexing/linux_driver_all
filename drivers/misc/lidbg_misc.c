@@ -429,7 +429,7 @@ static int thread_udisk_misc(void *data)
 		    else
 		    {
 		        int pos = 0;
-		        char *pPah[] = {USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf", "/sdcard1/conf/lidbg_udisk_shell.conf","/sdcard/conf/lidbg_udisk_shell.conf", NULL,};
+		        char *pPah[] = {USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf", "/storage/sdcard1/conf/lidbg_udisk_shell.conf","/sdcard/conf/lidbg_udisk_shell.conf", NULL,};
 		        while(i < 3 )
 		        {
 		            for(pos = 0; pPah[pos] != NULL; pos++)
@@ -674,7 +674,6 @@ int misc_init(void *data)
     while(0 == g_var.android_boot_completed)
         ssleep(5);
 
-    complete(&udisk_misc_wait);
     return 0;
 }
 

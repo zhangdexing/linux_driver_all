@@ -129,7 +129,7 @@ public class LidbgCommenLogicService extends Service
             }
             if (Environment.MEDIA_MOUNTED.equals(newState))
             {
-                if( !path.contains("0") )
+                if( !path.contains("emulated/0") )
 		FileWrite("/dev/lidbg_misc0", false, false, "conf_check:"+path);
             }
             else if (Environment.MEDIA_MOUNTED.equals(oldState))
