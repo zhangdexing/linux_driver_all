@@ -11,14 +11,14 @@ static int loop_warning_en = 0;
 
 #include "system_switch.c"
 
-
+#define TAG "lidbg_misc: "
 void lidbg_enable_logcat(void)
 {
     char cmd[128] = {0};
     char logcat_file_name[256] = {0};
     char time_buf[32] = {0};
 
-    lidbg("\n\n\nthread_enable_logcat:logcat+\n");
+    lidbg(TAG"\n\n\nthread_enable_logcat:logcat+\n");
 
     lidbg_get_current_time(time_buf, NULL);
     sprintf(logcat_file_name, "logcat_%d_%s.txt", get_machine_id(), time_buf);
@@ -36,14 +36,14 @@ void lidbg_enable_logcat(void)
 #endif
 
     lidbg_shell_cmd(cmd);
-    lidbg("logcat-\n");
+    lidbg(TAG"logcat-\n");
 
 }
 
 void lidbg_enable_logcat2(void)
 {
     int size, sizeold = 0, loop = 0;
-    lidbg("logcat+\n");
+    lidbg(TAG"logcat+\n");
     lidbg_shell_cmd("rm /sdcard/logcat.txt");
     lidbg_shell_cmd("rm /sdcard/logcat_old.txt");
     ssleep(2);
@@ -59,7 +59,7 @@ void lidbg_enable_logcat2(void)
         size = fs_get_file_size("/sdcard/logcat.txt") ;
         if(size >= MEM_SIZE_1_MB * 300)
         {
-            lidbg("logcat file_len over\n");
+            lidbg(TAG"logcat file_len over\n");
             lidbg_shell_cmd("rm /sdcard/logcat_old.txt");
             ssleep(1);
             lidbg_shell_cmd("cp -rf /sdcard/logcat.txt /sdcard/logcat_old.txt");
@@ -71,7 +71,7 @@ void lidbg_enable_logcat2(void)
         if((size == sizeold) && ( g_var.is_fly == 1))
         {
             lidbg_shell_cmd("logcat  -b main -b system -v threadtime -f /sdcard/logcat.txt &");
-            lidbg("run logcat again \n");
+            lidbg(TAG"run logcat again \n");
         }
         sizeold = size ;
         if(0)
@@ -81,7 +81,7 @@ void lidbg_enable_logcat2(void)
                 static char buff[64] ;
                 int mtime = ktime_to_ms(ktime_get_boottime());
                 snprintf(buff, 63, "log -t lidbg logcatping:%d.%d",  mtime / 1000, mtime % 1000);
-                lidbg("[%s]\n", buff);
+                lidbg(TAG"[%s]\n", buff);
                 lidbg_shell_cmd(buff);
                 ssleep(5);
             }
@@ -89,7 +89,7 @@ void lidbg_enable_logcat2(void)
         else
             ssleep(50);
     }
-    lidbg("logcat-\n");
+    lidbg(TAG"logcat-\n");
 
 }
 
@@ -102,7 +102,7 @@ void lidbg_enable_kmsg(void)
     char dmesg_file_path[256] = {0};
     char time_buf[32] = {0};
     int size;
-    lidbg("\n\n\nthread_enable_dmesg:kmsg+\n");
+    lidbg(TAG"\n\n\nthread_enable_dmesg:kmsg+\n");
 
     lidbg_trace_msg_disable(1);
     lidbg_get_current_time(time_buf, NULL);
@@ -123,7 +123,7 @@ void lidbg_enable_kmsg(void)
         size = fs_get_file_size(dmesg_file_path) ;
         if(size >= MEM_SIZE_1_MB * 300)
         {
-            lidbg("kmsg file_len over\n");
+            lidbg(TAG"kmsg file_len over\n");
             sprintf(cmd, "rm /sdcard/%s.old", dmesg_file_name);
             lidbg_shell_cmd(cmd);
             ssleep(1);
@@ -138,7 +138,7 @@ void lidbg_enable_kmsg(void)
         }
         ssleep(60);
     }
-    lidbg("kmsg-\n");
+    lidbg(TAG"kmsg-\n");
 }
 void cb_password_chmod(char *password )
 {
@@ -160,13 +160,13 @@ void cb_password_clean_all(char *password )
 }
 void cb_password_update(char *password )
 {
-    LIDBG_WARN("<===============UPDATE_INFO =================>\n" );
+    LIDBG_WARN(TAG"<===============UPDATE_INFO =================>\n" );
     fs_slient_level = 4;
     analysis_copylist(USB_MOUNT_POINT"/conf/copylist.conf");
 
     if(fs_is_file_exist(USB_MOUNT_POINT"/out/release"))
     {
-        LIDBG_WARN("use:release\n" );
+        LIDBG_WARN(TAG"use:release\n" );
         if( fs_update(USB_MOUNT_POINT"/out/release", USB_MOUNT_POINT"/out", "/flysystem/lib/out") >= 0)
         {
             if(delete_out_dir_after_update)
@@ -176,7 +176,7 @@ void cb_password_update(char *password )
         }
     }
     else
-        LIDBG_ERR("<skip>\n" );
+        LIDBG_ERR(TAG"<skip>\n" );
 }
 
 void update_lidbg_out_dir(char *key, char *value )
@@ -187,14 +187,14 @@ void update_lidbg_out_dir(char *key, char *value )
 void cb_password_gui_kmsg(char *password )
 {
     if(lidbg_exe("/flysystem/lib/out/lidbg_gui", "/proc/kmsg", "1", NULL, NULL, NULL, NULL) < 0)
-        LIDBG_ERR("Exe lidbg_kmsg failed !\n");
+        LIDBG_ERR(TAG"Exe lidbg_kmsg failed !\n");
 }
 
 void cb_password_gui_state(char *password )
 {
 
     if(lidbg_exe("/flysystem/lib/out/lidbg_gui", "/dev/log/state.txt", "1", NULL, NULL, NULL, NULL) < 0)
-        LIDBG_ERR("Exe status failed !\n");
+        LIDBG_ERR(TAG"Exe status failed !\n");
 }
 
 void cb_password_mem_log(char *password )
@@ -217,7 +217,7 @@ int thread_kmsg_fifo_save(void *data)
 void unhandled_monitor(char *key_word, void *data)
 {
     //DUMP_FUN;
-    lidbg("find key word\n");
+    lidbg(TAG"find key word\n");
 
     if( !fs_is_file_exist("/dev/log/no_reboot"))
     {
@@ -232,7 +232,7 @@ void unhandled_monitor(char *key_word, void *data)
 void lidbgerr_monitor(char *key_word, void *data)
 {
     //DUMP_FUN;
-    lidbg("find key word\n");
+    lidbg(TAG"find key word\n");
     lidbg_loop_warning();
 }
 
@@ -243,14 +243,14 @@ int thread_reboot(void *data)
 
     if(!reboot_delay_s )
     {
-        lidbg("<reb.exit0.%d>\n", reboot_delay_s);
+        lidbg(TAG"<reb.exit0.%d>\n", reboot_delay_s);
         return 0;
     }
 
     //if exist,means:the last time between current-reboot_delay_s had reboot.
     if(fs_is_file_exist(REBOOT_SIG_FILE))
     {
-        lidbg("<reb.exit1.%d,%d>\n", reboot_delay_s, fs_is_file_exist(REBOOT_SIG_FILE));
+        lidbg(TAG"<reb.exit1.%d,%d>\n", reboot_delay_s, fs_is_file_exist(REBOOT_SIG_FILE));
         g_var.is_debug_mode = 1;
         lidbg_loop_warning();
         return 0;
@@ -259,12 +259,12 @@ int thread_reboot(void *data)
     //write signal file in current time
     fs_file_write2(REBOOT_SIG_FILE, "right");
     ssleep(3);
-    LIDBG_WARN("reb.warn.%s:%d,%d", LIDBG_LOG_DIR"thread_reboot.txt", reboot_delay_s, fs_is_file_exist(REBOOT_SIG_FILE));
+    LIDBG_WARN(TAG"reb.warn.%s:%d,%d", LIDBG_LOG_DIR"thread_reboot.txt", reboot_delay_s, fs_is_file_exist(REBOOT_SIG_FILE));
 
     //make sure above is succeed.
     if( !fs_is_file_exist(REBOOT_SIG_FILE))
     {
-        lidbg("<reb.exit2.%d,%d>\n", reboot_delay_s, fs_is_file_exist(REBOOT_SIG_FILE));
+        lidbg(TAG"<reb.exit2.%d,%d>\n", reboot_delay_s, fs_is_file_exist(REBOOT_SIG_FILE));
         return 0;
     }
 
@@ -281,7 +281,7 @@ int thread_reboot(void *data)
         ssleep(2);
         if(!fs_is_file_exist(REBOOT_SIG_FILE))
         {
-            lidbg("<reb.succeed.%d>\n", reboot_delay_s);
+            lidbg(TAG"<reb.succeed.%d>\n", reboot_delay_s);
             lidbg_shell_cmd("reboot lidbg_reboot_test");
             ssleep(2);
             //if above way failed ,try the way below again.
@@ -292,7 +292,7 @@ int thread_reboot(void *data)
         }
         else
         {
-            lidbg("<reb.exit3.%d,%d>\n", reboot_delay_s, fs_is_file_exist(REBOOT_SIG_FILE));
+            lidbg(TAG"<reb.exit3.%d,%d>\n", reboot_delay_s, fs_is_file_exist(REBOOT_SIG_FILE));
         }
     }
 
@@ -303,7 +303,7 @@ int thread_reboot(void *data)
         volume_find = !!find_mounted_volume_by_mount_point(USB_MOUNT_POINT) ;
         if(volume_find && !te_is_ts_touched())
         {
-            lidbg("<lidbg:thread_reboot,call reboot,%d>\n", te_is_ts_touched());
+            lidbg(TAG"<lidbg:thread_reboot,call reboot,%d>\n", te_is_ts_touched());
             msleep(100);
             kernel_restart(NULL);
         }
@@ -314,7 +314,7 @@ int thread_reboot(void *data)
 
         if( !fs_is_file_exist("/dev/log/no_reboot"))
         {
-            lidbg("<lidbg:thread_reboot,call reboot>\n");
+            lidbg(TAG"<lidbg:thread_reboot,call reboot>\n");
             kernel_restart(NULL);
         }
     }
@@ -412,7 +412,7 @@ static int thread_udisk_misc(void *data)
 		    {
 #if 0
 		        ssleep(2);
-		        lidbg("mount /usb \n");
+		        lidbg(TAG"mount /usb \n");
 		        lidbg_shell_cmd("umount /usb");
 		        lidbg_shell_cmd("mkdir -m 777 /usb");
 
@@ -444,13 +444,13 @@ static int thread_udisk_misc(void *data)
 		        if(pPah[pos] && fs_is_file_exist(pPah[pos]))
 		        {
 		            LIST_HEAD(lidbg_udisk_shell_list);
-		            LIDBG_WARN("use:%s\n", pPah[pos] );
+		            LIDBG_WARN(TAG"use:%s\n", pPah[pos] );
 		            fs_fill_list(pPah[pos], FS_CMD_FILE_LISTMODE, &lidbg_udisk_shell_list);
 		            if(analyze_list_cmd(&lidbg_udisk_shell_list))
-		                LIDBG_WARN("exe success\n" );
+		                LIDBG_WARN(TAG"exe success\n" );
 		        }
 		        else
-		            LIDBG_ERR("miss:lidbg_udisk_shell\n" );
+		            LIDBG_ERR(TAG"miss:lidbg_udisk_shell\n" );
 		    }
 		}
     }
@@ -478,16 +478,16 @@ static int usb_nb_misc_func(struct notifier_block *nb, unsigned long action, voi
     case USB_DEVICE_REMOVE:
         if(g_var.recovery_mode == 1)
         {
-            lidbg("umount /usb \n");
+            lidbg(TAG"umount /usb \n");
             lidbg_shell_cmd("umount /usb");
         }
         if(dev->portnum == 1)
         {
-            lidbg("stop fuse udisk server \n");
+            lidbg(TAG"stop fuse udisk server \n");
             lidbg_shell_cmd("setprop persist.fuseusb.enable 0");
         }
         else
-            LIDBG_WARN("stop fuse udisk server skip:%d\n", dev->portnum);
+            LIDBG_WARN(TAG"stop fuse udisk server skip:%d\n", dev->portnum);
         break;
     }
     return NOTIFY_OK;
@@ -510,7 +510,7 @@ ssize_t misc_write (struct file *filp, const char __user *buf, size_t size, loff
 
     if(copy_from_user(cmd_buf, buf, size))
     {
-        lidbg("copy_from_user ERR\n");
+        lidbg(TAG"copy_from_user ERR\n");
     }
     if(cmd_buf[size - 1] == '\n')
         cmd_buf[size - 1] = '\0';
@@ -522,11 +522,11 @@ ssize_t misc_write (struct file *filp, const char __user *buf, size_t size, loff
     }
     else if(argc >= 2 && argv[1] != NULL && (!strcmp(argv[0], "conf_check")))
     {
-        lidbg("conf.check\n");
+        lidbg(TAG"conf.check\n");
         complete(&udisk_misc_wait);
     }
     else
-        LIDBG_ERR("%d\n", argc);
+        LIDBG_ERR(TAG"%d\n", argc);
     return size;
 }
 
@@ -539,15 +539,15 @@ static  struct file_operations misc_nod_fops =
 void checkif_wifiap_error(void)
 {
     int size = fs_get_file_size("/data/misc/wifi/hostapd.conf");
-    LIDBG_WARN("<%d>\n\n", size);
+    LIDBG_WARN(TAG"<%d>\n\n", size);
     if(size < 20000)
     {
 #ifdef PLATFORM_ID_2
-        LIDBG_WARN("<find error>\n\n");
+        LIDBG_WARN(TAG"<find error>\n\n");
         lidbg_shell_cmd("cp -rf /flysystem/lib/out/hostapd_g8_4.4.2.conf /data/misc/wifi/hostapd.conf");
 #endif
 #ifdef PLATFORM_ID_4
-        LIDBG_WARN("<find error>\n\n");
+        LIDBG_WARN(TAG"<find error>\n\n");
         lidbg_shell_cmd("cp -rf /flysystem/lib/out/hostapd_g9_4.4.4.conf /data/misc/wifi/hostapd.conf");
 #endif
     }
@@ -560,48 +560,48 @@ void check_display_mode(void)
     bool exist = fs_is_file_exist("/persist/display/pp_calib_data.bin");
     int HYFeature = fs_find_string(g_var.pflyhal_config_list, "HYFeatureDisplayon");
     int Israel = fs_find_string(g_var.pflyhal_config_list, "IsraelFeatureDisplayon");
-    LIDBG_WARN("<lcd_type=%d HYFeatureDisplayon.in [%d,%d]Israel.%d>\n", g_var.hw_info.lcd_type, HYFeature, exist,Israel);
+    LIDBG_WARN(TAG"<lcd_type=%d HYFeatureDisplayon.in [%d,%d]Israel.%d>\n", g_var.hw_info.lcd_type, HYFeature, exist,Israel);
     if(HYFeature > 0)
     {
-            LIDBG_WARN("<use HYFeatureDisplayon>\n");
+            LIDBG_WARN(TAG"<use HYFeatureDisplayon>\n");
             lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data.bin /persist/display/");
             lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
     }
     else if(Israel > 0)
     {
-            LIDBG_WARN("<use IsraelFeatureDisplayon>\n");
+            LIDBG_WARN(TAG"<use IsraelFeatureDisplayon>\n");
             lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data_Israel.bin /persist/display/pp_calib_data.bin");
             lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
     }
     else
     {
-        LIDBG_WARN("<check fly lcd Feature\n");
+        LIDBG_WARN(TAG"<check fly lcd Feature\n");
         if(0)
         {
             lidbg_shell_cmd("rm -rf /persist/display/pp_calib_data.bin");
-            LIDBG_WARN("<force remove lcd Feature\n");
+            LIDBG_WARN(TAG"<force remove lcd Feature\n");
             return;
         }
         switch (g_var.hw_info.lcd_type)
         {
         case 1:
-            LIDBG_WARN("<pp_calib_data7.bin>\n");
+            LIDBG_WARN(TAG"<pp_calib_data7.bin>\n");
             lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data7.bin /persist/display/pp_calib_data.bin");
             break;
         case 2:
-            LIDBG_WARN("<pp_calib_data8.bin>\n");
+            LIDBG_WARN(TAG"<pp_calib_data8.bin>\n");
             lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data8.bin /persist/display/pp_calib_data.bin");
             break;
         case 3:
-            LIDBG_WARN("<pp_calib_data10.bin>\n");
+            LIDBG_WARN(TAG"<pp_calib_data10.bin>\n");
             lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data10.bin /persist/display/pp_calib_data.bin");
             break;
         case 4:
-            LIDBG_WARN("<pp_calib_data9.bin>\n");
+            LIDBG_WARN(TAG"<pp_calib_data9.bin>\n");
             lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data9.bin /persist/display/pp_calib_data.bin");
             break;
         default:
-            LIDBG_WARN("<check fly lcd Feature,err lcd_type:%d\n", g_var.hw_info.lcd_type);
+            LIDBG_WARN(TAG"<check fly lcd Feature,err lcd_type:%d\n", g_var.hw_info.lcd_type);
             break;
         }
         lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
@@ -613,7 +613,7 @@ void check_display_mode(void)
 
 int misc_init(void *data)
 {
-    LIDBG_WARN("<==IN==>\n");
+    LIDBG_WARN(TAG"<==IN==>\n");
     init_completion(&udisk_misc_wait);
 
     system_switch_init();
@@ -660,7 +660,7 @@ int misc_init(void *data)
     checkif_wifiap_error();
 
 
-    LIDBG_WARN("<==OUT==>\n\n");
+    LIDBG_WARN(TAG"<==OUT==>\n\n");
     LIDBG_MODULE_LOG;
 
     if(1 == logcat_en)
