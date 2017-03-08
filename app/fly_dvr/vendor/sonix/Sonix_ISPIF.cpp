@@ -197,7 +197,7 @@ static bool sonix_check_cam(int cam_id, bool isH264, char* dev_name)
 
 FLY_BOOL Sonix_ISP_IF_LIB_CheckFrontCamExist()
 {
-	FLY_BOOL ret;
+	bool ret;
 	INT8 dev_name[255];
 	ret = sonix_check_cam(DVR_ID, true, dev_name);
 	if(ret == true)
@@ -207,7 +207,7 @@ FLY_BOOL Sonix_ISP_IF_LIB_CheckFrontCamExist()
 
 FLY_BOOL Sonix_ISP_IF_LIB_CheckRearCamExist()
 {
-	FLY_BOOL ret;
+	bool ret;
 	INT8 dev_name[255];
 	ret = sonix_check_cam(REARVIEW_ID, true, dev_name);
 	if(ret == true)
@@ -217,7 +217,7 @@ FLY_BOOL Sonix_ISP_IF_LIB_CheckRearCamExist()
 
 FLY_BOOL Sonix_ISP_IF_LIB_GetFrontCamDevName(INT8* dev_name)
 {
-	FLY_BOOL ret;
+	bool ret;
 	ret = sonix_check_cam(DVR_ID, true, dev_name);
 	if(ret == true)
 		return FLY_TRUE;
@@ -226,7 +226,7 @@ FLY_BOOL Sonix_ISP_IF_LIB_GetFrontCamDevName(INT8* dev_name)
 
 FLY_BOOL Sonix_ISP_IF_LIB_GetRearCamDevName(INT8* dev_name)
 {
-	FLY_BOOL ret;
+	bool ret;
 	ret = sonix_check_cam(REARVIEW_ID, true, dev_name);
 	if(ret == true)
 		return FLY_TRUE;
@@ -717,7 +717,9 @@ void dequeue_to_fp(int count , FILE * rec_fp, bool* isPermitted, camera_q_node* 
 	FILE *fp2 = NULL;
 	unsigned int totalLength = 0,diffMs = 0,kbPerSec = 0;
 	struct timespec start_sp, stop_sp ;
+	bool needAttachIFrame = false;
 	bool isFirstIFrame = false;
+	unsigned long filesize = -1;
 
 	if(mhead->msize < count)
 	{
@@ -728,6 +730,21 @@ void dequeue_to_fp(int count , FILE * rec_fp, bool* isPermitted, camera_q_node* 
 	vdbg("%s:E===totally [%d] , dequeue count :[%d]==\n",__func__,mhead->msize,count);
 
 	clock_gettime(CLOCK_MONOTONIC, &start_sp);
+
+	/*Check whether it is the first frame of file*/
+	if(rec_fp > 0)
+	{
+		fseek(rec_fp, 0L, SEEK_END);  
+	    filesize = ftell(rec_fp);  
+		vdbg("%s:==filesize: %d==\n",__func__,filesize);
+		if(filesize == 0)
+			needAttachIFrame = true;
+	}
+	else
+	{
+		lidbg("%s:==File des wrong!==\n",__func__);
+		return;
+	}
 
 	while((count --) > 0)
 	{
@@ -743,42 +760,45 @@ void dequeue_to_fp(int count , FILE * rec_fp, bool* isPermitted, camera_q_node* 
 		tempa = malloc(lengtha);
 		lengtha = dequeue(tempa, mhead);
 
-		if(isFirstIFrame == false)
+		if(needAttachIFrame == true)
 		{
+			if(isFirstIFrame == false)
+			{
 #if 1		
-			unsigned char tmp_val = 0;
-			tmp_val = *(unsigned char*)(tempa + 18);
-			if(tmp_val == 0x68) 
-			{
-
-				/*1280x720*/
-				tmp_val = *(unsigned char*)(tempa + 26);
-				if(tmp_val == 0x65) 
+				unsigned char tmp_val = 0;
+				tmp_val = *(unsigned char*)(tempa + 18);
+				if(tmp_val == 0x68) 
 				{
-					isFirstIFrame = true;
-				}
-			}
 
-			tmp_val = *(unsigned char*)(tempa + 19);
-			if(tmp_val == 0x68) 
-			{
-				/*640x360*/
-				tmp_val = *(unsigned char*)(tempa + 27);
-				if(tmp_val == 0x65)
-				{
-					isFirstIFrame = true;
+					/*1280x720*/
+					tmp_val = *(unsigned char*)(tempa + 26);
+					if(tmp_val == 0x65) 
+					{
+						isFirstIFrame = true;
+					}
 				}
-			}
+
+				tmp_val = *(unsigned char*)(tempa + 19);
+				if(tmp_val == 0x68) 
+				{
+					/*640x360*/
+					tmp_val = *(unsigned char*)(tempa + 27);
+					if(tmp_val == 0x65)
+					{
+						isFirstIFrame = true;
+					}
+				}
 #else
-				isFirstIFrame = 1;
+					isFirstIFrame = true;
 #endif
+			}
 		}
-		else isFirstIFrame = 1;
+		else isFirstIFrame = true;
 
 		if(*isPermitted == false);
 			//lidbg("%s:force return!!!count => %d\n",__func__,count);
 		
-		if(isFirstIFrame && rec_fp > 0)
+		if((isFirstIFrame == true) && rec_fp > 0)
 		{
 			fwrite(tempa, lengtha, 1, rec_fp);//write data to the output files
 			totalLength += (lengtha/1000);
