@@ -96,5 +96,7 @@ void Flydvr_PrintFwVersion(void)
 	//lidbg("Board Type: %d\n", uiBoardtype);
 
 	lidbg("------------------------------------------\n");
+	sleep(5);//prevent bug
+	return;
 }
 

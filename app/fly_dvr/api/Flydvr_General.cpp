@@ -299,7 +299,7 @@ void *thread_driver_daemon(void* data)
 		switch(ret)
 	    {	    
 			case MSG_USB_NOTIFY:
-				lidbg("%s:===MSG_USB_NOTIFY===\n",__func__);
+				lidbg("%s:===MSG_USB_NOTIFY,%d,%d===\n",__func__,b_old_frontStatus,b_frontStatus);
 				b_frontStatus = Flydvr_ISP_IF_LIB_CheckFrontCamExist();
 				if(b_old_frontStatus == FLY_FALSE && b_frontStatus == FLY_TRUE)
 				{
@@ -744,9 +744,6 @@ FLY_BOOL Flydvr_Initialize(void)
         Flydvr_InitFlydvrMessage();
 		Flydvr_InitGeneralFunc_LP();
         Flydvr_InitFlydvrMessage_LP();
-		Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_VIDEO_VR_INIT, 0);//Before driver
-		Flydvr_RegisterDriverDaemon();
-		Flydvr_RegisterMediaDaemon();
 		Flydvr_RegisterCallback(FLY_VIDEO_EVENT_FRONT_CAM_CONNECT,  VRFrontCamConnCB);
 		Flydvr_RegisterCallback(FLY_VIDEO_EVENT_FRONT_CAM_DISCONNECT,  VRFrontCamDisConnCB);
 		Flydvr_RegisterCallback(FLY_VIDEO_EVENT_REAR_CAM_CONNECT,  VRRearCamConnCB);
@@ -755,8 +752,9 @@ FLY_BOOL Flydvr_Initialize(void)
 		Flydvr_RegisterCallback(FLY_VIDEO_EVENT_MEDIA_DISCONN,  VRMediaDisConnCB);
 		Flydvr_RegisterCallback(FLY_VIDEO_EVENT_MEDIA_FULL,  VRMediaFullCB);
 		Flydvr_RegisterCallback(FLY_VIDEO_EVENT_GSENSOR_CRASH,  VRGsensorCrashCB);
-		
-		
+		Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_VIDEO_VR_INIT, 0);//Before driver
+		Flydvr_RegisterDriverDaemon();
+		Flydvr_RegisterMediaDaemon();
         m_bFlydvrGeneralInit = FLY_TRUE;
     }
 	return FLY_TRUE;

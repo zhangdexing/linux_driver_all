@@ -85,6 +85,7 @@ void Sonix_ISP_IF_LIB_Init(void)
 {
 	/*Get Camera Lib Version*/
 	m_Front_IspVer = Sonix_ISP_IF_LIB_LibVer_Init(DVR_ID);
+	sleep(2);//prevent error
 	m_Rear_IspVer = Sonix_ISP_IF_LIB_LibVer_Init(REARVIEW_ID);
 }
 
@@ -1953,6 +1954,12 @@ INT32 Sonix_ISP_IF_LIB_StartFrontVR()
 
 	lidbg("%s: E\n", __func__);
 
+	if(front_hw.VREnabledFlag)
+	{
+		lidbg("%s: Reopen!Return!\n", __func__);
+		return 0;
+	}
+
 	sonixInitFrontDefaultParameters();
 	
 	/* Open the video device. */
@@ -2093,6 +2100,12 @@ INT32 Sonix_ISP_IF_LIB_StartRearVR()
 
 	lidbg("%s: E\n", __func__);
 
+	if(rear_hw.VREnabledFlag)
+	{
+		lidbg("%s: Reopen!Return!\n", __func__);
+		return 0;
+	}
+
 	sonixInitRearDefaultParameters();
 	
 	/* Open the video device. */
@@ -2232,6 +2245,12 @@ INT32 Sonix_ISP_IF_LIB_StartFrontOnlineVR()
 	char dev_name[255];
 
 	lidbg("%s: E\n", __func__);
+
+	if(front_online_hw.VREnabledFlag)
+	{
+		lidbg("%s: Reopen!Return!\n", __func__);
+		return 0;
+	}
 
 	sonixInitFrontOnlineDefaultParameters();
 	
