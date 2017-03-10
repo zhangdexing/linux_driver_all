@@ -937,7 +937,8 @@ void dequeue_flush(int count , camera_q_node* mhead)
 						if(front_hw.rec_fp > 0) 
 							fclose(front_hw.rec_fp);
 						front_hw.rec_fp = 0;
-						dequeue_flush(front_mhead.msize, &front_mhead);
+						//dequeue_flush(front_mhead.msize, &front_mhead);
+						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_CAM_FLUSH, front_mhead.msize);
 	                    return (void *)0;
 	                }
 					else if(VR_CMD_PAUSE == front_hw.VRCmd)
@@ -1245,7 +1246,8 @@ void dequeue_flush(int count , camera_q_node* mhead)
 						if(rear_hw.rec_fp > 0) 
 							fclose(rear_hw.rec_fp);
 						rear_hw.rec_fp = 0;
-						dequeue_flush(rear_mhead.msize, &rear_mhead);
+						//dequeue_flush(rear_mhead.msize, &rear_mhead);
+						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_CAM_FLUSH, rear_mhead.msize);
 	                    return (void *)0;
 	                }
 					else if(VR_CMD_PAUSE == rear_hw.VRCmd)
