@@ -281,7 +281,8 @@ static int load_cali_flg = 0;
 //===============/*Flyaudio*/==================
 LIDBG_DEFINE;
 
-#ifdef SOC_mt35x
+//#ifdef SOC_mt35x
+#if defined(SOC_mt35x) | defined(PLATFORM_msm8996)
 #define FLY_USE_SUSPEND_IRQ
 #endif
 
