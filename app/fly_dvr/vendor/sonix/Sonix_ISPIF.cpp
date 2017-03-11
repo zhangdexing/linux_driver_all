@@ -38,6 +38,13 @@ ISP_IF_VERSION Sonix_ISP_IF_LIB_LibVer_Init(INT32 cam_id)
 	INT32 		nCamNum;
 	INT32 		camchoose;
 
+	if((cam_id == DVR_ID && Sonix_ISP_IF_LIB_CheckFrontCamExist() == FLY_FALSE)
+		|| (cam_id == REARVIEW_ID && Sonix_ISP_IF_LIB_CheckRearCamExist() == FLY_FALSE))
+	{
+		lidbg("None cam is found!\n");
+		goto err;
+	}
+
 	if (!cam_enum.Enum_Cam(CamArray, nCamNum))
 	{
 		lidbg("enumerate webcam error!\n");
