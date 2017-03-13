@@ -141,7 +141,8 @@ bool flyparameter_info_get(void)
             g_var.hw_info.ts_config = 10 * (g_recovery_meg->hwInfo.info[0] - '0') + g_recovery_meg->hwInfo.info[1] - '0';
             g_var.hw_info.virtual_key = 10 * (g_recovery_meg->hwInfo.info[2] - '0') + g_recovery_meg->hwInfo.info[3] - '0';
             g_var.hw_info.lcd_type = g_recovery_meg->hwInfo.info[4] - '0';
-            lidbg("ts_config:%d,virtual_key:%d\n", g_var.hw_info.ts_config, g_var.hw_info.virtual_key);
+            g_var.hw_info.lcd_manufactor = 10 * (g_recovery_meg->hwInfo.info[8] - '0') + g_recovery_meg->hwInfo.info[9] - '0';
+            lidbg("ts_config:%d,virtual_key:%d,lcd_manufactor:%d\n", g_var.hw_info.ts_config, g_var.hw_info.virtual_key,g_var.hw_info.lcd_manufactor);
 
             is_ublox_so_exist = fs_is_file_exist("/flysystem/lib/out/"FLY_GPS_SO);
             lidbg("ts_config5:gps:%c,%d\n", g_recovery_meg->hwInfo.info[5] , is_ublox_so_exist);

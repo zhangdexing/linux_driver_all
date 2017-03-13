@@ -334,7 +334,8 @@ struct hw_info
     int ts_config;
     int lcd_type;
     int virtual_key;
-    int reserve[12];
+    int lcd_manufactor;
+    int reserve[11];
 };
 
 struct lidbg_pvar_t // var must add  at the end of the struct

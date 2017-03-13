@@ -405,54 +405,54 @@ static int thread_udisk_misc(void *data)
     while(!kthread_should_stop())
     {
         if(!wait_for_completion_interruptible(&udisk_misc_wait))
-		{
-		    int i = 0;
+        {
+            int i = 0;
 
-		    if((g_var.recovery_mode == 1) && !fs_is_file_exist("recovery.conf"))
-		    {
+            if((g_var.recovery_mode == 1) && !fs_is_file_exist("recovery.conf"))
+            {
 #if 0
-		        ssleep(2);
-		        lidbg(TAG"mount /usb \n");
-		        lidbg_shell_cmd("umount /usb");
-		        lidbg_shell_cmd("mkdir -m 777 /usb");
+                ssleep(2);
+                lidbg(TAG"mount /usb \n");
+                lidbg_shell_cmd("umount /usb");
+                lidbg_shell_cmd("mkdir -m 777 /usb");
 
-		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*1 /usb");
-		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*2 /usb");
-		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*3 /usb");
-		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*4 /usb");
-		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*5 /usb");
-		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*6 /usb");
-		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*7 /usb");
-		        lidbg_shell_cmd("mount -t vfat /dev/block/sd*8 /usb");
+                lidbg_shell_cmd("mount -t vfat /dev/block/sd*1 /usb");
+                lidbg_shell_cmd("mount -t vfat /dev/block/sd*2 /usb");
+                lidbg_shell_cmd("mount -t vfat /dev/block/sd*3 /usb");
+                lidbg_shell_cmd("mount -t vfat /dev/block/sd*4 /usb");
+                lidbg_shell_cmd("mount -t vfat /dev/block/sd*5 /usb");
+                lidbg_shell_cmd("mount -t vfat /dev/block/sd*6 /usb");
+                lidbg_shell_cmd("mount -t vfat /dev/block/sd*7 /usb");
+                lidbg_shell_cmd("mount -t vfat /dev/block/sd*8 /usb");
 #endif
-		    }
-		    else
-		    {
-		        int pos = 0;
-		        char *pPah[] = {USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf", "/storage/sdcard1/conf/lidbg_udisk_shell.conf","/sdcard/conf/lidbg_udisk_shell.conf", NULL,};
-		        while(i < 3 )
-		        {
-		            for(pos = 0; pPah[pos] != NULL; pos++)
-		            {
-		                if(fs_is_file_exist(pPah[pos]))
-		                    break;
-		            }
-		            ssleep(1);
-		            i++;
-		        }
+            }
+            else
+            {
+                int pos = 0;
+                char *pPah[] = {USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf", "/storage/sdcard1/conf/lidbg_udisk_shell.conf", "/sdcard/conf/lidbg_udisk_shell.conf", NULL,};
+                while(i < 3 )
+                {
+                    for(pos = 0; pPah[pos] != NULL; pos++)
+                    {
+                        if(fs_is_file_exist(pPah[pos]))
+                            break;
+                    }
+                    ssleep(1);
+                    i++;
+                }
 
-		        if(pPah[pos] && fs_is_file_exist(pPah[pos]))
-		        {
-		            LIST_HEAD(lidbg_udisk_shell_list);
-		            LIDBG_WARN(TAG"use:%s\n", pPah[pos] );
-		            fs_fill_list(pPah[pos], FS_CMD_FILE_LISTMODE, &lidbg_udisk_shell_list);
-		            if(analyze_list_cmd(&lidbg_udisk_shell_list))
-		                LIDBG_WARN(TAG"exe success\n" );
-		        }
-		        else
-		            LIDBG_ERR(TAG"miss:lidbg_udisk_shell\n" );
-		    }
-		}
+                if(pPah[pos] && fs_is_file_exist(pPah[pos]))
+                {
+                    LIST_HEAD(lidbg_udisk_shell_list);
+                    LIDBG_WARN(TAG"use:%s\n", pPah[pos] );
+                    fs_fill_list(pPah[pos], FS_CMD_FILE_LISTMODE, &lidbg_udisk_shell_list);
+                    if(analyze_list_cmd(&lidbg_udisk_shell_list))
+                        LIDBG_WARN(TAG"exe success\n" );
+                }
+                else
+                    LIDBG_ERR(TAG"miss:lidbg_udisk_shell\n" );
+            }
+        }
     }
     return 1;
 }
@@ -560,28 +560,23 @@ void check_display_mode(void)
     bool exist = fs_is_file_exist("/persist/display/pp_calib_data.bin");
     int HYFeature = fs_find_string(g_var.pflyhal_config_list, "HYFeatureDisplayon");
     int Israel = fs_find_string(g_var.pflyhal_config_list, "IsraelFeatureDisplayon");
-    LIDBG_WARN(TAG"<lcd_type=%d HYFeatureDisplayon.in [%d,%d]Israel.%d>\n", g_var.hw_info.lcd_type, HYFeature, exist,Israel);
+    LIDBG_WARN(TAG"<lcd_type=%d HYFeatureDisplayon.in [%d,%d]Israel.%d,lcd_manufactor:%d>\n", g_var.hw_info.lcd_type, HYFeature, exist, Israel, g_var.hw_info.lcd_manufactor);
     if(HYFeature > 0)
     {
-            LIDBG_WARN(TAG"<use HYFeatureDisplayon>\n");
-            lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data.bin /persist/display/");
-            lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
+        LIDBG_WARN(TAG"<use HYFeatureDisplayon>\n");
+        lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data.bin /persist/display/");
+        lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
     }
     else if(Israel > 0)
     {
-            LIDBG_WARN(TAG"<use IsraelFeatureDisplayon>\n");
-            lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data_Israel.bin /persist/display/pp_calib_data.bin");
-            lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
+        LIDBG_WARN(TAG"<use IsraelFeatureDisplayon>\n");
+        lidbg_shell_cmd("cp -rf /flysystem/lib/out/pp_calib_data_Israel.bin /persist/display/pp_calib_data.bin");
+        lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
     }
     else
     {
         LIDBG_WARN(TAG"<check fly lcd Feature\n");
-        if(0)
-        {
-            lidbg_shell_cmd("rm -rf /persist/display/pp_calib_data.bin");
-            LIDBG_WARN(TAG"<force remove lcd Feature\n");
-            return;
-        }
+#ifdef PLATFORM_msm8909
         switch (g_var.hw_info.lcd_type)
         {
         case 1:
@@ -605,9 +600,18 @@ void check_display_mode(void)
             break;
         }
         lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
+#else
+        {
+            char shell_cmd[128] = {0};
+            sprintf(shell_cmd, "cp -rf /flysystem/flytheme/config/flyaudio_lcd_calib_%d_%d.conf /data/misc/display/qdcm_calib_data_nt35596_1080p_video_mode_dsi_panel.xml",  g_var.hw_info.lcd_type, g_var.hw_info.lcd_manufactor);
+            lidbg_shell_cmd(shell_cmd);
+            lidbg_shell_cmd("chmod 777 /data/misc/display/qdcm_calib_data_nt35596_1080p_video_mode_dsi_panel.xml");
+
+            sprintf(shell_cmd, "/flysystem/flytheme/config/flyaudio_lcd_calib_%d_%d.conf ",  g_var.hw_info.lcd_type, g_var.hw_info.lcd_manufactor);
+            LIDBG_WARN(TAG"<others.use %s-->%d>\n", shell_cmd, fs_is_file_exist(shell_cmd));
+        }
+#endif
     }
-
-
 }
 #endif
 
