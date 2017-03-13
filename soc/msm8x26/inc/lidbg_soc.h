@@ -63,7 +63,6 @@
 #define MUC_CONTROL_DSP
 #define MUC_DSP7741
 #define USB_HUB_SUPPORT
-#define DISPLAY_CALIBRATION
 #endif
 
 #if (defined PLATFORM_msm8909) || (defined PLATFORM_msm8996)

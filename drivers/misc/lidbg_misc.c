@@ -554,7 +554,6 @@ void checkif_wifiap_error(void)
 }
 
 
-#ifdef DISPLAY_CALIBRATION
 void check_display_mode(void)
 {
     bool exist = fs_is_file_exist("/persist/display/pp_calib_data.bin");
@@ -602,18 +601,24 @@ void check_display_mode(void)
         lidbg_shell_cmd("chmod 777 /persist/display/pp_calib_data.bin");
 #else
         {
-            char shell_cmd[128] = {0};
-            sprintf(shell_cmd, "cp -rf /flysystem/flytheme/config/flyaudio_lcd_calib_%d_%d.conf /data/misc/display/qdcm_calib_data_nt35596_1080p_video_mode_dsi_panel.xml",  g_var.hw_info.lcd_type, g_var.hw_info.lcd_manufactor);
+            char shell_cmd[256] = {0};
+            sprintf(shell_cmd, "/flysystem/flytheme/config/flyaudio_lcd_calib_%d_%02d.xml ",  g_var.hw_info.lcd_type, g_var.hw_info.lcd_manufactor);
+            LIDBG_WARN(TAG"<others.use %s-->%d>\n", shell_cmd, fs_is_file_exist(shell_cmd));
+
+            sprintf(shell_cmd, "cp -rf /flysystem/flytheme/config/flyaudio_lcd_calib_%d_%02d.xml /data/misc/display/qdcm_calib_data_nt35596_1080p_video_mode_dsi_panel.xml",  g_var.hw_info.lcd_type, g_var.hw_info.lcd_manufactor);
             lidbg_shell_cmd(shell_cmd);
             lidbg_shell_cmd("chmod 777 /data/misc/display/qdcm_calib_data_nt35596_1080p_video_mode_dsi_panel.xml");
-
-            sprintf(shell_cmd, "/flysystem/flytheme/config/flyaudio_lcd_calib_%d_%d.conf ",  g_var.hw_info.lcd_type, g_var.hw_info.lcd_manufactor);
-            LIDBG_WARN(TAG"<others.use %s-->%d>\n", shell_cmd, fs_is_file_exist(shell_cmd));
         }
 #endif
     }
 }
-#endif
+static int thread_check_display_mode(void *data)
+{
+    allow_signal(SIGKILL);
+    allow_signal(SIGSTOP);
+    check_display_mode();
+    return 1;
+}
 
 int misc_init(void *data)
 {
@@ -622,9 +627,7 @@ int misc_init(void *data)
 
     system_switch_init();
 
-#ifdef DISPLAY_CALIBRATION
-    check_display_mode();
-#endif
+    CREATE_KTHREAD(thread_check_display_mode, NULL);
 
     te_regist_password("001101", cb_password_upload);
     te_regist_password("001110", cb_password_clean_all);
