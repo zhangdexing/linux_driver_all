@@ -133,7 +133,7 @@ public class LidbgCommenLogicService extends Service
             if (Environment.MEDIA_MOUNTED.equals(newState))
             {
                 if( !path.contains("emulated/0") )
-                    FileWrite("/dev/lidbg_misc0", false, false, "conf_check:" + path);
+                    FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:echo conf_check:"+path+" > /dev/lidbg_misc0");
             }
             else if (Environment.MEDIA_MOUNTED.equals(oldState))
             {

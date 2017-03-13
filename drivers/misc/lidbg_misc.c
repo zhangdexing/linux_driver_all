@@ -437,7 +437,7 @@ static int thread_udisk_misc(void *data)
                         if(fs_is_file_exist(pPah[pos]))
                             break;
                     }
-                    ssleep(1);
+                    ssleep(2);
                     i++;
                 }
 
