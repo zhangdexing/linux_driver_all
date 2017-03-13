@@ -66,6 +66,9 @@ public class LidbgCommenLogicService extends Service
     public static String ISRDecodeAction = "cn.flyaudio.updateapp";
     private String[] mWhitePermissionList = null;
 
+    String mDangerlPermission[] =
+    {
+    };
 
     @Override
     public void onCreate()
@@ -130,7 +133,7 @@ public class LidbgCommenLogicService extends Service
             if (Environment.MEDIA_MOUNTED.equals(newState))
             {
                 if( !path.contains("emulated/0") )
-		FileWrite("/dev/lidbg_misc0", false, false, "conf_check:"+path);
+                    FileWrite("/dev/lidbg_misc0", false, false, "conf_check:" + path);
             }
             else if (Environment.MEDIA_MOUNTED.equals(oldState))
             {
@@ -599,7 +602,7 @@ public class LidbgCommenLogicService extends Service
     {
         // TODO Auto-generated method stub
         if(Build.VERSION.SDK_INT < 23)
-                return false;
+            return false;
         String[] permission = getPackagePermissions(pkg, protectionDangerous);
         if (permission != null)
         {
@@ -647,7 +650,7 @@ public class LidbgCommenLogicService extends Service
                 ArrayList<String> NewStrings = new ArrayList<String>();
                 for (String requestedPermission : requestedPermissions)
                 {
-                    if (isPermissionLevel(requestedPermission, PermissionLevel))
+                    if (isPermissionLevel(requestedPermission, PermissionLevel) || isInList(mDangerlPermission, requestedPermission))
                     {
                         NewStrings.add(requestedPermission);
                     }
@@ -733,7 +736,7 @@ public class LidbgCommenLogicService extends Service
         {
             for (String processName : mList)
             {
-                if (processName.equals(packageName))
+                if (processName != null && processName.equals(packageName))
                 {
                     return true;
                 }
