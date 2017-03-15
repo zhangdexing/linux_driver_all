@@ -430,17 +430,17 @@ static int thread_udisk_misc(void *data)
             {
                 int pos = 0;
                 char *pPah[] = {USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf", "/storage/sdcard1/conf/lidbg_udisk_shell.conf", "/sdcard/conf/lidbg_udisk_shell.conf", NULL,};
-                while(i < 3 )
+                while(i < 6 )
                 {
                     for(pos = 0; pPah[pos] != NULL; pos++)
                     {
                         if(fs_is_file_exist(pPah[pos]))
-                            break;
+                            goto found;
                     }
-                    ssleep(2);
+                    ssleep(1);
                     i++;
                 }
-
+found:
                 if(pPah[pos] && fs_is_file_exist(pPah[pos]))
                 {
                     LIST_HEAD(lidbg_udisk_shell_list);
@@ -522,7 +522,7 @@ ssize_t misc_write (struct file *filp, const char __user *buf, size_t size, loff
     }
     else if(argc >= 2 && argv[1] != NULL && (!strcmp(argv[0], "conf_check")))
     {
-        lidbg(TAG"conf.check\n");
+        lidbg(TAG"conf_check\n");
         complete(&udisk_misc_wait);
     }
     else

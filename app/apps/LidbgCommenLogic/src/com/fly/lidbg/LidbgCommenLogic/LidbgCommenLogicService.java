@@ -132,8 +132,13 @@ public class LidbgCommenLogicService extends Service
             }
             if (Environment.MEDIA_MOUNTED.equals(newState))
             {
-                if( !path.contains("emulated/0") )
-                    FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:echo conf_check:"+path+" > /dev/lidbg_misc0");
+                if( !path.contains("emulated") )
+                {
+                    printKernelMsg("conf_check:" + path + "\n");
+                    FileWrite("/dev/lidbg_misc0", false, false, "conf_check:"+path);
+                }
+                else
+                    printKernelMsg("conf_check:.ignore." + path + "\n");
             }
             else if (Environment.MEDIA_MOUNTED.equals(oldState))
             {
