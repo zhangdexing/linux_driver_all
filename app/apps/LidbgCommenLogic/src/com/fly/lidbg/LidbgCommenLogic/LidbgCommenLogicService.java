@@ -344,7 +344,7 @@ public class LidbgCommenLogicService extends Service
                 return;
             }
             printKernelMsg("mPackageReceiver:[" + intent.getAction() + "]\n");
-            if (intent.getAction().equals(Intent.ACTION_PACKAGE_ADDED) || intent.getAction().equals(Intent.ACTION_PACKAGE_REPLACED))
+            if (intent.getAction().equals(Intent.ACTION_PACKAGE_ADDED))//|| intent.getAction().equals(Intent.ACTION_PACKAGE_REPLACED)
             {
                 String packageName = intent.getData().getSchemeSpecificPart();
                 if(isInList(mWhitePermissionList, packageName))
