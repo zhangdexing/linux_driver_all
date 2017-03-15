@@ -213,6 +213,8 @@ int thread_dump_log_cp2_udisk(void *data)
     lidbg_shell_cmd(shell_cmd);
     sprintf(shell_cmd, "cp -rf /data/anr/*.txt /sdcard/ID-%d-%s", get_machine_id() , tbuff);
     lidbg_shell_cmd(shell_cmd);
+    sprintf(shell_cmd, "cp -rf /data/tombstones/* /sdcard/ID-%d-%s", get_machine_id() , tbuff);
+    lidbg_shell_cmd(shell_cmd);
 
 //for udisk
     sprintf(shell_cmd, "cp -rf /sdcard/ID-%d-%s "USB_MOUNT_POINT, get_machine_id() , tbuff);
@@ -1287,7 +1289,8 @@ void parse_cmd(char *pt)
 	     lidbg_shell_cmd("chmod 777  /sdcard/FlyLog/DriBugReport");	
 	     lidbg_shell_cmd("mkdir  /sdcard/FlyLog/DriBugReport/drivers");	     
 	     lidbg_shell_cmd("cp -rf /data/lidbg /sdcard/FlyLog/DriBugReport/drivers/");
-
+	     lidbg_shell_cmd("cp -rf /data/anr/* /sdcard/FlyLog/DriBugReport/drivers/");
+	     lidbg_shell_cmd("cp -rf /data/tombstones/* /sdcard/FlyLog/DriBugReport/drivers/");
         }
         else if (!strcmp(argv[1], "*158#101"))
         {
@@ -1536,6 +1539,7 @@ void parse_cmd(char *pt)
 		  lidbg_shell_cmd("cp -rf /sdcard/logcat* /storage/udisk/LogcatKmsg");
 		  lidbg_shell_cmd("cp -rf /sdcard/kmsg* /storage/udisk/LogcatKmsg");
 		  lidbg_shell_cmd("cp -rf /data/anr/* /storage/udisk/LogcatKmsg");
+		  lidbg_shell_cmd("cp -rf /data/tombstones/* /storage/udisk/LogcatKmsg");
 		  lidbg_shell_cmd("echo ws toast Copy.Completely 1 > /dev/lidbg_pm0");
 		  lidbg_domineering_ack();
 		}
