@@ -94,7 +94,10 @@ bool FLY_MSM_OS_MkDir(const char *dir_path)
 	if(dir_path == NULL)
 		return false;
 	if(mkdir(dir_path,S_IRWXU|S_IRWXG|S_IRWXO) >= 0)
+	{
+		chmod(dir_path,0777);
 		return true;
+	}
 	return false;
 }
 

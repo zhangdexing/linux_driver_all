@@ -56,6 +56,8 @@
 #define	REAR_VR_BIT_RATE_MODE		1	//VBR (CBR:1,VBR:2)
 #define	FRONT_ONLINE_VR_BIT_RATE_MODE	2	//CBR (CBR:1,VBR:2)
 
+//#define FRONT_ONLINE_NEED_FRAME_COMPOSE
+
 typedef enum{
     VR_CMD_EXIT = 0,
     VR_CMD_PAUSE,

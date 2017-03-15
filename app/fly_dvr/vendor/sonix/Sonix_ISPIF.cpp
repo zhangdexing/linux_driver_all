@@ -1483,6 +1483,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 		bool iswritePermitted = false;
 		unsigned char online_head[11] = {0};
 		unsigned char tmp_val = 0;
+		bool isFirstIFrame = false;
 		
 		lidbg("%s: E\n", __func__);
 
@@ -1499,6 +1500,10 @@ void dequeue_flush(int count , camera_q_node* mhead)
         struct timespec start_sp ;
         start_sp.tv_sec = start_sp.tv_nsec = 0;
         clock_gettime(CLOCK_MONOTONIC, &start_sp);
+
+		if(front_online_hw.rec_fp > 0) 
+			fclose(front_online_hw.rec_fp);
+		front_online_hw.rec_fp = 0;
 
         front_online_hw.VRCmdPending = 0;
 
@@ -1606,7 +1611,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 					Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_ONLINE_CAM_OSD_SYNC, 0);
 				
 				if(iswritePermitted == true)
-				{
+				{			
 					/*Compose the head of frame*/
 					online_head[0] = front_online_hw.buf0.bytesused >> 24;
 					online_head[1] = front_online_hw.buf0.bytesused >> 16;
@@ -1620,7 +1625,6 @@ void dequeue_flush(int count , camera_q_node* mhead)
 
 					online_head[8] = 0;
 
-
 					tmp_val = *(unsigned char*)(front_online_hw.mem0[front_online_hw.buf0.index] + 17);
 					if(tmp_val == 0x68) 
 					{
@@ -1628,6 +1632,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 						if(tmp_val == 0x65) 
 						{
 							online_head[8] = 0x01;
+							isFirstIFrame = true;
 						}
 					}
 
@@ -1640,6 +1645,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 						if(tmp_val == 0x65) 
 						{
 							online_head[8] = 0x01;
+							isFirstIFrame = true;
 						}
 					}
 
@@ -1651,11 +1657,16 @@ void dequeue_flush(int count , camera_q_node* mhead)
 						if(tmp_val == 0x65)
 						{
 							online_head[8] = 0x01;
+							isFirstIFrame = true;
 						}
 					}
-				
-					fwrite(online_head, 12 , 1, front_online_hw.rec_fp);//Frame Head
-					fwrite(front_online_hw.mem0[front_online_hw.buf0.index], front_online_hw.buf0.bytesused, 1, front_online_hw.rec_fp);
+					if((isFirstIFrame == true) &&  front_online_hw.rec_fp > 0)
+					{
+#if FRONT_ONLINE_NEED_FRAME_COMPOSE						
+						fwrite(online_head, 12 , 1, front_online_hw.rec_fp);//Frame Head
+#endif	
+						fwrite(front_online_hw.mem0[front_online_hw.buf0.index], front_online_hw.buf0.bytesused, 1, front_online_hw.rec_fp);
+					}
 				}
 				
 				ret = ioctl(front_online_hw.dev, VIDIOC_QBUF, &(front_online_hw.buf0));
