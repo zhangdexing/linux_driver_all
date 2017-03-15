@@ -37,6 +37,9 @@ void dump_sysinfo(void)
 	lidbg_shell_cmd("dumpsys alarm >> /data/lidbg/pm_info/dumpsys_alarm.txt");
 	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/location.txt");
 	lidbg_shell_cmd("dumpsys location >> /data/lidbg/pm_info/location.txt");
+	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/meminfo.txt");
+	lidbg_shell_cmd("dumpsys meminfo >> /data/lidbg/pm_info/meminfo.txt");
+
 	lidbg_shell_cmd("chmod 777 /data/lidbg/* -R");
 	lidbg_shell_cmd("chmod 777 /data/lidbg/*");
 
