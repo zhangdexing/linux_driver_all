@@ -118,8 +118,11 @@ FLY_BOOL Flydvr_ISP_IF_LIB_StopFrontOnlineVR()
 	if(Sonix_ISP_IF_LIB_StopFrontOnlineVR() == 0)
 	{
 		front_state = VR_STOP;
+		Flydvr_ISP_IF_LIB_RemoveOnlineFile();
+		Flydvr_ISP_IF_LIB_CloseOnlineFileAccess();
 		return FLY_TRUE;
 	}
+	Flydvr_ISP_IF_LIB_RemoveOnlineFile();
 	Flydvr_ISP_IF_LIB_CloseOnlineFileAccess();
 	return FLY_FALSE;
 }

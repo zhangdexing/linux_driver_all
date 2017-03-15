@@ -1576,6 +1576,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 					sprintf(VR_File_Name, "%s/%s", MMC0_ONLINE_VR_PATH, front_online_hw.currentVRFileName);
 					lidbg("=========online VR_File_Name : %s===========\n", VR_File_Name);	
 					front_online_hw.rec_fp = fopen(VR_File_Name, "wb");
+					chmod(VR_File_Name,0777);
 					Flydvr_ISP_IF_LIB_OpenOnlineFileAccess();
 				}	
 				iswritePermitted = true;
