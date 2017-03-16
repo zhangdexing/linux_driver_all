@@ -1692,7 +1692,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 		UINT16 usCount;
         while (1) {
 			//sleep(1);//tmp for debug
-			usleep(1000);
+			usleep(10*1000);
 		    if (Flydvr_GetMessage_LP( &uiMsgId, &uiParam1, &uiParam2) == FLY_FALSE) {
   			    continue;
 		    }
