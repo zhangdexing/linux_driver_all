@@ -119,9 +119,8 @@ static bool sonix_check_cam(int cam_id, bool isH264, char* dev_name)
 {
 	char temp_devname[256], temp_devname2[256],hub_path[256];
 	int rc = -1;
-
-	DIR *pDir ;
-	struct dirent *ent;
+	DIR *pDir = NULL;
+	struct dirent *ent = NULL;
 	int fcnt = 0  ;
 
     lidbg("%s: E,=======[%d]\n", __func__, cam_id);
@@ -132,22 +131,26 @@ static bool sonix_check_cam(int cam_id, bool isH264, char* dev_name)
 	//fix for attenuation hub.find the deepest one.
 	unsigned int back_charcnt = 0,front_charcnt = 0;
 	pDir=opendir("/sys/bus/usb/drivers/usb/");  
-	while((ent=readdir(pDir))!=NULL)  
-	{  
-			if((!strncmp(ent->d_name,  BACK_NODE , 5)) &&
-				(strlen(ent->d_name) >= back_charcnt) && (cam_id == 0))
-			{
-				back_charcnt = strlen(ent->d_name);
-				sprintf(hub_path, "/sys/bus/usb/drivers/usb/%s/%s:1.0/video4linux/", ent->d_name,ent->d_name);//back cam
-			}
-			else if((!strncmp(ent->d_name,  FRONT_NODE , 5)) &&
-				(strlen(ent->d_name) >= front_charcnt) && (cam_id == 1))
-			{
-				front_charcnt = strlen(ent->d_name);
-				sprintf(hub_path, "/sys/bus/usb/drivers/usb/%s/%s:1.0/video4linux/", ent->d_name,ent->d_name);//front cam
-			} 
+	if(pDir != NULL)
+	{
+		while((ent=readdir(pDir))!=NULL)  
+		{  
+				if((!strncmp(ent->d_name,  BACK_NODE , 5)) &&
+					(strlen(ent->d_name) >= back_charcnt) && (cam_id == 0))
+				{
+					back_charcnt = strlen(ent->d_name);
+					sprintf(hub_path, "/sys/bus/usb/drivers/usb/%s/%s:1.0/video4linux/", ent->d_name,ent->d_name);//back cam
+				}
+				else if((!strncmp(ent->d_name,  FRONT_NODE , 5)) &&
+					(strlen(ent->d_name) >= front_charcnt) && (cam_id == 1))
+				{
+					front_charcnt = strlen(ent->d_name);
+					sprintf(hub_path, "/sys/bus/usb/drivers/usb/%s/%s:1.0/video4linux/", ent->d_name,ent->d_name);//front cam
+				} 
+		}
+		closedir(pDir);
+		pDir = NULL;
 	}
-	if(pDir != NULL) closedir(pDir);
 
 	if((front_charcnt == 0) && (back_charcnt == 0))
 	{
@@ -164,35 +167,49 @@ static bool sonix_check_cam(int cam_id, bool isH264, char* dev_name)
 	}
 	
 	pDir=opendir(hub_path);  
-	while((ent=readdir(pDir))!=NULL)  
-	{  
-			fcnt++;
-	        if(ent->d_type & DT_DIR)  
-	        {  
-	                if((strcmp(ent->d_name,".") == 0) || (strcmp(ent->d_name,"..") == 0) || (strncmp(ent->d_name, "video", 5)))  
-	                        continue;  
-					if(fcnt == 3)
-						sprintf(temp_devname,"/dev/%s", ent->d_name);  
-					if(fcnt == 4)//also save 2nd node name
-						sprintf(temp_devname2,"/dev/%s", ent->d_name);  
-	        }  
+	if(pDir != NULL)
+	{
+		while((ent=readdir(pDir))!=NULL)  
+		{  
+				fcnt++;
+		        if(ent->d_type & DT_DIR)  
+		        {  
+		                if((strcmp(ent->d_name,".") == 0) || (strcmp(ent->d_name,"..") == 0) || (strncmp(ent->d_name, "video", 5)))  
+		                        continue;  
+						if(fcnt == 3)
+							sprintf(temp_devname,"/dev/%s", ent->d_name);  
+						if(fcnt == 4)//also save 2nd node name
+							sprintf(temp_devname2,"/dev/%s", ent->d_name);  
+		        }  
+		}
+		closedir(pDir);
+		pDir = NULL;
 	}
-	if(pDir != NULL) closedir(pDir);
-	
-	lidbg("%s:First node Path:%s\n",__func__ ,temp_devname);      
+	else 
+	{
+		lidbg("%s: openDir error!\n ", __func__ );
+		return false;
+	}
 
 	lidbg("%s: This Camera [%d] has %d video node.\n", __func__ ,cam_id, fcnt - 2);
+	
 	if(fcnt == 3)	
 	{
 		lidbg("%s: Camera [%d] does not support Sonix Recording!\n",__func__,cam_id);
 		return false;
 	}
-	
-	if((fcnt == 0) && (ent == NULL))
+	else if((fcnt == 0) && (ent == NULL))
 	{
 		lidbg("%s: Hub node is not exist !\n ", __func__);
 		return false;
 	}
+	else if(fcnt < 3)
+	{
+		lidbg("%s: Camera [%d] nothing exist in hub dir!\n",__func__,cam_id);
+		return false;
+	}	
+
+	lidbg("%s:First node Path:%s\n",__func__ ,temp_devname);      
 
 	if(isH264 == true)
 		strncpy(dev_name, temp_devname2, 256);
@@ -1691,8 +1708,6 @@ void dequeue_flush(int count , camera_q_node* mhead)
         UINT32 uiMsgId, uiParam1, uiParam2;
 		UINT16 usCount;
         while (1) {
-			//sleep(1);//tmp for debug
-			usleep(1000);
 		    if (Flydvr_GetMessage_LP( &uiMsgId, &uiParam1, &uiParam2) == FLY_FALSE) {
   			    continue;
 		    }

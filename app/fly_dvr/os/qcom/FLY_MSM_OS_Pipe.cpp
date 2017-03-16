@@ -23,7 +23,7 @@ UINT8 FLY_MSM_OS_GetMessage(FLY_OS_PIPE* osPipe, FLYDVR_QUEUE_MESSAGE* msg, UINT
 	FD_ZERO(&read_fdst);
 	FD_SET(osPipe->fd[0], &read_fdst);
 	tv.tv_sec = ulTimeout/1000;
-	tv.tv_usec = ulTimeout%1000;
+	tv.tv_usec = (ulTimeout*1000) - (ulTimeout/1000*1000);
 	nfds = select(osPipe->fd[0]+1, &read_fdst,NULL, NULL, &tv);
 	switch (nfds)
 	{
