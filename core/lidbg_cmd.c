@@ -17,11 +17,11 @@ struct cmd_item lidbg_cmd_item[] =
     {"key", lidbg_key_main},
     {"touch", lidbg_touch_main},
     {"soc", lidbg_soc_main},
-    {"uart", lidbg_uart_main},
+    //{"uart", lidbg_uart_main},
     {"servicer", lidbg_servicer_main},
     {"cmm", mod_cmn_main},
     {"file", lidbg_fileserver_main},
-    {"trace_msg", trace_msg_main},
+    //{"trace_msg", trace_msg_main},
     {"mem_log", mem_log_main},
 #ifndef USE_CALL_USERHELPER
     {"uevent", lidbg_uevent_main},

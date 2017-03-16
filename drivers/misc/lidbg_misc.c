@@ -104,7 +104,7 @@ void lidbg_enable_kmsg(void)
     int size;
     lidbg(TAG"\n\n\nthread_enable_dmesg:kmsg+\n");
 
-    lidbg_trace_msg_disable(1);
+   // lidbg_trace_msg_disable(1);
     lidbg_get_current_time(time_buf, NULL);
     sprintf(dmesg_file_name, "kmsg_%d_%s.txt", get_machine_id(), time_buf);
     sprintf(dmesg_file_path, "/sdcard/%s", dmesg_file_name);
@@ -209,8 +209,8 @@ void cb_int_mem_log(char *key, char *value )
 
 int thread_kmsg_fifo_save(void *data)
 {
-    ssleep(30);
-    kmsg_fifo_save();
+    //ssleep(30);
+    //kmsg_fifo_save();
     return 0;
 }
 
@@ -674,7 +674,7 @@ int misc_init(void *data)
         logcat_lunch(NULL, NULL);
 
     //lidbg_trace_msg_cb_register("unhandled",NULL,unhandled_monitor);
-    lidbg_trace_msg_cb_register("lidbgerr", NULL, lidbgerr_monitor);
+   // lidbg_trace_msg_cb_register("lidbgerr", NULL, lidbgerr_monitor);
 
     lidbg_new_cdev(&misc_nod_fops, "lidbg_misc0");
 

@@ -794,7 +794,7 @@ static int soc_dev_probe(struct platform_device *pdev)
     lidbg_new_cdev(&dev_fops, "flydev0");
 
    // lidbg_trace_msg_cb_register("unable to enumerate USB device", NULL, usb_enumerate_monitor);
-    lidbg_trace_msg_cb_register("clusters badly computed", NULL, sd_error_monitor);
+   // lidbg_trace_msg_cb_register("clusters badly computed", NULL, sd_error_monitor);
 
     FS_REGISTER_INT(udisk_stability_test, "udisk_stability_test", 0, NULL);
 

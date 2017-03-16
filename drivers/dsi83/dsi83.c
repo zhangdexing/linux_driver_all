@@ -575,8 +575,6 @@ static int dsi83_probe(struct platform_device *pdev)
 }
 
     lidbg_new_cdev(&dsi83_nod_fops, "lidbg_dsi830");
-    if(0)
-        lidbg_trace_msg_cb_register("ShutdownThread-cpu", NULL, disable_dsi83);
 
     return 0;
 

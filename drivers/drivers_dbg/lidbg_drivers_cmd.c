@@ -359,7 +359,7 @@ int thread_screenshot(void *data)
 
 int thread_kmsg_fifo_save(void *data)
 {
-    kmsg_fifo_save();
+    //kmsg_fifo_save();
     return 0;
 }
 
@@ -660,7 +660,7 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#012"))
         {
-            lidbg_trace_msg_disable(1);
+           // lidbg_trace_msg_disable(1);
         }
         else if (!strcmp(argv[1], "*158#013"))
         	{

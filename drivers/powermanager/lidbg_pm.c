@@ -1415,7 +1415,7 @@ static int __init lidbg_pm_init(void)
     lidbg_shell_cmd("setprop persist.lidbg.mediascan.en 1");
 
 #ifdef PLATFORM_msm8226
-    lidbg_trace_msg_cb_register("mdss_mdp_overlay_on: Failed to turn on fb0", NULL, find_fb_open_err);
+   // lidbg_trace_msg_cb_register("mdss_mdp_overlay_on: Failed to turn on fb0", NULL, find_fb_open_err);
 #endif
 
 #ifdef SOC_mt3360

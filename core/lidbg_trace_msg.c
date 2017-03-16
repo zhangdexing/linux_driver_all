@@ -418,7 +418,7 @@ static int __init lidbg_trace_msg_init(void)
     return platform_driver_register(&lidbg_trace_msg_driver);
 }
 
-static void __exit lidbg_trace_msg_exit(void)
+static void __exit lidbg_trace_msg_exit(void) 
 {
     DUMP_FUN;
 
