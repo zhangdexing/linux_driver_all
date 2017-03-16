@@ -167,8 +167,8 @@ function lidbg_handle()
 			storageDir=$(ls -d /media/*)
 			for thisDir  in `echo $storageDir | sed 's/=/ /g'`  
 			do   
-			    echo cp -rf $DBG_OUT_PATH $thisDir  
-			    cp -rf $DBG_OUT_PATH $thisDir
+			    echo cp -rf $DBG_OUT_PATH $thisDir/out1 
+			    cp -rf $DBG_OUT_PATH/ $thisDir/out1
 			done  
 			
 
