@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 		UINT16 usCount;
         while (1) {
 			//sleep(1);//tmp for debug
-			usleep(10*1000);
+			usleep(1000);
 		    if (Flydvr_GetMessage( &uiMsgId, &uiParam1, &uiParam2) == FLY_FALSE) {
   			    continue;
 		    }
