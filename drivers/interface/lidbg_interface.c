@@ -304,6 +304,14 @@ int iSOC_Get_CpuFreq(void)
         if(cpu_freq > 0)
             break;
     }
+
+    if(0)
+    for(i = 0; i < 4; i++)
+    {
+        cpu_freq = cpufreq_get(i);
+        lidbg("cpu%dfreq_get=%d\n", i,cpu_freq);
+
+    }
     return cpu_freq;
 }
 
