@@ -799,8 +799,9 @@ static int soc_dev_probe(struct platform_device *pdev)
    // lidbg_trace_msg_cb_register("clusters badly computed", NULL, sd_error_monitor);
 
     FS_REGISTER_INT(udisk_stability_test, "udisk_stability_test", 0, NULL);
-
+#ifdef PLATFORM_msm8996
 	USB_FRONT_WORK_ENABLE;
+#endif
 
   //  if(udisk_stability_test == 1)
     {
