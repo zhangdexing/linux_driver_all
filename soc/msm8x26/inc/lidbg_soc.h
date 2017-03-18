@@ -362,7 +362,7 @@ extern struct fly_smem *p_fly_smem ;
 #define IO_CONFIG_OUTPUT(group,index) do{  soc_io_config( index, GPIOMUX_FUNC_GPIO, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_16MA, 1);}while(0)
 #define IO_CONFIG_INPUT(group,index) do{  soc_io_config( index, GPIOMUX_FUNC_GPIO, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_16MA, 1);}while(0)
 
-#ifdef PLATFORM_ID_11
+#ifdef PLATFORM_msm8909
 #define GPIO_MAP_OFFSET  (911)
 #else
 #define GPIO_MAP_OFFSET  (0)
