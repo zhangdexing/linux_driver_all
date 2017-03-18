@@ -497,7 +497,7 @@ int main(int argc, char **argv)
         loop_count++;
         if(loop_count > 200)
         {
-            GetAudioPolicyService(true);
+            GetAudioPolicyService(false);
             GetAudioFlingerService(false);
             loop_count = 0;
         }
