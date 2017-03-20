@@ -110,7 +110,7 @@ static int __init msg_init(void)
     int ret;
     struct task_struct *task;
 
-    DUMP_BUILD_TIME;
+    //DUMP_BUILD_TIME;
     ret = misc_register(&misc);
 
     task = kthread_create(thread_msg, NULL, "thread_dbg_msg");

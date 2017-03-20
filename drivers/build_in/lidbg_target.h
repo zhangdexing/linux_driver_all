@@ -1,7 +1,8 @@
 //#define PLATFORM_MSM8226 1
 //#define PLATFORM_MSM8974 1
 //#define PLATFORM_sabresd_6dq 1
-#define PLATFORM_MSM8909 1
+//#define PLATFORM_MSM8909 1
+#define PLATFORM_MSM8996 1
 
 
 

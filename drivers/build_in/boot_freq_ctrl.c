@@ -54,9 +54,15 @@ struct thermal_ctrl cpu_thermal[] =
 
     {0,     0, 0, "0"} //end flag
 };
-
+#elif defined(PLATFORM_MSM8996)
+struct thermal_ctrl cpu_thermal[] =
+{
+    {-500,  50,  2150400, "2150400",4},
+    {51,    70,  1324800, "1324800",4},
+    {71,    500, 1190400,  "1190400",2},   
+    {0,     0, 0, "0"} //end flag
+};
 #endif
-
 
 #define FREQ_MAX_NODE "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"
 #define CPU_MAX_NODE    "/sys/devices/system/cpu/cpu0/core_ctl/max_cpus"
@@ -101,13 +107,12 @@ void freq_limit_exit(void)
 static int thread_freq_limit(void *data)
 {
     int count = 0;
-    int i = 0;
 
     struct tsens_device tsens_dev;
     //cpu0 temp_sensor_id
 #if defined(PLATFORM_MSM8226) || defined(PLATFORM_MSM8974)
     tsens_dev.sensor_num = 5;
-#elif defined(PLATFORM_MSM8909)
+#elif defined(PLATFORM_MSM8909) || defined(PLATFORM_MSM8996)
     tsens_dev.sensor_num = 3;
 #endif
     lidbg("create kthread \n");
@@ -117,6 +122,13 @@ static int thread_freq_limit(void *data)
         int tmp,i;
         long temp;
         u32 max_freq = 0;
+/*
+	for(i = 0; i < 4; i++)
+	{
+		tmp = cpufreq_get(i);
+		lidbg("cpu%dfreq_get=%d\n", i,tmp);
+	}
+*/
 	for(i = 0; i < 4; i++)
 	{
 	    tmp = cpufreq_get(i); //cpufreq.c
@@ -127,6 +139,7 @@ static int thread_freq_limit(void *data)
         max_freq = get_file_int(FREQ_MAX_NODE);
 
         tsens_get_temp(&tsens_dev, &temp);//cpu0 temp
+	temp = temp / 10;
         lidbg("cpufreq=%d,maxfreq=%d,cpu0_temp = %ld,status=%s", tmp, max_freq, temp, get_cpu_status());
         for(i = 0; i < SIZE_OF_ARRAY(cpu_thermal); i++)
         {
@@ -210,7 +223,7 @@ static struct notifier_block cpufreq_notifier =
 
 
 #define PROC_READ_CHECK {static int len_check = 0;if ((len_check++)%2) return 0;}
-static int  freq_ctrl_stop_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
+static ssize_t freq_ctrl_stop_proc(struct file *file, char __user *buf, size_t size, loff_t *ppos)
 {
 
     PROC_READ_CHECK;
