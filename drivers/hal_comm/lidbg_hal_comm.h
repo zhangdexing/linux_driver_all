@@ -62,7 +62,7 @@ typedef struct fifo_list
 	struct kfifo data_fifo;
 	struct list_head list;
 	struct semaphore fifo_sem;
-	struct mutex fifo_mutex;
+	spinlock_t fifo_lock;
 } threads_list;
 
 #define HAL_FIFO_SIZE 100

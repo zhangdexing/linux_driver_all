@@ -3,7 +3,6 @@
 
 struct list_head *klisthead ;
 
-
 static DEFINE_MUTEX(list_mutex); 
 
 static struct class *new_cdev_class = NULL;
@@ -144,23 +143,19 @@ int init_thread_kfifo(struct kfifo *pkfifo, int size)
 	return ret;
 }
 
-void put_buf_fifo(struct kfifo *pkfifo , void *buf, int size, struct mutex *lock)
+void put_buf_fifo(struct kfifo *pkfifo , void *buf, int size, spinlock_t *fifo_lock)
 {
 	int len, ret ,data_len;
 	len = kfifo_avail(pkfifo);
 	while(len < size){
 		printk(KERN_CRIT "fifo did't have enough space\n");
-//		mutex_lock(lock);
-		ret = kfifo_out(pkfifo, &data_len,2);
-//		mutex_unlock(lock);
+		ret = kfifo_out_spinlocked(pkfifo, &data_len,2,fifo_lock);
 		printk(KERN_CRIT "kfifo length is : %d \n",data_len);
 		if(ret < 0)
 			printk(KERN_CRIT "fail to output data \n");
 		{
 			char out_buf[data_len];
-//			mutex_lock(lock);
-			ret = kfifo_out(pkfifo,out_buf,data_len);
-//			mutex_unlock(lock);
+			ret = kfifo_out_spinlocked(pkfifo,out_buf,data_len,fifo_lock);
 			printk(KERN_CRIT "give up one data : %s ", out_buf);
 			if(ret < 0)
 				printk(KERN_CRIT "fail to output data \n");
@@ -168,24 +163,18 @@ void put_buf_fifo(struct kfifo *pkfifo , void *buf, int size, struct mutex *lock
 		len = kfifo_avail(pkfifo);
 		printk(KERN_CRIT "kfifo vaild len : %d \n",len);
 	}
-	mutex_lock(lock);
-	kfifo_in(pkfifo, buf, size); 
-	mutex_unlock(lock);
+	kfifo_in_spinlocked(pkfifo, buf, size,fifo_lock); 
 }
 
-short get_buf_fifo(struct kfifo *pkfifo, void *arg, struct mutex *lock)
+short get_buf_fifo(struct kfifo *pkfifo, void *arg, spinlock_t *fifo_lock)
 {
 	int ret;
 	short len;
 	char buff[100];
-//	mutex_lock(lock);
-	ret = kfifo_out(pkfifo, &len, 2);
-//	mutex_unlock(lock);
+	ret = kfifo_out_spinlocked(pkfifo, &len, 2,fifo_lock);
 	if(ret < 0)
 		printk(KERN_CRIT "fail to output data \n");
-//	mutex_lock(lock);
-	ret = kfifo_out(pkfifo, buff, len);
-//	mutex_unlock(lock);
+	ret = kfifo_out_spinlocked(pkfifo, buff, len,fifo_lock);
 	if(ret < 0)
 		printk(KERN_CRIT "fail to output data \n");
 	
@@ -243,19 +232,19 @@ static long hal_comm_ioctl(struct file *filp, unsigned int cmd, unsigned long ar
 			{
 				tmp_list = add_node_list(klisthead, tmp_type);
 				sema_init(&tmp_list->fifo_sem,0);
-				mutex_init(&tmp_list->fifo_mutex);
-				put_buf_fifo(&tmp_list->data_fifo, &data_size,2,&tmp_list->fifo_mutex);
-				put_buf_fifo(&tmp_list->data_fifo, (void *)arg,data_size,&tmp_list->fifo_mutex);
+				spin_lock_init(&tmp_list->fifo_lock);
+				put_buf_fifo(&tmp_list->data_fifo, &data_size,2,&tmp_list->fifo_lock);
+				put_buf_fifo(&tmp_list->data_fifo, (void *)arg,data_size,&tmp_list->fifo_lock);
 				return data_size;
 			}else{
 				if(kfifo_is_empty(&tmp_list->data_fifo))
 				{
-					put_buf_fifo(&tmp_list->data_fifo, &data_size,2,&tmp_list->fifo_mutex);
-					put_buf_fifo(&tmp_list->data_fifo, (void *)arg,data_size,&tmp_list->fifo_mutex);
+					put_buf_fifo(&tmp_list->data_fifo, &data_size,2,&tmp_list->fifo_lock);
+					put_buf_fifo(&tmp_list->data_fifo, (void *)arg,data_size,&tmp_list->fifo_lock);
 					up(&tmp_list->fifo_sem);
 				}else{
-					put_buf_fifo(&tmp_list->data_fifo, &data_size,2,&tmp_list->fifo_mutex);
-					put_buf_fifo(&tmp_list->data_fifo, (void *)arg,data_size,&tmp_list->fifo_mutex);	
+					put_buf_fifo(&tmp_list->data_fifo, &data_size,2,&tmp_list->fifo_lock);
+					put_buf_fifo(&tmp_list->data_fifo, (void *)arg,data_size,&tmp_list->fifo_lock);	
 				}
 				
 				return data_size;
@@ -263,9 +252,9 @@ static long hal_comm_ioctl(struct file *filp, unsigned int cmd, unsigned long ar
 		}else{
 			tmp_list = add_node_list(klisthead, tmp_type);
 			sema_init(&tmp_list->fifo_sem,0);
-			mutex_init(&tmp_list->fifo_mutex);
-			put_buf_fifo(&tmp_list->data_fifo, &data_size,2,&tmp_list->fifo_mutex);
-			put_buf_fifo(&tmp_list->data_fifo, (void *)arg,data_size,&tmp_list->fifo_mutex);
+			spin_lock_init(&tmp_list->fifo_lock);
+			put_buf_fifo(&tmp_list->data_fifo, &data_size,2,&tmp_list->fifo_lock);
+			put_buf_fifo(&tmp_list->data_fifo, (void *)arg,data_size,&tmp_list->fifo_lock);
 			return data_size;
 		}	
 	}else{
@@ -273,9 +262,9 @@ static long hal_comm_ioctl(struct file *filp, unsigned int cmd, unsigned long ar
 		{
 			tmp_list = add_node_list(klisthead, tmp_type);
 			sema_init(&tmp_list->fifo_sem,0);
-			mutex_init(&tmp_list->fifo_mutex);
+			spin_lock_init(&tmp_list->fifo_lock);
 			ret = down_interruptible(&tmp_list->fifo_sem);
-			data_size = get_buf_fifo(&tmp_list->data_fifo,(void*)arg,&tmp_list->fifo_mutex);
+			data_size = get_buf_fifo(&tmp_list->data_fifo,(void*)arg,&tmp_list->fifo_lock);
 			return data_size;
 		}else{
 			tmp_list= search_each_node(klisthead, tmp_type);
@@ -284,18 +273,18 @@ static long hal_comm_ioctl(struct file *filp, unsigned int cmd, unsigned long ar
 			{
 				tmp_list = add_node_list(klisthead, tmp_type);
 				sema_init(&tmp_list->fifo_sem,0);
-				mutex_init(&tmp_list->fifo_mutex);
+				spin_lock_init(&tmp_list->fifo_lock);
 				ret = down_interruptible(&tmp_list->fifo_sem);
-				data_size = get_buf_fifo(&tmp_list->data_fifo,(void*)arg,&tmp_list->fifo_mutex);
+				data_size = get_buf_fifo(&tmp_list->data_fifo,(void*)arg,&tmp_list->fifo_lock);
 				return data_size;
 			}else{
 				if(kfifo_is_empty(&tmp_list->data_fifo))
 				{
 					ret = down_interruptible(&tmp_list->fifo_sem);
-					data_size = get_buf_fifo(&tmp_list->data_fifo,(void*)arg,&tmp_list->fifo_mutex);
+					data_size = get_buf_fifo(&tmp_list->data_fifo,(void*)arg,&tmp_list->fifo_lock);
 					return data_size;
 				}else{
-					data_size = get_buf_fifo(&tmp_list->data_fifo,(void*)arg,&tmp_list->fifo_mutex);
+					data_size = get_buf_fifo(&tmp_list->data_fifo,(void*)arg,&tmp_list->fifo_lock);
 				}
 			}
 		}
