@@ -689,6 +689,11 @@ static int  lpc_probe(struct platform_device *pdev)
     }
 #endif 
 
+#ifndef FLY_HAL_NEW_COMM
+	lidbg("%s: FLY_HAL_NEW_COMM Disable!\n",__func__);
+	return 0;
+#endif
+
 #if defined(PLATFORM_msm8226) || defined(PLATFORM_ID_4) || defined(PLATFORM_ID_7)
 	  if(g_var.recovery_mode)
 	 		return 0;
