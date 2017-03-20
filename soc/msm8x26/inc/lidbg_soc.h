@@ -105,6 +105,7 @@
 #define SUSPEND_ONLINE
 #define MUC_CONTROL_DSP
 #define MUC_DSP7741
+//#define FLY_HAL_NEW_COMM
 enum msm_gpiomux_setting {
 	GPIOMUX_ACTIVE = 0,
 	GPIOMUX_SUSPENDED,

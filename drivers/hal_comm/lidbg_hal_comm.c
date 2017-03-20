@@ -307,6 +307,10 @@ static struct file_operations hal_comm_fops =
 static int  hal_comm_probe(struct platform_device *pdev)
 {
 	int ret;
+#ifndef FLY_HAL_NEW_COMM
+	lidbg("%s: FLY_HAL_NEW_COMM Disable!\n",__func__);
+	return 0;
+#endif
 	klisthead = (struct list_head *)kmalloc(sizeof(struct list_head), GFP_KERNEL);
 	ret = new_cdev_node(&hal_comm_fops, "lidbg_hal_comm0");
 	if(ret < 0){
