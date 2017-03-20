@@ -1523,8 +1523,8 @@ void parse_cmd(char *pt)
         else if (!strncmp(argv[1], "*158#124", 8))
         {
             lidbg("*158#124--enable logcat when coldboot \n");
-            lidbg_shell_cmd("echo coldBootLogcat > /sdcard/coldBootLogcat.txt");
-            lidbg_shell_cmd("chmod 777  /sdcard/coldBootLogcat.txt");
+            lidbg_shell_cmd("echo coldBootLogcat > /data/coldBootLogcat.txt");
+            lidbg_shell_cmd("chmod 777  /data/coldBootLogcat.txt");
             lidbg_shell_cmd("sync");
             lidbg_domineering_ack();
         }
