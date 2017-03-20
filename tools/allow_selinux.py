@@ -8,27 +8,48 @@ def save2file(line):
 #buf4
         i=line.find('{')
         j=line.find('}')
+	if (i==-1 or j==-1):
+		print("except4 occur!!")
+		print(line)
+		return
         buf4=line[i+2:j-1]
 #buf1
         i=line.find('scontext=')
 	if i==-1:
 		return
-	buf1=line[i:].split(':')[2]
+	try:
+		buf1=line[i:].split(':')[2]
+	except :
+		print("except1 occur!!")
+		print(line)
+		return
 	buf1=buf1.replace('\r','')
 	buf1=buf1.replace('\n','')
+
 #buf2
 	i=line.find('tcontext=')
 	if i==-1:
 		return
-	buf2=line[i:].split(':')[2]
+	try:
+		buf2=line[i:].split(':')[2]
+	except :
+		print("except2 occur!!")
+		print(line)
+		return
 	buf2=buf2.replace('\r','')
 	buf2=buf2.replace('\n','')
+
 #buf3
 	i=line.find('tclass=')
 	if i==-1:
 		return
-	buf3=line[i:].split('=')[1]
-	buf3=buf3.split(' ')[0]
+	try:
+		buf3=line[i:].split('=')[1]
+		buf3=buf3.split(' ')[0]
+	except :
+		print("except3 occur!!")
+		print(line)
+		return
 	buf3=buf3.replace('\r','')
 	buf3=buf3.replace('\n','')
 
@@ -47,18 +68,22 @@ def save2file(line):
 
 ISOTIMEFORMAT='%Y-%m-%d %X'
 cur_time = time.strftime( ISOTIMEFORMAT, time.localtime() )
-
+print("start")
 fd = open(sys.argv[2],'r')
 wfd = open(sys.argv[1],'a')
 rfd = open(sys.argv[1],'r')
-wfd.writelines('\n# flyaudio allow selinux ' + cur_time + '\n')
+wfd.writelines('\n# flyaudio allow selinux ' + cur_time + ' ' + sys.argv[2] + '\n')
 wfd.flush()
 for line in open(sys.argv[2]):  
     line = fd.readline()
     if line.find('avc:') != -1:
 	if line.find('denied') != -1:
-		save2file(line)
+		if line.find('scontext=') != -1:
+			if line.find('tcontext=') != -1:
+				if line.find('tclass=') != -1:
+					save2file(line)
 rfd.close()
 wfd.close()
 fd.close()
+print("end")
 
