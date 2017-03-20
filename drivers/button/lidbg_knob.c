@@ -231,7 +231,7 @@ static void left_work_knob_fn(struct work_struct *work)
 	    kfifo_in(&left_knob_data_fifo, &left_knob_data, 1);
 	    spin_unlock(&pfly_KeyEncoderInfo->left_fifo_lock);
 		wake_up_interruptible(&pfly_KeyEncoderInfo->left_wait_queue);
-		lidbg("left_knob_data = 0x%x\n", left_knob_data);
+		pr_debug("left_knob_data = 0x%x\n", left_knob_data);
 	}
 
     //complete(&origin_completion);
@@ -273,7 +273,7 @@ static void right_work_knob_fn(struct work_struct *work)
 	    kfifo_in(&right_knob_data_fifo, &right_knob_data, 1);
 	    spin_unlock(&pfly_KeyEncoderInfo->right_fifo_lock);
 		wake_up_interruptible(&pfly_KeyEncoderInfo->right_wait_queue);
-		lidbg("right_knob_data = 0x%x\n", right_knob_data);
+		pr_debug("right_knob_data = 0x%x\n", right_knob_data);
 	}
 	return;
 }

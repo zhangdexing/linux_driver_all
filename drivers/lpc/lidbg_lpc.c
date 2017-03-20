@@ -260,7 +260,7 @@ static void LPCdealReadFromMCUAll(BYTE *p, UINT length)
 
 static void LPCDataEnqueue(BYTE *buff, UINT length)
 {
-	lidbg("buffFromMCU OK!%d\n",buff[0]);
+	pr_debug("buffFromMCU OK!%d\n",buff[0]);
 	spin_lock(&notify_fifo_lock);
 	if(kfifo_is_full(&notify_data_fifo))
 	{

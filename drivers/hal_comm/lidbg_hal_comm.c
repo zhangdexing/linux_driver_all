@@ -178,7 +178,7 @@ short get_buf_fifo(struct kfifo *pkfifo, void *arg, spinlock_t *fifo_lock)
 		printk(KERN_CRIT "fail to output data \n");
 	
 	ret = copy_to_user(arg, buff, len);
-	printk(KERN_CRIT "read fifo length is %d ,context is %s", len,buff);
+	pr_debug("read fifo length is %d ,context is %s", len,buff);
 	return len;
 }
 
@@ -222,7 +222,7 @@ static long hal_comm_ioctl(struct file *filp, unsigned int cmd, unsigned long ar
 	short data_size;
 	tmp_type = _IOCOM_TYPE(cmd);
 	data_size = _IOCOM_SIZE(cmd);
-	printk(KERN_CRIT "kfifo = type : %d ,size : %d ,direction : %d \n",tmp_type , data_size, _IOCOM_DIR(cmd));
+	pr_debug("kfifo = type : %d ,size : %d ,direction : %d \n",tmp_type , data_size, _IOCOM_DIR(cmd));
 	if(_IOCOM_DIR(cmd) == 1){
 		if(!list_empty(klisthead))
 		{
