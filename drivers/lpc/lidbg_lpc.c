@@ -29,7 +29,7 @@ u8 *lpc_data_for_hal;
 
 u8 *notify_fifo_buffer;
 static struct kfifo notify_data_fifo;
-struct semaphore notify_sem;
+spinlock_t notify_fifo_lock;
 wait_queue_head_t wait_queue;
 
 #define LPC_DATA_SIZE_MAX 256
@@ -261,88 +261,16 @@ static void LPCdealReadFromMCUAll(BYTE *p, UINT length)
 static void LPCDataEnqueue(BYTE *buff, UINT length)
 {
 	lidbg("buffFromMCU OK!%d\n",buff[0]);
-#if 0	
-	switch (buff[0])//mode
-    {
-    	case LPCCOMM_SYSTEM_DATA_HEAD:
-			down(&system_notify_sem);
-			if(kfifo_is_full(&system_notify_data_fifo))
-			{
-				u8 temp_reset_data;
-				int tempbyte;
-				//kfifo_reset(&knob_data_fifo);
-				tempbyte = kfifo_out(&system_notify_data_fifo, &temp_reset_data, 1);
-				lidbg("%s:system  kfifo clear!!!!!\n",__func__);
-			}
-			kfifo_in(&system_notify_data_fifo, &(length),  1);
-			kfifo_in(&system_notify_data_fifo, buff,  length);
-			up(&system_notify_sem);
-
-			wake_up_interruptible(&system_wait_queue);
-			break;
-		case LPCCOMM_AUDIO_DATA_HEAD:
-			down(&audio_notify_sem);
-			if(kfifo_is_full(&audio_notify_data_fifo))
-			{
-				u8 temp_reset_data;
-				int tempbyte;
-				//kfifo_reset(&knob_data_fifo);
-				tempbyte = kfifo_out(&audio_notify_data_fifo, &temp_reset_data, 1);
-				lidbg("%s:audio kfifo clear!!!!!\n",__func__);
-			}
-			kfifo_in(&audio_notify_data_fifo, &(length),  1);
-			kfifo_in(&audio_notify_data_fifo, buff,  length);
-			up(&audio_notify_sem);
-
-			wake_up_interruptible(&audio_wait_queue);
-			break;	
-		case LPCCOMM_KEY_DATA_HEAD:
-			down(&key_notify_sem);
-			if(kfifo_is_full(&key_notify_data_fifo))
-			{
-				u8 temp_reset_data;
-				int tempbyte;
-				//kfifo_reset(&knob_data_fifo);
-				tempbyte = kfifo_out(&key_notify_data_fifo, &temp_reset_data, 1);
-				lidbg("%s:key kfifo clear!!!!!\n",__func__);
-			}
-			kfifo_in(&key_notify_data_fifo, &(length),  1);
-			kfifo_in(&key_notify_data_fifo, buff,  length);
-			up(&key_notify_sem);
-
-			wake_up_interruptible(&key_wait_queue);
-		break;
-
-		case LPCCOMM_RADIO_DATA_HEAD:
-			down(&radio_notify_sem);
-			if(kfifo_is_full(&radio_notify_data_fifo))
-			{
-				u8 temp_reset_data;
-				int tempbyte;
-				//kfifo_reset(&knob_data_fifo);
-				tempbyte = kfifo_out(&radio_notify_data_fifo, &temp_reset_data, 1);
-				lidbg("%s:radio kfifo clear!!!!!\n",__func__);
-			}
-			kfifo_in(&radio_notify_data_fifo, &(length),  1);
-			kfifo_in(&radio_notify_data_fifo, buff,  length);
-			up(&radio_notify_sem);
-
-			wake_up_interruptible(&radio_wait_queue);
-		break;
-	}
-#endif
-	down(&notify_sem);
+	spin_lock(&notify_fifo_lock);
 	if(kfifo_is_full(&notify_data_fifo))
 	{
-		u8 temp_reset_data;
-		int tempbyte;
-		//kfifo_reset(&knob_data_fifo);
-		tempbyte = kfifo_out(&notify_data_fifo, &temp_reset_data, 1);
-		lidbg("%s:kfifo clear!!!!!\n",__func__);
+		lidbg("%s:kfifo full!!!!!\n",__func__);
+		spin_unlock(&notify_fifo_lock);
+		return;
 	}
 	kfifo_in(&notify_data_fifo, &(length),  1);
 	kfifo_in(&notify_data_fifo, buff,  length);
-	up(&notify_sem);
+	spin_unlock(&notify_fifo_lock);
 
 	wake_up_interruptible(&wait_queue);
 	return;
@@ -610,10 +538,10 @@ ssize_t  lpc_read(struct file *filp, char __user *buffer, size_t size, loff_t *o
 		read_len = fifo_len;
 */
 	
-	down(&notify_sem);
+	spin_lock(&notify_fifo_lock);
 	ret = kfifo_out(&notify_data_fifo, &length_buf, 1);
 	ret = kfifo_out(&notify_data_fifo, data_buf, length_buf);
-	up(&notify_sem);
+	spin_unlock(&notify_fifo_lock);
 
 	lidbg("%s:lpc_read, length:%d \n",__func__,length_buf);
 
@@ -652,13 +580,13 @@ static unsigned int lpc_poll(struct file *filp, struct poll_table_struct *wait)
     pr_debug("lpc_poll+\n");
 
     poll_wait(filp, &wait_queue, wait);
-    down(&notify_sem);
+    spin_lock(&notify_fifo_lock);
     if(!kfifo_is_empty(&notify_data_fifo))
     {
         mask |= POLLIN | POLLRDNORM;
         pr_debug("lpc  poll have data!!!\n");
     }
-    up(&notify_sem);
+    spin_unlock(&notify_fifo_lock);
     pr_debug("lpc_poll-\n");
 
     return mask;
@@ -728,7 +656,7 @@ static int  lpc_probe(struct platform_device *pdev)
     }
 
 	notify_fifo_buffer = (u8 *)kmalloc(HAL_NOTIFY_FIFO_SIZE , GFP_KERNEL);
-	sema_init(&notify_sem, 1);
+	spin_lock_init(&notify_fifo_lock);
     kfifo_init(&notify_data_fifo, notify_fifo_buffer, HAL_NOTIFY_FIFO_SIZE);
 
 	init_waitqueue_head(&wait_queue);

@@ -39,11 +39,11 @@ struct fly_KeyEncoderInfo
     u8 time_out;
 
     struct work_struct left_encoder_work;
-    struct semaphore left_sem;
+    spinlock_t left_fifo_lock;
     wait_queue_head_t left_wait_queue;
 
 	struct work_struct right_encoder_work;
-	struct semaphore right_sem;
+	spinlock_t right_fifo_lock;
     wait_queue_head_t right_wait_queue;
 };
 
@@ -219,7 +219,7 @@ static void left_work_knob_fn(struct work_struct *work)
     //pfly_KeyEncoderInfo->time_out = GetTickCount();
 	if(left_knob_data > 0)
 	{
-	    down(&pfly_KeyEncoderInfo->left_sem);
+	    spin_lock(&pfly_KeyEncoderInfo->left_fifo_lock);
 	    if(kfifo_is_full(&left_knob_data_fifo))
 	    {
 	        u8 temp_reset_data;
@@ -229,7 +229,7 @@ static void left_work_knob_fn(struct work_struct *work)
 	        lidbg("[left_knob]kfifo_reset!!!!!\n");
 	    }
 	    kfifo_in(&left_knob_data_fifo, &left_knob_data, 1);
-	    up(&pfly_KeyEncoderInfo->left_sem);
+	    spin_unlock(&pfly_KeyEncoderInfo->left_fifo_lock);
 		wake_up_interruptible(&pfly_KeyEncoderInfo->left_wait_queue);
 		lidbg("left_knob_data = 0x%x\n", left_knob_data);
 	}
@@ -261,7 +261,7 @@ static void right_work_knob_fn(struct work_struct *work)
 
 	if(right_knob_data > 0)
 	{
-	    down(&pfly_KeyEncoderInfo->right_sem);
+	    spin_lock(&pfly_KeyEncoderInfo->right_fifo_lock);
 	    if(kfifo_is_full(&right_knob_data_fifo))
 	    {
 	        u8 temp_reset_data;
@@ -271,7 +271,7 @@ static void right_work_knob_fn(struct work_struct *work)
 	        lidbg("[right_knob]kfifo_reset!!!!!\n");
 	    }
 	    kfifo_in(&right_knob_data_fifo, &right_knob_data, 1);
-	    up(&pfly_KeyEncoderInfo->right_sem);
+	    spin_unlock(&pfly_KeyEncoderInfo->right_fifo_lock);
 		wake_up_interruptible(&pfly_KeyEncoderInfo->right_wait_queue);
 		lidbg("right_knob_data = 0x%x\n", right_knob_data);
 	}
@@ -766,12 +766,12 @@ static unsigned int left_knob_poll(struct file *filp, struct poll_table_struct *
     pr_debug("[knob_poll]wait begin\n");
     poll_wait(filp, &pfly_KeyEncoderInfo->left_wait_queue, wait);
     pr_debug("[knob_poll]wait done\n");
-    down(&pfly_KeyEncoderInfo->left_sem);
+    spin_lock(&pfly_KeyEncoderInfo->left_fifo_lock);
     if(!kfifo_is_empty(&left_knob_data_fifo))
     {
         mask |= POLLIN | POLLRDNORM;
     }
-    up(&pfly_KeyEncoderInfo->left_sem);
+    spin_unlock(&pfly_KeyEncoderInfo->left_fifo_lock);
     return mask;
 }
 
@@ -783,12 +783,12 @@ static unsigned int right_knob_poll(struct file *filp, struct poll_table_struct 
     pr_debug("[knob_poll]wait begin\n");
     poll_wait(filp, &pfly_KeyEncoderInfo->right_wait_queue, wait);
     pr_debug("[knob_poll]wait done\n");
-    down(&pfly_KeyEncoderInfo->right_sem);
+    spin_lock(&pfly_KeyEncoderInfo->right_fifo_lock);
     if(!kfifo_is_empty(&right_knob_data_fifo))
     {
         mask |= POLLIN | POLLRDNORM;
     }
-    up(&pfly_KeyEncoderInfo->right_sem);
+    spin_unlock(&pfly_KeyEncoderInfo->right_fifo_lock);
     return mask;
 }
 
@@ -835,9 +835,9 @@ static int  knob_probe(struct platform_device *pdev)
 
     // 2init all the tools
     init_waitqueue_head(&pfly_KeyEncoderInfo->left_wait_queue);
-    sema_init(&pfly_KeyEncoderInfo->left_sem, 1);
+	spin_lock_init(&pfly_KeyEncoderInfo->left_fifo_lock);
 	init_waitqueue_head(&pfly_KeyEncoderInfo->right_wait_queue);
-    sema_init(&pfly_KeyEncoderInfo->right_sem, 1);
+    spin_lock_init(&pfly_KeyEncoderInfo->right_fifo_lock);
 	
     lidbg_chmod("/dev/lidbg_volume_ctl0");
 	lidbg_chmod("/dev/lidbg_tune_ctl0");
@@ -869,11 +869,9 @@ ssize_t left_knob_read (struct file *filp, char __user *buf, size_t count, loff_
         if(wait_event_interruptible(pfly_KeyEncoderInfo->left_wait_queue, !kfifo_is_empty(&left_knob_data_fifo)))
             return -ERESTARTSYS;
     }
-    down(&pfly_KeyEncoderInfo->left_sem);
-
-
+    spin_lock(&pfly_KeyEncoderInfo->left_fifo_lock);
     fifo_len = kfifo_len(&left_knob_data_fifo);
-
+	spin_unlock(&pfly_KeyEncoderInfo->left_fifo_lock);
 
 	if(count < fifo_len)
 		read_len = count;
@@ -896,8 +894,9 @@ ssize_t left_knob_read (struct file *filp, char __user *buf, size_t count, loff_
         read_len = count;
     */
 
+	spin_lock(&pfly_KeyEncoderInfo->left_fifo_lock);
     bytes = kfifo_out(&left_knob_data_fifo, knob_data, read_len);
-    up(&pfly_KeyEncoderInfo->left_sem);
+    spin_unlock(&pfly_KeyEncoderInfo->left_fifo_lock);
 
     if(copy_to_user(buf, knob_data, read_len))
     {
@@ -925,10 +924,10 @@ ssize_t right_knob_read (struct file *filp, char __user *buf, size_t count, loff
         if(wait_event_interruptible(pfly_KeyEncoderInfo->right_wait_queue, !kfifo_is_empty(&right_knob_data_fifo)))
             return -ERESTARTSYS;
     }
-    down(&pfly_KeyEncoderInfo->right_sem);
-
-
+		
+    spin_lock(&pfly_KeyEncoderInfo->right_fifo_lock);
     fifo_len = kfifo_len(&right_knob_data_fifo);
+	spin_unlock(&pfly_KeyEncoderInfo->right_fifo_lock);
 
 	if(count < fifo_len)
 		read_len = count;
@@ -951,8 +950,9 @@ ssize_t right_knob_read (struct file *filp, char __user *buf, size_t count, loff
         read_len = count;
     */
 
+	spin_lock(&pfly_KeyEncoderInfo->right_fifo_lock);
     bytes = kfifo_out(&right_knob_data_fifo, knob_data, read_len);
-    up(&pfly_KeyEncoderInfo->right_sem);
+    spin_unlock(&pfly_KeyEncoderInfo->right_fifo_lock);
 
     if(copy_to_user(buf, knob_data, read_len))
     {

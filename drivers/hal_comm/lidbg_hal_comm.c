@@ -1,6 +1,5 @@
+#include "lidbg.h"
 #include "lidbg_hal_comm.h"
-
-
 struct list_head *klisthead ;
 
 static DEFINE_MUTEX(list_mutex); 
@@ -308,7 +307,7 @@ static int  hal_comm_probe(struct platform_device *pdev)
 {
 	int ret;
 #ifndef FLY_HAL_NEW_COMM
-	lidbg("%s: FLY_HAL_NEW_COMM Disable!\n",__func__);
+	printk(KERN_CRIT "%s: FLY_HAL_NEW_COMM Disable!\n",__func__);
 	return 0;
 #endif
 	klisthead = (struct list_head *)kmalloc(sizeof(struct list_head), GFP_KERNEL);
