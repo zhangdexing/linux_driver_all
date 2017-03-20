@@ -24,6 +24,16 @@ u32 *ad_fifo_buff;
 u8 *lpc_data_for_hal;
 #define LPC_SYSTEM_TYPE 0x00
 
+
+#define HAL_NOTIFY_FIFO_SIZE (1024)
+
+u8 *notify_fifo_buffer;
+static struct kfifo notify_data_fifo;
+struct semaphore notify_sem;
+wait_queue_head_t wait_queue;
+
+#define LPC_DATA_SIZE_MAX 256
+
 static int lpc_resume(struct device *dev);
 static int lpc_suspend(struct device *dev);
 
@@ -248,6 +258,96 @@ static void LPCdealReadFromMCUAll(BYTE *p, UINT length)
 #endif
 }
 
+static void LPCDataEnqueue(BYTE *buff, UINT length)
+{
+	lidbg("buffFromMCU OK!%d\n",buff[0]);
+#if 0	
+	switch (buff[0])//mode
+    {
+    	case LPCCOMM_SYSTEM_DATA_HEAD:
+			down(&system_notify_sem);
+			if(kfifo_is_full(&system_notify_data_fifo))
+			{
+				u8 temp_reset_data;
+				int tempbyte;
+				//kfifo_reset(&knob_data_fifo);
+				tempbyte = kfifo_out(&system_notify_data_fifo, &temp_reset_data, 1);
+				lidbg("%s:system  kfifo clear!!!!!\n",__func__);
+			}
+			kfifo_in(&system_notify_data_fifo, &(length),  1);
+			kfifo_in(&system_notify_data_fifo, buff,  length);
+			up(&system_notify_sem);
+
+			wake_up_interruptible(&system_wait_queue);
+			break;
+		case LPCCOMM_AUDIO_DATA_HEAD:
+			down(&audio_notify_sem);
+			if(kfifo_is_full(&audio_notify_data_fifo))
+			{
+				u8 temp_reset_data;
+				int tempbyte;
+				//kfifo_reset(&knob_data_fifo);
+				tempbyte = kfifo_out(&audio_notify_data_fifo, &temp_reset_data, 1);
+				lidbg("%s:audio kfifo clear!!!!!\n",__func__);
+			}
+			kfifo_in(&audio_notify_data_fifo, &(length),  1);
+			kfifo_in(&audio_notify_data_fifo, buff,  length);
+			up(&audio_notify_sem);
+
+			wake_up_interruptible(&audio_wait_queue);
+			break;	
+		case LPCCOMM_KEY_DATA_HEAD:
+			down(&key_notify_sem);
+			if(kfifo_is_full(&key_notify_data_fifo))
+			{
+				u8 temp_reset_data;
+				int tempbyte;
+				//kfifo_reset(&knob_data_fifo);
+				tempbyte = kfifo_out(&key_notify_data_fifo, &temp_reset_data, 1);
+				lidbg("%s:key kfifo clear!!!!!\n",__func__);
+			}
+			kfifo_in(&key_notify_data_fifo, &(length),  1);
+			kfifo_in(&key_notify_data_fifo, buff,  length);
+			up(&key_notify_sem);
+
+			wake_up_interruptible(&key_wait_queue);
+		break;
+
+		case LPCCOMM_RADIO_DATA_HEAD:
+			down(&radio_notify_sem);
+			if(kfifo_is_full(&radio_notify_data_fifo))
+			{
+				u8 temp_reset_data;
+				int tempbyte;
+				//kfifo_reset(&knob_data_fifo);
+				tempbyte = kfifo_out(&radio_notify_data_fifo, &temp_reset_data, 1);
+				lidbg("%s:radio kfifo clear!!!!!\n",__func__);
+			}
+			kfifo_in(&radio_notify_data_fifo, &(length),  1);
+			kfifo_in(&radio_notify_data_fifo, buff,  length);
+			up(&radio_notify_sem);
+
+			wake_up_interruptible(&radio_wait_queue);
+		break;
+	}
+#endif
+	down(&notify_sem);
+	if(kfifo_is_full(&notify_data_fifo))
+	{
+		u8 temp_reset_data;
+		int tempbyte;
+		//kfifo_reset(&knob_data_fifo);
+		tempbyte = kfifo_out(&notify_data_fifo, &temp_reset_data, 1);
+		lidbg("%s:kfifo clear!!!!!\n",__func__);
+	}
+	kfifo_in(&notify_data_fifo, &(length),  1);
+	kfifo_in(&notify_data_fifo, buff,  length);
+	up(&notify_sem);
+
+	wake_up_interruptible(&wait_queue);
+	return;
+}
+
 static BOOL readFromMCUProcessor(BYTE *p, UINT length)
 {
     UINT i;
@@ -295,6 +395,7 @@ static BOOL readFromMCUProcessor(BYTE *p, UINT length)
                 if (pGlobalHardwareInfo->buffFromMCUCRC == p[i])
                 {
                     LPCdealReadFromMCUAll(pGlobalHardwareInfo->buffFromMCU, pGlobalHardwareInfo->buffFromMCUFrameLengthMax - 1);
+                    LPCDataEnqueue(pGlobalHardwareInfo->buffFromMCU, pGlobalHardwareInfo->buffFromMCUFrameLength);
                 }
                 else
                 {
@@ -470,7 +571,6 @@ void lpc_linux_sync(bool print, int mint, char *extra_info)
 }
 
 
-
 int lpc_open(struct inode *inode, struct file *filp)
 {
     DUMP_FUN;
@@ -486,61 +586,79 @@ int lpc_close(struct inode *inode, struct file *filp)
 
 ssize_t  lpc_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
 {
-    struct lpc_device *dev = filp->private_data;
-    int bytes;
-    int read_len, fifo_len;
-    down(&dev->sem);
-    fifo_len = kfifo_len(&lpc_data_fifo);
+    //struct lpc_device *dev = filp->private_data;
+    //int bytes;
+    //int read_len;//, fifo_len;
+	unsigned char length_buf;
+	int ret;
+	u8 data_buf[LPC_DATA_SIZE_MAX];
 
-    if(fifo_len < size)
-        read_len = fifo_len;
-    else
-        read_len = size;
-	
-    pr_debug("lpc_read:read_len=%d\n",read_len);
-    bytes = kfifo_out(&lpc_data_fifo, lpc_data_for_hal, read_len);
-    up(&dev->sem);
-    if (copy_to_user(buffer, lpc_data_for_hal, read_len))
+	if(kfifo_is_empty(&notify_data_fifo))
     {
-        lidbg("copy_to_user ERR\n");
+        if(wait_event_interruptible(wait_queue, !kfifo_is_empty(&notify_data_fifo)))
+            return -ERESTARTSYS;
     }
+/*
+	fifo_len = kfifo_len(&notify_data_fifo);
 
-    return read_len;
+	if(size < fifo_len)
+	{
+		lidbg("%s:buf too small![%d] \n",__func__,size);
+		return -1;
+	}
+    else
+		read_len = fifo_len;
+*/
+	
+	down(&notify_sem);
+	ret = kfifo_out(&notify_data_fifo, &length_buf, 1);
+	ret = kfifo_out(&notify_data_fifo, data_buf, length_buf);
+	up(&notify_sem);
+
+	lidbg("%s:lpc_read, length:%d \n",__func__,length_buf);
+
+	if(copy_to_user(buffer, data_buf, length_buf))
+     {
+         lidbg("%s:copy_to_user ERR\n",__func__);
+     }
+
+    return length_buf;
 }
 static ssize_t lpc_write(struct file *filp, const char __user *buf,
                          size_t size, loff_t *ppos)
 {
-    int write_cnt;
     char *mem = kzalloc(size, GFP_KERNEL);
     if (!mem)
     {
         LIDBG_ERR("kzalloc \n");
         return false;
     }
-
-    if(copy_from_user(mem, buf, size))
+		
+	if(copy_from_user(mem, buf, size))
     {
         lidbg("copy_from_user ERR\n");
     }
+	
+	LPCCombinDataStream(mem, size);//Pack and send
+	pr_debug("write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n",mem[0],mem[1],mem[2],mem[3],mem[4],mem[5]);
 
-    write_cnt = SOC_I2C_Send(LPC_I2_ID, MCU_ADDR, mem, size);
     kfree(mem);
-    return write_cnt;
+    return size;
 }
 static unsigned int lpc_poll(struct file *filp, struct poll_table_struct *wait)
 {
     unsigned int mask = 0;
-    struct lpc_device *dev = filp->private_data;
+    //struct lpc_device *dev = filp->private_data;
     pr_debug("lpc_poll+\n");
 
-    poll_wait(filp, &dev->queue, wait);
-    down(&dev->sem);
-    if(!kfifo_is_empty(&lpc_data_fifo))
+    poll_wait(filp, &wait_queue, wait);
+    down(&notify_sem);
+    if(!kfifo_is_empty(&notify_data_fifo))
     {
         mask |= POLLIN | POLLRDNORM;
         pr_debug("lpc  poll have data!!!\n");
     }
-    up(&dev->sem);
+    up(&notify_sem);
     pr_debug("lpc_poll-\n");
 
     return mask;
@@ -609,6 +727,11 @@ static int  lpc_probe(struct platform_device *pdev)
         return 0;
     }
 
+	notify_fifo_buffer = (u8 *)kmalloc(HAL_NOTIFY_FIFO_SIZE , GFP_KERNEL);
+	sema_init(&notify_sem, 1);
+    kfifo_init(&notify_data_fifo, notify_fifo_buffer, HAL_NOTIFY_FIFO_SIZE);
+
+	init_waitqueue_head(&wait_queue);
 #ifdef SOC_mt3360
     return 0;
 #endif
@@ -628,13 +751,16 @@ static int  lpc_probe(struct platform_device *pdev)
     init_waitqueue_head(&dev->queue);
     kfifo_init(&lpc_data_fifo, fifo_buffer, FIFO_SIZE);
     kfifo_init(&lpc_ad_fifo, ad_fifo_buff, AD_FIFO_SIZE);
-    lidbg_new_cdev(&lpc_fops, "fly_lpc0");
+    lidbg_new_cdev(&lpc_fops, "lidbg_lpc_comm0");
 
+#if 0
     if((!g_var.recovery_mode && g_var.is_fly) || g_hw.lpc_disable) //origin system and fly mode when lpc_ping_en enable,lpc driver will go on;
     {
         lidbg("lpc_init do nothing.disable,[%d,%d,%d,%d]\n", g_var.is_fly, lpc_ping_en, g_var.recovery_mode, fs_is_file_exist(FLY_HAL_FILE));
         return 0;
     }
+#endif 
+
 #if defined(PLATFORM_msm8226) || defined(PLATFORM_ID_4) || defined(PLATFORM_ID_7)
 	  if(g_var.recovery_mode)
 	 		return 0;

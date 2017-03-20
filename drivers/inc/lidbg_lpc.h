@@ -149,6 +149,21 @@
 
 #endif
 
+#define LPCCOMM_SYSTEM_IOC_MAGIC  	 	'S'
+#define LPCCOMM_AUDIO_IOC_MAGIC  			'A'
+#define LPCCOMM_KEY_IOC_MAGIC  				'K'
+#define LPCCOMM_RADIO_IOC_MAGIC  			'R'
+
+#define LPCCOMM_SYSTEM_DATA_HEAD  	 	0x00
+#define LPCCOMM_AUDIO_DATA_HEAD  			0x10
+#define LPCCOMM_KEY_DATA_HEAD  				0x05
+#define LPCCOMM_RADIO_DATA_HEAD  			0x11
+
+typedef enum {
+ NR_LPC_SEND,
+ NR_LPC_RECV
+}lpc_direct_t;
+
 #define LPC_PRINT(x,y,z)  do{lpc_linux_sync(x,y,z);}while(0)
 void lpc_linux_sync(bool print, int mint, char *extra_info);
 
