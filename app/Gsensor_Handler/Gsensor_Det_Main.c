@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 	char isDebug_String[PROPERTY_VALUE_MAX];
 	int fd = 0,fd_txt = 0;
   	int ret;
-	struct acceleration_info accel;
+	struct acceleration_info accel, old_accel;
 	double rad;
 	double degree;
 	char logLine[200];
@@ -136,6 +136,20 @@ open_dev:
 					write(fd_txt,logLine, strlen(logLine));
 				continue;
 			}
+			else if((old_accel.x == accel.x) && (old_accel.y == accel.y) && (old_accel.z == accel.z))
+			{
+				sprintf(logLine , "Duplicate Data:%d,%d,%d\n",accel.x,accel.y,accel.z);
+				lidbg(logLine);
+				if(isDebug)
+					write(fd_txt,logLine, strlen(logLine));
+				usleep(500*1000);
+				continue;
+			}
+
+			/*Save previous data*/
+			old_accel.x = accel.x;
+			old_accel.y = accel.y;
+			old_accel.z = accel.z;
 
 			/*Three axis threshold: two times each crash warning*/
 			/*Flat Ground No Move HYUNDAI:100,280,900*/
