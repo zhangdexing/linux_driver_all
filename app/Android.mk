@@ -1,3 +1,4 @@
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,lidbg_uevent_cold_boot)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,flydecode_1)
 ifeq ($(DBG_VENDOR),VENDOR_QCOM)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,getQcomBand)

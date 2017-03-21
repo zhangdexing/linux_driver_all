@@ -554,6 +554,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#126--cp logcat kmsg to Udisk \n");
             fs_mem_log("*158#127--grantWhiteListPermissions \n");
             fs_mem_log("*158#128--trigger conf check \n");
+            fs_mem_log("*158#129--call lidbg_uevent_cold_boot \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1565,7 +1566,11 @@ void parse_cmd(char *pt)
 		  lidbg_shell_cmd("echo conf_check:/storage/udisk > /dev/lidbg_misc0");
 		  lidbg_domineering_ack();
 		}
-
+        else if (!strncmp(argv[1], "*158#129", 8))
+		{
+		  lidbg("*158#129--call lidbg_uevent_cold_boot \n");
+		  lidbg_shell_cmd("/flysystem/lib/out/lidbg_uevent_cold_boot &");
+		}
 
     }
     else if(!strcmp(argv[0], "flyaudio.code.disable") )
