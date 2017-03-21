@@ -26,7 +26,7 @@ export CONFIG_HAL_USB_CAMERA_PREVIEW=y
         export CONFIG_HAL_VOLD_8x26_6_0=y
 	export CONFIG_HAL_BOOTANIMATION_6=y;;
    17)
-        export CONFIG_HAL_VOLD_8996_6_0_origin=y;;
+        export CONFIG_HAL_VOLD_8x26_6_0=y;;
    22)
         export CONFIG_HAL_VOLD_8x26_7_0=y
 	export CONFIG_HAL_BOOTANIMATION_7=y

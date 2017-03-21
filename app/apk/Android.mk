@@ -1,16 +1,5 @@
 LOCAL_PATH := $(call my-dir)
 
-
-ifeq ($(CONFIG_HAL_VOLD_8996_6_0_origin),y)
-include $(CLEAR_VARS)
-LOCAL_MODULE := vold
-LOCAL_SRC_FILES := 8996_60_vold
-LOCAL_MODULE_CLASS := bin
-LOCAL_MODULE_TAGS := optional debug eng tests samples
-LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
-include $(BUILD_PREBUILT)
-endif
-
 include $(CLEAR_VARS)
 LOCAL_MODULE := pp_calib_data_Israel.bin
 LOCAL_SRC_FILES := pp_calib_data_Israel.bin
