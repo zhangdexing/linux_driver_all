@@ -161,6 +161,8 @@ static int thread_usb_hub_check(void *data)
 	    {
 	       lidbg("thread_usb_hub_check success\n");
 	    }
+	    msleep(6000);
+	    lidbg_shell_cmd("echo appcmd *158#129 > /dev/lidbg_drivers_dbg0");
      }
     return 1;
 }
