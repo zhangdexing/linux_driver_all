@@ -154,8 +154,12 @@ int thread_format_udisk(void *data)
 int thread_trigge_udisk_uevent(void *data)
 {
     lidbg_shell_cmd("echo remove > /sys/block/sda/uevent");
+    lidbg_shell_cmd("echo remove > /sys/block/mmcblk0/uevent");
+    lidbg_shell_cmd("echo remove > /sys/block/mmcblk1/uevent");
     ssleep(6);
     lidbg_shell_cmd("echo add > /sys/block/sda/uevent");
+    lidbg_shell_cmd("echo add > /sys/block/mmcblk0/uevent");
+    lidbg_shell_cmd("echo add > /sys/block/mmcblk1/uevent");
     LIDBG_WARN(".out");
     return 0;
 }
