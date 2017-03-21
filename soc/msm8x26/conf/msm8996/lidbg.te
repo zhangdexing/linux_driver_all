@@ -1427,3 +1427,110 @@ allow platform_app thermal-engine:file {open};
 allow untrusted_app usb_device:dir {read};
 allow untrusted_app usb_device:dir {open};
 allow untrusted_app device:chr_file {write open};
+
+# flyaudio allow selinux 2017-03-20 14:30:52 /dev/shm/2017-03-18_17-13-08
+allow untrusted_app rootfs:dir {create};
+allow mediaserver system_app:dir {search};
+allow mediaserver system_app:file {read};
+allow mediaserver system_app:file {open};
+
+# flyaudio allow selinux 2017-03-20 15:37:12 /dev/shm/Untitled Document
+allow lidbg_load vold_prop:property_service {set};
+allow init wcnss_service:process {signal};
+
+# flyaudio allow selinux 2017-03-20 17:27:37 /dev/shm/卡动态logo调试信息/AutoSave_COM10(USB).txt
+allow kernel sysfs_devices_system_cpu:file {write};
+
+# flyaudio allow selinux 2017-03-20 17:43:22 /dev/shm/ttyUSB1.txt
+allow init system_file:dir {create};
+allow init lidbguevent_device:chr_file {getattr};
+allow init lidbguevent_device:chr_file {execute};
+allow init lidbguevent_device:chr_file {write};
+allow kernel device:file {open};
+allow init dbgmsg_device:chr_file {append};
+allow recovery keystore_data_file:dir {getattr};
+allow recovery keystore_data_file:dir {read};
+allow recovery keystore_data_file:dir {open};
+allow recovery keystore_data_file:dir {write};
+allow recovery keystore_data_file:dir {remove_name};
+allow recovery keystore_data_file:dir {rmdir};
+allow recovery keystore_data_file:file {getattr};
+allow recovery keystore_data_file:file {unlink};
+allow recovery wpa_socket:dir {getattr};
+allow recovery wpa_socket:dir {read};
+allow lidbg_load fuse:dir {create};
+allow lidbg_load shell_data_file:dir {write};
+allow lidbg_load shell_data_file:dir {add_name};
+allow lidbg_load shell_data_file:file {create};
+allow lidbg_load su:dir {search};
+allow lidbg_load su:file {read};
+allow lidbg_load su:file {open};
+allow lidbg_load su:file {getattr};
+allow lidbg_load su:dir {getattr};
+allow lidbg_load su:dir {read};
+allow lidbg_load su:dir {open};
+allow system_app log_device:file {read append};
+allow system_app log_device:file {open};
+allow untrusted_app persist_file:dir {getattr};
+allow untrusted_app tombstone_data_file:dir {getattr};
+allow lidbg_load procrank_exec:file {getattr};
+allow lidbg_load procrank_exec:file {execute};
+allow lidbg_load procrank_exec:file {read open};
+allow lidbg_load procrank_exec:file {execute_no_trans};
+allow lidbg_load lidbg_load:capability {sys_ptrace};
+allow lidbg_load system_app:file {getattr};
+allow lidbg_load dpmservice_app:file {getattr};
+allow lidbg_load radio:file {getattr};
+allow lidbg_load qtitetherservice_app:file {getattr};
+allow lidbg_load dumpstate:file {getattr};
+allow lidbg_load perfd:file {getattr};
+allow lidbg_load tombstone_data_file:dir {read};
+allow lidbg_load tombstone_data_file:dir {open};
+allow lidbg_load tombstone_data_file:dir {getattr};
+allow lidbg_load tombstone_data_file:file {getattr};
+allow lidbg_load tombstone_data_file:file {read};
+allow lidbg_load tombstone_data_file:file {open};
+
+# flyaudio allow selinux 2017-03-21 14:40:43 /dev/shm/20170321-测试包-flyupdate-G9II-alpha-20170320_1226.fup/EX文件浏览器无响应 AutoSave_COM10(USB).txt
+allow lidbg_load qti_init_shell:dir {getattr};
+allow lidbg_load qti_init_shell:dir {search};
+allow lidbg_load qti_init_shell:file {read};
+allow lidbg_load qti_init_shell:file {open};
+allow lidbg_load qti_init_shell:dir {read};
+allow lidbg_load qti_init_shell:dir {open};
+allow lidbg_load su:file {read open};
+
+# flyaudio allow selinux 2017-03-21 14:41:16 /dev/shm/20170321-测试包-flyupdate-G9II-alpha-20170320_1226.fup/sd卡无法识别 AutoSave_COM20(USB).txt
+allow platform_app thermal-engine:file {getattr};
+allow platform_app adbd:file {read};
+allow platform_app adbd:file {open};
+allow platform_app adbd:file {getattr};
+allow platform_app netmgrd:dir {search};
+allow platform_app netmgrd:file {read};
+allow platform_app netmgrd:file {open};
+allow lidbg_load storage_file:dir {getattr};
+allow platform_app blkid_untrusted:dir {getattr};
+allow platform_app blkid_untrusted:dir {search};
+allow platform_app blkid_untrusted:file {read};
+allow platform_app blkid_untrusted:file {open};
+allow platform_app blkid_untrusted:file {getattr};
+allow lidbg_load fsck_untrusted:dir {getattr};
+allow lidbg_load fsck_untrusted:dir {search};
+allow lidbg_load fsck_untrusted:file {read};
+allow lidbg_load fsck_untrusted:file {open};
+allow lidbg_load fsck_untrusted:dir {read};
+allow lidbg_load fsck_untrusted:dir {open};
+
+# flyaudio allow selinux 2017-03-21 14:43:44 /dev/shm/20170321-测试包-flyupdate-G9II-alpha-20170320_1226.fup/识别不到U盘 AutoSave_COM6(USB).txt
+allow lidbg_load hostapd:dir {getattr};
+allow lidbg_load hostapd:dir {search};
+allow lidbg_load hostapd:file {read};
+allow lidbg_load hostapd:file {open};
+allow lidbg_load hostapd:dir {read};
+allow lidbg_load hostapd:dir {open};
+allow lidbg_load dnsmasq:dir {getattr};
+allow lidbg_load dnsmasq:dir {search};
+allow lidbg_load dnsmasq:file {read};
+allow lidbg_load dnsmasq:file {open};
+allow lidbg_load dnsmasq:dir {read};
+allow lidbg_load dnsmasq:dir {open};
