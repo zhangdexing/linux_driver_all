@@ -681,17 +681,15 @@ static int  lpc_probe(struct platform_device *pdev)
     kfifo_init(&lpc_ad_fifo, ad_fifo_buff, AD_FIFO_SIZE);
     lidbg_new_cdev(&lpc_fops, "lidbg_lpc_comm0");
 
-#if 0
+
+#ifdef FLY_HAL_NEW_COMM
+	 lidbg("def FLY_HAL_NEW_COMM\n");
+#else
     if((!g_var.recovery_mode && g_var.is_fly) || g_hw.lpc_disable) //origin system and fly mode when lpc_ping_en enable,lpc driver will go on;
     {
         lidbg("lpc_init do nothing.disable,[%d,%d,%d,%d]\n", g_var.is_fly, lpc_ping_en, g_var.recovery_mode, fs_is_file_exist(FLY_HAL_FILE));
         return 0;
     }
-#endif 
-
-#ifndef FLY_HAL_NEW_COMM
-	lidbg("%s: FLY_HAL_NEW_COMM Disable!\n",__func__);
-	return 0;
 #endif
 
 #if defined(PLATFORM_msm8226) || defined(PLATFORM_ID_4) || defined(PLATFORM_ID_7)
