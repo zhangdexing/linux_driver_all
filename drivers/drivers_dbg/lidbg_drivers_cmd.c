@@ -1294,6 +1294,7 @@ void parse_cmd(char *pt)
         else if (!strcmp(argv[1], "*158#100"))
         {
             lidbg("dump log for app upload\n");
+            LPC_CMD_LPC_DEBUG_REPORT;	
   	     lidbg_shell_cmd("echo appcmd *158#021 > /dev/lidbg_drivers_dbg0");
 	     dump_sysinfo();
 	     ssleep(3);
