@@ -67,21 +67,8 @@ vold_cflags := -Werror -Wall -Wno-missing-field-initializers -Wno-unused-variabl
 include $(CLEAR_VARS)
 
 LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
-LOCAL_MODULE := libvold
-LOCAL_CLANG := true
-LOCAL_SRC_FILES := $(common_src_files)
-LOCAL_C_INCLUDES := $(common_c_includes)
-LOCAL_SHARED_LIBRARIES := $(common_shared_libraries)
-LOCAL_STATIC_LIBRARIES := $(common_static_libraries)
-LOCAL_MODULE_TAGS := eng tests
-LOCAL_CFLAGS := $(vold_cflags)
-LOCAL_CONLYFLAGS := $(vold_conlyflags)
-
-include $(BUILD_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-
-LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
+LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+include $(DBG_BUILD_PATH)/build_cfg.mk
 LOCAL_MODULE:= vold
 LOCAL_CLANG := true
 LOCAL_SRC_FILES := \
@@ -106,6 +93,7 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 
 LOCAL_ADDITIONAL_DEPENDENCIES := $(LOCAL_PATH)/Android.mk
+LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
 LOCAL_CLANG := true
 LOCAL_SRC_FILES:= vdc.c
 LOCAL_MODULE:= vdc
@@ -126,3 +114,7 @@ LOCAL_CFLAGS := $(vold_cflags)
 LOCAL_CONLYFLAGS := $(vold_conlyflags)
 
 include $(BUILD_EXECUTABLE)
+
+
+
+include $(call all-makefiles-under, $(LOCAL_PATH))

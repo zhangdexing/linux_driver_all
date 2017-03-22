@@ -1,3 +1,8 @@
+
+ifeq ($(CONFIG_HAL_VOLD_8996_vold_60),y)
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,8996_vold_60)
+endif
+
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,lidbg_uevent_cold_boot)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,flydecode_1)
 ifeq ($(DBG_VENDOR),VENDOR_QCOM)
