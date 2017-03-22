@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
     setenv("ANDROID_LOG_TAGS", "*:v", 1);
     android::base::InitLogging(argv, android::base::LogdLogger(android::base::SYSTEM));
 
-    LOG(INFO) << "Vold 3.0 (the awakening) firing up,origin";
+    LOG(INFO) << "Vold 3.0 (the awakening) firing up,origin.sdcard";
 
     LOG(VERBOSE) << "Detected support for:"
             << (android::vold::IsFilesystemSupported("ext4") ? " ext4" : "")
