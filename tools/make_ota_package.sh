@@ -3,7 +3,11 @@ DATE=$(date +%Y%m%d_%H%M)
 VERSION_DATE=$(date +-%Y-%m-%d-%H-%M)
 
 if [ $DBG_PLATFORM = msm8909 ];then
-	BUILD_TYPE=G8II-alpha
+	if [ $ANDROID_VERSION = 601 ];then
+		BUILD_TYPE=G8II-6.0-alpha
+	else
+		BUILD_TYPE=G8II-alpha
+	fi
 	SOURCE_OUT_DIR=$RELEASE_REPOSITORY/out/$BUILD_TYPE
 
 elif [ $DBG_PLATFORM = sabresd_6dq ];then
