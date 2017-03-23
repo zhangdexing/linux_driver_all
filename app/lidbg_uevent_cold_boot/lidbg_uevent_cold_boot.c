@@ -21,17 +21,17 @@
 #define  LOG_TAG "uevent_cold_boot:"
 #include <cutils/log.h>
 
-int action = 1;////1:add 2:remove
+int action = 3;////1:add 2:remove 3:remove then add
 
 static void usage(char *cmd)
 {
     fprintf(stderr, "Usage: %s just use it as below two ways\n"
             "1: ./lidbg_uevent_cold_boot (default to /sys/block)\n"
-            "2: ./lidbg_uevent_cold_boot path int (1:add 2:remove)\n",
+            "2: ./lidbg_uevent_cold_boot path int (1:add 2:remove 3:remove then add)\n",
             cmd);
     lidbg(LOG_TAG "Usage: %s just use it as below two ways\n"
           "1: ./lidbg_uevent_cold_boot (default to /sys/block)\n"
-          "2: ./lidbg_uevent_cold_boot path int (1:add 2:remove)\n",
+          "2: ./lidbg_uevent_cold_boot path int (1:add 2:remove 3:remove then add)\n",
           cmd);
 }
 static void do_coldboot(DIR *d, int lvl)
@@ -46,8 +46,13 @@ static void do_coldboot(DIR *d, int lvl)
     {
         if(action == 1)
             write(fd, "add\n", 4);
-        else
+        else if(action == 2)
             write(fd, "remove\n", 7);
+        else
+        {
+            write(fd, "remove\n", 7);
+            write(fd, "add\n", 4);
+        }
         close(fd);
     }
 
@@ -112,7 +117,7 @@ int main(int argc, char **argv)
 
     coldboot(path);
 
-    SLOGE("exit: %s (%s)\n", path, strerror(errno));
-    lidbg(LOG_TAG "exit: %s (%s)\n", path, strerror(errno));
+    SLOGE("success exit: %s (%s)\n", path, strerror(errno));
+    lidbg(LOG_TAG "success exit: %s (%s)\n", path, strerror(errno));
     return -1;
 }
