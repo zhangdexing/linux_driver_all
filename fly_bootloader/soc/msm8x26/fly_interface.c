@@ -10,9 +10,12 @@ BUF_DMA_ALIGN(dt_buf, 4096);
 
 static unsigned char buf[4096]; //Equal to max-supported pagesize
 bool boot_into_flyrecovery=false;
-
 int boot_flyrecovery_from_mmc()
 {
+#if (defined BOOTLOADER_ID_23)
+		boot_into_flyrecovery = true;
+		return 0;
+#else
 #if (defined BOOTLOADER_MSM8909)
 char *cmdline;
 struct boot_img_hdr *hdr = (void*) buf;
@@ -673,6 +676,7 @@ unified_boot:
 		   (void *)hdr->ramdisk_addr, hdr->ramdisk_size);
 
 	return 0;
+#endif
 #endif
 }
 
