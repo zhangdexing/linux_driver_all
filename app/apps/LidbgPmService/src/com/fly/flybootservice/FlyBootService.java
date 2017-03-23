@@ -129,6 +129,7 @@ public class FlyBootService extends Service {
     private boolean AirplaneEnable = false;
     private boolean booleanAccWakedupState = false;
     private static int pmState = -1;
+    private static int pmOldState = -1;
     private int intPlatformId = 0;
     private boolean blSuspendUnairplaneFlag = false;
     private boolean blDozeModeFlag = false;
@@ -272,6 +273,11 @@ public class FlyBootService extends Service {
 							}else if(pmState == FBS_GOTO_SLEEP){
 								LIDBG_PRINT("FlyBootService get pm state: FBS_GOTO_SLEEP\n");
 								LIDBG_PRINT("FlyBootService FBS_GOTO_SLEEP:isSimCardReady:"+isSimCardReady+"/AirplaneEnable:"+AirplaneEnable+"/blSuspendUnairplaneFlag:"+blSuspendUnairplaneFlag+"\n");
+								if(pmOldState==FBS_SCREEN_ON)
+								{
+									LIDBG_PRINT("\n\n\nFlyBootService get pm state: error:gotosleep after screenon.skip\n\n\n");
+									continue;
+								}
 								if((AirplaneEnable) || (!blSuspendUnairplaneFlag)||!isSimCardReady){
 									LIDBG_PRINT("FlyBootService FBS_GOTO_SLEEP enable AirplaneMode\n");
 									enterAirplaneMode();
@@ -344,6 +350,7 @@ public class FlyBootService extends Service {
 								//InternetDisable();
 							}else
 								LIDBG_PRINT("FlyBootService undefined pm state: " + pmState);
+							pmOldState=pmState;
 						}
 					}
             }
