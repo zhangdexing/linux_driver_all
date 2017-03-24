@@ -263,6 +263,7 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 			}
 			Flydvr_MkVRPath(FLYDVR_MEDIA_MMC1);//prevent bug(Force mk)
 			Flydvr_DelLostDir(FLYDVR_MEDIA_MMC1);
+			//PRINT_STORAGE_FILESPACE_USAGE;
             break;
 
         case EVENT_MMC1_REMOVED:
@@ -297,6 +298,7 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 						{
 							lidbg("%s: ======No File left to delete!======\n", __func__);	
 							wdbg("No File left to delete!\n");
+							PRINT_STORAGE_FILESPACE_USAGE;
 							Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_SD_FULL);
 							Flydvr_Set_IsSDMMCFull(FLY_TRUE);
 						}
