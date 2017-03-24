@@ -55,6 +55,7 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 				Flydvr_ISP_IF_LIB_StopFrontVR();
 				Flydvr_ISP_IF_LIB_StopRearVR();
 				Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_DISABLE_CAM_POWER, NULL);
+				CHECK_DEBUG_FILE;
 			}
         break;
 

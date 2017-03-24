@@ -36,6 +36,26 @@ static int z_n_threshold = GSENSOR_Z_N_THRESHOLD;
 static int d_p_threshold = GSENSOR_DEGREE_P_THRESHOLD;
 static int d_n_threshold = GSENSOR_DEGREE_N_THRESHOLD;
 
+#define CHECK_DEBUG_FILE do{\
+	FILE *log_fp = NULL;\
+	int log_fd;\
+	unsigned long filesize = -1;\
+	if(log_fp == NULL)\
+	{\
+		log_fp = fopen(GSENSOR_DEBUG_FILE_PATH, "a+");\
+		chmod(GSENSOR_DEBUG_FILE_PATH,0777);\
+	}\
+	fseek(log_fp, 0L, SEEK_END);\
+    filesize = ftell(log_fp);\
+	if(filesize > 1000000)\
+	{\
+		log_fd = fileno(log_fp);\
+		ftruncate(log_fd,0);\
+   		fseek(log_fp,0L,SEEK_SET);\
+	}\
+	if(log_fp != NULL) fclose(log_fp);\
+}while(0)
+
 int main(int argc, char **argv)
 {
 	int isDebug = 0;
@@ -112,6 +132,7 @@ open_dev:
 				strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
 				sprintf(logLine , "Suspend Gsensor IRQ recv.%s\n",tmpbuf);
 				lidbg(logLine);
+				CHECK_DEBUG_FILE;
 				write(fd_txt,logLine, strlen(logLine));
 				system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
 				sleep(1);
@@ -164,6 +185,7 @@ open_dev:
 			    	strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
 					sprintf(logLine , "X axis Crash Warning.[%d:%d,%d,%d,%f]%s\n",rollOverCnt,accel.x,accel.y,accel.z,degree,tmpbuf);
 					lidbg(logLine);
+					CHECK_DEBUG_FILE;
 					write(fd_txt,logLine, strlen(logLine));
 					ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
 					system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
@@ -180,6 +202,7 @@ open_dev:
 			    	strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
 					sprintf(logLine , "Y axis Crash Warning.[%d:%d,%d,%d,%f]%s\n",rollOverCnt,accel.x,accel.y,accel.z,degree,tmpbuf);
 					lidbg(logLine);
+					CHECK_DEBUG_FILE;
 					write(fd_txt,logLine, strlen(logLine));
 					ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
 					system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
@@ -196,6 +219,7 @@ open_dev:
 			    	strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
 					sprintf(logLine , "Z axis Crash Warning.[%d:%d,%d,%d,%f]%s\n",rollOverCnt,accel.x,accel.y,accel.z,degree,tmpbuf);
 					lidbg(logLine);
+					CHECK_DEBUG_FILE;
 					write(fd_txt,logLine, strlen(logLine));
 					ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
 					system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
@@ -212,6 +236,7 @@ open_dev:
 			    	strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
 					sprintf(logLine , "Roll Over Warning.[%d:%d,%d,%d,%f]%s\n",rollOverCnt,accel.x,accel.y,accel.z,degree,tmpbuf);
 					lidbg(logLine);
+					CHECK_DEBUG_FILE;
 					write(fd_txt,logLine, strlen(logLine));	
 					ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
 					system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");

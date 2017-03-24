@@ -28,6 +28,26 @@
 	if(log_fp > 0) fclose(log_fp);\
 }while(0)
 
+#define CHECK_DEBUG_FILE do{\
+	FILE *log_fp = NULL;\
+	int log_fd;\
+	unsigned long filesize = -1;\
+	if(log_fp == NULL)\
+	{\
+		log_fp = fopen(LOG_PATH, "a+");\
+		chmod(LOG_PATH,0777);\
+	}\
+	fseek(log_fp, 0L, SEEK_END);\
+    filesize = ftell(log_fp);\
+	if(filesize > 1000000)\
+	{\
+		log_fd = fileno(log_fp);\
+		ftruncate(log_fd,0);\
+   		fseek(log_fp,0L,SEEK_SET);\
+	}\
+	if(log_fp != NULL) fclose(log_fp);\
+}while(0)
+
 /// Video Event
 typedef enum _FLY_VIDEO_EVENT {
     FLY_VIDEO_EVENT_NONE = 0,
