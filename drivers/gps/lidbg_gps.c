@@ -8,7 +8,7 @@ LIDBG_DEFINE;
 
 #define GPS_START	_IO('g', 1)
 #define GPS_STOP	_IO('g', 2)
-
+#define TAG	 "gps:"
 
 struct gps_device
 {
@@ -37,6 +37,7 @@ u8 *gps_data_for_hal;
 #define FIFO_SIZE (1024*4)
 u8 *fifo_buffer;
 static struct kfifo gps_data_fifo;
+bool is_kfifo_empty = 1;
 
 
 static char  num_avi_gps_data[2] = { 0 };
@@ -121,22 +122,35 @@ ssize_t gps_read (struct file *filp, char __user *buf, size_t count, loff_t *f_p
 {
     struct gps_device *dev = filp->private_data;
     int read_len, fifo_len, bytes;
-
+wait_for_data:
     if (!started)
     {
         lidbg("[ublox] gps stoped but read\n");
         return -1;
     }
 
-    if(kfifo_is_empty(&gps_data_fifo))
-    {
-        if(wait_event_interruptible(dev->queue, !kfifo_is_empty(&gps_data_fifo)))
-            return -ERESTARTSYS;
-    }
-
+	down(&dev->sem);
+	is_kfifo_empty = kfifo_is_empty(&gps_data_fifo);
+	up(&dev->sem);
+	
+	if(is_kfifo_empty)
+	{
+	    if(wait_event_interruptible(dev->queue, !is_kfifo_empty))
+	    {
+	        return -ERESTARTSYS;
+	    }
+	}
+	
     down(&dev->sem);
     fifo_len = kfifo_len(&gps_data_fifo);
-
+	
+    if(fifo_len == 0)
+    {
+	    lidbg(TAG"kfifo_len = 0\n");
+	    up(&dev->sem);
+	    goto  wait_for_data;
+    }
+	
     if(fifo_len > HAL_BUF_SIZE)
         read_len = HAL_BUF_SIZE;
     else
@@ -336,6 +350,7 @@ int thread_gps_server(void *data)
         {
             if (gps_debug_en)
                 lidbg("ublox:have data need read\n");
+	     is_kfifo_empty = 0;
             wake_up_interruptible(&dev->queue);
         }
         if(gps_debug_en)
