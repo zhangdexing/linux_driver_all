@@ -29,6 +29,24 @@
 #define	FRONT_NODE		"1-1.2"	
 #define	BACK_NODE		"1-1.3"
 
+#define LOG_PATH			"/dev/log/DVRERR.txt"
+
+#define wdbg(msg...) do{\
+	FILE *log_fp = NULL;\
+	time_t time_p;\
+	struct tm *tm_p; \
+	time(&time_p);\
+	tm_p = localtime(&time_p);\
+	if(log_fp <= 0)\
+	{\
+		log_fp = fopen(LOG_PATH, "a+");\
+		chmod(LOG_PATH,0777);\
+	}\
+	fprintf(log_fp,"%d-%02d-%02d__%02d.%02d.%02d: ",(1900+tm_p->tm_year), (1+tm_p->tm_mon), tm_p->tm_mday,tm_p->tm_hour , tm_p->tm_min,tm_p->tm_sec);\
+	fprintf(log_fp,msg);\
+	if(log_fp > 0) fclose(log_fp);\
+}while(0)
+
 static int is_debug = 0;
 static int cam_id = -1;
 
@@ -517,6 +535,7 @@ getuvcdevice:
         if((rc == -1) || (*dev_name == '\0'))
         {
             ALOGE("%s: No UVC node found \n", __func__);
+			wdbg("%s: Camera [%d] No UVC node found\n",__func__, cam_id);
             //goto try_open_again;
             goto out_err;
         }
@@ -1385,6 +1404,7 @@ try_open_again:
             if (-1 == ioctlLoop(camHal->fd, VIDIOC_S_FMT, &v4l2format))
             {
                 ALOGE("%s: VIDIOC_S_FMT failed", __func__);
+				wdbg("%s: Camera [%d] VIDIOC_S_FMT failed\n",__func__, cam_id);
                 return -1;
             }
 						
@@ -1416,7 +1436,10 @@ try_open_again:
             tempBuf.index   = i;
 
             if (-1 == ioctlLoop(camHal->fd, VIDIOC_QBUF, &tempBuf))
+            {
                 ALOGE("%s: VIDIOC_QBUF for %d buffer failed", __func__, i);
+				wdbg("%s: Camera [%d] VIDIOC_QBUF for %d buffer failed\n",__func__, cam_id, i);
+            }
             else
                 ALOGD("%s: VIDIOC_QBUF for %d buffer success", __func__, i);
         }
@@ -1454,6 +1477,7 @@ try_open_again:
         if( mPreviewWindow == NULL)
         {
             ALOGE("%s: mPreviewWindow = NULL", __func__);
+			wdbg("%s: Camera [%d] mPreviewWindow = NULL\n",__func__, cam_id);
             return -1;
         }
         err = mPreviewWindow->dequeue_buffer(mPreviewWindow,
@@ -1493,7 +1517,10 @@ try_open_again:
             }
         }
         else
+        {
             ALOGE("%s: dequeue buf failed \n", __func__);
+			wdbg("%s: Camera [%d] dequeue buf failed\n",__func__, cam_id);
+        }
         if(is_debug)
             ALOGD("%s: X", __func__);
 
@@ -1517,11 +1544,13 @@ try_open_again:
                 {
                 case EAGAIN:
                     ALOGE("%s: EAGAIN error", __func__);
+					wdbg("%s: Camera [%d] EAGAIN error\n",__func__, cam_id);
                     return 1;
                 case EIO:
                     /* Could ignore EIO, see spec. */
                 default:
                     ALOGE("%s: VIDIOC_DQBUF error", __func__);
+					wdbg("%s: Camera [%d] VIDIOC_DQBUF error\n",__func__, cam_id);
                 }
             }
             else
@@ -1739,6 +1768,7 @@ try_open_again:
         if (-1 == ioctlLoop(camHal->fd, VIDIOC_QBUF, &camHal->curCaptureBuf))
         {
             ALOGE("%s: VIDIOC_QBUF failed ", __func__);
+			wdbg("%s: Camera [%d] VIDIOC_QBUF failed\n",__func__, cam_id);
             return 1;
         }
         if(is_debug)
