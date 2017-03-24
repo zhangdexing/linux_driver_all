@@ -17,7 +17,7 @@
 
 #define GSENSOR_DEV_PATH						"/dev/mc3xxx"
 #define GSENSOR_ISDEBUG_PROP_NAME	"persist.gsensor.isDebug"
-#define GSENSOR_DEBUG_FILE_PATH			"/sdcard/gsensor_angle.txt"
+#define GSENSOR_DEBUG_FILE_PATH			"/dev/log/gsensor_angle.txt"
 
 struct acceleration_info {
 	bool isACCON;
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 	char isDebug_String[PROPERTY_VALUE_MAX];
 	int fd = 0,fd_txt = 0;
   	int ret;
-	struct acceleration_info accel, old_accel;
+	static struct acceleration_info accel, old_accel;
 	double rad;
 	double degree;
 	char logLine[200];
@@ -73,7 +73,7 @@ open_dev:
 	isDebug = atoi(isDebug_String);
 	lidbg("========[%s]-> %d =======\n",GSENSOR_ISDEBUG_PROP_NAME,isDebug);
 	
-	if(isDebug)
+	if(1)
 	{
 		fd_txt= open(GSENSOR_DEBUG_FILE_PATH,  O_RDWR|O_CREAT|O_TRUNC, 0777);
 		if (fd < 0) 
@@ -81,6 +81,7 @@ open_dev:
 		    lidbg("open gsensor_angle.txt fail\n");
 			isDebug = 0;
 		}
+		else chmod(GSENSOR_DEBUG_FILE_PATH,0777);
 	}
 
 	/*reverse install*/
@@ -108,7 +109,10 @@ open_dev:
 		{
 			if(accel.isIRQCrash == true)
 			{
-				lidbg("%s:====Suspend Gsensor IRQ recv====\n",__func__);
+				strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
+				sprintf(logLine , "Suspend Gsensor IRQ recv.%s\n",tmpbuf);
+				lidbg(logLine);
+				write(fd_txt,logLine, strlen(logLine));
 				system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
 				sleep(1);
 			}
@@ -121,25 +125,23 @@ open_dev:
 			degree = (rad/3.14)*180;
 			//lidbg("GsensorData:%d,%d,%d====%f",accel.x,accel.y,accel.z,(rad/3.14)*180);
 
-			if(isDebug)
-			{
-				tt=time(NULL);
-			    strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
-			}
-
 			/*useless data*/
 			if(accel.x > 3000 && accel.y > 3000 && accel.z > 4000)
 			{
-				sprintf(logLine , "Error Data:%d,%d,%d\n",accel.x,accel.y,accel.z);
-				lidbg(logLine);
+				tt=time(NULL);
+			    strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
+				sprintf(logLine , "Error Data:%d,%d,%d.%s\n",accel.x,accel.y,accel.z,tmpbuf);
+				//lidbg(logLine);
 				if(isDebug)
 					write(fd_txt,logLine, strlen(logLine));
 				continue;
 			}
 			else if((old_accel.x == accel.x) && (old_accel.y == accel.y) && (old_accel.z == accel.z))
 			{
-				sprintf(logLine , "Duplicate Data:%d,%d,%d\n",accel.x,accel.y,accel.z);
-				lidbg(logLine);
+				tt=time(NULL);
+			    strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
+				sprintf(logLine , "Duplicate Data:%d,%d,%d,%s\n",accel.x,accel.y,accel.z,tmpbuf);
+				//lidbg(logLine);
 				if(isDebug)
 					write(fd_txt,logLine, strlen(logLine));
 				usleep(500*1000);
@@ -158,10 +160,11 @@ open_dev:
 				lidbg("X axis Crash Warning____%d:%d,%d,%d,%f____\n",x_Cnt,accel.x,accel.y,accel.z,degree);
 				if(++x_Cnt >= 2) //filter
 				{
-					sprintf(logLine , "X axis Crash Warning.%s\n",tmpbuf);
+					tt=time(NULL);
+			    	strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
+					sprintf(logLine , "X axis Crash Warning.[%d:%d,%d,%d,%f]%s\n",rollOverCnt,accel.x,accel.y,accel.z,degree,tmpbuf);
 					lidbg(logLine);
-					if(isDebug)
-						write(fd_txt,logLine, strlen(logLine));
+					write(fd_txt,logLine, strlen(logLine));
 					ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
 					system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
 					sleep(1);
@@ -173,10 +176,11 @@ open_dev:
 				lidbg("Y axis Crash Warning____%d:%d,%d,%d,%f____\n",y_Cnt,accel.x,accel.y,accel.z,degree);
 				if(++y_Cnt >= 2) //filter
 				{
-					sprintf(logLine , "Y axis Crash Warning.%s\n",tmpbuf);
+					tt=time(NULL);
+			    	strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
+					sprintf(logLine , "Y axis Crash Warning.[%d:%d,%d,%d,%f]%s\n",rollOverCnt,accel.x,accel.y,accel.z,degree,tmpbuf);
 					lidbg(logLine);
-					if(isDebug)
-						write(fd_txt,logLine, strlen(logLine));
+					write(fd_txt,logLine, strlen(logLine));
 					ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
 					system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
 					sleep(1);
@@ -188,10 +192,11 @@ open_dev:
 				lidbg("Z axis Crash Warning____%d:%d,%d,%d,%f____\n",z_Cnt,accel.x,accel.y,accel.z,degree);
 				if(++z_Cnt >= 2) //filter
 				{
-					sprintf(logLine , "Z axis Crash Warning.%s\n",tmpbuf);
+					tt=time(NULL);
+			    	strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
+					sprintf(logLine , "Z axis Crash Warning.[%d:%d,%d,%d,%f]%s\n",rollOverCnt,accel.x,accel.y,accel.z,degree,tmpbuf);
 					lidbg(logLine);
-					if(isDebug)
-						write(fd_txt,logLine, strlen(logLine));
+					write(fd_txt,logLine, strlen(logLine));
 					ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
 					system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
 					sleep(1);
@@ -203,10 +208,11 @@ open_dev:
 				lidbg("Roll Over Warning____%d:%d,%d,%d,%f____\n",rollOverCnt,accel.x,accel.y,accel.z,degree);
 				if(++rollOverCnt >= 2) //filter
 				{
-					sprintf(logLine , "Roll Over Warning.%s\n",tmpbuf);
+					tt=time(NULL);
+			    	strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
+					sprintf(logLine , "Roll Over Warning.[%d:%d,%d,%d,%f]%s\n",rollOverCnt,accel.x,accel.y,accel.z,degree,tmpbuf);
 					lidbg(logLine);
-					if(isDebug)
-						write(fd_txt,logLine, strlen(logLine));	
+					write(fd_txt,logLine, strlen(logLine));	
 					ioctl(fd,GSENSOR_NOTIFY_CHAIN, 0);
 					system("am broadcast -a com.flyaudio.lidbg.gsensor --ei action 0");
 					sleep(1);
@@ -224,6 +230,8 @@ open_dev:
 			/*LogPrint*/
 			if(isDebug)
 			{
+				tt=time(NULL);
+			    strftime(tmpbuf,80,"%Y-%m-%d,%H:%M:%S\n",localtime(&tt));
 				sprintf(logLine , "%d,%d,%d,%f,%s\n",accel.x,accel.y,accel.z,degree,tmpbuf);
 				write(fd_txt,logLine, strlen(logLine));
 			}
