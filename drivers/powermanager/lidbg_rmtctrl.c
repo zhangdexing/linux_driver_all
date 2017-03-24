@@ -46,6 +46,7 @@ static u32 system_wakeup_ms = 0;
 static u32 repeat_times = 0;
 static u32 system_unormal_wakeup_cnt = 0;
 struct work_struct work_acc_status;
+bool is_kfifo_empty = 1;
 
 bool is_fake_acc_off = 0;
 
@@ -76,6 +77,7 @@ void rmtctrl_fifo_in(void)
 {
 	down(&rmtctrl_sem);
 	kfifo_in(&rmtctrl_state_fifo, (const void *)&atomic_read(&status), 4);
+	is_kfifo_empty = 0;
 	up(&rmtctrl_sem);
 }
 
@@ -120,11 +122,12 @@ static void send_app_status(FLY_SYSTEM_STATUS state)
 }
 static void rmtctrl_timer_func(unsigned long data)
 {
-	if((g_var.acc_flag == FLY_ACC_OFF)&&(is_fake_acc_off == 0)){
-       lidbg(TAG"rmtctrl_timer_func: goto_sleep %ds later...[usb_request:%d,usb_cam_request:%d]\n", GOTO_SLEEP_JIFF,g_var.usb_request,g_var.usb_cam_request);
-	//if(( g_var.usb_request == 0)&&(g_var.usb_cam_request == 0))
+	if((g_var.acc_flag == FLY_ACC_OFF)&&(is_fake_acc_off == 0))
+	{
+       	lidbg(TAG"rmtctrl_timer_func: goto_sleep %ds later...[usb_request:%d,usb_cam_request:%d]\n", GOTO_SLEEP_JIFF,g_var.usb_request,g_var.usb_cam_request);
+		//if(( g_var.usb_request == 0)&&(g_var.usb_cam_request == 0))
        	send_app_status(FLY_GOTO_SLEEP);
-       mod_timer(&rmtctrl_timer,GOTO_SLEEP_TIME_S);
+       	mod_timer(&rmtctrl_timer,GOTO_SLEEP_TIME_S);
 	}
 	else
 	{
@@ -151,13 +154,15 @@ void acc_status_handle(FLY_ACC_STATUS val)
 {
 	static u32 acc_count = 0;
 	lidbg(TAG"acc_status_handle: in val:%d,FLY_ACC_ON:%d\n",val,FLY_ACC_ON);
-	if(val == FLY_ACC_ON){
+	if(val == FLY_ACC_ON)
+	{
 		lidbg(TAG"acc_status_handle: FLY_ACC_ON\n");
 		g_var.acc_flag = FLY_ACC_ON;
+		del_timer(&rmtctrl_timer);
 		wake_lock(&rmtctrl_wakelock);
 		#ifdef SOC_mt35x
-		MSM_DSI83_POWER_ON;
-		dsi83_resume();
+			MSM_DSI83_POWER_ON;
+			dsi83_resume();
 		#endif
 		lidbg(TAG"acc_status_handle: FLY_ACC_ON:acc_count=%d\n",acc_count++);
 
@@ -176,8 +181,11 @@ void acc_status_handle(FLY_ACC_STATUS val)
 		send_app_status(FLY_SCREEN_ON);
 		fs_file_write(DEV_NAME, false, SCREEN_ON, 0, strlen(SCREEN_ON));
 		lidbg(TAG"acc_status_handle: FLY_ACC_ON del rmtctrl timer.\n");
-		del_timer(&rmtctrl_timer);
-	}else{
+
+	}
+	else
+	{
+	
 		lidbg(TAG"acc_status_handle: FLY_ACC_OFF\n");
 		g_var.acc_flag = FLY_ACC_OFF;
 
@@ -295,20 +303,29 @@ ssize_t  rmtctrl_read(struct file *filp, char __user *buffer, size_t size, loff_
 {
 	int bytes;
 	int rmtctrl_state;
+wait_for_data:
+	lidbg(TAG"rmtctrl_read :+\n");
 	
-	lidbg(TAG"rmtctrl_read\n");
-	if(kfifo_is_empty(&rmtctrl_state_fifo))
+	down(&rmtctrl_sem);
+	is_kfifo_empty = kfifo_is_empty(&rmtctrl_state_fifo);
+	up(&rmtctrl_sem);
+	
+	if(is_kfifo_empty)
 	{
-	    if(wait_event_interruptible(wait_queue, !kfifo_is_empty(&rmtctrl_state_fifo)))
+	    if(wait_event_interruptible(wait_queue, !is_kfifo_empty))
+	    {
+	        lidbg(TAG"rmtctrl_read :-\n");
 	        return -ERESTARTSYS;
+	    }
 	}
 
+	down(&rmtctrl_sem);
 	if( kfifo_len(&rmtctrl_state_fifo) == 0)
 	{
-	    lidbg(TAG"copy_to_user ERR\n");
-	    return -1;
+	    lidbg(TAG"kfifo_len = 0\n");
+	    up(&rmtctrl_sem);
+	    goto  wait_for_data;
 	}
-	down(&rmtctrl_sem);
 	bytes = kfifo_out(&rmtctrl_state_fifo, &rmtctrl_state, 4);
 	up(&rmtctrl_sem);
 
@@ -316,6 +333,7 @@ ssize_t  rmtctrl_read(struct file *filp, char __user *buffer, size_t size, loff_
 	{
 		lidbg(TAG"copy_to_user ERR\n");
 	}
+	lidbg(TAG"rmtctrl_read :-%d\n",rmtctrl_state);
 	return size;
 }
 
@@ -534,7 +552,9 @@ static int rmtctrl_pm_resume(struct device *dev)
 	{
 		lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON));
 	}
-	if((g_var.acc_flag == FLY_ACC_OFF)&&(is_fake_acc_off == 0)){
+	
+	if((g_var.acc_flag == FLY_ACC_OFF)&&(is_fake_acc_off == 0))
+	{
 		lidbg(TAG"rmtctrl_pm_resume, acc_io_state is FLY_ACC_OFF, add rmtctrl timer.\n");
 		mod_timer(&rmtctrl_timer,AUTO_SLEEP_TIME_S);
 	}
