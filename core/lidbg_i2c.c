@@ -529,7 +529,7 @@ void mod_i2c_main(int argc, char **argv)
         }
 
 
-#if 1
+#if 0
         lidbg("\nmod_i2c_main:w ");
         lidbg("bus_id %d;\n", bus_id);
         lidbg("dev_addr(7bit)=0x%x(8bit)=0x%x;\n", dev_addr, dev_addr << 1);
