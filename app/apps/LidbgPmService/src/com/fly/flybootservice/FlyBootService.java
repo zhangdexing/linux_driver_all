@@ -89,7 +89,7 @@ import android.bluetooth.BluetoothAdapter;
  * 0'~30'的阶段3.表示关屏关外设，但没到点进入深度休眠 30'~60'的阶段4.表示发出休眠请求到执行快速休眠 60'后,即进入深度休眠
  */
 public class FlyBootService extends Service {
-    private static final String TAG = "boot";
+    private static final String TAG = "bootTAG.";
 
     private static int FBS_SCREEN_OFF = 0;
     private static int FBS_DEVICE_DOWN = 1;
@@ -170,11 +170,11 @@ public class FlyBootService extends Service {
     public void onCreate() {
         super.onCreate();
 	mFlyBootService = this;
-        LIDBG_PRINT("flybootservice onCreate-->start LidbgCommenLogic.2016-12-29 20:12:23\n");
+        LIDBG_PRINT("onCreate-->start LidbgCommenLogic.2016-12-29 20:12:23\n");
         Intent mIntent = new Intent();
         mIntent.setComponent(new ComponentName("com.fly.lidbg.LidbgCommenLogic","com.fly.lidbg.LidbgCommenLogic.LidbgCommenLogicService"));
         this.startService(mIntent);
-        LIDBG_PRINT("flybootservice onCreate-->start H264ToMp4Service\n");
+        LIDBG_PRINT("onCreate-->start H264ToMp4Service\n");
         Intent mIntent2 = new Intent();
         mIntent2.setComponent(new ComponentName("com.flyaudio.lidbg.H264ToMp4","com.flyaudio.lidbg.H264ToMp4.H264ToMp4Service"));
         this.startService(mIntent2);
@@ -188,9 +188,9 @@ public class FlyBootService extends Service {
 	mWhiteList2 = FileReadList("/flysystem/flytheme/config/SuspendAppProtectList.conf","\n");
 	mInternelWhiteList = FileReadList("/flysystem/lib/out/appInternetProtectList.conf","\n");
 	DUMP();
-        LIDBG_PRINT("flybootservice start [getInternelAllAppUids]\n");
+        LIDBG_PRINT("start [getInternelAllAppUids]\n");
 	getInternelAllAppUids(mInternelAllAppListUID);
-        LIDBG_PRINT("flybootservice stop [getInternelAllAppUids]\n");
+        LIDBG_PRINT("stop [getInternelAllAppUids]\n");
         FlyaudioBlackListInternetControl(false);
 	IntentFilter filter = new IntentFilter();
 	filter.addAction("android.intent.action.BOOT_COMPLETED");
@@ -231,7 +231,7 @@ public class FlyBootService extends Service {
 	if (android.os.Build.VERSION.SDK_INT >= 23)//greater then Android_6.0
 		blDozeModeFlag = true;
 
-	LIDBG_PRINT("flybootservice get:\nplatform_id: " + intPlatformId
+	LIDBG_PRINT(" get:\nplatform_id: " + intPlatformId
 			+ "\n SuspendUnairplane: " + blSuspendUnairplaneFlag
 			+ "\n blDozeModeFlag: " + blDozeModeFlag
 			+ "\n Build.VERSION.SDK_INT: " + android.os.Build.VERSION.SDK_INT
@@ -246,7 +246,7 @@ public class FlyBootService extends Service {
 						pmState = readFromFile(pmFile);
 						if(pmState < 0)
 						{
-							LIDBG_PRINT("FlyBootService get pm state failed.\n");
+							LIDBG_PRINT("get pm state failed.\n");
 							delay(500);
 						}
 						else{
@@ -255,36 +255,36 @@ public class FlyBootService extends Service {
 								isWifiEnabled = isWifiEnabled();
 								isSimCardReady = isSimCardReady();
 								AirplaneEnable = SystemProperties.getBoolean("persist.lidbg.AirplaneEnable",false);
-								LIDBG_PRINT("FlyBootService get pm state: FBS_SCREEN_OFF/isSimCardReady:"+isSimCardReady+"\n");
+								LIDBG_PRINT("get pm state: FBS_SCREEN_OFF/isSimCardReady:"+isSimCardReady+"\n");
 								previousACCOffTime = SystemClock.elapsedRealtime();
 								SendBroadcastToService(KeyBootState, keyScreenOFF);
 							}else if(pmState == FBS_DEVICE_DOWN){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_DEVICE_DOWN\n");
+								LIDBG_PRINT("get pm state: FBS_DEVICE_DOWN\n");
 								if((!blDozeModeFlag)&&(AirplaneEnable == false))
 									FlyaudioInternetDisable();
 								SendBroadcastToService(KeyBootState, keyEearlySusupendOFF);
-								LIDBG_PRINT("FlyBootService sent device_down to hal\n");
+								LIDBG_PRINT(" sent device_down to hal\n");
 							}else if(pmState == FBS_FASTBOOT_REQUEST){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_FASTBOOT_REQUEST\n");
+								LIDBG_PRINT(" get pm state: FBS_FASTBOOT_REQUEST\n");
 							}else if(pmState == FBS_ANDROID_DOWN){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_ANDROID_DOWN\n");
+								LIDBG_PRINT(" get pm state: FBS_ANDROID_DOWN\n");
 								SendBroadcastToService(KeyBootState, keyFastSusupendOFF);
 								start_fastboot();
 							}else if(pmState == FBS_GOTO_SLEEP){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_GOTO_SLEEP\n");
-								LIDBG_PRINT("FlyBootService FBS_GOTO_SLEEP:isSimCardReady:"+isSimCardReady+"/AirplaneEnable:"+AirplaneEnable+"/blSuspendUnairplaneFlag:"+blSuspendUnairplaneFlag+"\n");
+								LIDBG_PRINT(" get pm state: FBS_GOTO_SLEEP\n");
+								LIDBG_PRINT(" FBS_GOTO_SLEEP:isSimCardReady:"+isSimCardReady+"/AirplaneEnable:"+AirplaneEnable+"/blSuspendUnairplaneFlag:"+blSuspendUnairplaneFlag+"\n");
 								if(pmOldState==FBS_SCREEN_ON)
 								{
 									LIDBG_PRINT("\n\n\nFlyBootService get pm state: error:gotosleep after screenon.skip\n\n\n");
 									continue;
 								}
 								if((AirplaneEnable) || (!blSuspendUnairplaneFlag)||!isSimCardReady){
-									LIDBG_PRINT("FlyBootService FBS_GOTO_SLEEP enable AirplaneMode\n");
+									LIDBG_PRINT(" FBS_GOTO_SLEEP enable AirplaneMode\n");
 									enterAirplaneMode();
 								}else
-									LIDBG_PRINT("FlyBootService FBS_GOTO_SLEEP disable AirplaneMode\n");
+									LIDBG_PRINT(" FBS_GOTO_SLEEP disable AirplaneMode\n");
 								setBlutetoothState(false);
-								LIDBG_PRINT("FlyBootService isWifiApEnabled:"+isWifiApEnabled+"/isWifiEnabled:"+isWifiEnabled+"\n");
+								LIDBG_PRINT(" isWifiApEnabled:"+isWifiApEnabled+"/isWifiEnabled:"+isWifiEnabled+"\n");
 								if (isWifiApEnabled)
 								{
 									setWifiApState(false);
@@ -298,15 +298,15 @@ public class FlyBootService extends Service {
 								//	KillProcess();
 								system_gotosleep();
 							}else if(pmState == FBS_KERNEL_DOWN){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_KERNEL_DOWN\n");
+								LIDBG_PRINT(" get pm state: FBS_KERNEL_DOWN\n");
 							}else if(pmState == FBS_KERNEL_UP){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_KERNEL_UP\n");
+								LIDBG_PRINT(" get pm state: FBS_KERNEL_UP\n");
 								if(blSuspendUnairplaneFlag){
 									fbPm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 									fbPm.wakeUp(SystemClock.uptimeMillis());
 								}
 							}else if(pmState == FBS_ANDROID_UP){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_ANDROID_UP\n");
+								LIDBG_PRINT(" get pm state: FBS_ANDROID_UP\n");
 								SendBroadcastToService(KeyBootState, keyFastSusupendON);
 								sendBroadcast(new Intent(SYSTEM_RESUME));
 								Intent intentBoot = new Intent(Intent.ACTION_BOOT_COMPLETED);
@@ -314,19 +314,19 @@ public class FlyBootService extends Service {
 								sendBroadcast(intentBoot);
 								system_resume();
 							}else if(pmState == FBS_DEVICE_UP){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_DEVICE_UP\n");
-								LIDBG_PRINT("FlyBootService FBS_DEVICE_UP:isSimCardReady:"+isSimCardReady+"/AirplaneEnable:"+AirplaneEnable+"/blSuspendUnairplaneFlag:"+blSuspendUnairplaneFlag+"\n");
+								LIDBG_PRINT(" get pm state: FBS_DEVICE_UP\n");
+								LIDBG_PRINT(" FBS_DEVICE_UP:isSimCardReady:"+isSimCardReady+"/AirplaneEnable:"+AirplaneEnable+"/blSuspendUnairplaneFlag:"+blSuspendUnairplaneFlag+"\n");
 								if((AirplaneEnable) || (!blSuspendUnairplaneFlag)||!isSimCardReady)
 									restoreAirplaneMode(mFlyBootService);
 								SendBroadcastToService(KeyBootState, keyEearlySusupendON);
 								InternetEnable();
 								if((!blDozeModeFlag)&&(AirplaneEnable == false))
 								{
-									LIDBG_PRINT("FlyBootService postDelayed start\n");
+									LIDBG_PRINT(" postDelayed start\n");
 									new Handler(mFlyBootService.getMainLooper()).postDelayed(new Runnable(){    
 										public void run() {    
 										FlyaudioInternetEnable();
-										LIDBG_PRINT("FlyBootService postDelayed stop\n");
+										LIDBG_PRINT(" postDelayed stop\n");
 										}    
 									}, 5000);  
 								}
@@ -339,17 +339,17 @@ public class FlyBootService extends Service {
 									setWifiState(true);
 								}
 							}else if(pmState == FBS_SCREEN_ON){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_SCREEN_ON\n");
+								LIDBG_PRINT(" get pm state: FBS_SCREEN_ON\n");
 								acquireWakeLock();
 								SendBroadcastToService(KeyBootState, keyScreenOn);
 								
 							}else if(pmState == FBS_SLEEP_TIMEOUT){
-								LIDBG_PRINT("FlyBootService get pm state: FBS_SLEEP_TIMEOUT\n");
+								LIDBG_PRINT(" get pm state: FBS_SLEEP_TIMEOUT\n");
 								if(blSuspendUnairplaneFlag)
 									KillProcess(true);
 								//InternetDisable();
 							}else
-								LIDBG_PRINT("FlyBootService undefined pm state: " + pmState);
+								LIDBG_PRINT(" undefined pm state: " + pmState);
 							pmOldState=pmState;
 						}
 					}
@@ -359,7 +359,7 @@ public class FlyBootService extends Service {
     }
 
 	public void reSetPmState () {
-		LIDBG_PRINT("flybootservice reset PM state.\n");
+		LIDBG_PRINT(" reset PM state.\n");
 		FBS_SCREEN_OFF = 0;
 		FBS_GOTO_SLEEP = 1;
 		FBS_DEVICE_DOWN = 2;
@@ -499,22 +499,22 @@ public class FlyBootService extends Service {
 				handleRebootEvent();
 			break;
 			case 15:
-				LIDBG_PRINT("FlyBootService isWifiApEnabled:"+isWifiApEnabled()+"\n");
+				LIDBG_PRINT(" isWifiApEnabled:"+isWifiApEnabled()+"\n");
 			break;
 			case 16:
-				LIDBG_PRINT("FlyBootService enableWifiApState:"+setWifiApState(true)+"\n");
+				LIDBG_PRINT(" enableWifiApState:"+setWifiApState(true)+"\n");
 			break;
 			case 17:
-				LIDBG_PRINT("FlyBootService disableWifiApState:"+setWifiApState(false)+"\n");
+				LIDBG_PRINT(" disableWifiApState:"+setWifiApState(false)+"\n");
 			break;
 			case 18:
-				LIDBG_PRINT("FlyBootService isWifiEnabled:"+isWifiEnabled()+"\n");
+				LIDBG_PRINT(" isWifiEnabled:"+isWifiEnabled()+"\n");
 			break;
 			case 19:
-				LIDBG_PRINT("FlyBootService enableWiFi:"+setWifiState(true)+"\n");
+				LIDBG_PRINT(" enableWiFi:"+setWifiState(true)+"\n");
 			break;
 			case 20:
-				LIDBG_PRINT("FlyBootService disableWiFi:"+setWifiState(false)+"\n");
+				LIDBG_PRINT(" disableWiFi:"+setWifiState(false)+"\n");
 			break;
 			case 21:
 				forceKillProcess();
@@ -547,7 +547,7 @@ public class FlyBootService extends Service {
 
 	};
 	private void setLocationMode(boolean enable) {
-	    LIDBG_PRINT("FlyBootService setLocationMode:"+enable+"\n");
+	    LIDBG_PRINT(" setLocationMode:"+enable+"\n");
 	    if (enable) {
 	        Settings.Secure.putInt(getContentResolver(), Settings.Secure.LOCATION_MODE,
 	                Settings.Secure.LOCATION_MODE_HIGH_ACCURACY);
@@ -601,7 +601,7 @@ public class FlyBootService extends Service {
     public void onDestroy() {
         // TODO Auto-generated method stub
         super.onDestroy();
-        LIDBG_PRINT("flybootservice destory...\n");
+        LIDBG_PRINT(" destory...\n");
     }
 
     public void acquireWakeLock() {
@@ -678,7 +678,7 @@ public static void releaseBrightWakeLock()
     }
 
     public void SendBroadcastToService(String key, String value) {
-         Log.d(TAG, " PowerBundle :  " + value);
+        LIDBG_PRINT("PowerBundle :  " + value);
         Intent intent = new Intent(action);
         Bundle bundle = new Bundle();
         bundle.putString(key, value);
@@ -711,7 +711,7 @@ public static void releaseBrightWakeLock()
 
 	private void system_resume(){
 		if(firstBootFlag){
-			LIDBG_PRINT("FlyBootService system resume...\n");
+			LIDBG_PRINT(" system resume...\n");
 			enableShowLogo(true);
 			powerOnSystem(mFlyBootService);
 		}
@@ -720,7 +720,7 @@ public static void releaseBrightWakeLock()
     BroadcastReceiver sendBroadcasResult = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-                Log.d(TAG, "Send Broadcast finish in " + SystemClock.elapsedRealtime());
+                LIDBG_PRINT( "Send Broadcast finish in " + SystemClock.elapsedRealtime());
                 LIDBG_PRINT("  Send Broadcast finish\n");
                 sendBroadcastDone = true;
         }
@@ -773,13 +773,13 @@ public static void releaseBrightWakeLock()
         for (ActivityManager.RecentTaskInfo item : list) {
             String packageName = item.baseIntent.getComponent()
                     .getPackageName();
-            Log.d(TAG, "@@" + packageName);
+            Log.e(TAG, "@@" + packageName);
             if (!isFlyApp(packageName)) {
                 SystemProperties.set("fly.third.LastPageName", packageName);
                 SystemProperties.set("fly.third.LastClassName",
                         item.baseIntent.getComponent().getClassName());
-                Log.d(TAG, "LastPageName--->" + packageName);
-                Log.d(TAG, "LastClassName--->"
+                LIDBG_PRINT( "LastPageName--->" + packageName);
+                LIDBG_PRINT( "LastClassName--->"
                         + item.baseIntent.getComponent().getClassName());
                 return;
             }
@@ -801,10 +801,10 @@ public static void releaseBrightWakeLock()
 
 		if (bIsKLDRunning) {
 		SystemProperties.set("fly.gps.run", "1");
-			Log.d(TAG, "-----fly.gps.run----1----");
+			LIDBG_PRINT( "-----fly.gps.run----1----");
 		} else {
 			SystemProperties.set("fly.gps.run", "0");
-			Log.d(TAG, "-----fly.gps.run-----0---");
+			LIDBG_PRINT( "-----fly.gps.run-----0---");
 		}
 		LIDBG_PRINT("powerOffSystem step 4\n");
 		//if(!blSuspendUnairplaneFlag)
@@ -1059,9 +1059,9 @@ public static void releaseBrightWakeLock()
         }
 
     private static void LIDBG_PRINT(String msg) {
-        Log.d(TAG, msg);
+        Log.e(TAG, msg);
 
-        String newmsg = "lidbg_msg: " + msg;
+        String newmsg = TAG + msg;
         File mFile = new File("/dev/lidbg_msg");
         if (mFile.exists()) {
             try {
@@ -1283,7 +1283,7 @@ public static void releaseBrightWakeLock()
 	    {
 	        if(!mBtAdapter.isEnabled())
 	        {
-	            LIDBG_PRINT("FlyBootService bluetooth mBtAdapter.enable():oldstate:" + mBtAdapter.isEnabled() + "\n");
+	            LIDBG_PRINT(" bluetooth mBtAdapter.enable():oldstate:" + mBtAdapter.isEnabled() + "\n");
 	            mBtAdapter.enable();
 	        }
 	    }
@@ -1291,7 +1291,7 @@ public static void releaseBrightWakeLock()
 	    {
 	        if(mBtAdapter.isEnabled())
 	        {
-	            LIDBG_PRINT("FlyBootService bluetooth mBtAdapter.disable():oldstate:" + mBtAdapter.isEnabled()+ "\n");
+	            LIDBG_PRINT(" bluetooth mBtAdapter.disable():oldstate:" + mBtAdapter.isEnabled()+ "\n");
 	            mBtAdapter.disable();
 	        }
 	    }
@@ -1301,7 +1301,7 @@ public static void releaseBrightWakeLock()
 	{
 		String msg = "info:";
 		// TODO Auto-generated method stub
-		LIDBG_PRINT("FlyBootService setWifiApState:"+enable+"\n");
+		LIDBG_PRINT(" setWifiApState:"+enable+"\n");
 		try
 		{
 			WifiManager mWifiManager = (WifiManager) mFlyBootService
@@ -1314,7 +1314,7 @@ public static void releaseBrightWakeLock()
 			Method method2 = mWifiManager.getClass().getMethod(
 					"setWifiApEnabled", WifiConfiguration.class, boolean.class);
 			method2.invoke(mWifiManager, config, enable);
-			LIDBG_PRINT("FlyBootService setWifiApState:exe suncess\n");
+			LIDBG_PRINT(" setWifiApState:exe suncess\n");
 			return true;
 		} catch (NoSuchMethodException e)
 		{
@@ -1333,7 +1333,7 @@ public static void releaseBrightWakeLock()
 			// TODO Auto-generated catch block
 			msg = e.getMessage();
 		}
-		LIDBG_PRINT("FlyBootService setWifiApState:exe error:"+msg+"\n");
+		LIDBG_PRINT(" setWifiApState:exe error:"+msg+"\n");
 		return false;
 	}
 
@@ -1348,7 +1348,7 @@ public static void releaseBrightWakeLock()
 			Method method = mWifiManager.getClass()
 					.getMethod("isWifiApEnabled");
 			method.setAccessible(true);
-			LIDBG_PRINT("FlyBootService isWifiApEnabled:exe suncess\n");
+			LIDBG_PRINT(" isWifiApEnabled:exe suncess\n");
 			return (Boolean) method.invoke(mWifiManager);
 		} catch (NoSuchMethodException e)
 		{
@@ -1357,7 +1357,7 @@ public static void releaseBrightWakeLock()
 		{
 			msg = e.getMessage();
 		}
-		LIDBG_PRINT("FlyBootService isWifiApEnabled:exe error:"+msg+"\n");
+		LIDBG_PRINT(" isWifiApEnabled:exe error:"+msg+"\n");
 		return false;
 	}
 	private boolean isWifiEnabled()
@@ -1373,7 +1373,7 @@ public static void releaseBrightWakeLock()
 		// TODO Auto-generated method stub
 		WifiManager mWifiManager = (WifiManager) mFlyBootService
 				.getSystemService(Context.WIFI_SERVICE);
-		LIDBG_PRINT("FlyBootService setWifiState:"+enable+"\n");
+		LIDBG_PRINT(" setWifiState:"+enable+"\n");
 		if (enable)
 		{
 			return mWifiManager.setWifiEnabled(true);
