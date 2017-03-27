@@ -36,10 +36,10 @@ static void Flydvr_PrintIspLibVersion( void )
 {
 	Flydvr_ISP_IF_LIB_Init();//tmp
 				
-	lidbg("%s: Front:vid = 0x%.4x, pid = 0x%.4x, Manufacturer = %s, VersionMark= %s\n", __func__, 
+	adbg("%s: Front:vid = 0x%.4x, pid = 0x%.4x, Manufacturer = %s, VersionMark= %s\n", __func__, 
 				Flydvr_ISP_IF_LIB_GetFrontLibVer().Vid, Flydvr_ISP_IF_LIB_GetFrontLibVer().Pid, 
 				Flydvr_ISP_IF_LIB_GetFrontLibVer().szMfg, Flydvr_ISP_IF_LIB_GetFrontLibVer().VerMark);
-	lidbg("%s: Rear:vid = 0x%.4x, pid = 0x%.4x, Manufacturer = %s, VersionMark= %s\n", __func__, 
+	adbg("%s: Rear:vid = 0x%.4x, pid = 0x%.4x, Manufacturer = %s, VersionMark= %s\n", __func__, 
 				Flydvr_ISP_IF_LIB_GetRearLibVer().Vid, Flydvr_ISP_IF_LIB_GetRearLibVer().Pid, 
 				Flydvr_ISP_IF_LIB_GetRearLibVer().szMfg, Flydvr_ISP_IF_LIB_GetRearLibVer().VerMark);
 }
@@ -58,8 +58,8 @@ static void Flydvr_SendDriverIspLibVersion( void )
 void Flydvr_PrintBuildTime(void)
 {
 	lidbg("\n");
-	lidbg("------------------------------------------\n");
-    lidbg("Build Time - %s  %s  \n", __DATE__,__TIME__); 
+	adbg("------------------------------------------\n");
+    adbg("Build Time - %s  %s  \n", __DATE__,__TIME__); 
 }
 
 //------------------------------------------------------------------------------

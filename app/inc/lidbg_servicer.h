@@ -156,5 +156,41 @@ struct lidbg_dev_smem
     unsigned long valid_offset;
 };
 
+#define general_wdbg(path,msg...) do{\
+	FILE *log_fp = NULL;\
+	time_t time_p;\
+	struct tm *tm_p; \
+	time(&time_p);\
+	tm_p = localtime(&time_p);\
+	if(log_fp == NULL)\
+	{\
+		log_fp = fopen(path, "a+");\
+		chmod(path,0777);\
+	}\
+	fprintf(log_fp,"%d-%02d-%02d__%02d.%02d.%02d: ",(1900+tm_p->tm_year), (1+tm_p->tm_mon), tm_p->tm_mday,tm_p->tm_hour , tm_p->tm_min,tm_p->tm_sec);\
+	fprintf(log_fp,msg);\
+	if(log_fp != NULL) fclose(log_fp);\
+}while(0)
+
+#define general_check_debug_file(path,uppersize) do{\
+	FILE *log_fp = NULL;\
+	int log_fd;\
+	unsigned long filesize = -1;\
+	if(log_fp == NULL)\
+	{\
+		log_fp = fopen(path, "a+");\
+		chmod(path,0777);\
+	}\
+	fseek(log_fp, 0L, SEEK_END);\
+    filesize = ftell(log_fp);\
+	if(filesize > uppersize)\
+	{\
+		log_fd = fileno(log_fp);\
+		ftruncate(log_fd,0);\
+   		fseek(log_fp,0L,SEEK_SET);\
+	}\
+	if(log_fp != NULL) fclose(log_fp);\
+}while(0)
+
 
 #endif

@@ -17,7 +17,7 @@
 
 #define GSENSOR_DEV_PATH						"/dev/mc3xxx"
 #define GSENSOR_ISDEBUG_PROP_NAME	"persist.gsensor.isDebug"
-#define GSENSOR_DEBUG_FILE_PATH			"/dev/log/gsensor_angle.txt"
+#define GSENSOR_DEBUG_FILE_PATH			"/data/lidbg/GsensorDebug.txt"
 
 struct acceleration_info {
 	bool isACCON;
@@ -36,25 +36,9 @@ static int z_n_threshold = GSENSOR_Z_N_THRESHOLD;
 static int d_p_threshold = GSENSOR_DEGREE_P_THRESHOLD;
 static int d_n_threshold = GSENSOR_DEGREE_N_THRESHOLD;
 
-#define CHECK_DEBUG_FILE do{\
-	FILE *log_fp = NULL;\
-	int log_fd;\
-	unsigned long filesize = -1;\
-	if(log_fp == NULL)\
-	{\
-		log_fp = fopen(GSENSOR_DEBUG_FILE_PATH, "a+");\
-		chmod(GSENSOR_DEBUG_FILE_PATH,0777);\
-	}\
-	fseek(log_fp, 0L, SEEK_END);\
-    filesize = ftell(log_fp);\
-	if(filesize > 1000000)\
-	{\
-		log_fd = fileno(log_fp);\
-		ftruncate(log_fd,0);\
-   		fseek(log_fp,0L,SEEK_SET);\
-	}\
-	if(log_fp != NULL) fclose(log_fp);\
-}while(0)
+#define wdbg(msg...) general_wdbg(GSENSOR_DEBUG_FILE_PATH, msg)
+
+#define CHECK_DEBUG_FILE general_check_debug_file(GSENSOR_DEBUG_FILE_PATH,1000000)
 
 int main(int argc, char **argv)
 {
@@ -95,7 +79,7 @@ open_dev:
 	
 	if(1)
 	{
-		fd_txt= open(GSENSOR_DEBUG_FILE_PATH,  O_RDWR|O_CREAT|O_TRUNC, 0777);
+		fd_txt= open(GSENSOR_DEBUG_FILE_PATH,  O_RDWR|O_CREAT|O_APPEND, 0777);
 		if (fd < 0) 
 		{
 		    lidbg("open gsensor_angle.txt fail\n");

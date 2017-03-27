@@ -29,23 +29,11 @@
 #define	FRONT_NODE		"1-1.2"	
 #define	BACK_NODE		"1-1.3"
 
-#define LOG_PATH			"/dev/log/DVRERR.txt"
+#define LOG_PATH			"/data/lidbg/CameraHALDebug.txt"
 
-#define wdbg(msg...) do{\
-	FILE *log_fp = NULL;\
-	time_t time_p;\
-	struct tm *tm_p; \
-	time(&time_p);\
-	tm_p = localtime(&time_p);\
-	if(log_fp <= 0)\
-	{\
-		log_fp = fopen(LOG_PATH, "a+");\
-		chmod(LOG_PATH,0777);\
-	}\
-	fprintf(log_fp,"%d-%02d-%02d__%02d.%02d.%02d: ",(1900+tm_p->tm_year), (1+tm_p->tm_mon), tm_p->tm_mday,tm_p->tm_hour , tm_p->tm_min,tm_p->tm_sec);\
-	fprintf(log_fp,msg);\
-	if(log_fp > 0) fclose(log_fp);\
-}while(0)
+#define wdbg(msg...) general_wdbg(LOG_PATH, msg)
+
+#define CHECK_DEBUG_FILE general_check_debug_file(LOG_PATH,500000)
 
 static int is_debug = 0;
 static int cam_id = -1;
@@ -527,6 +515,8 @@ failproc:
             rc = -1;
             goto out_err;
         }
+
+		CHECK_DEBUG_FILE;
 getuvcdevice:
         dev_name = camHal->dev_name;
         //rc = get_hub_uvc_device(mid,dev_name);

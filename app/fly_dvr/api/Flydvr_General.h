@@ -1,8 +1,9 @@
 #ifndef _FLYDVR_GENERAL_H_
 #define _FLYDVR_GENERAL_H_
+#include "lidbg_servicer.h"
 
 #define DRIVER_NODE   "/dev/lidbg_flycam0"
-#define LOG_PATH			"/dev/log/DVRERR.txt"
+#define LOG_PATH			"/data/lidbg/DVRDebug.txt"
 
 #ifdef VERBOSE_DEBUG
 #define vdbg lidbg
@@ -12,41 +13,14 @@
 #endif /* DEBUG */
 
 
-#define wdbg(msg...) do{\
-	FILE *log_fp = NULL;\
-	time_t time_p;\
-	struct tm *tm_p; \
-	time(&time_p);\
-	tm_p = localtime(&time_p);\
-	if(log_fp <= 0)\
-	{\
-		log_fp = fopen(LOG_PATH, "a+");\
-		chmod(LOG_PATH,0777);\
-	}\
-	fprintf(log_fp,"%d-%02d-%02d__%02d.%02d.%02d: ",(1900+tm_p->tm_year), (1+tm_p->tm_mon), tm_p->tm_mday,tm_p->tm_hour , tm_p->tm_min,tm_p->tm_sec);\
-	fprintf(log_fp,msg);\
-	if(log_fp > 0) fclose(log_fp);\
+#define wdbg(msg...) general_wdbg(LOG_PATH, msg)
+
+#define adbg(msg...) do{\
+	lidbg(msg);\
+	general_wdbg(LOG_PATH, msg);\
 }while(0)
 
-#define CHECK_DEBUG_FILE do{\
-	FILE *log_fp = NULL;\
-	int log_fd;\
-	unsigned long filesize = -1;\
-	if(log_fp == NULL)\
-	{\
-		log_fp = fopen(LOG_PATH, "a+");\
-		chmod(LOG_PATH,0777);\
-	}\
-	fseek(log_fp, 0L, SEEK_END);\
-    filesize = ftell(log_fp);\
-	if(filesize > 1000000)\
-	{\
-		log_fd = fileno(log_fp);\
-		ftruncate(log_fd,0);\
-   		fseek(log_fp,0L,SEEK_SET);\
-	}\
-	if(log_fp != NULL) fclose(log_fp);\
-}while(0)
+#define CHECK_DEBUG_FILE general_check_debug_file(LOG_PATH,1000000)
 
 /// Video Event
 typedef enum _FLY_VIDEO_EVENT {

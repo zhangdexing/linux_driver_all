@@ -617,8 +617,7 @@ void *thread_cb_media_abnormal_full_restore(void* cb_tmp)
 
 void VRFrontCamConnCB(void)
 {
-    lidbg("%s\n",__func__);
-	wdbg("%s\n",__func__);
+    adbg("%s\n",__func__);
 	Flydvr_SetFrontCameraConnect(FLY_TRUE);
 	Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_FRONT_CAM_DETECT, 0);
 	return;
@@ -626,8 +625,7 @@ void VRFrontCamConnCB(void)
 
 void VRFrontCamDisConnCB(void)
 {
-    lidbg("%s\n",__func__);
-	wdbg("%s\n",__func__);
+    adbg("%s\n",__func__);
 	Flydvr_SetFrontCameraConnect(FLY_FALSE);
 	Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_FRONT_CAM_REMOVED, 0);
 	return;
@@ -635,8 +633,7 @@ void VRFrontCamDisConnCB(void)
 
 void VRRearCamConnCB(void)
 {
-    lidbg("%s\n",__func__);
-	wdbg("%s\n",__func__);
+    adbg("%s\n",__func__);
 	Flydvr_SetRearCameraConnect(FLY_TRUE);
 	Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_REAR_CAM_DETECT, 0);
 	return;
@@ -644,8 +641,7 @@ void VRRearCamConnCB(void)
 
 void VRRearCamDisConnCB(void)
 {
-    lidbg("%s\n",__func__);
-	wdbg("%s\n",__func__);
+    adbg("%s\n",__func__);
 	Flydvr_SetRearCameraConnect(FLY_FALSE);
 	Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_REAR_CAM_REMOVED, 0);
 	return;
@@ -653,8 +649,7 @@ void VRRearCamDisConnCB(void)
 
 void VRMediaConnCB(void)
 {
-    lidbg("%s\n",__func__);
-	wdbg("%s\n",__func__);
+    adbg("%s\n",__func__);
 	Flydvr_SDMMC_SetMountState(SDMMC_IN);
 	Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_CONN_SDCARD, NULL);
 	Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_SD_PLUG_IN);
@@ -664,8 +659,7 @@ void VRMediaConnCB(void)
 
 void VRMediaDisConnCB(void)
 {
-    lidbg("%s\n",__func__);
-	wdbg("%s\n",__func__);
+    adbg("%s\n",__func__);
 	Flydvr_SDMMC_SetMountState(SDMMC_OUT);
 	Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_DISCONN_SDCARD, NULL);
 	Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_SD_PLUG_OUT);
