@@ -678,7 +678,7 @@ public static void releaseBrightWakeLock()
     }
 
     public void SendBroadcastToService(String key, String value) {
-        // Log.d(TAG, " PowerBundle :  " + value);
+         Log.d(TAG, " PowerBundle :  " + value);
         Intent intent = new Intent(action);
         Bundle bundle = new Bundle();
         bundle.putString(key, value);
