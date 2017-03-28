@@ -2,4 +2,4 @@
 include $(DBG_ROOT_PATH)/build/build.mk
 include $(DBG_DRIVERS_PATH)/drivers.mk
 
-obj-y	:=  accel/ drivers_dbg/ gps/ touchscreen/ interface/ misc_devices/ powermanager/ dsi83/ lpc/ saf7741/  flysemdriver/ drivers_loader/ misc/ flyparameter/ ad/ temp/ button/ tef6638/ sound_det/ uvc_cam/ flycam/ i2c_devices_probe/ lowmemorykillprotectlist/ factory_machine_patch/ fm1388/ ymu836/ hal_comm/
+obj-y	:=  accel/ drivers_dbg/ gps/ touchscreen/ interface/ misc_devices/ powermanager/ dsi83/ lpc/ saf7741/  flysemdriver/ drivers_loader/ misc/ flyparameter/ ad/ temp/ button/ tef6638/ sound_det/ uvc_cam/ flycam/ i2c_devices_probe/ lowmemorykillprotectlist/ factory_machine_patch/ fm1388/ hal_comm/
