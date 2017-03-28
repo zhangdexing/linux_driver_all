@@ -22,6 +22,7 @@
 # 20--mt3562 Android_6.0.1 V2 new code
 # 21--mt3561 Android_6.0.1 V2 new code ct
 # 22--msm8996 Android_7.1.1
+# 23--msm8909 Android_6.0.1
 
 ## USERS_ID ###
 # 0--root@192.168.9.222
