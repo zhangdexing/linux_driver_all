@@ -439,23 +439,25 @@ void* thread_media_daemon(void* data)
 				if(lastStatus == FLY_FALSE)  isMMC1Conn = FLY_TRUE;
 				lastStatus = FLY_TRUE;
 
-				/*SD Full*/
+				/*SD Full (Wait for delete)*/
 				if(freeSpace < MMC1_REVERSE_SIZE)
 					isMMC1Full = FLY_TRUE;
 				
-				/*SD Not Full*/
+				/*SD Space Restore*/
 				if(freeSpace > MMC1_REVERSE_SIZE + 200)
 				{
 					if(Flydvr_Get_IsSDMMCFull() == FLY_TRUE)
 					{
-						lidbg("%s: ======SD space restore!======\n", __func__);	
-						wdbg("SD space restore!\n");
-						Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_SD_NOT_FULL);
 						isMediaAbnormalFullRestore = FLY_TRUE;
 						Flydvr_Set_IsSDMMCFull(FLY_FALSE);
 					}
 				}
-				
+
+				/*SD Space less than 100MB && still continue video record*/
+				if(freeSpace < 100 && Flydvr_Get_IsSDMMCFull() == FLY_FALSE)
+				{
+					adbg("Space Warning: continue VR [total:%d, left:%d]\n", __func__,totalspace,freeSpace);	
+				}
 				//sync();
 			}
 		}
@@ -683,7 +685,8 @@ void VRGsensorCrashCB(void)
 
 void VRMediaAbnormalFullRestoreCB(void)
 {
-    lidbg("%s\n",__func__);
+    adbg("%s\n",__func__);
+	Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_SD_NOT_FULL);
 	Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_VRCB_MEDIA_ABNORMAL_FULL_RESTORE, 0);
 	return;
 }

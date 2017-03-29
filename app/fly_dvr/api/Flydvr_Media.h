@@ -53,7 +53,7 @@ typedef enum{
 
 #endif
 
-#define PRINT_STORAGE_FILESPACE_USAGE		system("du -ah "MMC1_STORAGE_PATH" >> /dev/log/DVRERR.txt")
+#define PRINT_STORAGE_FILESPACE_USAGE		system("du -ah "MMC1_STORAGE_PATH" >> "LOG_PATH)
 
 FLY_BOOL Flydvr_GetStorageMediaGeometry(UINT8 byMediaID, UINT8* devtype, UINT32* partition_count,UINT32* totalspace);
 FLY_BOOL Flydvr_GetPathFreeSpace(UINT8 byMediaID, UINT32* freeSpace);
