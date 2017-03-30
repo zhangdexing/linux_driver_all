@@ -25,7 +25,7 @@
 #include <linux/fs.h>
 #include <linux/fiemap.h>
 
-#define LOG_TAG "secdiscard"
+#define LOG_TAG "voldsecdiscard"
 #include "cutils/log.h"
 
 // Deliberately limit ourselves to wiping small files.

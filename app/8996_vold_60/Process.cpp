@@ -27,7 +27,7 @@
 #include <sys/stat.h>
 #include <signal.h>
 
-#define LOG_TAG "ProcessKiller"
+#define LOG_TAG "voldProcessKiller"
 #include <cutils/log.h>
 
 #include "Process.h"
@@ -212,7 +212,7 @@ int Process::killProcessesWithOpenFiles(const char *path, int signal) {
         }
 
         if (signal != 0) {
-            SLOGW("Sending %s to process %d", strsignal(signal), pid);
+            SLOGW("Sending %s to process %d/%s", strsignal(signal), pid,name);
             kill(pid, signal);
             count++;
         }

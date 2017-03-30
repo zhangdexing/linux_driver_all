@@ -16,7 +16,7 @@
 
 #include <errno.h>
 
-#define LOG_TAG "VolumeManager_test"
+#define LOG_TAG "voldVolumeManager_test"
 #include <utils/Log.h>
 #include <openssl/md5.h>
 #include "../VolumeManager.h"

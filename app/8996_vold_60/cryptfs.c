@@ -44,7 +44,7 @@
 #include <time.h>
 #include <math.h>
 #include "cryptfs.h"
-#define LOG_TAG "Cryptfs"
+#define LOG_TAG "voldCryptfs"
 #include "cutils/log.h"
 #include "cutils/properties.h"
 #include "cutils/android_reboot.h"

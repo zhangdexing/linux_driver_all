@@ -22,7 +22,7 @@
 #include "cryptfs.h"
 #include "ext4_crypt_init_extensions.h"
 
-#define LOG_TAG "Ext4Crypt"
+#define LOG_TAG "voldExt4Crypt"
 #include "cutils/log.h"
 #include <cutils/klog.h>
 #include <base/file.h>
