@@ -115,6 +115,25 @@ static int test_mount_hw_encrypted_fs(struct crypt_mnt_ftr* crypt_ftr,
 int cryptfs_changepw_hw_fde(int crypt_type, const char *currentpw,
                                    const char *newpw);
 
+static void convert_key_to_hex_ascii_for_upgrade(const unsigned char *master_key,
+                                     unsigned int keysize, char *master_key_ascii)
+{
+    unsigned int i, a;
+    unsigned char nibble;
+
+    for (i = 0, a = 0; i < keysize; i++, a += 2) {
+        /* For each byte, write out two ascii hex digits */
+        nibble = (master_key[i] >> 4) & 0xf;
+        master_key_ascii[a] = nibble + (nibble > 9 ? 0x57 : 0x30);
+
+        nibble = master_key[i] & 0xf;
+        master_key_ascii[a + 1] = nibble + (nibble > 9 ? 0x57 : 0x30);
+    }
+
+    /* Add the null termination */
+    master_key_ascii[a] = '\0';
+}
+
 static int get_keymaster_hw_fde_passwd(const char* passwd, unsigned char* newpw,
                                   unsigned char* salt,
                                   const struct crypt_mnt_ftr *ftr)
@@ -184,7 +203,7 @@ static int verify_and_update_hw_fde_passwd(char *passwd,
                     SLOGE("System out of memory. Password verification  incomplete");
                     goto out;
                 }
-                convert_key_to_hex_ascii((const unsigned char*)passwd,
+                convert_key_to_hex_ascii_for_upgrade((const unsigned char*)passwd,
                                        strlen(passwd), new_passwd);
             }
             key_index = set_hw_device_encryption_key((const char*)new_passwd,
@@ -1668,7 +1687,7 @@ static int create_encrypted_random_key(char *passwd, unsigned char *master_key, 
 int wait_and_unmount(const char *mountpoint, bool kill)
 {
     int i, err, rc;
-#define WAIT_UNMOUNT_COUNT 200
+#define WAIT_UNMOUNT_COUNT 20
 
     /*  Now umount the tmpfs filesystem */
     for (i=0; i<WAIT_UNMOUNT_COUNT; i++) {
@@ -1685,18 +1704,18 @@ int wait_and_unmount(const char *mountpoint, bool kill)
 
         err = errno;
 
-        /* If allowed, be increasingly aggressive before the last 2 seconds */
+        /* If allowed, be increasingly aggressive before the last two retries */
         if (kill) {
-            if (i == (WAIT_UNMOUNT_COUNT - 30)) {
+            if (i == (WAIT_UNMOUNT_COUNT - 3)) {
                 SLOGW("sending SIGHUP to processes with open files\n");
                 vold_killProcessesWithOpenFiles(mountpoint, SIGTERM);
-            } else if (i == (WAIT_UNMOUNT_COUNT - 20)) {
+            } else if (i == (WAIT_UNMOUNT_COUNT - 2)) {
                 SLOGW("sending SIGKILL to processes with open files\n");
                 vold_killProcessesWithOpenFiles(mountpoint, SIGKILL);
             }
         }
 
-        usleep(100000);
+        sleep(1);
     }
 
     if (i < WAIT_UNMOUNT_COUNT) {
