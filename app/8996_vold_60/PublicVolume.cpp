@@ -195,7 +195,8 @@ status_t PublicVolume::doUnmount() {
         TEMP_FAILURE_RETRY(waitpid(mFusePid, nullptr, 0));
         mFusePid = 0;
     }
-
+    LOG(ERROR) << getId() << "fuvold:doUnmount PublicVolume but first kill:"<<getPath();
+    KillProcessesUsingPath(getPath()); 
     ForceUnmount(kAsecPath);
 
     ForceUnmount(mFuseDefault);

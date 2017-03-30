@@ -178,6 +178,8 @@ status_t PrivateVolume::doMount() {
 }
 
 status_t PrivateVolume::doUnmount() {
+    LOG(ERROR) << getId() << "fuvold:doUnmount PrivateVolume but first kill:"<<getPath();
+    KillProcessesUsingPath(getPath()); 
     ForceUnmount(mPath);
 
     if (TEMP_FAILURE_RETRY(rmdir(mPath.c_str()))) {
