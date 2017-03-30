@@ -53,6 +53,9 @@ import android.content.pm.ResolveInfo;
 
 import java.util.ArrayList;
 
+import android.app.ActivityManager;
+import android.app.ActivityManager.MemoryInfo;
+
 public class LidbgCommenLogicService extends Service
 {
 
@@ -95,8 +98,8 @@ public class LidbgCommenLogicService extends Service
         IntentFilter filter = new IntentFilter();
         filter.addAction("android.intent.action.BOOT_COMPLETED");
         filter.addAction("com.fly.lidbg.LidbgCommenLogic");
-        //filter.addAction(Intent.ACTION_SCREEN_OFF);
-        //filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         filter.addAction(Intent.ACTION_MEDIA_SCANNER_STARTED);
@@ -118,6 +121,18 @@ public class LidbgCommenLogicService extends Service
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
         mStorageManager.registerListener(mStorageEventListener);
     }
+public long getAvailMem()
+{
+	long availMem = -1;
+	ActivityManager.MemoryInfo info = new ActivityManager.MemoryInfo();
+	ActivityManager mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+	mActivityManager.getMemoryInfo(info);
+	if (info != null)
+	{
+		availMem = info.availMem;
+	}
+	return availMem;
+}
     private final StorageEventListener mStorageEventListener = new StorageEventListener()
     {
         @Override
@@ -386,6 +401,11 @@ public class LidbgCommenLogicService extends Service
                     printKernelMsg("ignore grantWhiteListPermissions\n");
                 return;
             }
+            else if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF) || intent.getAction().equals(Intent.ACTION_SCREEN_ON))
+            {
+                printKernelMsg("getAvailMem:"+getAvailMem()/1024/1024);
+                return;
+            }
             else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_ATTACHED) || intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED))
             {
                 //UsbDevice device = (UsbDevice)intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
@@ -492,6 +512,9 @@ public class LidbgCommenLogicService extends Service
             case 10:
                 printKernelMsg("reboot");
                 reboot();
+                break;
+            case 11:
+                printKernelMsg("getAvailMem:"+getAvailMem()/1024/1024);
                 break;
             default:
                 printKernelMsg("unkown:" + action + "\n");
