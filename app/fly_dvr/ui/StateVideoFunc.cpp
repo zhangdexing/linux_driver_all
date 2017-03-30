@@ -279,35 +279,51 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 				UINT8 byMediaID = FLYDVR_MEDIA_MMC1;
 				INT8 minVRFileName[255];
 				INT8 totalPathVRFileName[255];
-				UINT32 filecnt, freeSpace, delFileCnt = 0;
+				UINT32 freeSpace = 0, VRfilecnt = 0, EMfilecnt = 0,delVRFileCnt = 0,delEMFileCnt = 0;
 				do
 				{
-					Flydvr_GetVRFileInfo(byMediaID, minVRFileName, &filecnt);
-					vdbg("%s: ======[remove:%s]======\n", __func__,minVRFileName);	
-					if(filecnt > 0)
+					/*Video record file list: PRIOR:1st*/
+					Flydvr_GetVRFileInfo(byMediaID, minVRFileName, &VRfilecnt);
+					vdbg("%s: ======[VR remove:%s]======\n", __func__,minVRFileName);	
+					if(VRfilecnt > 0)
 					{
 						sprintf(totalPathVRFileName, "%s/%s", MMC1_VR_PATH, minVRFileName);
 						remove(totalPathVRFileName);
-						delFileCnt++;
+						delVRFileCnt++;
 					}
 					else 
 					{
-						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_PAUSE , 0);
-						Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE , 0);
-						if(Flydvr_Get_IsSDMMCFull() == FLY_FALSE)
+						/*Emergency record file list: PRIOR:2nd*/
+						Flydvr_GetEMFileInfo(byMediaID, minVRFileName, &EMfilecnt);
+						vdbg("%s: ======[EM remove:%s]======\n", __func__,minVRFileName);	
+						if(EMfilecnt > 0)
 						{
-							lidbg("%s: ======No File left to delete!======\n", __func__);	
-							wdbg("No File left to delete!\n");
-							PRINT_STORAGE_FILESPACE_USAGE;
-							Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_SD_FULL);
-							Flydvr_Set_IsSDMMCFull(FLY_TRUE);
+							sprintf(totalPathVRFileName, "%s/%s", MMC1_VR_PATH, minVRFileName);
+							remove(totalPathVRFileName);
+							delEMFileCnt++;
 						}
-						break;
+						else
+						{
+							/*No more record file to delete*/
+							Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_PAUSE , 0);
+							Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_PAUSE , 0);
+							if(Flydvr_Get_IsSDMMCFull() == FLY_FALSE)
+							{
+								lidbg("%s: ======No File left to delete!======\n", __func__);	
+								wdbg("No File left to delete!\n");
+								PRINT_STORAGE_FILESPACE_USAGE;
+								Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_SD_FULL);
+								Flydvr_Set_IsSDMMCFull(FLY_TRUE);
+							}
+							break;
+						}
 					}
 					Flydvr_GetPathFreeSpace(byMediaID, &freeSpace);	
 				}while(freeSpace < MMC1_REVERSE_SIZE);
 				
-				lidbg("%s: ======[VRFile:total %d files; %d files has been delete.]======\n", __func__,filecnt,delFileCnt);
+				lidbg("%s: ======[VRFile:total %d files; %d files has been delete.]======\n", __func__,VRfilecnt,delVRFileCnt);
+				if(EMfilecnt > 0) 
+					lidbg("%s: ======[EMFile:total %d files; %d files has been delete.]======\n", __func__,EMfilecnt,delEMFileCnt);
 			}
 			break;
 		case EVENT_GSENSOR_CRASH:

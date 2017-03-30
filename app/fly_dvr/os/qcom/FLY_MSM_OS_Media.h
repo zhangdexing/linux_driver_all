@@ -23,6 +23,7 @@ typedef struct FlyOS_tagDevinfo_T
 int FLY_MSM_OS_GetStorageMediaGeometry(const char* partition_head,FlyOS_tagDevinfo_t* info);
 int FLY_MSM_OS_GetPathFreeSpace(char* path);
 int FLY_MSM_OS_GetVRFileInfo(char* Dir,char* minRecName, unsigned int* filecnt);
+int FLY_MSM_OS_GetEMFileInfo(char* Dir,char* minRecName, unsigned int* filecnt);
 int FLY_MSM_OS_DelDaysFile(char* Dir,int days);
 int FLY_MSM_OS_SetFirstDelProtectFile(char* protectVRFileName);
 int FLY_MSM_OS_SetSecondDelProtectFile(char* protectVRFileName);

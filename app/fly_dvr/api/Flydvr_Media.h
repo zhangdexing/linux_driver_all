@@ -58,6 +58,7 @@ typedef enum{
 FLY_BOOL Flydvr_GetStorageMediaGeometry(UINT8 byMediaID, UINT8* devtype, UINT32* partition_count,UINT32* totalspace);
 FLY_BOOL Flydvr_GetPathFreeSpace(UINT8 byMediaID, UINT32* freeSpace);
 FLY_BOOL Flydvr_GetVRFileInfo(UINT8 byMediaID ,INT8* minVRFileName,UINT32* filecnt);
+FLY_BOOL Flydvr_GetEMFileInfo(UINT8 byMediaID ,INT8* minVRFileName,UINT32* filecnt);
 FLY_BOOL Flydvr_DelDaysFile(UINT8 byMediaID ,UINT32 days);
 SDMMC_STATE Flydvr_SDMMC_GetMountState(void);
 void Flydvr_SDMMC_SetMountState(SDMMC_STATE val);

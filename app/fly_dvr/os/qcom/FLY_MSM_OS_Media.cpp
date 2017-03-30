@@ -9,6 +9,7 @@
 #include "FLY_MSM_OS_Media.h"
 #include "FLY_MSM_OS_Fs.h"
 #include "Flydvr_Common.h"
+#include "Flydvr_General.h"
 
 #define DEVTYPE_DISK 2
 #define DEVTYPE_U    3
@@ -219,11 +220,88 @@ int FLY_MSM_OS_GetVRFileInfo(char* Dir,char* minRecName, unsigned int* filecnt)
 	{  
 	        if(!(ent->d_type & DT_DIR))  
 	        {  
-	                if((strcmp(ent->d_name,".") == 0) || (strcmp(ent->d_name,"..") == 0) || (ent->d_reclen != 48) ) 
+	        		vdbg("VR: ent->d_name:%s====strlen(ent->d_name):%d=====\n", ent->d_name,strlen(ent->d_name)); 
+	                if((strcmp(ent->d_name,".") == 0) || (strcmp(ent->d_name,"..") == 0) || (strlen(ent->d_name) != 26) ) 
 	                        continue;  
 					//if((!strncmp(ent->d_name, "F", 1) && (cam_id == DVR_ID)) ||(!strncmp(ent->d_name, "R", 1) && (cam_id == REARVIEW_ID)) )
 					//{
 					if(strncmp(ent->d_name, "F", 1) && strncmp(ent->d_name, "R", 1))
+							continue;
+
+					if((strcmp(ent->d_name, firstProtectFile) == 0) || (strcmp(ent->d_name, secondProtectFile) == 0))
+					{
+						//lidbg("can't track itself!!%s,%s\n",firstProtectFile,secondProtectFile);
+						continue;
+					}
+						
+						(*filecnt)++;
+		                //lidbg("ent->d_name:%s====ent->d_reclen:%d=====\n", ent->d_name,ent->d_reclen); 
+
+						strcpy(tmpDName, ent->d_name + 1);
+						FLY_MSM_OS_tokenString(tmpDName, "__", date_time_key);
+						//lidbg("date_time_key0:%s====date_time_key1:%s=====", date_time_key[0],date_time_key[2]);	
+						FLY_MSM_OS_tokenString(date_time_key[0], "-", date_key);
+						//lidbg("date_key:%s====%s===%s==", date_key[0],date_key[1],date_key[2]);	
+						FLY_MSM_OS_tokenString(date_time_key[2], ".", time_key);
+						//lidbg("time_key:%s====%s===%s==", time_key[0],time_key[1],time_key[2]);	
+						
+						curTm.tm_year = atoi(date_key[0]) -1900;
+						curTm.tm_mon = atoi(date_key[1]) -1;
+						curTm.tm_mday = atoi(date_key[2]);
+						curTm.tm_hour = atoi(time_key[0]);
+						curTm.tm_min = atoi(time_key[1]);
+						curTm.tm_sec	 = atoi(time_key[2]);	
+						curtimep = mktime(&curTm);
+						
+						#if 0
+						lidbg("prevtimep=======%d========",  prevtimep);
+						lidbg("curtimep=======%d========",  curtimep);
+						lidbg("difftime=======%d========", difftime(curtimep, prevtimep));
+						#endif
+						if((curtimep < prevtimep) || (prevtimep == 0))
+						{
+							prevtimep = curtimep;
+							strcpy(minRecName, ent->d_name);
+							//lidbg("minRecName---->%s\n",minRecName);
+						}
+					//}
+	        }  
+	}
+	closedir(pDir);
+	return 0;
+}
+
+int FLY_MSM_OS_GetEMFileInfo(char* Dir,char* minRecName, unsigned int* filecnt)
+{
+	DIR *pDir ;
+	struct dirent *ent; 
+	int ret;
+	char *date_time_key[5] = {NULL};
+	char *date_key[3] = {NULL};
+	char *time_key[3] = {NULL};
+	int cur_date[3] = {0,0,0};
+	int cur_time[3] = {0,0,0};
+	int min_date[3] = {5000,13,50};
+	int min_time[3] = {13,100,100};
+	char tmpDName[100] = {0};
+	struct tm prevTm,curTm;
+	time_t prevtimep = 0,curtimep;
+	
+	
+	/*find the earliest rec file and del*/
+	*filecnt = 0;
+	pDir=opendir(Dir);  
+	if(pDir == NULL) return -1;
+	while((ent=readdir(pDir))!=NULL)  
+	{  
+	        if(!(ent->d_type & DT_DIR))  
+	        {  
+	        		vdbg("EM:ent->d_name:%s====strlen(ent->d_name):%d=====\n",  ent->d_name,strlen(ent->d_name)); 
+	                if((strcmp(ent->d_name,".") == 0) || (strcmp(ent->d_name,"..") == 0) || (strlen(ent->d_name) != 27) ) 
+	                        continue;  
+					//if((!strncmp(ent->d_name, "F", 1) && (cam_id == DVR_ID)) ||(!strncmp(ent->d_name, "R", 1) && (cam_id == REARVIEW_ID)) )
+					//{
+					if(strncmp(ent->d_name, "EF", 2) && strncmp(ent->d_name, "ER", 2))
 							continue;
 
 					if((strcmp(ent->d_name, firstProtectFile) == 0) || (strcmp(ent->d_name, secondProtectFile) == 0))

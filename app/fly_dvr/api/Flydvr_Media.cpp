@@ -123,6 +123,23 @@ FLY_BOOL Flydvr_GetVRFileInfo(UINT8 byMediaID ,INT8* minVRFileName,UINT32* filec
 	return FLY_TRUE;
 }
 
+FLY_BOOL Flydvr_GetEMFileInfo(UINT8 byMediaID ,INT8* minVRFileName,UINT32* filecnt)
+{
+	INT8 VRPath[255];
+	switch(byMediaID) {
+	    case FLYDVR_MEDIA_MMC0:
+			strcpy(VRPath, MMC0_VR_PATH);
+	        break;
+	    case FLYDVR_MEDIA_MMC1:
+	        strcpy(VRPath, MMC1_VR_PATH);
+	        break;
+	    default:
+	        return FLY_FALSE;
+    }
+	FLY_MSM_OS_GetEMFileInfo(VRPath, minVRFileName, filecnt);
+	return FLY_TRUE;
+}
+
 FLY_BOOL Flydvr_SetFirstDelProtectFile(INT8* protectVRFileName)
 {
 	FLY_MSM_OS_SetFirstDelProtectFile(protectVRFileName);
