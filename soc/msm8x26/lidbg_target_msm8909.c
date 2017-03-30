@@ -142,7 +142,7 @@ struct hw_version_specific g_hw_version_specific[] =
         .i2c_bus_lpc = 3,
         .i2c_bus_pca9634 = 4,
         .ad_val_mcu = 1,
-        .fly_parameter_node = "/dev/block/platform/7824900.sdhci/by-name/flyparameter",
+        .fly_parameter_node = "/dev/block/bootdevice/by-name/flyparameter",
 
         .thermal_ctrl_en = 1,
         // msm8909.dtsi  qcom,sensor-information
