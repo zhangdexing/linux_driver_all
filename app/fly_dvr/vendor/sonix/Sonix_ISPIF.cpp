@@ -835,7 +835,7 @@ void dequeue_to_fp(int count , FILE * rec_fp, bool* isPermitted, camera_q_node* 
 	kbPerSec = totalLength/diffMs;
 	
 	vdbg("(Write Speed: %dMBytes/Sec)\n",kbPerSec);
-	if(kbPerSec < 10)
+	if(kbPerSec < 5)
 		lidbg("%s:Write speed warning![%dMB/s] \n",__func__,kbPerSec);
 	
 	vdbg("%s:X====\n",__func__,count);
@@ -928,7 +928,8 @@ void dequeue_flush(int count , camera_q_node* mhead)
 	                clock_gettime(CLOCK_MONOTONIC, &stop_sp);
 	                diff = (stop_sp.tv_sec * 1000 + stop_sp.tv_nsec / 1000000) - (start_sp.tv_sec * 1000 + start_sp.tv_nsec / 1000000);
 	                FPS = 1000 * loop_count / diff;
-	                lidbg("%s:PRI.%d, FPS.%d,WritePermit.%d,totalFrames.%d,EMHandle.%d\n",
+					if(FPS < 25) // warning
+	                	lidbg("%s:PRI.%d, FPS.%d,WritePermit.%d,totalFrames.%d,EMHandle.%d\n",
 										__func__, threadPriority, FPS, front_hw.iswritePermitted,front_mhead.msize,front_hw.isEMHandling);
 	                loop_count = 0;
 	                clock_gettime(CLOCK_MONOTONIC, &start_sp);
@@ -1237,7 +1238,8 @@ void dequeue_flush(int count , camera_q_node* mhead)
 	                clock_gettime(CLOCK_MONOTONIC, &stop_sp);
 	                diff = (stop_sp.tv_sec * 1000 + stop_sp.tv_nsec / 1000000) - (start_sp.tv_sec * 1000 + start_sp.tv_nsec / 1000000);
 	                FPS = 1000 * loop_count / diff;
-	                lidbg("%s:PRI.%d, FPS.%d,WritePermit.%d,totalFrames.%d,EMHandle.%d\n",
+					if(FPS < 25)// warning
+	               		lidbg("%s:PRI.%d, FPS.%d,WritePermit.%d,totalFrames.%d,EMHandle.%d\n",
 										__func__, threadPriority, FPS, rear_hw.iswritePermitted,rear_mhead.msize,rear_hw.isEMHandling);
 	                loop_count = 0;
 	                clock_gettime(CLOCK_MONOTONIC, &start_sp);

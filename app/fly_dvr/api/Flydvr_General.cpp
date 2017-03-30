@@ -427,7 +427,8 @@ void* thread_media_daemon(void* data)
 		if(Flydvr_GetStorageMediaGeometry(byMediaID, &devtype, &partition_count, &totalspace) == FLY_TRUE)
 		{
 			Flydvr_GetPathFreeSpace(byMediaID, &freeSpace);	
-			lidbg("%s: ======[total:%d, left:%d]======\n", __func__,totalspace,freeSpace);			
+			if(freeSpace < MMC1_REVERSE_SIZE) //warning
+				lidbg("%s: ======[total:%d, left:%d]======\n", __func__,totalspace,freeSpace);			
 			if(Flydvr_CheckVRPath(FLYDVR_MEDIA_MMC1)== FLY_FALSE && freeSpace == 0)
 			{
 				//lidbg("%s: ======VR Path Not Found!Make New One!======\n", __func__);
