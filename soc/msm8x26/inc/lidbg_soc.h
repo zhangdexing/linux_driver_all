@@ -63,6 +63,7 @@
 #define MUC_CONTROL_DSP
 #define MUC_DSP7741
 #define USB_HUB_SUPPORT
+#define FLY_HAL_NEW_COMM
 #endif
 
 #if (defined PLATFORM_msm8909) || (defined PLATFORM_msm8996)
