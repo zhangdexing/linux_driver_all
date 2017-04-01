@@ -2,6 +2,7 @@ sudo chmod 777 /dev/ttyUSB*
 ls /dev/ttyUSB* 
 mv ~/minicom_log ~/minicom_log_$(date '+%y-%m-%d')
 mkdir ~/minicom_log
+nautilus ~/minicom_log
 
 if [ -e "/dev/ttyUSB0"  ]; then
 date > ~/minicom_log/ttyUSB0.txt 
