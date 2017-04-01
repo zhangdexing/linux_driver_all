@@ -256,22 +256,6 @@ int thread_thermal(void *data)
 
     temp_init();
 
-    if(0)//if(g_var.recovery_mode == 1)
-    {
-        int cpu_freq;
-        while(1)
-        {
-            if(g_hw.cpu_freq_recovery_limit != NULL)
-                lidbg_readwrite_file(FREQ_MAX_NODE, NULL, g_hw.cpu_freq_recovery_limit, strlen(g_hw.cpu_freq_recovery_limit));
-            else
-                lidbg(TAG"g_hw.fly_parameter_node == NULL,return\n");
-            set_cpu_governor(0);
-            ssleep(5);
-            cpu_freq = SOC_Get_CpuFreq();
-            cur_temp = soc_temp_get(g_hw.mem_sensor_num);
-            lidbg(TAG"cpufreq=%d,mem_temp=%d\n", cpu_freq, cur_temp);
-        }
-    }
 
     while(is_cpu_temp_enabled)
     {
