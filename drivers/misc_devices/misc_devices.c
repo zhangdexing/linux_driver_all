@@ -597,7 +597,7 @@ static struct file_operations dev_fops =
 
 
 #define UDISK_LOG_PATH 	 LIDBG_LOG_DIR"udisk_stable_test.txt"
-u32 err_cnt = 0,cnt = 0;
+u32 err_cnt = 0, cnt = 0, retry_cnt = 0;
 bool is_udisk_file_exist(void)
 {
     if(g_var.usb_status == true)
@@ -605,17 +605,26 @@ bool is_udisk_file_exist(void)
         char shell_cmd[128] = {0};
         if(!fs_is_file_exist(USB_MOUNT_POINT"/udisk_stable_test"))
         {
-            err_cnt++;
-            sprintf(shell_cmd, "udisk_not_found:%d/%d\n", err_cnt, cnt);
-            lidbg_toast_show("udisk_stable_test:", shell_cmd);
-            fs_file_write2(UDISK_LOG_PATH, shell_cmd);
+            if(retry_cnt ==1)
+            {
+                err_cnt++;
+                sprintf(shell_cmd, "udisk_not_found:%d/%d\n", err_cnt, cnt);
+                lidbg_toast_show("udisk_stable_test:", shell_cmd);
+                fs_file_write2(UDISK_LOG_PATH, shell_cmd);
+            }
+            else
+            {
+                sprintf(shell_cmd, "more retry:%d %d\n", retry_cnt, cnt);
+                lidbg_toast_show("udisk_stable_test:", shell_cmd);
+                lidbg("%s", shell_cmd);
+            }
             return false;
         }
         else
         {
             sprintf(shell_cmd, "udisk_found:%d/%d\n", err_cnt, cnt);
             lidbg_toast_show("udisk_stable_test:", shell_cmd);
-            lidbg("%s",shell_cmd);
+            lidbg("%s", shell_cmd);
             return true;
         }
     }
@@ -625,16 +634,20 @@ int thread_udisk_stability_test(void *data)
 {
     while(1)
     {
-        ssleep(1);
+        ssleep(3);
         while(g_var.udisk_stable_test == 1)
         {
+            cnt++;
+            retry_cnt = 60;
+
             usb_disk_enable(1);
             ssleep(20);
-            is_udisk_file_exist();
-            ssleep(2);
+            while(--retry_cnt > 0 && !is_udisk_file_exist())
+            {
+                ssleep(1);
+            }
             usb_disk_enable(0);
             ssleep(5);
-            cnt++;
         }
     }
 }
