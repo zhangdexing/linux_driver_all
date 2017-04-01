@@ -223,6 +223,8 @@ int thread_fix_fly_update_info(void *data)
     msleep(20000);
     fs_file_read("/dev/fly_upate_info0", &info, 0, sizeof(info));
     lidbg("read info is %c\n", info);
+    msleep(40000);
+    lidbg_chmod(FLYPARAMETER_NODE);
     return 1;
 }
 
