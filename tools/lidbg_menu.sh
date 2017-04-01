@@ -187,7 +187,7 @@ function lidbg_handle()
 			chmod 777 ./* -R
 			;;
 		*)
-			echo
+			;;
 		esac
 }
 
