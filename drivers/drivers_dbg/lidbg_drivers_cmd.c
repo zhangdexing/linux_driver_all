@@ -151,16 +151,13 @@ int thread_format_udisk(void *data)
     return 0;
 }
 
-int thread_trigge_udisk_uevent(void *data)
+int thread_trigge_SD_uevent(void *data)
 {
-    lidbg_shell_cmd("echo remove > /sys/block/sda/uevent");
+    LIDBG_WARN("thread_trigge_SD_uevent");
     lidbg_shell_cmd("echo remove > /sys/block/mmcblk0/uevent");
     lidbg_shell_cmd("echo remove > /sys/block/mmcblk1/uevent");
-    ssleep(6);
-    lidbg_shell_cmd("echo add > /sys/block/sda/uevent");
     lidbg_shell_cmd("echo add > /sys/block/mmcblk0/uevent");
     lidbg_shell_cmd("echo add > /sys/block/mmcblk1/uevent");
-    LIDBG_WARN(".out");
     return 0;
 }
 
@@ -526,7 +523,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#098--format udisk\n");
             fs_mem_log("*158#099--adust Gsensor Sensitivity \n");
             fs_mem_log("*158#100--dump log for app upload\n");
-            fs_mem_log("*158#101--trigge udisk remount uevent  to vold\n");
+            fs_mem_log("*158#101--trigge_SD_uevent\n");
             fs_mem_log("*158#102--copy /persist/display/* to udisk\n");
             fs_mem_log("*158#103--copy udisk QDCM.apk to system/app\n");
             fs_mem_log("*158#104--save gps raw data to sdcard\n");
@@ -1336,9 +1333,8 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#101"))
         {
-            lidbg("*158#101--trigge udisk remount uevent  to vold\n");
-            CREATE_KTHREAD(thread_trigge_udisk_uevent, NULL);
-            lidbg_domineering_ack();
+            lidbg("*158#101--trigge_SD_uevent\n");
+            CREATE_KTHREAD(thread_trigge_SD_uevent, NULL);
         }
         else if (!strcmp(argv[1], "*158#102"))
         {

@@ -136,6 +136,13 @@ static int thread_usb_hub_check(void *data)
 	       lidbg("thread_usb_hub_check success\n");
 	    }
      }
+     if(!fs_is_file_exist("/storage/sdcard1"))
+     {
+          lidbg("sdcard1 reuevent\n");
+          lidbg_shell_cmd("echo appcmd *158#101 > /dev/lidbg_drivers_dbg0");
+     }
+     else
+          lidbg("sdcard1 success\n");
     return 1;
 }
 #endif
