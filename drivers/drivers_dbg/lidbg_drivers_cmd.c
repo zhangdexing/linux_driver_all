@@ -595,6 +595,7 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#002"))
         {
+ #if 0
             lidbg_chmod("/data");
 #ifdef USE_CALL_USERHELPER
             k2u_write(LOG_DMESG);
@@ -607,13 +608,21 @@ void parse_cmd(char *pt)
                lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
 
 		 lidbg_shell_cmd("chmod 777 /data/lidbg/reckmsg/* ");
-
+#endif
+	    if(g_var.is_fly)
+           	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE_IN_TIME &");
+           else
+               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE_IN_TIME &");
+		   
             lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#073"))
         {
             lidbg_chmod("/data");
-            CREATE_KTHREAD(thread_enable_dmesg, NULL);
+	    if(g_var.is_fly)
+           	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE_IN_TIME &");
+           else
+               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE_IN_TIME &");
         }
         else if (!strcmp(argv[1], "*158#003"))
         {

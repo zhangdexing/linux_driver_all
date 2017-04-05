@@ -10,7 +10,7 @@
 #include "lidbg_servicer.h"
 #define PROCESS "record_klogctl" //进程名字 record_klogctl
 #define CMD1 "STORE"   //保存不退出
-#define CMD2 "STORE_EXIT"     //保存退出
+#define CMD2 "STORE_IN_TIME"     //一直保存
 
 /*根据进程名字获取进程id*/
 int get_pid_by_name(char* processname)
@@ -84,7 +84,7 @@ int main(int argc,char* argv[])
    if(argc < 2)
    {
     lidbg("sendsignal:Usage:./sendsignal cmd\n");
-    lidbg("sendsignal:cmd can be : STORE or STORE_EXIT \n");
+    lidbg("sendsignal:cmd can be : STORE or STORE_IN_TIME \n");
       return -1;
    }
    
@@ -112,7 +112,7 @@ int main(int argc,char* argv[])
        return -1;
    }
    
- lidbg("sendsignal:pid is %d\n",pid);
+ lidbg("sendsignal:pid is %d,%s\n",pid,argv[1]);
   
    
    sig_ret = kill(pid,sig);

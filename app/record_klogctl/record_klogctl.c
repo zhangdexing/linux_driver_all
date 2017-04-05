@@ -2,7 +2,9 @@
 #include "lidbg_servicer.h"
 
 #define BUFSIZE (1024*512)
-#define MAXINUM (1024*1024*15)
+int MAXINUM = (1024*1024*15);
+int poll_time = 5;
+bool save_in_time_mode = 0;
 #define PATH "/data/lidbg/reckmsg/"
 
 int openfd;
@@ -82,7 +84,7 @@ void write_log(char *buf)
 		else
 		{			
 			savesize += readsize; 
-			if(savesize>=BUFSIZE)
+			if( (savesize >= BUFSIZE) || (save_in_time_mode == 1))
 			{
 				//lidbg("record_klogctl:write log to file\n");
 				write(openfd,buf,savesize);
@@ -91,7 +93,7 @@ void write_log(char *buf)
 				filesize_ctrl();
 			}
 		}
-		sleep(5);
+		sleep(poll_time);
 	}
 }
 
@@ -102,11 +104,9 @@ void filesize_ctrl()
 	struct stat filebuf;
 	int exists;
 	int totalsize;
-       int filenum = 0;
-	char cmd[256];
+        int filenum = 0;
 	char filename[128];
 	/********计算文件夹大小***********/
-
 	d = opendir(PATH);
 	
 	if(d == NULL)
@@ -144,10 +144,6 @@ void filesize_ctrl()
 		}
 		else
 		{
-			//sprintf(cmd,"rm %s$(ls %s -rt | sed -n '1p')",PATH,PATH);
-			//sprintf(cmd,"rm %s$(ls %s | sed -n '1p')",PATH,PATH);
-			//system(cmd);
-			//lidbg("record_klogctl:do %s\n",cmd);
 			remove_old_file();
 		}
 	}
@@ -157,11 +153,22 @@ void filesize_ctrl()
 void sigfunc(int sig)
 {
 	sig = sig;
-	write(openfd,buf,savesize);
-	//lidbg("record_klogctl:sigfunc write log to file\n");
-	readsize = savesize = 0;
-	memset(buf,'\0',BUFSIZE);	
-       filesize_ctrl();
+	//if(sig == SIGUSR1)
+	{
+		write(openfd,buf,savesize);
+		//lidbg("record_klogctl:sigfunc write log to file\n");
+		readsize = savesize = 0;
+		memset(buf,'\0',BUFSIZE);	
+		filesize_ctrl();
+	}
+	if (sig == SIGUSR2)
+	{
+		lidbg("record_klogctl:in time mode\n");
+		MAXINUM = (1024*1024*500);
+		poll_time = 1;
+		save_in_time_mode = 1;
+		
+	}
 }
 
 int main()
