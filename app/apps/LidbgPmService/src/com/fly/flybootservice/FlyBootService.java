@@ -147,6 +147,7 @@ public class FlyBootService extends Service {
     private boolean mKillProcessEn = true;
     private Toast toast = null;
     private boolean isWifiApEnabled=false;
+    private boolean isAirplaneOn=false;
     private boolean isWifiEnabled=false;
     private boolean isSimCardReady=false;
     private boolean isFirstBoot=true;
@@ -251,11 +252,14 @@ public class FlyBootService extends Service {
 						}
 						else{
 							if(pmState == FBS_SCREEN_OFF){
+								isAirplaneOn = isAirplaneModeOn(mFlyBootService);
 								isWifiApEnabled = isWifiApEnabled();
 								isWifiEnabled = isWifiEnabled();
 								isSimCardReady = isSimCardReady();
 								AirplaneEnable = SystemProperties.getBoolean("persist.lidbg.AirplaneEnable",false);
-								LIDBG_PRINT("get pm state: FBS_SCREEN_OFF/isSimCardReady:"+isSimCardReady+"\n");
+								LIDBG_PRINT("get pm state: FBS_SCREEN_OFF\n");
+								LIDBG_PRINT(" FBS_SCREEN_OFF:isSimCardReady:"+isSimCardReady+"/AirplaneEnable:"+AirplaneEnable+"/blSuspendUnairplaneFlag:"+blSuspendUnairplaneFlag+"\n");
+								LIDBG_PRINT(" FBS_SCREEN_OFF:isWifiApEnabled:"+isWifiApEnabled+"/isWifiEnabled:"+isWifiEnabled+"/isAirplaneOn:"+isAirplaneOn+"\n");
 								previousACCOffTime = SystemClock.elapsedRealtime();
 								SendBroadcastToService(KeyBootState, keyScreenOFF);
 							}else if(pmState == FBS_DEVICE_DOWN){
@@ -272,7 +276,6 @@ public class FlyBootService extends Service {
 								start_fastboot();
 							}else if(pmState == FBS_GOTO_SLEEP){
 								LIDBG_PRINT(" get pm state: FBS_GOTO_SLEEP\n");
-								LIDBG_PRINT(" FBS_GOTO_SLEEP:isSimCardReady:"+isSimCardReady+"/AirplaneEnable:"+AirplaneEnable+"/blSuspendUnairplaneFlag:"+blSuspendUnairplaneFlag+"\n");
 								if(pmOldState==FBS_SCREEN_ON)
 								{
 									LIDBG_PRINT("\n\n\nFlyBootService get pm state: error:gotosleep after screenon.skip\n\n\n");
@@ -284,7 +287,6 @@ public class FlyBootService extends Service {
 								}else
 									LIDBG_PRINT(" FBS_GOTO_SLEEP disable AirplaneMode\n");
 								setBlutetoothState(false);
-								LIDBG_PRINT(" isWifiApEnabled:"+isWifiApEnabled+"/isWifiEnabled:"+isWifiEnabled+"\n");
 								if (isWifiApEnabled)
 								{
 									setWifiApState(false);
@@ -957,7 +959,7 @@ public static void releaseBrightWakeLock()
         return true;
     }
 
-    public static boolean isAirplaneModeOn(Context context) {
+    public boolean isAirplaneModeOn(Context context) {
         return Settings.Global.getInt(context.getContentResolver(),
                 Settings.Global.AIRPLANE_MODE_ON, 0) != 0;
     }
@@ -1501,6 +1503,12 @@ public static void releaseBrightWakeLock()
 		{
 			//if(cmdParabase==0)
 				acquireWakeLock();
+				LIDBG_PRINT(" isAirplaneOn:"+isAirplaneOn+"\n");
+				if (!isAirplaneOn)
+				{
+					restoreAirplaneMode(mFlyBootService);
+					delay(1000);
+				}
 				writeToFile("/dev/lidbg_misc0","flyaudio:reboot lidbg_sevendays_timeout");
 			//else
 			//	LIDBG_PRINT("salarm:should be reboot but in debug mode.");
