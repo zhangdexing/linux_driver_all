@@ -288,9 +288,13 @@ public class LidbgCommenLogicService extends Service
         {
             if ( !volume.getPath().contains("emulated") && !volume.getPath().toUpperCase().contains("SDCARD"))
             {
-                printKernelMsg(mount+"/mountUmountUdiskUp6_0.find it->" + volume.getPath()+"  getId:"+volume.getId());
-                if(mount)// Environment.MEDIA_MOUNTED.equals(getVolumeState(mPath));
-                mStorageManager.mount(volume.getId());
+                String mVolumeState = mStorageManager.getVolumeState(volume.getPath());
+                printKernelMsg(mount + "/mountUmountUdiskUp6_0.find it->" + volume.getPath() + "  getId:" + volume.getId() + "  getPath:" + volume.getPath() + "  mVolumeState:" + mVolumeState);
+                if(mount)
+                {
+		if(!Environment.MEDIA_MOUNTED.equals(mVolumeState))
+		mStorageManager.mount(volume.getId());
+                }
                 else
                  mStorageManager.unmount(volume.getId());
             }
