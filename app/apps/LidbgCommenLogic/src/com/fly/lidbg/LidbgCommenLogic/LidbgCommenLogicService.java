@@ -280,23 +280,31 @@ public class LidbgCommenLogicService extends Service
             printKernelMsg("Build.VERSION.SDK_INT <23.return" );
             return;
         }
+        try
+        {
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
         final StorageVolume[] volumes = mStorageManager.getVolumeList();
         for (StorageVolume volume : volumes)
         {
             if ( !volume.getPath().contains("emulated") && !volume.getPath().toUpperCase().contains("SDCARD"))
             {
-                //printKernelMsg(mount+"/mountUmountUdiskUp6_0.find it->" + volume.getPath()+"/getId:"+volume.getId());
-                // if(mount)
-                //mStorageManager.mount(volume.getId());
-                // else
-                // mStorageManager.unmount(volume.getId());
+                printKernelMsg(mount+"/mountUmountUdiskUp6_0.find it->" + volume.getPath()+"  getId:"+volume.getId());
+                if(mount)// Environment.MEDIA_MOUNTED.equals(getVolumeState(mPath));
+                mStorageManager.mount(volume.getId());
+                else
+                 mStorageManager.unmount(volume.getId());
             }
             else
             {
-                //printKernelMsg(mount+"/mountUmountUdiskUp6_0.not find->" + volume.getPath()+"/getId:"+volume.getId());
+                printKernelMsg(mount+"/mountUmountUdiskUp6_0.not target volume.retry->" + volume.getPath()+"  getId:"+volume.getId());
             }
         }
+        }
+        catch (Exception e)
+        {
+            printKernelMsg("mountUmountUdiskUp6_0.error:" + e.getMessage());
+        }
+
     }
 
     protected void wakeUpSystem()
