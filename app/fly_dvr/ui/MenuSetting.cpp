@@ -35,11 +35,11 @@ static MENU_ATOMS  menu_atoms =
     NUMBER_SETTING,
     {
         // Still
-        {/* 000 */"EMSaveDays", 3,    1, EMERGENCY_SAVE_NUM - 1,   "0~Save days of Emergency Files  - 14"},
+        {/* 000 */"EMSaveDays", 6,    1, EMERGENCY_SAVE_NUM - 1,   "0~Save days of Emergency Files  - 14"},
         {/* 001 */"EMSwitch",1,     0, EMERGENCY_NUM - 1,    "0:Emergency Disable, 1:Emergency Enable"},
         {/* 003 */"VRMode", 0,    0, RECORD_MODE_NUM - 1,   "0:Single VR, 1:Dual VR"},
         {/* 004 */"VRSwitch",0,     0, RECORD_NUM - 1,    "0:Start VR, 1:Stop VR"},
-        {/* 005 */"VRFileTime", 3,    1, SINGLEFILE_RECORD_TIME_NUM - 1,   "0~time of VRFile(mins) - 10"},
+        {/* 005 */"VRFileTime", 2,    1, SINGLEFILE_RECORD_TIME_NUM - 1,   "0~time of VRFile(mins) - 10"},
         /* END OF MARK */
         {NULL,                            0,           0,              0,                            NULL}
     }
