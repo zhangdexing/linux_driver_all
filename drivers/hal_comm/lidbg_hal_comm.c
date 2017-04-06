@@ -43,7 +43,6 @@ threads_list *add_node_list(struct list_head *hlist, int thread_type)
     init_thread_kfifo(&listnode->data_fifo, HAL_FIFO_SIZE);
     list_add_tail(&listnode->list, hlist);
     mutex_unlock(&list_mutex);
-
     return listnode;
 }
 
@@ -69,13 +68,11 @@ int init_thread_kfifo(struct kfifo *pkfifo, int size)
 {
     int ret;
     ret = kfifo_alloc(pkfifo, size, GFP_KERNEL);
-
     if (ret < 0)
     {
         lidbg("kfifo_alloc failed !\n");
         return -EFAULT;
     }
-
     return ret;
 }
 
@@ -163,85 +160,27 @@ static long hal_comm_ioctl(struct file *filp, unsigned int cmd, unsigned long ar
     tmp_type = _IOCOM_TYPE(cmd);
     data_size = _IOCOM_SIZE(cmd);
     pr_debug("kfifo = type : %d ,size : %d ,direction : %d \n", tmp_type , data_size, _IOCOM_DIR(cmd));
+
+    if(list_empty(klisthead) || ( (tmp_list = search_each_node(klisthead, tmp_type) ) == NULL) )
+    {
+        tmp_list = add_node_list(klisthead, tmp_type);
+        init_waitqueue_head(&tmp_list->fifo_wait_queue);
+        spin_lock_init(&tmp_list->fifo_lock);
+    }
+
     if(_IOCOM_DIR(cmd) == 1)//write
     {
-        if(!list_empty(klisthead))
-        {
-            tmp_list = search_each_node(klisthead, tmp_type);
-            if(tmp_list == NULL)
-            {
-                tmp_list = add_node_list(klisthead, tmp_type);
-                init_waitqueue_head(&tmp_list->fifo_wait_queue);
-                spin_lock_init(&tmp_list->fifo_lock);
-                put_buf_fifo(&tmp_list->data_fifo, &data_size, 2, &tmp_list->fifo_lock);
-                put_buf_fifo(&tmp_list->data_fifo, (void *)arg, data_size, &tmp_list->fifo_lock);
-                return data_size;
-            }
-            else
-            {
-                if(kfifo_is_empty(&tmp_list->data_fifo))
-                {
-                    put_buf_fifo(&tmp_list->data_fifo, &data_size, 2, &tmp_list->fifo_lock);
-                    put_buf_fifo(&tmp_list->data_fifo, (void *)arg, data_size, &tmp_list->fifo_lock);
-                    wake_up_interruptible(&tmp_list->fifo_wait_queue);
-                }
-                else
-                {
-                    put_buf_fifo(&tmp_list->data_fifo, &data_size, 2, &tmp_list->fifo_lock);
-                    put_buf_fifo(&tmp_list->data_fifo, (void *)arg, data_size, &tmp_list->fifo_lock);
-                }
-
-                return data_size;
-            }
-        }
-        else
-        {
-            tmp_list = add_node_list(klisthead, tmp_type);
-            init_waitqueue_head(&tmp_list->fifo_wait_queue);
-            spin_lock_init(&tmp_list->fifo_lock);
-            put_buf_fifo(&tmp_list->data_fifo, &data_size, 2, &tmp_list->fifo_lock);
-            put_buf_fifo(&tmp_list->data_fifo, (void *)arg, data_size, &tmp_list->fifo_lock);
-            return data_size;
-        }
+    	 bool is_kfifo_empty = kfifo_is_empty(&tmp_list->data_fifo);
+	 put_buf_fifo(&tmp_list->data_fifo, &data_size, 2, &tmp_list->fifo_lock);
+        put_buf_fifo(&tmp_list->data_fifo, (void *)arg, data_size, &tmp_list->fifo_lock);
+	 if(is_kfifo_empty)
+	 	wake_up_interruptible(&tmp_list->fifo_wait_queue);
     }
     else//read
     {
-        if(list_empty(klisthead))
-        {
-            tmp_list = add_node_list(klisthead, tmp_type);
-            init_waitqueue_head(&tmp_list->fifo_wait_queue);
-            spin_lock_init(&tmp_list->fifo_lock);
+        if(kfifo_is_empty(&tmp_list->data_fifo))
             ret = wait_event_interruptible(tmp_list->fifo_wait_queue, !kfifo_is_empty(&tmp_list->data_fifo));
-            data_size = get_buf_fifo(&tmp_list->data_fifo, (void *)arg, &tmp_list->fifo_lock);
-            return data_size;
-        }
-        else
-        {
-            tmp_list = search_each_node(klisthead, tmp_type);
-
-            if(tmp_list == NULL)
-            {
-                tmp_list = add_node_list(klisthead, tmp_type);
-                init_waitqueue_head(&tmp_list->fifo_wait_queue);
-                spin_lock_init(&tmp_list->fifo_lock);
-                ret = wait_event_interruptible(tmp_list->fifo_wait_queue, !kfifo_is_empty(&tmp_list->data_fifo));
-                data_size = get_buf_fifo(&tmp_list->data_fifo, (void *)arg, &tmp_list->fifo_lock);
-                return data_size;
-            }
-            else
-            {
-                if(kfifo_is_empty(&tmp_list->data_fifo))
-                {
-                    ret = wait_event_interruptible(tmp_list->fifo_wait_queue, !kfifo_is_empty(&tmp_list->data_fifo));
-                    data_size = get_buf_fifo(&tmp_list->data_fifo, (void *)arg, &tmp_list->fifo_lock);
-                    return data_size;
-                }
-                else
-                {
-                    data_size = get_buf_fifo(&tmp_list->data_fifo, (void *)arg, &tmp_list->fifo_lock);
-                }
-            }
-        }
+        data_size = get_buf_fifo(&tmp_list->data_fifo, (void *)arg, &tmp_list->fifo_lock);
     }
     return data_size;
 }
@@ -262,13 +201,14 @@ static int  hal_comm_probe(struct platform_device *pdev)
 {
     int ret;
     klisthead = (struct list_head *)kmalloc(sizeof(struct list_head), GFP_KERNEL);
+    list_init(klisthead);
+
     ret = lidbg_new_cdev(&hal_comm_fops, "lidbg_hal_comm0");
     if(ret < 0)
     {
         lidbg( "Fail to creat cdev \n");
         return -1;
     }
-    list_init(klisthead);
     return 0;
 }
 
