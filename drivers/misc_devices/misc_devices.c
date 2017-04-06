@@ -649,12 +649,21 @@ int thread_udisk_stability_test(void *data)
             cnt++;
             retry_cnt = 60;
 
+            lidbg_toast_show("udisk_stable_test:", "usb 5V on");
             usb_disk_enable(1);
-            ssleep(20);
+            ssleep(10);
             while(--retry_cnt > 0 && !is_udisk_file_exist())
             {
                 ssleep(1);
             }
+            if(retry_cnt > 0)
+            {
+                ssleep(5);
+                lidbg_toast_show("udisk_stable_test:", "umount it");
+                lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 2");
+                ssleep(10);
+            }
+            lidbg_toast_show("udisk_stable_test:", "usb 5V off");
             usb_disk_enable(0);
             ssleep(5);
         }
