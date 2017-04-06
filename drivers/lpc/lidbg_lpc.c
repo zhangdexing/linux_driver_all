@@ -347,7 +347,7 @@ static int  lpc_probe(struct platform_device *pdev)
     init_waitqueue_head(&wait_queue);
     wake_lock_init(&lpc_wakelock, WAKE_LOCK_SUSPEND, "lpc_wakelock");
 
-    lidbg_new_cdev(&lpc_fops, "lidbg_lpc_comm0");
+    lidbg_new_cdev(&lpc_fops, "fly_lpc0");
 
     mcuFirstInit();
 
