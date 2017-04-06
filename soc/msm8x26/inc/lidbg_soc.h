@@ -69,7 +69,6 @@
 #if (defined PLATFORM_msm8909) || (defined PLATFORM_msm8996)
 #define FLY_USB_CAMERA_SUPPORT
 #define DEFAULT_SUSPEND_NO_AIRPLANE_MODE
-//#define FLY_HAL_NEW_COMM
 #endif
 
 #ifdef PLATFORM_msm8974

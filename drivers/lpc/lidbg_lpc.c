@@ -24,6 +24,7 @@ u32 *ad_fifo_buff;
 u8 *lpc_data_for_hal;
 #define LPC_SYSTEM_TYPE 0x00
 
+#define SUSPEND_DATA_WAIT_TIME   10*HZ
 
 #define HAL_NOTIFY_FIFO_SIZE (1024)
 
@@ -182,7 +183,7 @@ int LPCCombinDataStream(BYTE *p, UINT len)
     ret = SOC_I2C_Send(LPC_I2_ID, MCU_ADDR, buf, 3 + i + 1);
 #endif
 
-#if 1 //def LPC_DEBUG_LOG
+#if 0 //def LPC_DEBUG_LOG
     lidbg("ToMCU.%d:%x %x %x\n", ret, p[0], p[1], p[2]);
 #endif
 
@@ -406,7 +407,11 @@ irqreturn_t MCUIIC_isr(int irq, void *dev_id)
     if(!lpc_work_en)
         return IRQ_HANDLED;
     //SOC_IO_ISR_Disable(MCU_IIC_REQ_GPIO);
+#if 0    
     wake_lock(&lpc_wakelock);
+#else
+	wake_lock_timeout(&lpc_wakelock, SUSPEND_DATA_WAIT_TIME);
+#endif
     schedule_work(&pGlobalHardwareInfo->FlyIICInfo.iic_work);
     return IRQ_HANDLED;
 }
@@ -422,7 +427,9 @@ static void workFlyMCUIIC(struct work_struct *work)
         iReadLen = 16;
     }
     //SOC_IO_ISR_Enable(MCU_IIC_REQ_GPIO);
+#if 0       
     wake_unlock(&lpc_wakelock);
+#endif
 }
 
 
@@ -463,7 +470,6 @@ void mcuFirstInit(void)
 
 void LPCSuspend(void)
 {
-
     //SOC_IO_ISR_Disable(MCU_IIC_REQ_GPIO);
 }
 
@@ -473,7 +479,11 @@ void LPCResume(void)
     BYTE iReadLen = 12;
 
     //SOC_IO_ISR_Enable(MCU_IIC_REQ_GPIO);
+#if 0    
     wake_lock(&lpc_wakelock);
+#else
+	wake_lock_timeout(&lpc_wakelock, SUSPEND_DATA_WAIT_TIME);
+#endif
     //clear lpc i2c buffer
     while (SOC_IO_Input(MCU_IIC_REQ_GPIO, MCU_IIC_REQ_GPIO, 0) == 0)
     {
@@ -481,8 +491,9 @@ void LPCResume(void)
         actualReadFromMCU(buff, iReadLen);
         iReadLen = 16;
     }
+#if 0		
      wake_unlock(&lpc_wakelock);
-
+#endif
 }
 
 void lpc_linux_sync(bool print, int mint, char *extra_info)
