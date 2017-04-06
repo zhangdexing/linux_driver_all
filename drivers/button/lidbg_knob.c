@@ -42,8 +42,8 @@ struct fly_KeyEncoderInfo
     spinlock_t left_fifo_lock;
     wait_queue_head_t left_wait_queue;
 
-	struct work_struct right_encoder_work;
-	spinlock_t right_fifo_lock;
+    struct work_struct right_encoder_work;
+    spinlock_t right_fifo_lock;
     wait_queue_head_t right_wait_queue;
 };
 
@@ -59,8 +59,6 @@ struct completion origin_completion;
 u8 *knob_data_for_hal;
 
 #define FIFO_SIZE (512)
-//u8 *knob_fifo_buffer;
-//static struct kfifo knob_data_fifo;
 
 u8 *left_knob_fifo_buffer;
 static struct kfifo left_knob_data_fifo;
@@ -214,25 +212,25 @@ static void left_work_knob_fn(struct work_struct *work)
         left_knob_data |= (1 << 1);
         pfly_KeyEncoderInfo->iEncoderLeftDecCount -= 2;
     }
-	
+
     pfly_KeyEncoderInfo->bTimeOutRun = 1;
     //pfly_KeyEncoderInfo->time_out = GetTickCount();
-	if(left_knob_data > 0)
-	{
-	    spin_lock(&pfly_KeyEncoderInfo->left_fifo_lock);
-	    if(kfifo_is_full(&left_knob_data_fifo))
-	    {
-	        u8 temp_reset_data;
-	        int tempbyte;
-	        //kfifo_reset(&knob_data_fifo);
-	        tempbyte = kfifo_out(&left_knob_data_fifo, &temp_reset_data, 1);
-	        lidbg("[left_knob]kfifo_reset!!!!!\n");
-	    }
-	    kfifo_in(&left_knob_data_fifo, &left_knob_data, 1);
-	    spin_unlock(&pfly_KeyEncoderInfo->left_fifo_lock);
-		wake_up_interruptible(&pfly_KeyEncoderInfo->left_wait_queue);
-		pr_debug("left_knob_data = 0x%x\n", left_knob_data);
-	}
+    if(left_knob_data > 0)
+    {
+        spin_lock(&pfly_KeyEncoderInfo->left_fifo_lock);
+        if(kfifo_is_full(&left_knob_data_fifo))
+        {
+            u8 temp_reset_data;
+            int tempbyte;
+            //kfifo_reset(&knob_data_fifo);
+            tempbyte = kfifo_out(&left_knob_data_fifo, &temp_reset_data, 1);
+            lidbg("[left_knob]kfifo_reset!!!!!\n");
+        }
+        kfifo_in(&left_knob_data_fifo, &left_knob_data, 1);
+        spin_unlock(&pfly_KeyEncoderInfo->left_fifo_lock);
+        wake_up_interruptible(&pfly_KeyEncoderInfo->left_wait_queue);
+        pr_debug("left_knob_data = 0x%x\n", left_knob_data);
+    }
 
     //complete(&origin_completion);
     //pr_debug("knob_data = %x\n", knob_data);
@@ -241,14 +239,14 @@ static void left_work_knob_fn(struct work_struct *work)
 
 static void right_work_knob_fn(struct work_struct *work)
 {
-	u8 right_knob_data;
-	if(!((pfly_KeyEncoderInfo->iEncoderRightIncCount >= 2) | (pfly_KeyEncoderInfo->iEncoderRightDecCount >= 2)))
-	{
+    u8 right_knob_data;
+    if(!((pfly_KeyEncoderInfo->iEncoderRightIncCount >= 2) | (pfly_KeyEncoderInfo->iEncoderRightDecCount >= 2)))
+    {
         return;
     }
-	right_knob_data = 0;
-	
-	while (pfly_KeyEncoderInfo->iEncoderRightIncCount >= 2)
+    right_knob_data = 0;
+
+    while (pfly_KeyEncoderInfo->iEncoderRightIncCount >= 2)
     {
         right_knob_data |= (1 << 0);
         pfly_KeyEncoderInfo->iEncoderRightIncCount -= 2;
@@ -259,23 +257,23 @@ static void right_work_knob_fn(struct work_struct *work)
         pfly_KeyEncoderInfo->iEncoderRightDecCount -= 2;
     }
 
-	if(right_knob_data > 0)
-	{
-	    spin_lock(&pfly_KeyEncoderInfo->right_fifo_lock);
-	    if(kfifo_is_full(&right_knob_data_fifo))
-	    {
-	        u8 temp_reset_data;
-	        int tempbyte;
-	        //kfifo_reset(&knob_data_fifo);
-	        tempbyte = kfifo_out(&right_knob_data_fifo, &temp_reset_data, 1);
-	        lidbg("[right_knob]kfifo_reset!!!!!\n");
-	    }
-	    kfifo_in(&right_knob_data_fifo, &right_knob_data, 1);
-	    spin_unlock(&pfly_KeyEncoderInfo->right_fifo_lock);
-		wake_up_interruptible(&pfly_KeyEncoderInfo->right_wait_queue);
-		pr_debug("right_knob_data = 0x%x\n", right_knob_data);
-	}
-	return;
+    if(right_knob_data > 0)
+    {
+        spin_lock(&pfly_KeyEncoderInfo->right_fifo_lock);
+        if(kfifo_is_full(&right_knob_data_fifo))
+        {
+            u8 temp_reset_data;
+            int tempbyte;
+            //kfifo_reset(&knob_data_fifo);
+            tempbyte = kfifo_out(&right_knob_data_fifo, &temp_reset_data, 1);
+            lidbg("[right_knob]kfifo_reset!!!!!\n");
+        }
+        kfifo_in(&right_knob_data_fifo, &right_knob_data, 1);
+        spin_unlock(&pfly_KeyEncoderInfo->right_fifo_lock);
+        wake_up_interruptible(&pfly_KeyEncoderInfo->right_wait_queue);
+        pr_debug("right_knob_data = 0x%x\n", right_knob_data);
+    }
+    return;
 }
 
 /**
@@ -666,14 +664,6 @@ static int knob_resume(struct platform_device *pdev)
     return 0;
 }
 
-/*
-static struct dev_pm_ops knob_pm_ops =
-{
-    .suspend	= knob_suspend,
-    .resume	= knob_resume,
-};
-*/
-
 
 /**
  * knob_init - init knob processing work
@@ -696,11 +686,11 @@ void knob_init(void)
 #if defined(EXTI_USE_DELAYED)
         p_left_work_encode_queue = create_singlethread_workqueue("left_encode_knob_queue");
         INIT_DELAYED_WORK(&pfly_KeyEncoderInfo->left_encoder_work, left_work_knob_fn);
-		 p_right_work_encode_queue = create_singlethread_workqueue("right_encode_knob_queue");
+        p_right_work_encode_queue = create_singlethread_workqueue("right_encode_knob_queue");
         INIT_DELAYED_WORK(&pfly_KeyEncoderInfo->right_encoder_work, right_work_knob_fn);
 #else
         INIT_WORK(&pfly_KeyEncoderInfo->left_encoder_work, left_work_knob_fn);
-		INIT_WORK(&pfly_KeyEncoderInfo->right_encoder_work, right_work_knob_fn);
+        INIT_WORK(&pfly_KeyEncoderInfo->right_encoder_work, right_work_knob_fn);
 #endif
 
 #ifdef SOC_mt3360
@@ -741,11 +731,7 @@ int thread_knob_init(void *data)
     knob_init();
     if(g_var.is_fly == 0)
     {
-        //knob_init();//temp for product commit
-        //INIT_WORK(&process_work, work_process);
-        //schedule_work(&process_work);
         init_completion(&origin_completion);
-        //CREATE_KTHREAD(thread_process, NULL);
     }
     return 0;
 }
@@ -777,7 +763,6 @@ static unsigned int left_knob_poll(struct file *filp, struct poll_table_struct *
 
 static unsigned int right_knob_poll(struct file *filp, struct poll_table_struct *wait)
 {
-    //struct gps_device *dev = filp->private_data;
     struct fly_KeyEncoderInfo *pfly_KeyEncoderInfo = filp->private_data;
     unsigned int mask = 0;
     pr_debug("[knob_poll]wait begin\n");
@@ -805,24 +790,15 @@ static int  knob_probe(struct platform_device *pdev)
     DUMP_FUN;
 
 #ifndef FLY_HAL_NEW_COMM
-	lidbg("%s: FLY_HAL_NEW_COMM Disable!\n",__func__);
-	return 0;
+    lidbg("%s: FLY_HAL_NEW_COMM Disable!\n", __func__);
+    return 0;
 #endif
-    // 1creat cdev
-    /*
-    knob_fifo_buffer = (u8 *)kmalloc(FIFO_SIZE , GFP_KERNEL);
-    knob_data_for_hal = (u8 *)kmalloc(HAL_BUF_SIZE , GFP_KERNEL);
-    if((knob_data_for_hal == NULL) || (knob_fifo_buffer == NULL))
-    {
-        lidbg("knob_probe kmalloc err\n");
-        return 0;
-    }
-    */
-	left_knob_fifo_buffer = (u8 *)kmalloc(FIFO_SIZE , GFP_KERNEL);
-	right_knob_fifo_buffer = (u8 *)kmalloc(FIFO_SIZE , GFP_KERNEL);
-	kfifo_init(&left_knob_data_fifo, left_knob_fifo_buffer, FIFO_SIZE);
-	kfifo_init(&right_knob_data_fifo, right_knob_fifo_buffer, FIFO_SIZE);
-		
+
+    left_knob_fifo_buffer = (u8 *)kmalloc(FIFO_SIZE , GFP_KERNEL);
+    right_knob_fifo_buffer = (u8 *)kmalloc(FIFO_SIZE , GFP_KERNEL);
+    kfifo_init(&left_knob_data_fifo, left_knob_fifo_buffer, FIFO_SIZE);
+    kfifo_init(&right_knob_data_fifo, right_knob_fifo_buffer, FIFO_SIZE);
+
     pfly_KeyEncoderInfo = (struct fly_KeyEncoderInfo *)kmalloc( sizeof(struct fly_KeyEncoderInfo), GFP_KERNEL );
     if (pfly_KeyEncoderInfo == NULL)
     {
@@ -835,12 +811,12 @@ static int  knob_probe(struct platform_device *pdev)
 
     // 2init all the tools
     init_waitqueue_head(&pfly_KeyEncoderInfo->left_wait_queue);
-	spin_lock_init(&pfly_KeyEncoderInfo->left_fifo_lock);
-	init_waitqueue_head(&pfly_KeyEncoderInfo->right_wait_queue);
+    spin_lock_init(&pfly_KeyEncoderInfo->left_fifo_lock);
+    init_waitqueue_head(&pfly_KeyEncoderInfo->right_wait_queue);
     spin_lock_init(&pfly_KeyEncoderInfo->right_fifo_lock);
-	
+
     lidbg_chmod("/dev/lidbg_volume_ctl0");
-	lidbg_chmod("/dev/lidbg_tune_ctl0");
+    lidbg_chmod("/dev/lidbg_tune_ctl0");
 
     // 3creat thread
     CREATE_KTHREAD(thread_knob_init, NULL);
@@ -861,8 +837,7 @@ ssize_t left_knob_read (struct file *filp, char __user *buf, size_t count, loff_
 {
     struct fly_KeyEncoderInfo *pfly_KeyEncoderInfo = filp->private_data;
     int read_len, fifo_len, bytes;
-	unsigned char* knob_data;
-	
+
     pr_debug("left knob read start.\n");
     if(kfifo_is_empty(&left_knob_data_fifo))
     {
@@ -871,43 +846,25 @@ ssize_t left_knob_read (struct file *filp, char __user *buf, size_t count, loff_
     }
     spin_lock(&pfly_KeyEncoderInfo->left_fifo_lock);
     fifo_len = kfifo_len(&left_knob_data_fifo);
-	spin_unlock(&pfly_KeyEncoderInfo->left_fifo_lock);
-
-	if(count < fifo_len)
-		read_len = count;
-    else
-		read_len = fifo_len;
-
-	knob_data = (u8 *)kmalloc(read_len , GFP_KERNEL);
-    if(knob_data == NULL)
-    {
-        lidbg("%s:knob_probe kmalloc err\n",__func__);
-        return 0;
-    }
-
-    /*
-    if((count > HAL_BUF_SIZE) &  (fifo_len > HAL_BUF_SIZE))
-        read_len = HAL_BUF_SIZE;
-    else if (count > fifo_len )
-        read_len = fifo_len;
-    else
-        read_len = count;
-    */
-
-	spin_lock(&pfly_KeyEncoderInfo->left_fifo_lock);
-    bytes = kfifo_out(&left_knob_data_fifo, knob_data, read_len);
     spin_unlock(&pfly_KeyEncoderInfo->left_fifo_lock);
 
-    if(copy_to_user(buf, knob_data, read_len))
+    if(count < fifo_len)
+        read_len = count;
+    else
+        read_len = fifo_len;
     {
-    	kfree(knob_data);
-        return -1;
-    }
+        char knob_data[read_len];
+        spin_lock(&pfly_KeyEncoderInfo->left_fifo_lock);
+        bytes = kfifo_out(&left_knob_data_fifo, knob_data, read_len);
+        spin_unlock(&pfly_KeyEncoderInfo->left_fifo_lock);
 
+        if(copy_to_user(buf, knob_data, read_len))
+        {
+            return -1;
+        }
+    }
     if(fifo_len > bytes)
         wake_up_interruptible(&pfly_KeyEncoderInfo->left_wait_queue);
-
-	kfree(knob_data);
 
     return read_len;
 }
@@ -916,54 +873,36 @@ ssize_t right_knob_read (struct file *filp, char __user *buf, size_t count, loff
 {
     struct fly_KeyEncoderInfo *pfly_KeyEncoderInfo = filp->private_data;
     int read_len, fifo_len, bytes;
-    unsigned char* knob_data;
-		
+
     pr_debug("right knob read start.\n");
     if(kfifo_is_empty(&right_knob_data_fifo))
     {
         if(wait_event_interruptible(pfly_KeyEncoderInfo->right_wait_queue, !kfifo_is_empty(&right_knob_data_fifo)))
             return -ERESTARTSYS;
     }
-		
+
     spin_lock(&pfly_KeyEncoderInfo->right_fifo_lock);
     fifo_len = kfifo_len(&right_knob_data_fifo);
-	spin_unlock(&pfly_KeyEncoderInfo->right_fifo_lock);
-
-	if(count < fifo_len)
-		read_len = count;
-    else
-		read_len = fifo_len;
-	
-	knob_data = (u8 *)kmalloc(read_len , GFP_KERNEL);
-    if(knob_data == NULL)
-    {
-        lidbg("%s:knob_probe kmalloc err\n",__func__);
-        return 0;
-    }
-
-    /*
-    if((count > HAL_BUF_SIZE) &  (fifo_len > HAL_BUF_SIZE))
-        read_len = HAL_BUF_SIZE;
-    else if (count > fifo_len )
-        read_len = fifo_len;
-    else
-        read_len = count;
-    */
-
-	spin_lock(&pfly_KeyEncoderInfo->right_fifo_lock);
-    bytes = kfifo_out(&right_knob_data_fifo, knob_data, read_len);
     spin_unlock(&pfly_KeyEncoderInfo->right_fifo_lock);
 
-    if(copy_to_user(buf, knob_data, read_len))
-    {
-    	kfree(knob_data);
-        return -1;
-    }
+    if(count < fifo_len)
+        read_len = count;
+    else
+        read_len = fifo_len;
 
+    {
+        char knob_data[read_len];
+        spin_lock(&pfly_KeyEncoderInfo->right_fifo_lock);
+        bytes = kfifo_out(&right_knob_data_fifo, knob_data, read_len);
+        spin_unlock(&pfly_KeyEncoderInfo->right_fifo_lock);
+
+        if(copy_to_user(buf, knob_data, read_len))
+        {
+            return -1;
+        }
+    }
     if(fifo_len > bytes)
         wake_up_interruptible(&pfly_KeyEncoderInfo->right_wait_queue);
-
-	kfree(knob_data);
 
     return read_len;
 }
@@ -1116,11 +1055,8 @@ static void  knob_dev_exit(void)
     printk("knob chdrv_exit\n");
 }
 
-//EXPORT_SYMBOL(knob_suspend);
-//EXPORT_SYMBOL(knob_resume);
 module_init(knob_dev_init);
 module_exit(knob_dev_exit);
-
 
 
 MODULE_AUTHOR("fly, <fly@gmail.com>");
