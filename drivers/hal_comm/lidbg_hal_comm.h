@@ -65,5 +65,5 @@ typedef struct fifo_list
 	spinlock_t fifo_lock;
 } threads_list;
 
-#define HAL_FIFO_SIZE 100
+#define HAL_FIFO_SIZE 512
 #define HAL_DATA_SIZE_MAX 1016

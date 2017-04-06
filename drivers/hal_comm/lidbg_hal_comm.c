@@ -144,23 +144,24 @@ int init_thread_kfifo(struct kfifo *pkfifo, int size)
 
 void put_buf_fifo(struct kfifo *pkfifo , void *buf, int size, spinlock_t *fifo_lock)
 {
-	int len, ret ,data_len;
+	int len, ret;
+	short data_len;
 	len = kfifo_avail(pkfifo);
 	while(len < size){
 		printk(KERN_CRIT "fifo did't have enough space\n");
 		ret = kfifo_out_spinlocked(pkfifo, &data_len,2,fifo_lock);
-		printk(KERN_CRIT "kfifo length is : %d \n",data_len);
+		pr_debug(KERN_CRIT "kfifo length is : %d \n",data_len);
 		if(ret < 0)
 			printk(KERN_CRIT "fail to output data \n");
 		{
 			char out_buf[data_len];
 			ret = kfifo_out_spinlocked(pkfifo,out_buf,data_len,fifo_lock);
-			printk(KERN_CRIT "give up one data : %s ", out_buf);
+			printk(KERN_CRIT "give up one data\n ");
 			if(ret < 0)
 				printk(KERN_CRIT "fail to output data \n");
 		}
 		len = kfifo_avail(pkfifo);
-		printk(KERN_CRIT "kfifo vaild len : %d \n",len);
+		pr_debug(KERN_CRIT "kfifo vaild len : %d \n",len);
 	}
 	kfifo_in_spinlocked(pkfifo, buf, size,fifo_lock); 
 }
