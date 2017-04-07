@@ -47,7 +47,8 @@ typedef enum{
 
 #define MMC0_VR_PATH 	"/storage/sdcard0/camera_rec"
 #define MMC1_VR_PATH 	"/storage/sdcard1/camera_rec"
-#define MMC0_ONLINE_VR_PATH 	"/dev/preview_cache"
+//#define MMC0_ONLINE_VR_PATH 	"/dev/preview_cache"
+#define MMC0_ONLINE_VR_PATH 	"/storage/emulated/0/preview_cache"
 #endif
 
 
