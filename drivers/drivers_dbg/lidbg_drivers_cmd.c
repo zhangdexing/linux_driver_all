@@ -969,7 +969,7 @@ void parse_cmd(char *pt)
         else if (!strcmp(argv[1], "*158#052"))
         {
             lidbg("-------udisk reset -----");
-            fs_file_write2("/dev/lidbg_pm0", "ws udisk_reset");
+            fs_file_write2("/dev/flydev0", "udisk_reset");
             lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#053"))

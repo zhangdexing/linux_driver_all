@@ -120,36 +120,6 @@ typedef struct hw_recinfo
 } hw_info_t;
 
 //-----------------------------------------
-#ifdef SOC_mt3360
-typedef struct arm2_header
-{
-    char flags[16];
-    UINT data_size;
-    BYTE version[4];
-    UINT offset;
-} arm2_header_t;
-
-typedef struct recovery_meg
-{
-    bootParams_t bootParam;
-    verParams_t verParam;
-    recovery_header_t recovery_headers;
-
-
-    //-----------------------------------------
-    lk_header_t lkHeader;
-    bp_header_t bpHeader;
-    qcn_header_t qcnHeader;
-    bp_time_t bpTimes;
-    recovery_language_t recoveryLanguage;
-    mbr_header_t mbrHeader;
-    osd_header_t osdHeader;
-    FLY_RESTORE_DATA flyRestoreData;
-    //-----------------------------------------
-    arm2_header_t arm2Header;
-    hw_info_t hwInfo;
-} recovery_meg_t;
-#else
 typedef struct recovery_meg
 {
     bootParams_t bootParam;
@@ -169,7 +139,6 @@ typedef struct recovery_meg
     //-----------------------------------------
     hw_info_t hwInfo;
 } recovery_meg_t;
-#endif
 
 /**test emmc **/
 
@@ -183,8 +152,4 @@ typedef  struct flywrdata
 
 void fly_erase( char *parname);
 int emmc_get_extra_recovery_msg(char *ptn_name, unsigned  long len, unsigned char *in);
-
-//#define WITH_DEBUG_GLOBAL_RAM 1
-
-
 

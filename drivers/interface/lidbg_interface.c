@@ -277,11 +277,6 @@ int iSOC_Display_Get_Res(u32 *screen_x, u32 *screen_y)
     return soc_get_screen_res(screen_x, screen_y);
 }
 
-struct fly_smem *iSOC_Get_Share_Mem(void)
-{
-    return p_fly_smem;
-}
-
 void iSOC_System_Status(FLY_SYSTEM_STATUS status)
 {
     lidbg("SOC_System_Status=%d\n", status);
@@ -382,7 +377,6 @@ static void set_func_tbl(void)
     //display/touch
     plidbg_dev->soc_func_tbl.pfnSOC_Display_Get_Res = iSOC_Display_Get_Res;
 
-    //   plidbg_dev->soc_func_tbl.pfnSOC_Get_Share_Mem = iSOC_Get_Share_Mem;
     plidbg_dev->soc_func_tbl.pfnSOC_System_Status = iSOC_System_Status;
     plidbg_dev->soc_func_tbl.pfnSOC_WakeLock_Stat  = lidbg_wakelock_register;
     plidbg_dev->soc_func_tbl.pfnSOC_Get_CpuFreq  = iSOC_Get_CpuFreq;

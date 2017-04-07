@@ -11,7 +11,6 @@
 LIDBG_DEFINE;
 static struct timer_list usb_release_timer;
 
-int udisk_stability_test = 0;
 #define LCD_ON_DELAY (1500)//acc_on-->lcd_on
 static struct wake_lock device_wakelock;
 //int usb_request = 0;
@@ -31,9 +30,6 @@ int thread_lcd_on_delay(void *data)
 		msleep(1000);
 		lidbg("LCD_ON2.in.hold_bootanim2.false\n");
 		lidbg_shell_cmd("setprop lidbg.hold_bootanim2 false");
-#if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
-		lidbg_shell_cmd("setprop lidbg.hold_bootanim false");
-#endif
 		lidbg_shell_cmd("echo echoLCD_ON2.hold_bootanim2.false > /dev/lidbg_msg");
 	}
 	else
@@ -79,6 +75,7 @@ static int devices_notifier_callback(struct notifier_block *self,
 
 
 static u32 last_usb_off_time = 0;
+
 
 void usb_camera_enable(bool enable)
 {
@@ -176,7 +173,7 @@ void usb_disk_enable(bool enable)
 
    if((g_var.usb_status == enable)&&(enable == 1))
    {
-   	lidbg("usb_disk_enable skip\n");
+   	lidbg("usb_disk_enable skip \n");
    	return;
    }
     lidbg("60.[%s]\n", enable ? "usb_enable" : "usb_disable");
@@ -215,12 +212,6 @@ void usb_disk_enable(bool enable)
 }
 static int thread_usb_disk_enable_delay(void *data)
 {
-#ifdef VENDOR_QCOM
-#ifndef FLY_USB_CAMERA_SUPPORT
-    if(g_var.recovery_mode == 0)
-        msleep(5000);
-#endif
-#endif
 #if ANDROID_VERSION >= 600
 	 if((g_var.recovery_mode == 0)&&(g_var.android_boot_completed == 0))
 	 {
@@ -235,26 +226,12 @@ static int thread_usb_disk_enable_delay(void *data)
   
     usb_disk_enable(true);
     SET_USB_ID_SUSPEND;
-
-    if(0)
-    {
-        ssleep(10);
-        lidbg("usb : trigge udisk remount uevent  to vold.after sleep 10S \n");
-        lidbg_shell_cmd("echo add > /sys/block/sda/uevent");
-    }
-
-
     return 1;
 }
 
 
 static int thread_usb_disk_disable_delay(void *data)
 {
-#ifdef DISABLE_USB_WHEN_DEVICE_DOWN
-    //msleep(2000);
-#else
-    //msleep(1000);
-#endif
 
 	if(( g_var.usb_request == 1)||(g_var.usb_cam_request== 1))
 		lidbg("Usb still being used, don't disable it actually...\n");
@@ -335,9 +312,6 @@ static int misc_dev_dev_event(struct notifier_block *this,
 #endif
         		lidbg("hold_bootanim2.true\n");
 		lidbg_shell_cmd("setprop lidbg.hold_bootanim2 true");
-#if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
-		lidbg_shell_cmd("setprop lidbg.hold_bootanim true");
-#endif
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_GOTO_SLEEP):
 #ifdef DISABLE_USB_WHEN_GOTO_SLEEP
@@ -491,34 +465,24 @@ static void parse_cmd(char *pt)
     else if (!strcmp(argv[0], "udisk_request"))
     {
         	lidbg("Misc devices ctrl: udisk_request");
-#if defined(PLATFORM_msm8909) && defined(BOARD_V1)
- 		g_var.usb_request= 1;
-		usb_disk_enable(true);
-#else
+
 		 g_var.usb_cam_request = 1;
 		if(g_var.acc_flag == FLY_ACC_OFF)
 		{
 		    usb_camera_enable(true);
 		    mod_timer(&usb_release_timer,jiffies + 180*HZ);
 		}
-
-#endif
 		
     }
     else if (!strcmp(argv[0], "udisk_unrequest"))
     {
         	lidbg("Misc devices ctrl: udisk_unrequest");
-#if defined(PLATFORM_msm8909) && defined(BOARD_V1)
-		 g_var.usb_request = 0;
-		 usb_disk_enable(false);
-#else
 		  g_var.usb_cam_request= 0;
 		  if(g_var.acc_flag == FLY_ACC_OFF)
 		  {
 		 	usb_camera_enable(false);
 			del_timer(&usb_release_timer);
 		  }
-#endif
     }
     else if (!strcmp(argv[0], "usb_reboot"))
     {
@@ -530,6 +494,12 @@ static void parse_cmd(char *pt)
 	 USB_ID_LOW_HOST;
 	 USB_POWER_ENABLE;
 	}
+    else  if(!strcmp(argv[0], "udisk_reset"))
+    {
+        USB_WORK_DISENABLE;
+        ssleep(2);
+       USB_WORK_ENABLE;
+    }
     else if (!strcmp(argv[0], "gps_request"))
     {
         	lidbg("Misc devices ctrl: gps_request");
@@ -649,44 +619,6 @@ static struct file_operations dev_fops =
     .release = dev_close,
 };
 
-int usb_enumerate_limit = 5;
-void usb_enumerate_monitor(char *key_word, void *data)
-{
-    DUMP_FUN;
-    if(!g_var.is_udisk_needreset || usb_enumerate_limit <= 0)
-    {
-        lidbg("find key word.return %d,%d\n", !g_var.is_udisk_needreset, usb_enumerate_limit);
-        return;
-    }
-    lidbg("find key word.in %d\n", usb_enumerate_limit);
-    g_var.is_udisk_needreset = 0;
-    usb_enumerate_limit--;
-#ifndef FLY_USB_CAMERA_SUPPORT
-    if(g_var.system_status >= FLY_ANDROID_UP)
-    {
-        usb_disk_enable(0);
-        ssleep(2);
-        usb_disk_enable(1);
-    }
-#endif
-}
-
-
-void sd_error_monitor(char *key_word, void *data)
-{
-    static int sd_error_monitor_limit = 7;
-
-    DUMP_FUN;
-    lidbg("find key word.in\n");
-    if( sd_error_monitor_limit <= 0)
-    {
-        lidbg("find key word.return %d\n", sd_error_monitor_limit);
-        return;
-    }
-    lidbg_shell_cmd("mount -o remount /mnt/media_rw/sdcard1");
-    sd_error_monitor_limit--;
-    
-}
 
 
 int thread_udisk_stability_test(void *data)
@@ -708,36 +640,6 @@ int thread_udisk_stability_test(void *data)
     }
 
 }
-
-#ifdef PLATFORM_ID_7
-static bool  is_udisk_added = 0;
-static int usb_nb_misc_func(struct notifier_block *nb, unsigned long action, void *data)
-{
-    if(!is_udisk_added)
-        lidbg("stop.thread_udisk_en\n");
-    is_udisk_added = 1;
-    return NOTIFY_OK;
-}
-static struct notifier_block usb_nb_misc =
-{
-    .notifier_call = usb_nb_misc_func,
-};
-int thread_udisk_en(void *data)
-{
-    int loop = 0;
-    DUMP_FUN_ENTER;
-    ssleep(3);
-    while(!is_udisk_added)
-    {
-        lidbg("thread_udisk_en====%d\n", ++loop);
-        IO_CONFIG_OUTPUT(0, 73);
-        soc_io_output(0, 73, 0);
-        ssleep(2);
-    }
-    lidbg("thread_udisk_en===exit=%d\n", loop);
-    return 0;
-}
-#endif
 
 
 int thread_usb_camera_enable(void *data)
@@ -762,12 +664,45 @@ static void usb_release_timer_func(unsigned long data)
 }
 
 
+int thread_dev_init(void *data)
+{
+//poweron
+    LCD_ON;
+    GPS_POWER_ON;
+    LEVEL_CONVERSION_ENABLE;
+
+//gpio
+    GPIO_IS_READY;
+    SET_GPIO_READY_SUSPEND;
+    if((g_var.is_fly == 0) && (g_var.recovery_mode == 0) )
+	   HAL_IS_READY;
+//led
+     CREATE_KTHREAD(thread_led, NULL);
+
+//sound
+ #ifdef MUC_CONTROL_DSP
+  if(!g_var.recovery_mode && !g_var.is_fly)
+    	CREATE_KTHREAD(thread_sound_dsp_init, NULL);
+#endif
+
+ //usb
+    USB_WORK_DISENABLE;
+    msleep(500);
+    USB_FRONT_WORK_ENABLE;
+    USB_BACK_WORK_ENABLE;
+    CREATE_KTHREAD(thread_usb_disk_enable_delay, NULL);
+    CREATE_KTHREAD(thread_udisk_stability_test, NULL);
+    return 0;
+}
+
 static int soc_dev_probe(struct platform_device *pdev)
 {
 #if defined(CONFIG_FB)
     devices_notif.notifier_call = devices_notifier_callback;
     fb_register_client(&devices_notif);
 #endif
+    wake_lock_init(&device_wakelock, WAKE_LOCK_SUSPEND, "lidbg_device_wakelock");
+
     init_timer(&usb_release_timer);
     usb_release_timer.function = usb_release_timer_func;
     usb_release_timer.data = 0;
@@ -775,76 +710,15 @@ static int soc_dev_probe(struct platform_device *pdev)
 
     register_lidbg_notifier(&lidbg_notifier);
 
-    CREATE_KTHREAD(thread_led, NULL);
-#ifdef MUC_CONTROL_DSP
-  if(!g_var.recovery_mode && !g_var.is_fly)
-    	CREATE_KTHREAD(thread_sound_dsp_init, NULL);
-#endif
-    //CREATE_KTHREAD(thread_thermal, NULL);
-
-    if((g_var.is_fly == 0) || (g_var.recovery_mode == 1))
-    {
-        // CREATE_KTHREAD(thread_button_init, NULL);
-        //CREATE_KTHREAD(thread_key, NULL);
-
-        //LCD_ON;
-    }
-    LCD_ON;
-    //lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_BL_LCD_STATUS_CHANGE, NOTIFIER_MINOR_BL_APP_ON));
-    //lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_BL_LCD_STATUS_CHANGE, NOTIFIER_MINOR_BL_HAL_ON));
-
     lidbg_new_cdev(&dev_fops, "flydev0");
 
-   // lidbg_trace_msg_cb_register("unable to enumerate USB device", NULL, usb_enumerate_monitor);
-   // lidbg_trace_msg_cb_register("clusters badly computed", NULL, sd_error_monitor);
-
-    FS_REGISTER_INT(udisk_stability_test, "udisk_stability_test", 0, NULL);
-#ifdef PLATFORM_msm8996
-	USB_FRONT_WORK_ENABLE;
-#endif
-
-  //  if(udisk_stability_test == 1)
-    {
-        CREATE_KTHREAD(thread_udisk_stability_test, NULL);
-    }
-     CREATE_KTHREAD(thread_usb_disk_enable_delay, NULL);
-   
-    GPIO_IS_READY;
-    SET_GPIO_READY_SUSPEND;
-
-    if( g_recovery_meg->bootParam.upName.val == 2)
-    {
-		lidbg("disable printk uart\n");
-		lidbg_shell_cmd("echo appcmd *158#041 > /dev/lidbg_drivers_dbg0");
-    }
-
-    if((!g_var.is_fly) && (g_var.recovery_mode == 0) )
-	   HAL_IS_READY;
-    //SET_HAL_READY_SUSPEND;
-#ifdef PLATFORM_ID_7
-    if(0)
-    {
-        usb_register_notify(&usb_nb_misc);
-        CREATE_KTHREAD(thread_udisk_en, NULL);
-    }
-#endif
-#ifdef SOC_mt35x
-	GPS_POWER_ON;
-#endif
-#ifdef PLATFORM_msm8996
-	USB_VBUS_POWER_DISABLE;
-	msleep(500);
-	USB_VBUS_POWER_ENABLE;
-#endif
+    CREATE_KTHREAD(thread_dev_init, NULL);
     return 0;
 
 }
 static int soc_dev_remove(struct platform_device *pdev)
 {
     lidbg("soc_dev_remove\n");
-   
-    if(!g_var.is_fly) {}
-
     return 0;
 
 }
@@ -852,10 +726,6 @@ static int  soc_dev_suspend(struct platform_device *pdev, pm_message_t state)
 {
     lidbg("soc_dev_suspend\n");
     LEVEL_CONVERSION_ENABLE;
-    if(!g_var.is_fly)
-    {
-        //button_suspend();
-    }
     led_suspend();
     GPIO_NOT_READY;
     HAL_NOT_READY;
@@ -867,10 +737,6 @@ static int  soc_dev_suspend(struct platform_device *pdev, pm_message_t state)
 static int soc_dev_resume(struct platform_device *pdev)
 {
     lidbg("soc_dev_resume \n");
-    if(!g_var.is_fly)
-    {
-        //button_resume();
-    }
      led_resume();
     GPIO_IS_READY;
 
@@ -912,7 +778,6 @@ int dev_init(void)
     lidbg("=======misc_dev_init========\n");
     LIDBG_GET;
     set_func_tbl();
-    wake_lock_init(&device_wakelock, WAKE_LOCK_SUSPEND, "lidbg_device_wakelock");
     platform_device_register(&soc_devices);
     platform_driver_register(&soc_devices_driver);
     return 0;

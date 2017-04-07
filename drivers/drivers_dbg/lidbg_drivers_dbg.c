@@ -42,6 +42,13 @@ if(fs_is_file_exist("/data/coldBootLogcat.txt"))
     lidbg("enable coldBootLogcat\n");
     lidbg_shell_cmd("echo appcmd *158#001 > /dev/lidbg_drivers_dbg0");
 }
+
+    if( g_recovery_meg->bootParam.upName.val == 2)
+    {
+		lidbg("disable printk uart\n");
+		lidbg_shell_cmd("echo appcmd *158#041 > /dev/lidbg_drivers_dbg0");
+    }
+	
    if((!g_var.is_fly) && (g_var.recovery_mode == 0) )
    {
    	    set_wifi_adb_mode(true);

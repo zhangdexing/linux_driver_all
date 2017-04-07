@@ -226,9 +226,7 @@ int dsi83_check(void)
 #if defined(CONFIG_FB)
 void dsi83_suspend(void)
 {
-#ifdef PLATFORM_msm8226
-    is_dsi83_inited = false;
-#endif
+
 }
 
 void dsi83_resume(void)

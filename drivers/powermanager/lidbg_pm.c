@@ -340,14 +340,6 @@ int linux_to_lidbg_receiver(linux_to_lidbg_transfer_t _enum, void *data)
     return 1;
 }
 
-void usb_disk_enable(bool enable)
-{
-    lidbg("[%s]\n", enable ? "usb_enable" : "usb_disable");
-    if(enable)
-        USB_WORK_ENABLE;
-    else
-        USB_WORK_DISENABLE;
-}
 
 #ifdef LIDBG_PM_MONITOR
 static struct wakeup_source *autosleep_ws;
@@ -541,17 +533,7 @@ static int thread_send_power_key(void *data)
 }
 #endif
 
-#if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
-static int thread_gps_handle(void *data)
-{
-       msleep(50*1000);
-	  if(ANDROID_VERSION >= 600)
-	       lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 22 &");
-         else
-       	lidbg_shell_cmd("settings put  secure location_providers_allowed network,gps");
-       return 1;
-}
-#endif
+
 
 #ifdef SOC_mt3360
 void suspendkey_timer_isr(unsigned long data)
@@ -717,12 +699,7 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
         else if(!strcmp(cmd[1], "devices_up"))
         {
             MCU_APP_GPIO_ON;
-#if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
-	  if(ANDROID_VERSION >= 600)
-            	lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 22 &");
-	  else
-              lidbg_shell_cmd("settings put  secure location_providers_allowed network,gps");
-#endif
+
             SOC_System_Status(FLY_DEVICE_UP);
             PM_WARN("mediascan.en.1\n");
             lidbg_shell_cmd("setprop persist.lidbg.mediascan.en 1");
@@ -736,12 +713,6 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
         else if(!strcmp(cmd[1], "devices_down"))
         {
         
-#if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
-	  if(ANDROID_VERSION >= 600)
-           	 lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 23 &");
-	  else
-               lidbg_shell_cmd("settings put  secure location_providers_allowed \"\"");
-#endif
             SOC_System_Status(FLY_DEVICE_DOWN);
             PM_WARN("mediascan.en.0\n");
             lidbg_shell_cmd("setprop persist.lidbg.mediascan.en 0");
@@ -858,12 +829,6 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
         {
             //int  enum_value = simple_strtoul(cmd[3], 0, 0);
             lidbg_toast_show("lidbg:    ",cmd[2]);
-        }
-        else  if(!strcmp(cmd[1], "udisk_reset"))
-        {
-            usb_disk_enable(false);
-            ssleep(2);
-            usb_disk_enable(true);
         }
         else  if(!strcmp(cmd[1], "task"))
         {
@@ -1370,21 +1335,7 @@ static void set_func_tbl(void)
     plidbg_dev->soc_func_tbl.pfnSOC_PM_STEP = lidbg_pm_step_call;
     plidbg_dev->soc_func_tbl.pfnHal_Acc_Callback = NULL;
 }
-#ifdef PLATFORM_msm8226
-void find_fb_open_err(char *key_word, void *data)
-{
-    DUMP_FUN;
-    lidbgerr("find key word:find_fb_open_err\n");
-    if(g_var.system_status >= FLY_KERNEL_UP)
-    {
-        SOC_Key_Report(KEY_POWER, KEY_PRESSED_RELEASED);
-        ssleep(2);
-        SOC_Key_Report(KEY_POWER, KEY_PRESSED_RELEASED);
-    }
-    else
-        lidbg("find key word:find_fb_open_err.drop.%d\n", g_var.system_status );
-}
-#endif
+
 
 static int __init lidbg_pm_init(void)
 {
@@ -1405,18 +1356,10 @@ static int __init lidbg_pm_init(void)
 
     CREATE_KTHREAD(thread_gpio_app_status_delay, NULL);
     CREATE_KTHREAD(thread_get_3rd_package_name_list_delay, NULL);
-
-#if defined(PLATFORM_msm8226) || defined(PLATFORM_msm8974) 
-    CREATE_KTHREAD(thread_gps_handle, NULL);
-#endif
 	
     //lidbg_shell_cmd("echo 8  > /proc/sys/kernel/printk");
     PM_WARN("mediascan.en.0\n");
     lidbg_shell_cmd("setprop persist.lidbg.mediascan.en 1");
-
-#ifdef PLATFORM_msm8226
-   // lidbg_trace_msg_cb_register("mdss_mdp_overlay_on: Failed to turn on fb0", NULL, find_fb_open_err);
-#endif
 
 #ifdef SOC_mt3360
     init_timer(&suspendkey_timer);

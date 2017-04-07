@@ -13,50 +13,6 @@
 
 LIDBG_DEFINE;
 
-#if 0
-int saf7741_io_config(u32 gpio_num, char *label)
-{
-    int rc = 0;
-
-    if (!gpio_is_valid(gpio_num))
-    {
-        printk(KERN_CRIT "dsi83:gpio-%u isn't valid!\n", gpio_num);
-        return -ENODEV;
-    }
-
-    rc = gpio_request(gpio_num, label);
-    if (rc)
-    {
-        printk(KERN_CRIT "dsi83:request gpio-%u failed, rc=%d\n", gpio_num, rc);
-        //gpio_free(gpio_num);
-        return -ENODEV;
-    }
-    rc = gpio_tlmm_config(GPIO_CFG(
-                              gpio_num, 0,
-                              GPIO_CFG_OUTPUT,
-                              GPIO_CFG_PULL_DOWN,
-                              GPIO_CFG_2MA),
-                          GPIO_CFG_ENABLE);
-
-    if (rc)
-    {
-        printk(KERN_CRIT "dsi83:unable to config tlmm = %d\n", gpio_num);
-        gpio_free(gpio_num);
-        return -ENODEV;
-    }
-
-    return 0;
-}
-
-static void saf7741_reset(void)
-{
-    gpio_direction_output(SAF7741_GPIO_RST, 0);
-    mdelay(300);
-    gpio_direction_output(SAF7741_GPIO_RST, 1);
-    mdelay(20);
-}
-#endif
-
 BOOL I2C_Read_SAF7741(UINT ulRegAddr, BYTE *pRegValBuf, UINT uiValBufLen)
 {
     BYTE i;

@@ -38,12 +38,7 @@
 #include <linux/version.h>
 #include <linux/platform_device.h>
 #include <linux/syscalls.h>
-//#include <asm/system.h>
 #include <linux/time.h>
-#ifdef SOC_mt3360
-#else
-#include <linux/pwm.h>
-#endif
 #include <linux/hrtimer.h>
 #include <linux/stat.h>
 #include <linux/kprobes.h>
@@ -75,9 +70,9 @@
 #include <linux/reboot.h>
 #include <linux/workqueue.h>
 #include <linux/cpufreq.h>
-//px3 add pm
 #include <linux/wakelock.h>
 #include <linux/completion.h>
+
 //////lidbg//////
 #include "lidbg_loader.h"
 #include "lidbg_io.h"
@@ -102,15 +97,14 @@
 #include "lidbg_immediate.h"
 #include "lidbg_soc.h"
 
+#ifdef PLATFORM_msm8909
+#include "lidbg_soc_msm8909.h"
+#elif defined(PLATFORM_msm8996)
+#include "lidbg_soc_msm8996.h"
+#endif
 
 //////drivers//////
-#ifdef BUILD_DRIVERS
-#ifdef SOC_msm8x25
-#include "lidbg_enter.h"
-#else
 #include "lidbg_interface.h"
-#endif
-#endif
 
 #endif
 

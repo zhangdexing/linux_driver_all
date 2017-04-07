@@ -175,9 +175,6 @@ void acc_status_handle(FLY_ACC_STATUS val)
 		lidbg_shell_cmd("setprop persist.lidbg.acc.status 0");
 		send_app_status(FLY_KERNEL_UP);//wakeup
 		lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON));
-		//if(g_var.is_fly == 0)
-		//    USB_WORK_ENABLE;
-		//LCD_ON;
 		send_app_status(FLY_SCREEN_ON);
 		fs_file_write(DEV_NAME, false, SCREEN_ON, 0, strlen(SCREEN_ON));
 		lidbg(TAG"acc_status_handle: FLY_ACC_ON del rmtctrl timer.\n");

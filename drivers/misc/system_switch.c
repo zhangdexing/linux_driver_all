@@ -91,8 +91,6 @@ retry:
                 lidbg_shell_cmd("chmod 777 /flysystem");
                 lidbg_shell_cmd("chmod 777 /flysystem/app/sys-app/*");
 
-                lidbg_shell_cmd("rm /system/lib/modules/out/"FLY_GPS_SO);
-
                 lidbg_shell_cmd("mkdir	"ORIGIN_APP_PATH);
                 lidbg_shell_cmd("mkdir	"ORIGIN_TMP_PATH);
                 LIDBG_WARN("<====system_switch_init:update====>\n");

@@ -5,8 +5,6 @@
 #include <mt_thermal.h>
 #include <tscpu_settings.h>
 
-struct fly_smem *p_fly_smem = NULL;
-
 int soc_temp_get(int num)
 {
     return tscpu_get_cpu_temp_met(num)/1000;
@@ -86,57 +84,16 @@ static struct platform_driver lidbg_soc_driver =
 };
 
 
-
-int lidbg_write_file(const char *filename, const char *wbuf, size_t length)
-{
-    int ret = 0;
-    struct file *filp = (struct file *) - ENOENT;
-    mm_segment_t oldfs;
-    oldfs = get_fs();
-    set_fs(KERNEL_DS);
-
-    filp = filp_open(filename, O_RDWR | O_CREAT, 0666);
-    if (IS_ERR(filp) || !filp->f_op)
-    {
-
-        lidbg("kernel_write_file:filp_open Error\n");
-        ret = -ENOENT;
-        return ret;
-    }
-
-    ret = filp->f_op->write(filp, wbuf, length, &filp->f_pos);
-    if (ret < 0)
-    {
-        lidbg("kernel_write_file:write Error\n");
-        return ret;
-    }
-
-    if (!IS_ERR(filp))
-        filp_close(filp, NULL);
-    set_fs(oldfs);
-    return ret;
-}
-
-int thread_get_mac_addr(void *data)
-{
-
-    return 0;
-}
-
-
-
 int mt35x_init(void)
 {
     DUMP_BUILD_TIME;
-
-    CREATE_KTHREAD(thread_get_mac_addr, NULL);
 
     platform_device_register(&lidbg_soc);
     platform_driver_register(&lidbg_soc_driver);
     return 0;
 }
 
-/*Ä£¿éÐ¶ÔØº¯Êý*/
+
 void mt35x_exit(void)
 {
     lidbg("mx35x_exit\n");
@@ -145,7 +102,6 @@ void mt35x_exit(void)
 
 
 EXPORT_SYMBOL(lidbg_soc_main);
-EXPORT_SYMBOL(p_fly_smem);
 EXPORT_SYMBOL(soc_temp_get);
 
 MODULE_AUTHOR("Lsw");
