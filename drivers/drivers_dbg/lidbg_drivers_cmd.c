@@ -14,8 +14,8 @@ void dump_sysinfo(void)
 	lidbg_shell_cmd("cat /proc/cmdline >> /data/lidbg/machine/machine.txt");
 	lidbg_shell_cmd("getprop fly.version.mcu >> /data/lidbg/machine/machine.txt");
 	lidbg_shell_cmd("getprop ro.release.version >> /data/lidbg/machine/machine.txt");
-	lidbg_shell_cmd("top -n 15 -t -d 1 -m 25 >/data/lidbg/machine/top.txt &");
-	lidbg_shell_cmd("procrank > /data/lidbg/machine/procrank.txt &");
+	lidbg_shell_cmd("top -n 1 -t -d 1 -m 25 >/data/lidbg/machine/top.txt");
+	lidbg_shell_cmd("procrank > /data/lidbg/machine/procrank.txt");
 	lidbg_shell_cmd("ps > /data/lidbg/machine/ps.txt");
 	lidbg_shell_cmd("df > /data/lidbg/machine/df.txt");
 	lidbg_shell_cmd("getprop > /data/lidbg/machine/getprop.txt");
@@ -1316,6 +1316,8 @@ void parse_cmd(char *pt)
 		 lidbg_shell_cmd("mkdir  /sdcard/FlyLog/DriBugReport/drivers/DVR");
  		 lidbg_shell_cmd("cp -rf /dev/log/DVRERR.txt /sdcard/FlyLog/DriBugReport/drivers/DVR");
 		 lidbg_shell_cmd("cp -rf /dev/log/gsensor_angle.txt /sdcard/FlyLog/DriBugReport/drivers/DVR");
+		 lidbg_shell_cmd("cp -rf /dev/log/build_time.txt /sdcard/FlyLog/DriBugReport/drivers/build_time.txt");
+		 
         }
         else if (!strcmp(argv[1], "*158#101"))
         {
