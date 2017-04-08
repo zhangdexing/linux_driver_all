@@ -5,7 +5,7 @@
 int MAXINUM = (1024*1024*15);
 int poll_time = 5;
 bool save_in_time_mode = 0;
-#define PATH "/data/lidbg/reckmsg/"
+char * PATH =  "/data/lidbg/reckmsg/";
 
 int openfd;
 int readsize = 0,savesize = 0;
@@ -152,29 +152,35 @@ void filesize_ctrl()
 
 void sigfunc(int sig)
 {
-	sig = sig;
+	lidbg("record_klogctl:sigfunc write log to file\n");
 	//if(sig == SIGUSR1)
 	{
 		write(openfd,buf,savesize);
-		//lidbg("record_klogctl:sigfunc write log to file\n");
 		readsize = savesize = 0;
 		memset(buf,'\0',BUFSIZE);	
 		filesize_ctrl();
 	}
 	if (sig == SIGUSR2)
 	{
-		lidbg("record_klogctl:in time mode\n");
-		MAXINUM = (1024*1024*500);
+		lidbg("record_klogctl:change in time mode\n");
+		MAXINUM = (1024*1024*50);
 		poll_time = 1;
 		save_in_time_mode = 1;
-		
 	}
 }
 
-int main()
+int main(int argc , char **argv)
 {
 	time_t ctime;
 	struct tm *tm;
+	save_in_time_mode = strtoul(argv[1], 0, 0);
+	if(save_in_time_mode == 1)
+	{
+		lidbg("record_klogctl:in time mode\n");
+		MAXINUM = (1024*1024*500);
+		poll_time = 1;
+		PATH = "/sdcard/kmsg/";
+	}
 	
 	umask(0);//屏蔽创建文件权限
 	int fd = mkdir(PATH,777);	
@@ -190,8 +196,10 @@ int main()
 	buf = (char *)malloc(BUFSIZE);
 	openfd = open(newfile,O_RDWR | O_CREAT,0777);
 	system("chmod 777 /data/lidbg/reckmsg/* ");
+	system("chmod 777 /sdcard/kmsg/* ");
 
 	signal(SIGUSR1,sigfunc);
+	signal(SIGUSR2,sigfunc);
 	write_log(buf);
 	free(buf);
 	return 0;

@@ -555,6 +555,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#127--grantWhiteListPermissions \n");
             fs_mem_log("*158#128--trigger conf check \n");
             fs_mem_log("*158#129--call lidbg_uevent_cold_boot \n");
+            fs_mem_log("*158#130--get kmsg log in time mode \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -610,9 +611,22 @@ void parse_cmd(char *pt)
 		 lidbg_shell_cmd("chmod 777 /data/lidbg/reckmsg/* ");
 #endif
 	    if(g_var.is_fly)
-           	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE_IN_TIME &");
+	    	{
+		 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE &");
+           	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal KILL &");
+	    	}
            else
-               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE_IN_TIME &");
+           	{
+               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
+               lidbg_shell_cmd("/system/lib/modules/out/sendsignal KILL &");
+           	}
+		   
+	    msleep(500);
+	    if(g_var.is_fly)
+           	 lidbg_shell_cmd("/flysystem/lib/out/record_klogctl 1 &");
+           else
+               lidbg_shell_cmd("/system/lib/modules/out/record_klogctl 1 &");
+
 		   
             lidbg_domineering_ack();
         }
@@ -1587,7 +1601,10 @@ void parse_cmd(char *pt)
 		  lidbg("*158#129--call lidbg_uevent_cold_boot \n");
 		  lidbg_shell_cmd("/flysystem/lib/out/lidbg_uevent_cold_boot &");
 		}
-
+        else if (!strcmp(argv[1], "*158#130"))
+        {
+           	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE_IN_TIME &");
+        }
     }
     else if(!strcmp(argv[0], "flyaudio.code.disable") )
     {

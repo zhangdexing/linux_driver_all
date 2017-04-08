@@ -99,8 +99,8 @@ int main(int argc,char* argv[])
    }
    else
    {
-     lidbg("sendsignal:unknown cmd!\n");
-       return -1;
+     lidbg("sendsignal:send kill cmd!\n");
+     sig = SIGKILL;
    }
    
 
