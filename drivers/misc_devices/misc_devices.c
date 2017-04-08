@@ -686,12 +686,21 @@ int thread_dev_init(void *data)
 #endif
 
  //usb
-    USB_WORK_DISENABLE;
-    msleep(500);
-    USB_FRONT_WORK_ENABLE;
-    USB_BACK_WORK_ENABLE;
-    CREATE_KTHREAD(thread_usb_disk_enable_delay, NULL);
-    CREATE_KTHREAD(thread_udisk_stability_test, NULL);
+    if(g_var.recovery_mode == 1)//enable udisk asap
+    {
+	USB_FRONT_WORK_ENABLE;
+	USB_BACK_WORK_ENABLE;
+	USB_POWER_UDISK_ENABLE;
+    }
+   else
+   {
+	USB_WORK_DISENABLE;
+	msleep(500);
+	USB_FRONT_WORK_ENABLE;
+	USB_BACK_WORK_ENABLE;
+	CREATE_KTHREAD(thread_usb_disk_enable_delay, NULL);
+	CREATE_KTHREAD(thread_udisk_stability_test, NULL);
+   }
     return 0;
 }
 
