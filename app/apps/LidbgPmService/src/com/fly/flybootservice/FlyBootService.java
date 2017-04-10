@@ -238,7 +238,11 @@ public class FlyBootService extends Service {
 			+ "\n Build.VERSION.SDK_INT: " + android.os.Build.VERSION.SDK_INT
 			+ "\n Build.VERSION.RELEASE: " + android.os.Build.VERSION.RELEASE);
 
-        restoreAirplaneMode(mFlyBootService);
+	if(!SystemProperties.getBoolean("persist.lidbg.airPlaneState",false))
+		restoreAirplaneMode(mFlyBootService);
+
+	if(SystemProperties.getBoolean("persist.lidbg.WIFIEnable",false))
+		setWifiState(true);
 
         new Thread() {
             @Override
@@ -262,6 +266,8 @@ public class FlyBootService extends Service {
 								LIDBG_PRINT(" FBS_SCREEN_OFF:isWifiApEnabled:"+isWifiApEnabled+"/isWifiEnabled:"+isWifiEnabled+"/isAirplaneOn:"+isAirplaneOn+"\n");
 								previousACCOffTime = SystemClock.elapsedRealtime();
 								SendBroadcastToService(KeyBootState, keyScreenOFF);
+								SystemProperties.set("persist.lidbg.WIFIState", ""+isWifiEnabled);
+								SystemProperties.set("persist.lidbg.airPlaneState", ""+isAirplaneOn);
 							}else if(pmState == FBS_DEVICE_DOWN){
 								LIDBG_PRINT("get pm state: FBS_DEVICE_DOWN\n");
 								if((!blDozeModeFlag)&&(AirplaneEnable == false))
