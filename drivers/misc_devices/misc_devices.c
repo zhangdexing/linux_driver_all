@@ -604,7 +604,8 @@ static struct file_operations dev_fops =
     .release = dev_close,
 };
 
-
+#undef USB_MOUNT_POINT
+#define USB_MOUNT_POINT  "/storage/udisk-E79D-104D"
 #define UDISK_LOG_PATH 	 LIDBG_LOG_DIR"udisk_stable_test.txt"
 u32 err_cnt = 0, cnt = 0, retry_cnt = 0;
 bool is_udisk_file_exist(void)

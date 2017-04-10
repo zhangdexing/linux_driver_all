@@ -12,6 +12,8 @@ static int loop_warning_en = 0;
 #include "system_switch.c"
 
 #define TAG "lidbg_misc: "
+#undef USB_MOUNT_POINT
+#define USB_MOUNT_POINT  "/storage/udisk-E79D-104D"
 void lidbg_enable_logcat(void)
 {
     char cmd[128] = {0};
