@@ -58,6 +58,10 @@ namespace vfat {
 static const char* kMkfsPath = "/system/bin/newfs_msdos";
 static const char* kFsckPath = "/system/bin/fsck_msdos";
 
+int selectPath(){
+		return 0;
+}
+
 bool IsSupported() {
     return access(kMkfsPath, X_OK) == 0
             && access(kFsckPath, X_OK) == 0

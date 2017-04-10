@@ -261,7 +261,11 @@ int VolumeManager::start() {
     // storage; the framework will decide if it should be mounted.
     CHECK(mInternalEmulated == nullptr);
     mInternalEmulated = std::shared_ptr<android::vold::VolumeBase>(
-            new android::vold::EmulatedVolume("/data/media"));
+#ifdef PLATFORM_msm8974
+	new android::vold::EmulatedVolume("/flysdcard"));
+#else
+	new android::vold::EmulatedVolume("/data/media"));
+#endif
     mInternalEmulated->create();
 
     return 0;

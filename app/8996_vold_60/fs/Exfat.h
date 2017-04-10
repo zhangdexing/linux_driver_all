@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_VOLD_VFAT_H
-#define ANDROID_VOLD_VFAT_H
+#ifndef ANDROID_VOLD_EXFAT_H
+#define ANDROID_VOLD_EXFAT_H
 
 #include <utils/Errors.h>
 
@@ -23,17 +23,17 @@
 
 namespace android {
 namespace vold {
-namespace vfat {
+namespace exfat {
+
 int selectPath();
 bool IsSupported();
 
 status_t Check(const std::string& source);
 status_t Mount(const std::string& source, const std::string& target, bool ro,
-        bool remount, bool executable, int ownerUid, int ownerGid, int permMask,
-        bool createLost);
-status_t Format(const std::string& source, unsigned int numSectors);
+        bool remount, bool executable, int ownerUid, int ownerGid, int permMask);
+status_t Format(const std::string& source);
 
-}  // namespace vfat
+}  // namespace exfat
 }  // namespace vold
 }  // namespace android
 

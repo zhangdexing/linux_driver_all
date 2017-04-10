@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+#include "fs/Exfat.h"
+#include "fs/Ext4.h"
+#include "fs/F2fs.h"
+#include "fs/Ntfs.h"
+
 #include "fs/Vfat.h"
 #include "PublicVolume.h"
 #include "Utils.h"
@@ -43,7 +48,7 @@ static const char* kAsecPath = "/mnt/secure/asec";
 
 PublicVolume::PublicVolume(dev_t device) :
         VolumeBase(Type::kPublic), mDevice(device), mFusePid(0) {
-    setId(StringPrintf("public:%u,%u", major(device), minor(device)));
+    setId(StringPrintf("public:%u_%u", major(device), minor(device)));
     mDevPath = StringPrintf("/dev/block/vold/%s", getId().c_str());
 }
 
@@ -94,13 +99,8 @@ status_t PublicVolume::doMount() {
     // TODO: expand to support mounting other filesystems
     readMetadata();
 
-    if (mFsType != "vfat") {
+    if (!IsFilesystemSupported(mFsType)) {
         LOG(ERROR) << getId() << " unsupported filesystem " << mFsType;
-        return -EIO;
-    }
-
-    if (vfat::Check(mDevPath)) {
-        LOG(ERROR) << getId() << " failed filesystem check";
         return -EIO;
     }
 
@@ -131,8 +131,50 @@ status_t PublicVolume::doMount() {
         return -errno;
     }
 
-    if (vfat::Mount(mDevPath, mRawPath, false, false, false,
-            AID_MEDIA_RW, AID_MEDIA_RW, 0007, true)) {
+    int ret = 0;
+
+	if (mFsType == "exfat") {
+        ret = exfat::selectPath();
+    } else if (mFsType == "ntfs") {
+        ret = ntfs::selectPath();
+    } else if (mFsType == "vfat") {
+        ret = vfat::selectPath();
+    } else {
+        LOG(WARNING) << getId() << " unsupported filesystem selectPath, skipping";
+    }
+    if (ret) {
+        LOG(ERROR) << getId() << " failed to find mount-tools";
+        return -EIO;
+    }
+
+
+    if (mFsType == "exfat") {
+        ret = exfat::Check(mDevPath);
+    } else if (mFsType == "ntfs") {
+        ret = ntfs::Check(mDevPath);
+    } else if (mFsType == "vfat") {
+        ret = vfat::Check(mDevPath);
+    } else {
+        LOG(WARNING) << getId() << " unsupported filesystem check, skipping";
+    }
+    if (ret) {
+        LOG(ERROR) << getId() << " failed filesystem check";
+        return -EIO;
+    }
+
+    if (mFsType == "exfat") {
+        ret = exfat::Mount(mDevPath, mRawPath, false, false, false,
+                AID_MEDIA_RW, AID_MEDIA_RW, 0007);
+    } else if (mFsType == "ntfs") {
+        ret = ntfs::Mount(mDevPath, mRawPath, false, false, false,
+                AID_MEDIA_RW, AID_MEDIA_RW, 0007, true);
+    } else if (mFsType == "vfat") {
+        ret = vfat::Mount(mDevPath, mRawPath, false, false, false,
+                AID_MEDIA_RW, AID_MEDIA_RW, 0007, true);
+    } else {
+        ret = ::mount(mDevPath.c_str(), mRawPath.c_str(), mFsType.c_str(), 0, NULL);
+    }
+    if (ret) {
         PLOG(ERROR) << getId() << " failed to mount " << mDevPath;
         return -EIO;
     }

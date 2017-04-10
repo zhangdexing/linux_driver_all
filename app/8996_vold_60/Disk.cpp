@@ -80,7 +80,7 @@ Disk::Disk(const std::string& eventPath, dev_t device,
         const std::string& nickname, int flags) :
         mDevice(device), mSize(-1), mNickname(nickname), mFlags(flags), mCreated(
                 false), mJustPartitioned(false) {
-    mId = StringPrintf("disk:%u,%u", major(device), minor(device));
+    mId = StringPrintf("disk:%u_%u", major(device), minor(device));
     mEventPath = eventPath;
     mSysPath = StringPrintf("/sys/%s", eventPath.c_str());
     mDevPath = StringPrintf("/dev/block/vold/%s", mId.c_str());
@@ -259,6 +259,17 @@ status_t Disk::readPartitions() {
 
     std::vector<std::string> output;
     status_t res = ForkExecvp(cmd, output);
+
+	std::string strck = output[1];	//PART 1 4f
+	if( strck[7] == '4' && strck[8] == 'f') {
+		output.clear();
+		output.push_back("PART 1 7");
+	}
+	if ( strck[7] == '7' && strck[8] == '2') {
+		output.clear();
+		output.push_back("PART 1 b");
+	}
+
     if (res != OK) {
         LOG(WARNING) << "sgdisk failed to scan " << mDevPath;
         notifyEvent(ResponseCode::DiskScanned);
@@ -298,6 +309,8 @@ status_t Disk::readPartitions() {
                 case 0x0b: // W95 FAT32 (LBA)
                 case 0x0c: // W95 FAT32 (LBA)
                 case 0x0e: // W95 FAT16 (LBA)
+                case 0x07: // NTFS/exFAT
+                case 0x83: // Linux EXT4/F2FS/...
                     createPublicVolume(partDevice);
                     break;
                 }
