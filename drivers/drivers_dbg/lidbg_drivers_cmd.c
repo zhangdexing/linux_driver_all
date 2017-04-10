@@ -1610,6 +1610,8 @@ void parse_cmd(char *pt)
 		{
 		  lidbg("*158#131--enable red osd ,logcat \n");
 		  lidbg_shell_cmd("rm -rf /sdcard/*.txt");
+		  lidbg_shell_cmd("rm -rf /data/anr/*");
+		  lidbg_shell_cmd("rm -rf /data/tombstones/*");
 		  lidbg_shell_cmd("am broadcast -a android.provider.Telephony.SECRET_CODE -d android_secret_code://9846 &");
 		  ssleep(2);
 		  lidbg_shell_cmd("echo appcmd *158#001 > /dev/lidbg_drivers_dbg0");
