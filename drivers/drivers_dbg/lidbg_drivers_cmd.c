@@ -556,6 +556,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#128--trigger conf check \n");
             fs_mem_log("*158#129--call lidbg_uevent_cold_boot \n");
             fs_mem_log("*158#130--get kmsg log in time mode \n");
+            fs_mem_log("*158#131--enable red osd ,logcat \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1605,6 +1606,14 @@ void parse_cmd(char *pt)
         {
            	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE_IN_TIME &");
         }
+        else if (!strncmp(argv[1], "*158#131", 8))
+		{
+		  lidbg("*158#131--enable red osd ,logcat \n");
+		  lidbg_shell_cmd("rm -rf /sdcard/*.txt");
+		  lidbg_shell_cmd("am broadcast -a android.provider.Telephony.SECRET_CODE -d android_secret_code://9846 &");
+		  ssleep(2);
+		  lidbg_shell_cmd("echo appcmd *158#001 > /dev/lidbg_drivers_dbg0");
+		}
     }
     else if(!strcmp(argv[0], "flyaudio.code.disable") )
     {
