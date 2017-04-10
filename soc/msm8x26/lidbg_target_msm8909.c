@@ -121,6 +121,7 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_mcu_app = 34,//LPC_MSM2     P1-25		qcom-->lpc:hal alive=0,else 1
 	.gpio_request_fastboot = 35,//LPC_MSM3   P1-23	lpc-->qcom:acc status , on=1,off=0
 	.gpio_ready = 36,//LPC_MSM4       P0_15      qcom-->lpc:gpio ready=1,else 0
+		.gpio_mcu_read_busy = 31, //LPC_MSM5			qcom-->lpc:busy:0  ready:1
 
         .gpio_ts_int = 13,
         .gpio_ts_rst = 12,

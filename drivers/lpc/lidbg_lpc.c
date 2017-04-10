@@ -24,6 +24,13 @@ spinlock_t notify_fifo_lock;
 wait_queue_head_t wait_queue;
 struct wake_lock lpc_wakelock;
 bool is_kfifo_empty = 1;
+
+u8 *wbuf_fifo_buffer;
+static struct kfifo wbuf_data_fifo;
+spinlock_t wbuf_fifo_lock;
+
+struct work_struct wBuf_work;
+
 typedef struct _FLY_IIC_INFO
 {
     struct work_struct iic_work;
@@ -84,7 +91,47 @@ int LPCCombinDataStream(BYTE *p, UINT len)
 }
 
 
-static void LPCDataEnqueue(BYTE *buff, UINT length)
+static void LPCWriteDataEnqueue(BYTE *buff, short length)
+{
+    unsigned long irqflags;
+	UINT i = 0;
+    BYTE checksum = 0;
+    BYTE bufData[length + 4];
+    BYTE *buf = bufData;
+
+    if((!lpc_work_en) || (g_hw.lpc_disable))
+    {
+        if(length >= 3 )pr_debug("ToMCU.skip:%x %x %x\n", buff[0], buff[1], buff[2]);
+        return;
+    }
+
+    buf[0] = 0xFF;
+    buf[1] = 0x55;
+    buf[2] = length + 1;
+    checksum = buf[2];
+    for (i = 0; i < length; i++)
+    {
+        buf[3 + i] = buff[i];
+        checksum += buff[i];
+    }
+
+    buf[3 + i] = checksum;
+	
+    spin_lock_irqsave(&wbuf_fifo_lock, irqflags);
+    if(kfifo_is_full(&wbuf_data_fifo))
+    {
+        lidbg("%s:kfifo full!!!!!\n", __func__);
+        spin_unlock_irqrestore(&wbuf_fifo_lock, irqflags);
+        return;
+    }
+	length += 4;
+    kfifo_in(&wbuf_data_fifo, &length ,  2);
+    kfifo_in(&wbuf_data_fifo, buf,  length);
+    spin_unlock_irqrestore(&wbuf_fifo_lock, irqflags);
+    return;
+}
+
+static void LPCReadDataEnqueue(BYTE *buff, short length)
 {
     unsigned long irqflags;
     spin_lock_irqsave(&notify_fifo_lock, irqflags);
@@ -94,7 +141,7 @@ static void LPCDataEnqueue(BYTE *buff, UINT length)
         spin_unlock_irqrestore(&notify_fifo_lock, irqflags);
         return;
     }
-    kfifo_in(&notify_data_fifo, &(length),  1);
+    kfifo_in(&notify_data_fifo, &length,  2);
     kfifo_in(&notify_data_fifo, buff,  length);
     spin_unlock_irqrestore(&notify_fifo_lock, irqflags);
     is_kfifo_empty = 0;
@@ -148,7 +195,7 @@ static BOOL readFromMCUProcessor(BYTE *p, UINT length)
                 pGlobalHardwareInfo->buffFromMCUProcessorStatus = 0;
                 if (pGlobalHardwareInfo->buffFromMCUCRC == p[i])
                 {
-                    LPCDataEnqueue(pGlobalHardwareInfo->buffFromMCU, pGlobalHardwareInfo->buffFromMCUFrameLength);
+                    LPCReadDataEnqueue(pGlobalHardwareInfo->buffFromMCU, (short)pGlobalHardwareInfo->buffFromMCUFrameLength);
                 }
                 else
                 {
@@ -215,6 +262,52 @@ static void workFlyMCUIIC(struct work_struct *work)
     //SOC_IO_ISR_Enable(MCU_IIC_REQ_GPIO);
 }
 
+irqreturn_t MCUDQBuf_isr(int irq, void *dev_id)
+{
+    if(!lpc_work_en)
+        return IRQ_HANDLED;
+    pr_debug("%s: isr\n", __func__);
+	if(!work_pending(&wBuf_work))
+		schedule_work(&wBuf_work);
+    return IRQ_HANDLED;
+}
+
+static void workFlyMCUDQBuf(struct work_struct *work)
+{
+    short length_buf = 0;
+    int ret;
+	unsigned long irqflags;
+
+	/*Send data when wait_gpio pull up*/
+    while ((SOC_IO_Input(MCU_READ_BUSY_GPIO, MCU_READ_BUSY_GPIO, 0) == 1) && (lpc_work_en == 1))
+    {
+    	spin_lock_irqsave(&wbuf_fifo_lock, irqflags);
+		if(kfifo_is_empty(&wbuf_data_fifo))//no data, skip
+		{
+			spin_unlock_irqrestore(&wbuf_fifo_lock, irqflags);
+			return;
+		}
+	    ret = kfifo_out(&wbuf_data_fifo, &length_buf, 2);
+	    if(length_buf > 0)
+	    {
+	        u8 data_buf[length_buf];
+	        ret = kfifo_out(&wbuf_data_fifo, data_buf, length_buf);
+	        spin_unlock_irqrestore(&wbuf_fifo_lock, irqflags);
+
+	        pr_debug("%s: length:%d,0x%x, 0x%x,0x%x,0x%x,0x%x\n", __func__, length_buf,data_buf[0],data_buf[1],data_buf[2],data_buf[3],data_buf[4]);
+			
+#ifdef SEND_DATA_WITH_UART
+		    ret = SOC_Uart_Send(data_buf);
+#else
+		    ret = SOC_I2C_Send(LPC_I2_ID, MCU_ADDR, data_buf, length_buf);
+#endif
+	    }
+	    else
+	        spin_unlock_irqrestore(&wbuf_fifo_lock, irqflags);
+    }
+	return;
+}
+
 
 void mcuFirstInit(void)
 {
@@ -222,7 +315,12 @@ void mcuFirstInit(void)
     pGlobalHardwareInfo = &GlobalHardwareInfo;
     INIT_WORK(&pGlobalHardwareInfo->FlyIICInfo.iic_work, workFlyMCUIIC);
     SOC_IO_ISR_Add(MCU_IIC_REQ_GPIO, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, MCUIIC_isr, pGlobalHardwareInfo);
-    schedule_work(&pGlobalHardwareInfo->FlyIICInfo.iic_work);
+	schedule_work(&pGlobalHardwareInfo->FlyIICInfo.iic_work);
+	
+	INIT_WORK(&wBuf_work, workFlyMCUDQBuf);
+	SOC_IO_ISR_Add(MCU_READ_BUSY_GPIO,  IRQF_TRIGGER_RISING | IRQF_ONESHOT, MCUDQBuf_isr, NULL);
+    //if(!work_pending(&wBuf_work))
+	//	schedule_work(&wBuf_work);
 }
 
 
@@ -254,7 +352,7 @@ int lpc_close(struct inode *inode, struct file *filp)
 
 ssize_t  lpc_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
 {
-    unsigned char length_buf = 0;
+    short length_buf = 0;
     int ret;
     unsigned long irqflags;
 
@@ -269,7 +367,7 @@ ssize_t  lpc_read(struct file *filp, char __user *buffer, size_t size, loff_t *o
     }
 
     spin_lock_irqsave(&notify_fifo_lock, irqflags);
-    ret = kfifo_out(&notify_data_fifo, &length_buf, 1);
+    ret = kfifo_out(&notify_data_fifo, &length_buf, 2);
     if(length_buf > 0)
     {
         u8 data_buf[length_buf];
@@ -296,10 +394,15 @@ static ssize_t lpc_write(struct file *filp, const char __user *buf,
     {
         lidbg("copy_from_user ERR\n");
     }
-
+#if 0
     LPCCombinDataStream(mem, size);//Pack and send
-    if(size >= 3 ) pr_debug("write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
-
+#else
+	LPCWriteDataEnqueue(mem, size);//Pack and enqueue
+#endif
+   // if(size >= 3 ) pr_debug("write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
+	pr_debug("size:%d,write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", size, mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
+	if(!work_pending(&wBuf_work))
+		schedule_work(&wBuf_work);
     return size;
 }
 static unsigned int lpc_poll(struct file *filp, struct poll_table_struct *wait)
@@ -344,13 +447,17 @@ static int  lpc_probe(struct platform_device *pdev)
     notify_fifo_buffer = (u8 *)kmalloc(HAL_NOTIFY_FIFO_SIZE , GFP_KERNEL);
     kfifo_init(&notify_data_fifo, notify_fifo_buffer, HAL_NOTIFY_FIFO_SIZE);
     spin_lock_init(&notify_fifo_lock);
+
+	wbuf_fifo_buffer = (u8 *)kmalloc(HAL_NOTIFY_FIFO_SIZE , GFP_KERNEL);
+    kfifo_init(&wbuf_data_fifo, wbuf_fifo_buffer, HAL_NOTIFY_FIFO_SIZE);
+    spin_lock_init(&wbuf_fifo_lock);
+		
     init_waitqueue_head(&wait_queue);
     wake_lock_init(&lpc_wakelock, WAKE_LOCK_SUSPEND, "lpc_wakelock");
 
-    lidbg_new_cdev(&lpc_fops, "fly_lpc0");
-
     mcuFirstInit();
-
+	
+	lidbg_new_cdev(&lpc_fops, "fly_lpc0");
     return 0;
 }
 

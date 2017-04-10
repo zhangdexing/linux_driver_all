@@ -135,7 +135,7 @@ struct hw_version_specific
 
 	int gpio_level_conversion_en;
 
-
+	int gpio_mcu_read_busy;
 };
 extern struct hw_version_specific g_hw_version_specific[];
 
@@ -163,6 +163,7 @@ extern struct hw_version_specific g_hw_version_specific[];
 //lpc
 #define  LPC_I2_ID        (g_hw.i2c_bus_lpc)
 #define  MCU_IIC_REQ_GPIO (g_hw.gpio_int_mcu_i2c_request)
+#define  MCU_READ_BUSY_GPIO (g_hw.gpio_mcu_read_busy)
 
 //dsi83
 #define  DSI83_I2C_BUS  		(g_hw.i2c_bus_dsi83)
