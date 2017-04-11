@@ -14,7 +14,7 @@ typedef struct fifo_list
     spinlock_t fifo_lock;
 } threads_list;
 
-#define HAL_FIFO_SIZE (1024*4)
+#define HAL_FIFO_SIZE (1024*16)
 
 
 static DEFINE_MUTEX(list_mutex);
