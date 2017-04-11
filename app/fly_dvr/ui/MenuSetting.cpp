@@ -40,6 +40,7 @@ static MENU_ATOMS  menu_atoms =
         {/* 003 */"VRMode", 0,    0, RECORD_MODE_NUM - 1,   "0:Single VR, 1:Dual VR"},
         {/* 004 */"VRSwitch",0,     0, RECORD_NUM - 1,    "0:Start VR, 1:Stop VR"},
         {/* 005 */"VRFileTime", 2,    1, SINGLEFILE_RECORD_TIME_NUM - 1,   "0~time of VRFile(mins) - 10"},
+        {/* 006 */"sensitivityLevel", 1,    0, GSENSOR_SENSITIVITY_NUM - 1,   "0~gsensorSensLevel - 2"},
         /* END OF MARK */
         {NULL,                            0,           0,              0,                            NULL}
     }
@@ -71,6 +72,7 @@ void ListAllMenuSetting(MenuInfo *Info)
     lidbg(" uiRecordMode     = %d \n", Info->uiRecordMode     );
     lidbg(" uiRecordSwitch        = %d \n", Info->uiRecordSwitch        );
     lidbg(" uiSingleFileRecordTime       = %d \n", Info->uiSingleFileRecordTime       );
+	lidbg(" uiGsensorSensitivity       = %d \n", Info->uiGsensorSensitivity       );
     lidbg("---------------------------------------------------\n");
 }
 
@@ -85,7 +87,7 @@ FLY_BOOL CheckMenuSetting(MenuInfo* CurMenu)
 	MenuSettingInRange(&(CurMenu->uiRecordMode), 		0, 	RECORD_MODE_NUM-1	);
 	MenuSettingInRange(&(CurMenu->uiRecordSwitch), 		0, 	RECORD_NUM-1				);
 	MenuSettingInRange(&(CurMenu->uiSingleFileRecordTime), 		1, 	SINGLEFILE_RECORD_TIME_NUM-1		);
-
+	MenuSettingInRange(&(CurMenu->uiGsensorSensitivity), 		1, 	GSENSOR_SENSITIVITY_NUM-1		);
 	return FLY_TRUE;
 }
 

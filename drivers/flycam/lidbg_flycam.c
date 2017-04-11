@@ -16,6 +16,8 @@ static int checkSDCardStatus(char *path);
 //#define FLY_CAM_ISDVRUSED		0x04
 //#define FLY_CAM_ISONLINEUSED		0x08
 
+#define GSENSOR_SENSITIVITY_PROP_NAME	"persist.gsensor.sensLevel"
+
 struct fly_UsbCamInfo
 {
 	unsigned char camStatus;/*Camera status(DVR&RearView)*/
@@ -96,8 +98,8 @@ u8 camera_DVR_res[100] = {0};
 
 char tm_cmd[100] = {0};
 
-static int isEmRecPermitted = 1;
-static int delDays = 6, CVBSMode = 0;
+static int isEmRecPermitted = 1, isVRLocked = 0;
+static int delDays = 6, CVBSMode = 0, sensitivity_level = 1;
 
 bool isOnlineRunning = false;
 
@@ -908,6 +910,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				s_info.recordMode= ((struct status_info*)arg)->recordMode;
 				s_info.recordSwitch= ((struct status_info*)arg)->recordSwitch;
 				s_info.singleFileRecordTime= ((struct status_info*)arg)->singleFileRecordTime;
+				s_info.sensitivityLevel= ((struct status_info*)arg)->sensitivityLevel;
 				lidbg("%s:NR_NEW_DVR_IO %d  \n",__func__, s_info.recordSwitch);
 				return 0;
 		        break;		
@@ -1431,6 +1434,51 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 							lidbg("%s:copy_to_user ERR\n",__func__);
 						}
 						break;
+					case CMD_GSENSOR_SENSITIVITY:
+						lidbg("%s:CMD_GSENSOR_SENSITIVITY [%d]\n",__func__,((char*)arg)[1]);
+						
+						if(((char*)arg)[1] == 0) 
+						{
+							sensitivity_level = 0;
+							s_info.sensitivityLevel = 0;
+						}
+						else if(((char*)arg)[1] == 1) 
+						{
+							sensitivity_level = 1;
+							s_info.sensitivityLevel = 1;
+						}
+						else if(((char*)arg)[1] == 2) 
+						{
+							sensitivity_level = 2;
+							s_info.sensitivityLevel = 2;
+						}
+						else lidbg("%s:INVALID SENSITIVITY!! [%d]\n",__func__,((char*)arg)[1]);
+
+						notify_newDVR(MSG_GSENSOR_SENSITIVITY);
+						
+						dvrRespond[1] = sensitivity_level;
+						length += 2;
+						if(copy_to_user((char*)arg,dvrRespond,length))
+						{
+							lidbg("%s:copy_to_user ERR\n",__func__);
+						}
+						break;
+					case CMD_VR_LOCK:
+						lidbg("%s:CMD_VR_LOCK [%d]\n",__func__,((char*)arg)[1]);
+						
+						if(((char*)arg)[1] == 0) 
+						{
+							isVRLocked = 0;
+							s_info.isVRLocked = false;
+						}
+						else if(((char*)arg)[1] == 1) 
+						{
+							isVRLocked = 1;
+							s_info.isVRLocked = true;
+						}
+						else lidbg("%s:INVALID CMD_VR_LOCK!! [%d]\n",__func__,((char*)arg)[1]);
+						notify_newDVR(MSG_VR_LOCK);
+						break;
 					case CMD_AUTO_DETECT:
 						lidbg("%s:CMD_AUTO_DETECT\n",__func__);
 
@@ -1594,6 +1642,14 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						initMsg[length] = CMD_CVBS_MODE;
 						length++;
 						initMsg[length] = CVBSMode;
+						length++;
+						/*------msgTAIL------*/
+						initMsg[length] = ';';
+						length++;
+
+						initMsg[length] = CMD_GSENSOR_SENSITIVITY;
+						length++;
+						initMsg[length] = s_info.sensitivityLevel;
 						length++;
 						/*------msgTAIL------*/
 						initMsg[length] = ';';

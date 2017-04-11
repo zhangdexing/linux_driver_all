@@ -285,6 +285,7 @@ int Flydvr_SendDriverIoctl(const char *who, char magic , char nr, unsigned long 
 void *thread_driver_daemon(void* data)
 {
 	struct status_info info,tmp_info;
+	char cmd[256];
 	FLY_BOOL b_old_frontStatus = FLY_FALSE, b_frontStatus = FLY_FALSE;
 	FLY_BOOL b_old_rearStatus = FLY_FALSE, b_rearStatus = FLY_FALSE;
 	/*driver args init*/
@@ -293,6 +294,7 @@ void *thread_driver_daemon(void* data)
 	tmp_info.recordMode= MenuSettingConfig()->uiRecordMode;
 	tmp_info.recordSwitch= MenuSettingConfig()->uiRecordSwitch;
 	tmp_info.singleFileRecordTime= MenuSettingConfig()->uiSingleFileRecordTime;
+	tmp_info.sensitivityLevel= MenuSettingConfig()->uiGsensorSensitivity;
 	Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_IO, (unsigned long) &tmp_info);
 	
 	while(1)
@@ -403,6 +405,18 @@ void *thread_driver_daemon(void* data)
 			case MSG_STOP_ONLINE_VR_NOTIFY:
 				lidbg("%s:===MSG_STOP_ONLINE_VR_NOTIFY===\n",__func__);
 				//StateSwitchMode(UI_VIDEO_STATE);
+			break;
+
+			case MSG_GSENSOR_SENSITIVITY:
+				lidbg("%s:===MSG_GSENSOR_SENSITIVITY===[%d]\n",__func__,info.sensitivityLevel);
+				sprintf(cmd, "setprop "GSENSOR_SENSITIVITY_PROP_NAME" %d",info.sensitivityLevel);
+				system(cmd);
+			break;
+
+			case MSG_VR_LOCK:
+				lidbg("%s:===MSG_VR_LOCK===[%d]\n",__func__,info.isVRLocked);
+				if(info.isVRLocked== true)
+					Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_USER_LOCK, 0);
 			break;
 	    }
         lidbg("[%s].call driver_abnormal_cb:ret=%d\n", __FUNCTION__, ret );

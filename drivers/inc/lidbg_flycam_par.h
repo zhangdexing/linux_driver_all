@@ -91,6 +91,8 @@ typedef enum {
   CMD_FORMAT_SDCARD,
   CMD_EM_SAVE_DAYS,
   CMD_CVBS_MODE,
+  CMD_GSENSOR_SENSITIVITY,
+  CMD_VR_LOCK,
 }rec_cmd_t;
 
 #define FLYCAM_FRONT_REC_IOC_MAGIC  'F'
@@ -150,6 +152,8 @@ typedef enum {
   RET_RECORD_START,
   RET_SD_NOT_FULL,
   RET_SD_FULL,
+  RET_EMERGENCY_LOCK,
+  RET_EMERGENCY_UNLOCK,
   RET_DVR_OSD_FAIL = 0x49,
   RET_FORMAT_SUCCESS = 0x50,
   RET_FORMAT_FAIL,
@@ -183,6 +187,8 @@ typedef enum {
   MSG_STOP_FORMAT_NOTIFY,
   MSG_START_ONLINE_VR_NOTIFY,
   MSG_STOP_ONLINE_VR_NOTIFY,
+  MSG_VR_LOCK,
+  MSG_GSENSOR_SENSITIVITY,
 }dvr_msg_t;
 
 struct status_info {
@@ -191,10 +197,12 @@ struct status_info {
 	unsigned char recordMode;
 	unsigned char recordSwitch;
 	unsigned char singleFileRecordTime;
+	unsigned char sensitivityLevel;
 	bool isACCOFF;
 	bool isFrontCamReady;
 	bool isRearCamReady;
 	bool isSDCardReady;
+	bool isVRLocked;
 };
 
 typedef enum {

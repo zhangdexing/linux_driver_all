@@ -438,7 +438,7 @@ case "$USERS_ID" in
 		23)
                 export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/msm8909_6_0
 		export BP_SOURCE_PATH=$DBG_PLATFORM_PATH/8974-6.0/bp
-                export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8909-release;;
+                export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/../8909-release;;
 	esac;;
 	8)
 	export DBG_PLATFORM_PATH=/home/ctb/cks

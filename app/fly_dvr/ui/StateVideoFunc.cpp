@@ -337,6 +337,10 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 				lidbg("@@@ EVENT_GSENSOR_CRASH REJECT!-\r\n");
 			}
 			break;
+		case EVENT_USER_LOCK:
+			lidbg("@@@ EVENT_USER_LOCK -\r\n");
+			Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_USER_LOCK , 0);
+			break;
 		case EVENT_VRCB_MEDIA_ABNORMAL_FULL_RESTORE:
 			lidbg("@@@ EVENT_VRCB_MEDIA_ABNORMAL_FULL_RESTORE -\r\n");
 			if(Flydvr_SDMMC_GetMountState() == SDMMC_OUT)

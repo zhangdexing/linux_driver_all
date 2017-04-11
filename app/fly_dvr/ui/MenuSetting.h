@@ -48,6 +48,13 @@ typedef enum {
     RECORD_MODE_NUM
 } RECORD_MODE_SETTING;
 
+typedef enum {
+    GSENSOR_SENSITIVITY_L0 = 0 ,
+    GSENSOR_SENSITIVITY_L1 = 1,
+    GSENSOR_SENSITIVITY_L2 = 2,
+    GSENSOR_SENSITIVITY_NUM
+} GSENSOR_SENSITIVITY_SETTING;
+
 typedef struct _MenuInfo
 {
 	/*current used*/
@@ -56,6 +63,7 @@ typedef struct _MenuInfo
 	UINT8 uiRecordMode;
 	UINT8 uiRecordSwitch;
 	UINT8 uiSingleFileRecordTime;
+	UINT8 uiGsensorSensitivity;
 } MenuInfo, *pMenuInfo;
 
 pMenuInfo MenuSettingConfig(void);

@@ -20,6 +20,8 @@
 	general_wdbg(LOG_PATH, msg);\
 }while(0)
 
+#define GSENSOR_SENSITIVITY_PROP_NAME	"persist.gsensor.sensLevel"
+
 #define CHECK_DEBUG_FILE general_check_debug_file(LOG_PATH,1000000)
 
 /// Video Event

@@ -43,6 +43,8 @@ typedef enum _KeyEventID {
 
 	EVENT_GSENSOR_CRASH,
 
+	EVENT_USER_LOCK,
+
     //  Video Mode
 
 	EVENT_FRONT_PAUSE,

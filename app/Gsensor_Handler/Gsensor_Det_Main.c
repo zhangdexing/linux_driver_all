@@ -6,17 +6,38 @@
 #define GSENSOR                                0x95
 #define GSENSOR_NOTIFY_CHAIN                     _IO(GSENSOR,  0x11)
 
-#define GSENSOR_X_P_THRESHOLD					  700
-#define GSENSOR_X_N_THRESHOLD				-700
-#define GSENSOR_Y_P_THRESHOLD					  800
-#define GSENSOR_Y_N_THRESHOLD				-200
-#define GSENSOR_Z_P_THRESHOLD					1600
-#define GSENSOR_Z_N_THRESHOLD					-300
-#define GSENSOR_DEGREE_P_THRESHOLD		   40
-#define GSENSOR_DEGREE_N_THRESHOLD		 -40
+/*---------------------------------------------*/
+#define GSENSOR_L0_X_P_THRESHOLD					  500
+#define GSENSOR_L0_X_N_THRESHOLD				-500
+#define GSENSOR_L0_Y_P_THRESHOLD					  600
+#define GSENSOR_L0_Y_N_THRESHOLD				-200
+#define GSENSOR_L0_Z_P_THRESHOLD					1400
+#define GSENSOR_L0_Z_N_THRESHOLD					-300
+#define GSENSOR_L0_DEGREE_P_THRESHOLD		   40
+#define GSENSOR_L0_DEGREE_N_THRESHOLD		 -40
+
+#define GSENSOR_L1_X_P_THRESHOLD					  700
+#define GSENSOR_L1_X_N_THRESHOLD				-700
+#define GSENSOR_L1_Y_P_THRESHOLD					  800
+#define GSENSOR_L1_Y_N_THRESHOLD				-200
+#define GSENSOR_L1_Z_P_THRESHOLD					1600
+#define GSENSOR_L1_Z_N_THRESHOLD					-300
+#define GSENSOR_L1_DEGREE_P_THRESHOLD		   40
+#define GSENSOR_L1_DEGREE_N_THRESHOLD		 -40
+
+#define GSENSOR_L2_X_P_THRESHOLD					  900
+#define GSENSOR_L2_X_N_THRESHOLD				-900
+#define GSENSOR_L2_Y_P_THRESHOLD					  1200
+#define GSENSOR_L2_Y_N_THRESHOLD				-400
+#define GSENSOR_L2_Z_P_THRESHOLD					2000
+#define GSENSOR_L2_Z_N_THRESHOLD					-500
+#define GSENSOR_L2_DEGREE_P_THRESHOLD		   40
+#define GSENSOR_L2_DEGREE_N_THRESHOLD		 -40
+/*---------------------------------------------*/
 
 #define GSENSOR_DEV_PATH						"/dev/mc3xxx"
 #define GSENSOR_ISDEBUG_PROP_NAME	"persist.gsensor.isDebug"
+#define GSENSOR_SENSITIVITY_PROP_NAME	"persist.gsensor.sensLevel"
 #define GSENSOR_DEBUG_FILE_PATH			"/data/lidbg/GsensorDebug.txt"
 
 struct acceleration_info {
@@ -27,14 +48,14 @@ struct acceleration_info {
 	int z;
 };
 
-static int x_p_threshold = GSENSOR_X_P_THRESHOLD;
-static int x_n_threshold = GSENSOR_X_N_THRESHOLD;
-static int y_p_threshold = GSENSOR_Y_P_THRESHOLD;
-static int y_n_threshold = GSENSOR_Y_N_THRESHOLD;
-static int z_p_threshold = GSENSOR_Z_P_THRESHOLD;
-static int z_n_threshold = GSENSOR_Z_N_THRESHOLD;
-static int d_p_threshold = GSENSOR_DEGREE_P_THRESHOLD;
-static int d_n_threshold = GSENSOR_DEGREE_N_THRESHOLD;
+static int x_p_threshold = GSENSOR_L1_X_P_THRESHOLD;
+static int x_n_threshold = GSENSOR_L1_X_N_THRESHOLD;
+static int y_p_threshold = GSENSOR_L1_Y_P_THRESHOLD;
+static int y_n_threshold = GSENSOR_L1_Y_N_THRESHOLD;
+static int z_p_threshold = GSENSOR_L1_Z_P_THRESHOLD;
+static int z_n_threshold = GSENSOR_L1_Z_N_THRESHOLD;
+static int d_p_threshold = GSENSOR_L1_DEGREE_P_THRESHOLD;
+static int d_n_threshold = GSENSOR_L1_DEGREE_N_THRESHOLD;
 
 #define wdbg(msg...) general_wdbg(GSENSOR_DEBUG_FILE_PATH, msg)
 
@@ -43,7 +64,11 @@ static int d_n_threshold = GSENSOR_DEGREE_N_THRESHOLD;
 int main(int argc, char **argv)
 {
 	int isDebug = 0;
+	unsigned int i = 0; 
 	char isDebug_String[PROPERTY_VALUE_MAX];
+	int sensitivityLevel = 0;
+	char sensitivityLevel_String[PROPERTY_VALUE_MAX];
+	bool isReverse = false;
 	int fd = 0,fd_txt = 0;
   	int ret;
 	static struct acceleration_info accel, old_accel;
@@ -98,15 +123,87 @@ open_dev:
 	if(	accel.z < -700)
 	{
 		lidbg("%s:====Z REVERSE INSTALL(z:%d)====\n",__func__,accel.z);
-		z_p_threshold = -GSENSOR_Z_N_THRESHOLD;
-		z_n_threshold = -GSENSOR_Z_P_THRESHOLD;
+		isReverse = true;
+		z_p_threshold = -GSENSOR_L1_Z_N_THRESHOLD;
+		z_n_threshold = -GSENSOR_L1_Z_P_THRESHOLD;
 	}
-	else lidbg("%s:====Z NORMAL INSTALL(z:%d)====\n",__func__,accel.z);
+	else
+	{
+		lidbg("%s:====Z NORMAL INSTALL(z:%d)====\n",__func__,accel.z);
+		isReverse = false;
+	}
 	
 	while(1)
 	{
 		usleep(100*1000);
 		read(fd, &accel, sizeof(struct acceleration_info));
+
+		
+		if(i++ % 10 == 0)
+		{
+			property_get(GSENSOR_SENSITIVITY_PROP_NAME, sensitivityLevel_String, "1");
+			sensitivityLevel = atoi(sensitivityLevel_String);
+			if(sensitivityLevel == 0)
+			{
+				//lidbg("sensitivityLevel == 0\n");
+				x_p_threshold = GSENSOR_L0_X_P_THRESHOLD;
+				x_n_threshold = GSENSOR_L0_X_N_THRESHOLD;
+				y_p_threshold = GSENSOR_L0_Y_P_THRESHOLD;
+				y_n_threshold = GSENSOR_L0_Y_N_THRESHOLD;
+				if(isReverse == true)
+				{
+					z_p_threshold = -GSENSOR_L0_Z_N_THRESHOLD;
+					z_n_threshold = -GSENSOR_L0_Z_P_THRESHOLD;
+				}
+				else
+				{
+					z_p_threshold = GSENSOR_L0_Z_P_THRESHOLD;
+					z_n_threshold = GSENSOR_L0_Z_N_THRESHOLD;
+				}
+				d_p_threshold = GSENSOR_L0_DEGREE_P_THRESHOLD;
+				d_n_threshold = GSENSOR_L0_DEGREE_N_THRESHOLD;
+			}
+			else if(sensitivityLevel == 1)
+			{
+				//lidbg("sensitivityLevel == 1\n");
+				x_p_threshold = GSENSOR_L1_X_P_THRESHOLD;
+				x_n_threshold = GSENSOR_L1_X_N_THRESHOLD;
+				y_p_threshold = GSENSOR_L1_Y_P_THRESHOLD;
+				y_n_threshold = GSENSOR_L1_Y_N_THRESHOLD;
+				if(isReverse == true)
+				{
+					z_p_threshold = -GSENSOR_L1_Z_N_THRESHOLD;
+					z_n_threshold = -GSENSOR_L1_Z_P_THRESHOLD;
+				}
+				else
+				{
+					z_p_threshold = GSENSOR_L1_Z_P_THRESHOLD;
+					z_n_threshold = GSENSOR_L1_Z_N_THRESHOLD;
+				}
+				d_p_threshold = GSENSOR_L1_DEGREE_P_THRESHOLD;
+				d_n_threshold = GSENSOR_L1_DEGREE_N_THRESHOLD;
+			}
+			else if(sensitivityLevel == 2)
+			{
+				//lidbg("sensitivityLevel == 2\n");
+				x_p_threshold = GSENSOR_L2_X_P_THRESHOLD;
+				x_n_threshold = GSENSOR_L2_X_N_THRESHOLD;
+				y_p_threshold = GSENSOR_L2_Y_P_THRESHOLD;
+				y_n_threshold = GSENSOR_L2_Y_N_THRESHOLD;
+				if(isReverse == true)
+				{
+					z_p_threshold = -GSENSOR_L2_Z_N_THRESHOLD;
+					z_n_threshold = -GSENSOR_L2_Z_P_THRESHOLD;
+				}
+				else
+				{
+					z_p_threshold = GSENSOR_L2_Z_P_THRESHOLD;
+					z_n_threshold = GSENSOR_L2_Z_N_THRESHOLD;
+				}
+				d_p_threshold = GSENSOR_L2_DEGREE_P_THRESHOLD;
+				d_n_threshold = GSENSOR_L2_DEGREE_N_THRESHOLD;
+			}
+		}
 
 		/*Suspend Notify: Gsensor IRQ*/
 		if(accel.isACCON == false)
