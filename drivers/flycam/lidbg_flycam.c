@@ -955,6 +955,26 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				USB_POWER_BACK_DISABLE;
 				return 0;
 		        break;
+			case NR_ENABLE_FRONT_CAM_POWER:
+				lidbg("%s:NR_ENABLE_FRONT_CAM_POWER  \n",__func__ );
+				USB_POWER_FRONT_ENABLE;
+				return 0;
+		        break;
+			case NR_DISABLE_FRONT_CAM_POWER:
+				lidbg("%s:NR_DISABLE_FRONT_CAM_POWER  \n",__func__ );
+				USB_POWER_FRONT_DISABLE;
+				return 0;
+		        break;
+			case NR_ENABLE_REAR_CAM_POWER:
+				lidbg("%s:NR_ENABLE_REAR_CAM_POWER  \n",__func__ );
+				USB_POWER_BACK_ENABLE;
+				return 0;
+		        break;
+			case NR_DISABLE_REAR_CAM_POWER:
+				lidbg("%s:NR_DISABLE_REAR_CAM_POWER  \n",__func__ );
+				USB_POWER_BACK_DISABLE;
+				return 0;
+		        break;
 			case NR_CONN_SDCARD:
 				lidbg("%s:NR_CONN_SDCARD  \n",__func__ );
 				s_info.isSDCardReady = true;

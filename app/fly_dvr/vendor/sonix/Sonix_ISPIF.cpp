@@ -1712,6 +1712,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
     {
         UINT32 uiMsgId, uiParam1, uiParam2;
 		UINT16 usCount;
+		UINT8 osdFrontFailTime = 0,osdRearFailTime = 0;
         while (1) {
 		    if (Flydvr_GetMessage_LP( &uiMsgId, &uiParam1, &uiParam2) == FLY_FALSE) {
   			    continue;
@@ -1767,7 +1768,16 @@ void dequeue_flush(int count , camera_q_node* mhead)
 					if(XU_OSD_Set_RTC(front_hw.dev, 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec) <0)
 					{	
 						lidbg( "front_hw  : XU_OSD_Set_RTC Failed\n");
+						if(osdFrontFailTime++ == 5)
+						{
+							adbg("front_hw: OSD set error! front cam reset!\n");
+							Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_DISABLE_FRONT_CAM_POWER, NULL);
+							usleep(200*1000);
+							Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_ENABLE_FRONT_CAM_POWER, NULL);
+							osdFrontFailTime = 0;
+						}
 					}
+					else osdFrontFailTime = 0;
 				}
 			break;
 			case EVENT_REAR_CAM_OSD_SYNC:
@@ -1780,7 +1790,16 @@ void dequeue_flush(int count , camera_q_node* mhead)
 					if(XU_OSD_Set_RTC(rear_hw.dev, 1900+p->tm_year, 1+p->tm_mon, p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec) <0)
 					{	
 						lidbg( "rear_hw  : XU_OSD_Set_RTC Failed\n");
+						if(osdRearFailTime++ == 5)
+						{
+							adbg("rear_hw: OSD set error! rear cam reset!\n");
+							Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_DISABLE_REAR_CAM_POWER, NULL);
+							usleep(200*1000);
+							Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_ENABLE_REAR_CAM_POWER, NULL);
+							osdRearFailTime = 0;
+						}
 					}
+					else osdRearFailTime = 0;
 				}
 			break;
 			case EVENT_FRONT_ONLINE_CAM_OSD_SYNC:
