@@ -14,7 +14,7 @@ DEFINE_SEMAPHORE(lidbg_msg_sem);
 
 static int thread_msg(void *data);
 
-#define TOTAL_LOGS  (50)
+#define TOTAL_LOGS  (100)
 #define LOG_BYTES   (256)
 
 typedef struct
