@@ -1829,7 +1829,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 							sprintf(VR_File_Name, "%s/%s", MMC1_VR_PATH, front_hw.currentVRFileName);
 							sprintf(EM_VR_File_Name, "%s/E%s", MMC1_VR_PATH, front_hw.currentVRFileName);
 							
-							if(strncmp(front_hw.currentVRFileName, "E",1) != 0 || strncmp(front_hw.currentVRFileName, "L",1) != 0)//prevent multi rename
+							if(strncmp(front_hw.currentVRFileName, "E",1) != 0 && strncmp(front_hw.currentVRFileName, "L",1) != 0)//prevent multi rename
 							{
 								strcpy(tmpCurrent_File_Name, front_hw.currentVRFileName);
 								sprintf(front_hw.currentVRFileName, "E%s", tmpCurrent_File_Name);
@@ -1871,7 +1871,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 							sprintf(VR_File_Name, "%s/%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
 							sprintf(EM_VR_File_Name, "%s/E%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
 							
-							if(strncmp(rear_hw.currentVRFileName, "E",1) != 0 || strncmp(rear_hw.currentVRFileName, "L",1) != 0)//prevent multi rename
+							if(strncmp(rear_hw.currentVRFileName, "E",1) != 0 && strncmp(rear_hw.currentVRFileName, "L",1) != 0)//prevent multi rename
 							{
 								strcpy(tmpCurrent_File_Name, rear_hw.currentVRFileName);
 								sprintf(rear_hw.currentVRFileName, "E%s", tmpCurrent_File_Name);
