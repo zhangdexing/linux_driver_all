@@ -778,12 +778,7 @@ static int soc_dev_resume(struct platform_device *pdev)
     lidbg("soc_dev_resume \n");
      led_resume();
     GPIO_IS_READY;
-
-    if((!g_var.is_fly) && (g_var.recovery_mode == 0) )
-	   HAL_IS_READY;
-    else
-          HAL_NOT_READY;
-	
+    HAL_IS_READY;
     LEVEL_CONVERSION_ENABLE;
 
     return 0;

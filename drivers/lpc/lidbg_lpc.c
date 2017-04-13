@@ -471,7 +471,7 @@ static int  lpc_remove(struct platform_device *pdev)
 static int lpc_suspend(struct device *dev)
 {
     DUMP_FUN;
-    //SOC_IO_ISR_Disable(MCU_IIC_REQ_GPIO);
+    SOC_IO_ISR_Disable(MCU_IIC_REQ_GPIO);
     //SOC_IO_ISR_Disable(MCU_READ_BUSY_GPIO);
     return 0;
 }
@@ -479,7 +479,7 @@ static int lpc_suspend(struct device *dev)
 static int lpc_resume(struct device *dev)
 {
     DUMP_FUN;
-    //SOC_IO_ISR_Enable(MCU_IIC_REQ_GPIO);
+    SOC_IO_ISR_Enable(MCU_IIC_REQ_GPIO);
     //SOC_IO_ISR_Enable(MCU_READ_BUSY_GPIO);
     return 0;
 }
