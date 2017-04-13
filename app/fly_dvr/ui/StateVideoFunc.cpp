@@ -203,7 +203,7 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
         	break;
 
 		case EVENT_VIDEO_KEY_EMERGENCY_SAVEDAYS:
-            lidbg("@@@ EVENT_VIDEO_KEY_EMERGENCY_SAVEDAYS -\r\n");
+            lidbg("@@@ EVENT_VIDEO_KEY_EMERGENCY_SAVEDAYS [%d] -\r\n",ulParam);
 			MenuSettingConfig()->uiEmergencySaveDays= ulParam;
 			uiSaveCurrentConfig();
         	break;
@@ -367,8 +367,18 @@ void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam)
 				}
 			}
 			break;
+		case EVENT_VIDEO_KEY_GSENSOR_SENS:
+			lidbg("@@@ EVENT_VIDEO_KEY_GSENSOR_SENS  [%d]-\r\n",ulParam);
+			{
+				char cmd[256];
+				sprintf(cmd, "setprop "GSENSOR_SENSITIVITY_PROP_NAME" %d",ulParam);
+				system(cmd);
+				MenuSettingConfig()->uiGsensorSensitivity= ulParam;
+				uiSaveCurrentConfig();
+			}
+			break;
         default:
-        break;
+        	break;
 	}
 	return;
 }

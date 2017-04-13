@@ -285,7 +285,6 @@ int Flydvr_SendDriverIoctl(const char *who, char magic , char nr, unsigned long 
 void *thread_driver_daemon(void* data)
 {
 	struct status_info info,tmp_info;
-	char cmd[256];
 	FLY_BOOL b_old_frontStatus = FLY_FALSE, b_frontStatus = FLY_FALSE;
 	FLY_BOOL b_old_rearStatus = FLY_FALSE, b_rearStatus = FLY_FALSE;
 	/*driver args init*/
@@ -409,8 +408,13 @@ void *thread_driver_daemon(void* data)
 
 			case MSG_GSENSOR_SENSITIVITY:
 				lidbg("%s:===MSG_GSENSOR_SENSITIVITY===[%d]\n",__func__,info.sensitivityLevel);
+				Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_VIDEO_KEY_GSENSOR_SENS, info.sensitivityLevel);
+#if 0				
 				sprintf(cmd, "setprop "GSENSOR_SENSITIVITY_PROP_NAME" %d",info.sensitivityLevel);
 				system(cmd);
+				MenuSettingConfig()->uiGsensorSensitivity= info.sensitivityLevel;
+				uiSaveCurrentConfig();
+#endif				
 			break;
 
 			case MSG_VR_LOCK:

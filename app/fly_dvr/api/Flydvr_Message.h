@@ -74,6 +74,8 @@ typedef enum _KeyEventID {
 
 	EVENT_VIDEO_KEY_RECORD_MODE                ,
 
+	EVENT_VIDEO_KEY_GSENSOR_SENS                ,
+
 	EVENT_VRCB_MEDIA_FULL                      ,
 
 	EVENT_VRCB_MEDIA_ABNORMAL_FULL                      ,
