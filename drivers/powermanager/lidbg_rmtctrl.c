@@ -472,14 +472,21 @@ static int thread_check_acc_and_response_acc_off_delay(void *data)
 }
 static int lidbg_rmtctrl_probe(struct platform_device *pdev)
 {
-	int ret;
+	int ret = 1;
 
        fs_mem_log("<have a deep check,is enum FLY_ACC_OFF == 0  :%d,[g_var.acc_flag:%d ,  FLY_ACC_OFF:%d] >\n",(g_var.acc_flag == FLY_ACC_OFF),g_var.acc_flag,FLY_ACC_OFF);
        FS_REGISTER_INT(g_var.alarmtimer_interval, "alarmtimer_wakeup_time", 5, NULL);
-	fb_notif.notifier_call = fb_notifier_callback;
-	ret = fb_register_client(&fb_notif);
-	if (ret)
-		PM_ERR("Unable to register fb_notifier: %d\n",ret);
+       fb_notif.notifier_call = fb_notifier_callback;
+
+       while(ret)
+       {
+              ret = fb_register_client(&fb_notif);
+              if (ret)
+              {
+                     PM_ERR("Unable to register fb_notifier: %d\n",ret);
+                     msleep(100);
+              }
+       }
 
 	rmtctrl_state_buffer = (unsigned int *)kmalloc(rmtctrl_FIFO_SIZE, GFP_KERNEL);
 	if(rmtctrl_state_buffer == NULL)
