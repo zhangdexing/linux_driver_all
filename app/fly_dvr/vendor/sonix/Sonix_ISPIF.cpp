@@ -1084,10 +1084,15 @@ void dequeue_flush(int count , camera_q_node* mhead)
 
 						if((front_hw.rec_fp > 0) && (i != 0)) //seamless
 						{
-							fclose(front_hw.rec_fp);
+#if 0							
+							fclose(front_hw.rec_fp);						
 							strcpy(Old_VR_File_Name, VR_File_Name);
 							front_hw.old_rec_fp = fopen(Old_VR_File_Name, "ab+");
+#else
+							front_hw.old_rec_fp = front_hw.rec_fp;
+							front_hw.rec_fp = NULL;
 							Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_FRONT_CAM_DEQUEUE_OLDFP, front_mhead.msize);
+#endif							
 						}
 						else
 							dequeue_flush(front_mhead.msize, &front_mhead);
@@ -1394,10 +1399,15 @@ void dequeue_flush(int count , camera_q_node* mhead)
 
 						if((rear_hw.rec_fp > 0) && (i != 0)) //seamless
 						{
+#if 0						
 							fclose(rear_hw.rec_fp);
 							strcpy(Old_VR_File_Name, VR_File_Name);
 							rear_hw.old_rec_fp = fopen(Old_VR_File_Name, "ab+");
+#else
+							rear_hw.old_rec_fp = rear_hw.rec_fp;
+							rear_hw.rec_fp = NULL;
 							Flydvr_SendMessage_LP(FLYM_UI_NOTIFICATION, EVENT_REAR_CAM_DEQUEUE_OLDFP, rear_mhead.msize);
+#endif							
 						}
 						else
 							dequeue_flush(rear_mhead.msize, &rear_mhead);
