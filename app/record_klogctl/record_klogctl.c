@@ -73,10 +73,12 @@ int remove_old_file()
 
 void write_log(char *buf)
 {
+	int len;
 	while(1)
 	{
+		len = klogctl(9,NULL,0);
 		readsize = klogctl(2,buf+savesize,BUFSIZE-savesize);
-		//lidbg("record_klogctl:read %d\n",readsize);
+		//lidbg("record_klogctl:read %d,%d\n",readsize,len);
 		if( readsize <= 0)
 		{
 			lidbg("record_klogctl:klogctl error");
