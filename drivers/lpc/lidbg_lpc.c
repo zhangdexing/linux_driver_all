@@ -279,7 +279,7 @@ static void workFlyMCUDQBuf(struct work_struct *work)
     unsigned long irqflags;
 
     /*Send data when wait_gpio pull up*/
-    while(1)// ((SOC_IO_Input(MCU_READ_BUSY_GPIO, MCU_READ_BUSY_GPIO, 0) == 1) && (lpc_work_en == 1))
+    while ((SOC_IO_Input(MCU_READ_BUSY_GPIO, MCU_READ_BUSY_GPIO, 0) == 1) && (lpc_work_en == 1))
     {
         spin_lock_irqsave(&wbuf_fifo_lock, irqflags);
         if(kfifo_is_empty(&wbuf_data_fifo))//no data, skip
@@ -320,7 +320,7 @@ void mcuFirstInit(void)
     schedule_work(&pGlobalHardwareInfo->FlyIICInfo.iic_work);
 
     INIT_WORK(&wBuf_work, workFlyMCUDQBuf);
-    //SOC_IO_ISR_Add(MCU_READ_BUSY_GPIO,  IRQF_TRIGGER_RISING | IRQF_ONESHOT, MCUDQBuf_isr, NULL);
+    SOC_IO_ISR_Add(MCU_READ_BUSY_GPIO,  IRQF_TRIGGER_RISING | IRQF_ONESHOT, MCUDQBuf_isr, NULL);
 }
 
 
@@ -472,7 +472,7 @@ static int lpc_suspend(struct device *dev)
 {
     DUMP_FUN;
     SOC_IO_ISR_Disable(MCU_IIC_REQ_GPIO);
-    //SOC_IO_ISR_Disable(MCU_READ_BUSY_GPIO);
+    SOC_IO_ISR_Disable(MCU_READ_BUSY_GPIO);
     return 0;
 }
 
@@ -480,7 +480,7 @@ static int lpc_resume(struct device *dev)
 {
     DUMP_FUN;
     SOC_IO_ISR_Enable(MCU_IIC_REQ_GPIO);
-    //SOC_IO_ISR_Enable(MCU_READ_BUSY_GPIO);
+    SOC_IO_ISR_Enable(MCU_READ_BUSY_GPIO);
     return 0;
 }
 
