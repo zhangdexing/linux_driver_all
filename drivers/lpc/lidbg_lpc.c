@@ -400,7 +400,7 @@ static ssize_t lpc_write(struct file *filp, const char __user *buf,
     LPCWriteDataEnqueue(mem, size);//Pack and enqueue
 #endif
     // if(size >= 3 ) pr_debug("write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
-    pr_debug("size:%d,write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", size, mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
+    pr_debug("size:%d,write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", (int)size, mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
     if(!work_pending(&wBuf_work))
         schedule_work(&wBuf_work);
     return size;
