@@ -79,7 +79,7 @@ bool iSOC_IO_ISR_Add(u32 irq, u32  interrupt_type, pinterrupt_isr func, void *de
 #ifdef SOC_mt35x
     return ret;
 #endif
-#if 1
+#if 0
 #ifdef SUSPEND_ONLINE
 	//if(g_var.suspend_airplane_mode == 0)
 	{
