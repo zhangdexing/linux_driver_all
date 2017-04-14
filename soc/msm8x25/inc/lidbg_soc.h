@@ -116,7 +116,6 @@ enum
 
 #define SOC_KO  "lidbg_soc_msm8x25.ko"
 #define INTERFACE_KO  "lidbg_fly_hal.ko"
-#define USB_MOUNT_POINT  "/mnt/usbdisk"
 #define RECOVERY_USB_MOUNT_POINT "/usb"
 
 struct io_config

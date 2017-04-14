@@ -612,7 +612,8 @@ bool is_udisk_file_exist(void)
     if(g_var.usb_status == true)
     {
         char shell_cmd[128] = {0};
-        if(!fs_is_file_exist(USB_MOUNT_POINT"/udisk_stable_test"))
+        char buff[128] = {0};
+if(!fs_is_file_exist(get_udisk_file_path(buff, "udisk_stable_test")))
         {
             if(retry_cnt ==1)
             {

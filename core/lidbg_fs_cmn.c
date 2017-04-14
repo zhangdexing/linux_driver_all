@@ -427,54 +427,6 @@ void cb_kv_filedetecen(char *key, char *value)
     if ( (!strcmp(key, "fs_dbg_file_detect" ))  &&  (strcmp(value, "0" )) )
         show_filedetec_list();
 }
-void cp_data_to_udisk(bool encode)
-{
-    struct list_head *client_list = &fs_filename_list;
-    FS_ALWAYS("encode:%d\n", encode);
-    if(!list_empty(client_list))
-    {
-        int index = 0;
-        char dir[128], tbuff[128];
-        int copy_delay = 300;
-        struct fs_filename_item *pos;
-
-        memset(dir, '\0', sizeof(dir));
-        memset(tbuff, '\0', sizeof(tbuff));
-
-        lidbg_get_current_time(tbuff, NULL);
-        sprintf(dir, USB_MOUNT_POINT"/ID%d-%s", get_machine_id(), tbuff);
-        lidbg_mkdir(dir);
-        msleep(1000);
-
-        list_for_each_entry(pos, client_list, tmp_list)
-        {
-            if (pos->filename)
-            {
-                char *file = strrchr(pos->filename, '/');
-                if(file)
-                {
-                    index++;
-                    memset(tbuff, '\0', sizeof(tbuff));
-                    sprintf(tbuff, "%s/%s", dir, ++file);
-                    if(encode)
-                        fs_copy_file_encode(pos->filename, tbuff);
-                    else
-                        fs_copy_file(pos->filename, tbuff);
-                }
-                msleep(copy_delay);
-                if(pos->remove_after_copy)
-                    lidbg_rm(pos->filename);
-
-            }
-        }
-        sprintf(tbuff, "%s/*", dir);
-        lidbg_chmod(tbuff);
-        lidbg_domineering_ack();
-    }
-    else
-        FS_ERR("<nobody_register>\n");
-}
-
 //zone end
 
 
@@ -517,18 +469,6 @@ void fs_show_filename_list(void)
 {
     show_filename_list(&fs_filename_list);
 }
-static bool data_encode = false;
-int thread_cp_data_to_udiskt(void *data)
-{
-    cp_data_to_udisk(data_encode);
-    return 0;
-}
-void fs_cp_data_to_udisk(bool encode)
-{
-    data_encode = encode;
-    lidbg_chmod("/data/lidbg/*");
-    CREATE_KTHREAD(thread_cp_data_to_udiskt, NULL);
-}
 //zone end
 
 
@@ -545,7 +485,6 @@ void lidbg_fs_cmn_init(void)
 EXPORT_SYMBOL(fs_file_read);
 EXPORT_SYMBOL(fs_file_write);
 EXPORT_SYMBOL(fs_file_write2);
-EXPORT_SYMBOL(fs_cp_data_to_udisk);
 EXPORT_SYMBOL(fs_regist_filedetec);
 EXPORT_SYMBOL(fs_copy_file);
 EXPORT_SYMBOL(fs_copy_file_encode);

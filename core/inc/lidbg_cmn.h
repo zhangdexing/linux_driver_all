@@ -17,6 +17,7 @@ int lidbg_readdir_and_dealfile(char *insure_is_dir, void (*callback)(char *dirna
 u32 lidbg_get_random_number(u32 num_max);
 int  lidbg_token_string(char *buf, char *separator, char **token);
 void lidbg_strrpl(char originalString[], char key[], char swap[]);
+bool lidbg_strstrrpl(char *des, char originalString[], char key[], char swap[]);
 char *lidbgstrtrim(char *s);
 int  lidbg_exe(char path[], char argv1[], char argv2[], char argv3[], char argv4[], char argv5[], char argv6[]);
 int  lidbg_mount(char path[]);
@@ -30,7 +31,6 @@ int  lidbg_reboot(void);
 int  lidbg_setprop(char key[], char value[]);
 int  lidbg_start(char server[]);
 int  lidbg_stop(char server[]);
-int  lidbg_pm_install_dir(char apkpath_or_apkdirpath[]);
 int  lidbg_pm_install(char apkpath_or_apkdirpath[]);
 int  lidbg_force_stop_apk(char packagename[]);
 int  lidbg_toast_show(char *who,char *what);
@@ -53,6 +53,8 @@ void lidbg_shell_cmd(char *shell_cmd);
 char *get_bin_path( char *buf);
 char *get_lidbg_file_path(char *buff, char *filename);
 void set_cpu_governor(int state);
+char *set_udisk_path(char *buff);
+char *get_udisk_file_path(char *buff, char *filename);
 
 #define MOUNT_PATH get_bin_path("mount")
 #define INSMOD_PATH get_bin_path("insmod")

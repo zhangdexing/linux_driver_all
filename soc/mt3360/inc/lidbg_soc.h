@@ -169,7 +169,6 @@ enum
 
 #define SOC_KO  "ac83xxinput.ko","lidbg_soc_mt3360.ko"
 #define INTERFACE_KO  "lidbg_interface.ko"
-#define USB_MOUNT_POINT  "/storage/udisk"
 #define RECOVERY_USB_MOUNT_POINT "/usb"
 
 #define SOC_TARGET_PATH "../../soc/mt3360/lidbg_target_mt3360.c"

@@ -1,6 +1,5 @@
 
 #include "lidbg.h"
-#define PATH_FLY_HW_INFO_CONFIG USB_MOUNT_POINT"/conf/machine_info.conf"
 #define RECOVERY_PATH_FLY_HW_INFO_CONFIG RECOVERY_USB_MOUNT_POINT"/machine_info.conf"
 
 #define FLAG_HW_INFO_VALID (0x12345678)
@@ -48,7 +47,10 @@ void read_fly_hw_config_file(fly_hw_data *p_info)
     if(g_var.recovery_mode)
         fs_fill_list(RECOVERY_PATH_FLY_HW_INFO_CONFIG, FS_CMD_FILE_CONFIGMODE, &hw_config_list);
     else
-        fs_fill_list(PATH_FLY_HW_INFO_CONFIG, FS_CMD_FILE_CONFIGMODE, &hw_config_list);
+    {
+        char buff[128] = {0};
+        fs_fill_list(get_udisk_file_path(buff, "conf/machine_info.conf"), FS_CMD_FILE_CONFIGMODE, &hw_config_list);
+    }
 
     fs_get_intvalue(&hw_config_list, "hw_version", &(p_info->hw_info.hw_version), NULL);
     fs_get_intvalue(&hw_config_list, "ts_type", &(p_info->hw_info.ts_type), NULL);
@@ -92,16 +94,18 @@ bool fly_hw_info_save(fly_hw_data *p_info)
     return false;
 }
 
-void cb_fly_hw_info_save(char *key, char *value )
+/*
+void fly_hw_info_save_from(char *where)
 {
-    if((update_hw_info != 0) && (fs_is_file_exist(PATH_FLY_HW_INFO_CONFIG)))
+    char buff[128] = {0};
+    if((update_hw_info != 0) && (fs_is_file_exist(get_udisk_file_path(buff, "conf/machine_info.conf"))))
     {
         g_fly_hw_data->flag_need_update = 0;
         g_fly_hw_data->flag_hw_info_valid = FLAG_HW_INFO_VALID;
         fly_hw_info_save(g_fly_hw_data);
     }
 }
-
+*/
 bool flyparameter_info_get(void)
 {
     bool is_ublox_so_exist = false;
@@ -332,7 +336,6 @@ int lidbg_flyparameter_init(void)
     DUMP_BUILD_TIME;
     LIDBG_GET;
     lidbg_chmod(FLYPARAMETER_NODE);
-    FS_REGISTER_INT(update_hw_info, "update_hw_info", 0, cb_fly_hw_info_save);
     flyparameter_init();
     lidbg_fly_hw_info_init();//block other ko before hw_info set
     lidbg_new_cdev(&fly_upate_info_fops, "fly_upate_info0");

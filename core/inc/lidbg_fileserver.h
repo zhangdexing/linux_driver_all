@@ -42,7 +42,6 @@ struct fs_filename_item
 #define LIDBG_OSD_DIR LIDBG_LOG_DIR"lidbg_osd/"
 
 extern void lidbg_fileserver_main(int argc, char **argv);
-extern void fs_cp_data_to_udisk(bool encode);
 extern void fs_file_separator(char *file2separator);
 extern void fs_regist_filedetec(char *filename, void (*cb_filedetec)(char *filename ));
 extern void fs_save_state(void);

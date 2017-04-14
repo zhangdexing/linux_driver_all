@@ -15,8 +15,6 @@ struct rtc_time precmdfile_tm;
 struct rtc_time pre_machine_info_tm;
 static struct task_struct *fs_statetask;
 static struct task_struct *filepoll_task;
-static struct task_struct *udisk_conf_task;
-static struct completion udisk_conf_wait;
 //zone end
 
 
@@ -174,41 +172,6 @@ static int thread_pollstate_func(void *data)
     }
     return 1;
 }
-static int usb_nc_conf(struct notifier_block *nb, unsigned long action, void *data)
-{
-    FS_WARN("get usb action:%d\n", (int)action);
-    switch (action)
-    {
-    case USB_DEVICE_ADD:
-        complete(&udisk_conf_wait);
-        break;
-    case USB_DEVICE_REMOVE:
-        break;
-    }
-    return NOTIFY_OK;
-}
-
-static struct notifier_block usb_nb_conf =
-{
-    .notifier_call = usb_nc_conf,
-};
-static int thread_udisk_conf(void *data)
-{
-    allow_signal(SIGKILL);
-    allow_signal(SIGSTOP);
-    while(!kthread_should_stop())
-    {
-        if(!wait_for_completion_interruptible(&udisk_conf_wait))
-        {
-            ssleep(5);
-            FS_WARN("start\n");
-            update_list(USB_MOUNT_POINT"/conf/core.conf", &lidbg_core_list);
-            update_list(USB_MOUNT_POINT"/conf/drivers.conf", &lidbg_drivers_list);
-            //           update_list(USB_MOUNT_POINT"/conf/machine_info.conf", &lidbg_machine_info_list);
-        }
-    }
-    return 1;
-}
 //zone end
 
 
@@ -231,13 +194,10 @@ void fs_save_state(void)
 
 void lidbg_fs_conf_init(void)
 {
-    init_completion(&udisk_conf_wait);
-    usb_register_notify(&usb_nb_conf);
     fs_get_intvalue(&lidbg_core_list, "fs_pollfile_ms", &g_pollfile_ms, NULL);
     fs_get_intvalue(&lidbg_core_list, "fs_updatestate_ms", &g_pollstate_ms, NULL);
     filepoll_task = kthread_run(thread_pollfile_func, NULL, "ftf_filepolltask");
     fs_statetask = kthread_run(thread_pollstate_func, NULL, "ftf_statetask");
-    udisk_conf_task = kthread_run(thread_udisk_conf, NULL, "ftf_fs_uconf");
 }
 
 EXPORT_SYMBOL(lidbg_machine_info_list);

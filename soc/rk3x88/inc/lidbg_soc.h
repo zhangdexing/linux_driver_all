@@ -145,7 +145,6 @@ enum
 
 #define SOC_KO  "lidbg_soc_rk3x88.ko"
 #define INTERFACE_KO  "lidbg_interface.ko"
-#define USB_MOUNT_POINT  "/mnt/usb_storage"
 #define RECOVERY_USB_MOUNT_POINT "/usb"
 
 #define TRACE_MSG_FROM_KMSG

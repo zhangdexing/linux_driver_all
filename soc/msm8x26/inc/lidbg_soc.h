@@ -59,7 +59,6 @@ void lidbg_soc_main(int argc, char **argv);
 #endif
 
 #define SOC_KO  "lidbg_ad_msm8x26.ko","lidbg_soc_msm8x26.ko"
-#define USB_MOUNT_POINT  "/storage/udisk"
 #define RECOVERY_USB_MOUNT_POINT "/usb"
 
 

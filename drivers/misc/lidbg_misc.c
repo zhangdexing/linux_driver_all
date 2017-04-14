@@ -3,8 +3,6 @@ LIDBG_DEFINE;
 
 static int logcat_en;
 static int reboot_delay_s = 0;
-static int cp_data_to_udisk_en = 0;
-static int update_lidbg_out_dir_en = 0;
 static int delete_out_dir_after_update = 1;
 static int dump_mem_log = 0;
 static int loop_warning_en = 0;
@@ -158,31 +156,6 @@ void cb_password_clean_all(char *password )
     fs_mem_log("<called:%s>\n", __func__ );
     fs_clean_all();
 }
-void cb_password_update(char *password )
-{
-    LIDBG_WARN(TAG"<===============UPDATE_INFO =================>\n" );
-    fs_slient_level = 4;
-    analysis_copylist(USB_MOUNT_POINT"/conf/copylist.conf");
-
-    if(fs_is_file_exist(USB_MOUNT_POINT"/out/release"))
-    {
-        LIDBG_WARN(TAG"use:release\n" );
-        if( fs_update(USB_MOUNT_POINT"/out/release", USB_MOUNT_POINT"/out", "/flysystem/lib/out") >= 0)
-        {
-            if(delete_out_dir_after_update)
-                lidbg_rmdir(USB_MOUNT_POINT"/out");
-            lidbg_launch_user(CHMOD_PATH, "777", "/flysystem/lib/out", "-R", NULL, NULL, NULL);
-            lidbg_reboot();
-        }
-    }
-    else
-        LIDBG_ERR(TAG"<skip>\n" );
-}
-
-void update_lidbg_out_dir(char *key, char *value )
-{
-    cb_password_update(NULL);
-}
 
 void cb_password_gui_kmsg(char *password )
 {
@@ -295,30 +268,6 @@ int thread_reboot(void *data)
             lidbg(TAG"<reb.exit3.%d,%d>\n", reboot_delay_s, fs_is_file_exist(REBOOT_SIG_FILE));
         }
     }
-
-
-    if(0)//cool boot usb mount test
-    {
-        bool volume_find;
-        volume_find = !!find_mounted_volume_by_mount_point(USB_MOUNT_POINT) ;
-        if(volume_find && !te_is_ts_touched())
-        {
-            lidbg(TAG"<lidbg:thread_reboot,call reboot,%d>\n", te_is_ts_touched());
-            msleep(100);
-            kernel_restart(NULL);
-        }
-    }
-
-    if(0)
-    {
-
-        if( !fs_is_file_exist("/dev/log/no_reboot"))
-        {
-            lidbg(TAG"<lidbg:thread_reboot,call reboot>\n");
-            kernel_restart(NULL);
-        }
-    }
-
     return 0;
 }
 
@@ -328,25 +277,6 @@ void logcat_lunch(char *key, char *value )
     k2u_write(LOG_LOGCAT);
 #else
     lidbg_enable_logcat();
-#endif
-}
-void cb_cp_data_to_udisk(char *key, char *value )
-{
-    char shell_cmd[128] = {0}, tbuff[128] = {0};
-#ifdef SOC_msm8x25
-    fs_cp_data_to_udisk(false);
-#else
-    ssleep(7);
-    lidbg_get_current_time(tbuff, NULL);
-    sprintf(shell_cmd, "mkdir "USB_MOUNT_POINT"/ID-%d-%s", get_machine_id() , tbuff);
-    lidbg_shell_cmd(shell_cmd);
-    sprintf(shell_cmd, "cp -rf "LIDBG_LOG_DIR"* "USB_MOUNT_POINT"/ID-%d-%s", get_machine_id() , tbuff);
-    lidbg_shell_cmd(shell_cmd);
-    sprintf(shell_cmd, "cp  /data/*.txt "USB_MOUNT_POINT"/ID-%d-%s", get_machine_id() , tbuff);
-    lidbg_shell_cmd(shell_cmd);
-    sprintf(shell_cmd, "cp  "LIDBG_MEM_DIR"*.txt "USB_MOUNT_POINT"/ID-%d-%s", get_machine_id() , tbuff);
-    lidbg_shell_cmd(shell_cmd);
-    ssleep(2);
 #endif
 }
 int loop_warnning(void *data)
@@ -372,13 +302,6 @@ void lidbg_loop_warning(void)
             is_loop_warning = 1;
         }
     }
-}
-void cb_kv_app_install(char *key, char *value)
-{
-    if(value && *value == '1')
-        lidbg_pm_install_dir("/mnt/media_rw/udisk/apps");
-    else
-        fs_mem_log("cb_kv_app_install:fail,%s\n", value);
 }
 void cb_kv_reboot_recovery(char *key, char *value)
 {
@@ -429,7 +352,10 @@ static int thread_udisk_misc(void *data)
             else
             {
                 int pos = 0;
-                char *pPah[] = {USB_MOUNT_POINT"/conf/lidbg_udisk_shell.conf", "/storage/sdcard1/conf/lidbg_udisk_shell.conf", "/sdcard/conf/lidbg_udisk_shell.conf", NULL,};
+                char buff[128] = {0};
+                char *pPah[] = {"", "/storage/sdcard1/conf/lidbg_udisk_shell.conf", "/sdcard/conf/lidbg_udisk_shell.conf", NULL,};
+                get_udisk_file_path(buff, "conf/lidbg_udisk_shell.conf");
+                pPah[0] = buff;
                 while(i < 6 )
                 {
                     for(pos = 0; pPah[pos] != NULL; pos++)
@@ -523,6 +449,7 @@ ssize_t misc_write (struct file *filp, const char __user *buf, size_t size, loff
     else if(argc >= 2 && argv[1] != NULL && (!strcmp(argv[0], "conf_check")))
     {
         lidbg(TAG"conf_check\n");
+        set_udisk_path(argv[1]);
         complete(&udisk_misc_wait);
     }
     else
@@ -632,7 +559,6 @@ int misc_init(void *data)
     te_regist_password("001101", cb_password_upload);
     te_regist_password("001110", cb_password_clean_all);
     te_regist_password("001111", cb_password_chmod);
-    te_regist_password("001112", cb_password_update);
     te_regist_password("001120", cb_password_gui_kmsg);
     te_regist_password("001121", cb_password_gui_state);
     te_regist_password("011200", cb_password_mem_log);
@@ -640,13 +566,10 @@ int misc_init(void *data)
     FS_REGISTER_INT(dump_mem_log, "dump_mem_log", 0, cb_int_mem_log);
     FS_REGISTER_INT(logcat_en, "logcat_en", 0, logcat_lunch);
     FS_REGISTER_INT(reboot_delay_s, "reboot_delay_s", 0, NULL);
-    FS_REGISTER_INT(cp_data_to_udisk_en, "cp_data_to_udisk_en", 0, cb_cp_data_to_udisk);
-    FS_REGISTER_INT(update_lidbg_out_dir_en, "update_lidbg_out_dir_en", 0, update_lidbg_out_dir);
     FS_REGISTER_INT(delete_out_dir_after_update, "delete_out_dir_after_update", 0, NULL);
     FS_REGISTER_INT(loop_warning_en, "loop_warning_en", 0, NULL);
 
     FS_REGISTER_KEY( "cmdstring", cb_kv_cmd);
-    FS_REGISTER_KEY( "app_install_en", cb_kv_app_install);
     FS_REGISTER_KEY( "reboot_recovery", cb_kv_reboot_recovery);
     FS_REGISTER_KEY( "lidbg_origin_system", cb_kv_lidbg_origin_system);
 

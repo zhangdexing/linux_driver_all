@@ -51,7 +51,21 @@ char *get_lidbg_file_path(char *buff, char *filename)
     sprintf(buff, "%s%s", path, filename);
     return buff;
 }
-
+static char  udisk_path[64];
+char *set_udisk_path(char *buff)
+{
+    if(buff != NULL)
+        snprintf(udisk_path, sizeof(udisk_path), "%s", buff);
+    return buff;
+}
+char *get_udisk_file_path(char *buff, char *filename)
+{
+    if(filename != NULL)
+        sprintf(buff, "%s/%s", udisk_path, filename);
+    else
+        return udisk_path;
+    return buff;
+}
 
 void set_power_state(int state)
 {
@@ -278,25 +292,6 @@ void pm_install_apk(char apkpath[])
 {
     lidbg_launch_user(get_bin_path("pm"), "install", "-r", apkpath, "&", NULL, NULL);
 }
-void callback_pm_install(char *dirname, char *filename)
-{
-    char apkpath[256];
-    if(!filename || strstr(filename, "apk") == NULL)
-    {
-        LIDBG_ERR("failed:%s\n", filename);
-        return;
-    }
-    memset(apkpath, '\0', sizeof(apkpath));
-    sprintf(apkpath, "'%s/apps/%s'", USB_MOUNT_POINT, filename);
-    pm_install_apk(apkpath);
-}
-int  lidbg_pm_install_dir(char apkpath_or_apkdirpath[])
-{
-    if(!apkpath_or_apkdirpath)
-        return 0;
-    lidbg_readdir_and_dealfile(apkpath_or_apkdirpath, callback_pm_install);
-    return 1;
-}
 
 int  lidbg_pm_install(char apkpath_or_apkdirpath[])
 {
@@ -468,6 +463,24 @@ int lidbg_token_string(char *buf, char *separator, char **token)
         pos++;
     }
     return pos;
+}
+/*
+input:  "/storage/udisk/hello.txt"
+output:  "/storage/udisk-DEF4-DEEF/hello.txt"
+*/
+bool lidbg_strstrrpl(char *des, char originalString[], char key[], char swap[])
+{
+    char *toke2 = NULL;
+    char *toke1 = strstr(originalString, key);
+    if (toke1 == NULL)
+    {
+        sprintf(des, "%s", originalString);
+        return false;
+    }
+    toke2 = toke1 + strlen(key) - 1;
+    toke1[0] = '\0';
+    sprintf(des, "%s%s%s", originalString, swap, toke2);
+    return true;
 }
 
 /*
@@ -663,6 +676,7 @@ EXPORT_SYMBOL(find_mounted_volume_by_mount_point);
 EXPORT_SYMBOL(lidbg_readdir_and_dealfile);
 EXPORT_SYMBOL(lidbg_token_string);
 EXPORT_SYMBOL(lidbg_strrpl);
+EXPORT_SYMBOL(lidbg_strstrrpl);
 EXPORT_SYMBOL(lidbgstrtrim);
 EXPORT_SYMBOL(lidbg_get_random_number);
 EXPORT_SYMBOL(lidbg_exe);
@@ -677,7 +691,6 @@ EXPORT_SYMBOL(lidbg_reboot);
 EXPORT_SYMBOL(lidbg_setprop);
 EXPORT_SYMBOL(lidbg_start);
 EXPORT_SYMBOL(lidbg_stop);
-EXPORT_SYMBOL(lidbg_pm_install_dir);
 EXPORT_SYMBOL(lidbg_pm_install);
 EXPORT_SYMBOL(lidbg_toast_show);
 EXPORT_SYMBOL(lidbg_force_stop_apk);
@@ -693,6 +706,8 @@ EXPORT_SYMBOL(lidbg_get_current_time);
 EXPORT_SYMBOL(set_power_state);
 EXPORT_SYMBOL(get_bin_path);
 EXPORT_SYMBOL(get_lidbg_file_path);
+EXPORT_SYMBOL(set_udisk_path);
+EXPORT_SYMBOL(get_udisk_file_path);
 EXPORT_SYMBOL(lidbg_shell_cmd);
 EXPORT_SYMBOL(set_cpu_governor);
 

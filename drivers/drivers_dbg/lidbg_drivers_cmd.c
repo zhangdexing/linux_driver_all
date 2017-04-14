@@ -206,34 +206,30 @@ int thread_dump_log_cp2_udisk(void *data)
 	ssleep(50);
 //	lidbg_shell_cmd("screencap -p /data/lidbg/screenshot.png &");
 	ssleep(2);
-#ifdef SOC_msm8x25
-    fs_cp_data_to_udisk(true);
-#else
-{
-    char shell_cmd[128] = {0}, tbuff[128] = {0};
-    lidbg_get_current_time(tbuff, NULL);
-    sprintf(shell_cmd, "mkdir /sdcard/ID-%d-%s", get_machine_id() , tbuff);
-    lidbg_shell_cmd(shell_cmd);
-    sprintf(shell_cmd, "cp -rf "LIDBG_LOG_DIR"* /sdcard/ID-%d-%s", get_machine_id() , tbuff);
-    lidbg_shell_cmd(shell_cmd);
-    sprintf(shell_cmd, "cp -rf /sdcard/logcat*.txt /sdcard/ID-%d-%s", get_machine_id() , tbuff);
-    lidbg_shell_cmd(shell_cmd);
-    sprintf(shell_cmd, "cp -rf /sdcard/kmsg*.txt /sdcard/ID-%d-%s", get_machine_id() , tbuff);
-    lidbg_shell_cmd(shell_cmd);
-    sprintf(shell_cmd, "cp -rf /data/anr /sdcard/ID-%d-%s", get_machine_id() , tbuff);
-    lidbg_shell_cmd(shell_cmd);
-    sprintf(shell_cmd, "cp -rf /data/tombstones /sdcard/ID-%d-%s", get_machine_id() , tbuff);
-    lidbg_shell_cmd(shell_cmd);
+	{
+	    char shell_cmd[128] = {0}, tbuff[128] = {0};
+	    lidbg_get_current_time(tbuff, NULL);
+	    sprintf(shell_cmd, "mkdir /sdcard/ID-%d-%s", get_machine_id() , tbuff);
+	    lidbg_shell_cmd(shell_cmd);
+	    sprintf(shell_cmd, "cp -rf "LIDBG_LOG_DIR"* /sdcard/ID-%d-%s", get_machine_id() , tbuff);
+	    lidbg_shell_cmd(shell_cmd);
+	    sprintf(shell_cmd, "cp -rf /sdcard/logcat*.txt /sdcard/ID-%d-%s", get_machine_id() , tbuff);
+	    lidbg_shell_cmd(shell_cmd);
+	    sprintf(shell_cmd, "cp -rf /sdcard/kmsg*.txt /sdcard/ID-%d-%s", get_machine_id() , tbuff);
+	    lidbg_shell_cmd(shell_cmd);
+	    sprintf(shell_cmd, "cp -rf /data/anr /sdcard/ID-%d-%s", get_machine_id() , tbuff);
+	    lidbg_shell_cmd(shell_cmd);
+	    sprintf(shell_cmd, "cp -rf /data/tombstones /sdcard/ID-%d-%s", get_machine_id() , tbuff);
+	    lidbg_shell_cmd(shell_cmd);
 
-//for udisk
-    sprintf(shell_cmd, "cp -rf /sdcard/ID-%d-%s "USB_MOUNT_POINT, get_machine_id() , tbuff);
-    lidbg_shell_cmd(shell_cmd);
+	//for udisk
+	    sprintf(shell_cmd, "cp -rf /sdcard/ID-%d-%s %s", get_machine_id() , tbuff , get_udisk_file_path(NULL, NULL));
+	    lidbg_shell_cmd(shell_cmd);
 
-    ssleep(10);
-    lidbg_shell_cmd("sync");
-    ssleep(1);
-}
-#endif
+	    ssleep(10);
+	    lidbg_shell_cmd("sync");
+	    ssleep(1);
+	}
     lidbg_domineering_ack();
     lidbg_toast_show("158013--", "可拔掉U盘,调试信息以ID开头");
     lidbg_shell_cmd("am start -n com.mypftf.android.BugReport/.MainActivity &");
@@ -1115,18 +1111,20 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#071"))
         {
+            char buff[128] = {0};
             lidbg("udisk stable test\n");
             if(g_var.udisk_stable_test == 0)
                 g_var.udisk_stable_test = 1;
             else
                 g_var.udisk_stable_test = 0;
-            lidbg_fs_log(USB_MOUNT_POINT"/udisk_stable_test", "udisk_stable_test\n");
+            lidbg_fs_log(get_udisk_file_path(buff, "udisk_stable_test"), "udisk_stable_test\n");
             lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#072"))
         {
+            char buff[128] = {0};
             lidbg("acc on/off udisk stable test\n");
-            lidbg_fs_log(USB_MOUNT_POINT"/udisk_stable_test", "udisk_stable_test\n");
+            lidbg_fs_log(get_udisk_file_path(buff, "udisk_stable_test"), "udisk_stable_test\n");
             g_var.udisk_stable_test = 2;
             lidbg_domineering_ack();
         }

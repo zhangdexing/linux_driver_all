@@ -143,7 +143,6 @@ enum
 #define SUSPEND_ONLINE
 #define SOC_KO  "lidbg_soc_imx6q.ko"
 #define INTERFACE_KO  "lidbg_interface.ko"
-#define USB_MOUNT_POINT  "/storage/udisk"
 #define RECOVERY_USB_MOUNT_POINT "/usb"
 
 #define TRACE_MSG_FROM_KMSG

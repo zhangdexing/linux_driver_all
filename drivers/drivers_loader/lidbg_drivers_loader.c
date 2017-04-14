@@ -205,6 +205,7 @@ not_volid_judgment_cmd:
 
 bool analyze_list_cmd(struct list_head *client_list)
 {
+    char thiscmd[1000];
     struct string_dev *pos;
     char *cmd[8] = {NULL};
     int cmd_num  = 0, tsleep = 0, judgmenttimes = 0;
@@ -235,24 +236,14 @@ bool analyze_list_cmd(struct list_head *client_list)
                 else
                     goto drop;
             }
-#ifdef SOC_msm8x25
-            else if(strncmp(pos->yourkey, "cp", sizeof("cp") - 1) == 0)
-            {
-                cmd_num = lidbg_token_string(pos->yourkey, " ", cmd) ;
-                if(cmd_num == 3)
-                {
-                    LIDBG_WARN("cp <%s,%s>\n", cmd[1], cmd[2]);
-                    fs_copy_file(cmd[1], cmd[2]);
-                }
-                else
-                    goto drop;
-            }
-#endif
             else
             {
+                if(lidbg_strstrrpl(thiscmd, pos->yourkey, "/storage/udisk/", get_udisk_file_path(NULL, NULL)))
+                {
+                    LIDBG_WARN("fexe<%s>\n", thiscmd);
+                }
+                lidbg_shell_cmd(thiscmd);
                 //msleep(100);
-                //LIDBG_WARN("exe<%s>\n", pos->yourkey);
-                lidbg_shell_cmd(pos->yourkey);
             }
 
             continue;
