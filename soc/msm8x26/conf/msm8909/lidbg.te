@@ -588,3 +588,5 @@ allow lidbg_load mm-pp-daemon:file {read};
 allow lidbg_load mm-pp-daemon:file {open};
 allow lidbg_load mm-pp-daemon:file {getattr};
 allow lidbg_load su:dir {search};
+allow qti_init_shell selinuxfs:file write;
+allow qti_init_shell kernel:security setenforce;
