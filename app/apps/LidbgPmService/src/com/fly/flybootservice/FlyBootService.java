@@ -833,7 +833,7 @@ public static void releaseBrightWakeLock()
 			LIDBG_PRINT("powerOnSystem+\n");
 			//if(!blSuspendUnairplaneFlag)
 			//	restoreAirplaneMode(context);
-			while((SystemProperties.getBoolean("lidbg.hold_bootanim", false)||SystemProperties.getBoolean("lidbg.hold_bootanim2", false)) && (cnt < 50))
+			while((SystemProperties.getBoolean("lidbg.hold_bootanim", false)||SystemProperties.getBoolean("lidbg.hold_bootanim2", false)) && (cnt < 10*10))//10S
 			{
 				SystemClock.sleep(100);
 				cnt ++;
