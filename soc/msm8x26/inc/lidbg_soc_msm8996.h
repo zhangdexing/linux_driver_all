@@ -42,7 +42,7 @@
 #define SUSPEND_ONLINE
 #define MUC_CONTROL_DSP
 #define MUC_DSP7741
-
+#define CHECK_MCU_BUSY
 
 enum msm_gpiomux_setting {
 	GPIOMUX_ACTIVE = 0,
