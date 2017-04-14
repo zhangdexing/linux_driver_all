@@ -73,27 +73,19 @@ int remove_old_file()
 
 void write_log(char *buf)
 {
-	int len;
+	int total_size = klogctl(10,0,0);
 	while(1)
 	{
-		len = klogctl(9,NULL,0);
-		readsize = klogctl(2,buf+savesize,BUFSIZE-savesize);
-		//lidbg("record_klogctl:read %d,%d\n",readsize,len);
-		if( readsize <= 0)
+		readsize = klogctl(4,buf+savesize,total_size);
+		//lidbg("record_klogctl:read %d,%d\n",readsize,total_size);
+		savesize += readsize;
+		if ((readsize > 0) && ( (savesize >= BUFSIZE) || (save_in_time_mode == 1)))
 		{
-			lidbg("record_klogctl:klogctl error");
-		}
-		else
-		{			
-			savesize += readsize; 
-			if( (savesize >= BUFSIZE) || (save_in_time_mode == 1))
-			{
-				//lidbg("record_klogctl:write log to file\n");
-				write(openfd,buf,savesize);
-				readsize = savesize = 0;
-				memset(buf,'\0',BUFSIZE);
-				filesize_ctrl();
-			}
+			//lidbg("record_klogctl:write log to file\n");
+			write(openfd,buf,savesize);
+			readsize = savesize = 0;
+			memset(buf,'\0',BUFSIZE);
+			filesize_ctrl();
 		}
 		sleep(poll_time);
 	}
