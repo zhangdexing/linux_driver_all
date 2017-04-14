@@ -205,7 +205,7 @@ not_volid_judgment_cmd:
 
 bool analyze_list_cmd(struct list_head *client_list)
 {
-    char thiscmd[1000];
+    char thiscmd[512];
     struct string_dev *pos;
     char *cmd[8] = {NULL};
     int cmd_num  = 0, tsleep = 0, judgmenttimes = 0;
