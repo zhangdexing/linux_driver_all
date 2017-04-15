@@ -1,7 +1,7 @@
 
 #include "lidbg_servicer.h"
 
-#define BUFSIZE (1024*512)
+int BUFSIZE;
 int MAXINUM = (1024*1024*15);
 int poll_time = 5;
 bool save_in_time_mode = 0;
@@ -29,7 +29,7 @@ int remove_old_file()
         long mtime = 0;
         if(d == NULL)
         {
-                perror("prsize");
+                perror("remove_old_file err");
                 exit(1);
         }
 	lidbg("remove_old_file\n");
@@ -71,15 +71,18 @@ int remove_old_file()
 }
 
 
-void write_log(char *buf)
+void write_log()
 {
 	int total_size = klogctl(10,0,0);
+	BUFSIZE = total_size * 4;
+        buf = (char *)malloc(BUFSIZE);
+	memset(buf,'\0',BUFSIZE);
 	while(1)
 	{
 		readsize = klogctl(4,buf+savesize,total_size);
 		//lidbg("record_klogctl:read %d,%d\n",readsize,total_size);
 		savesize += readsize;
-		if ((readsize > 0) && ( (savesize >= BUFSIZE) || (save_in_time_mode == 1)))
+		if ((readsize > 0) && ( (savesize >= BUFSIZE - total_size) || (save_in_time_mode == 1)))
 		{
 			//lidbg("record_klogctl:write log to file\n");
 			write(openfd,buf,savesize);
@@ -105,7 +108,9 @@ void filesize_ctrl()
 	
 	if(d == NULL)
 	{
-		lidbg("record_klogctl:prsize");
+		lidbg("record_klogctl:filesize_ctrl err");
+		free(buf);
+		close(openfd);
 		exit(1);
 	}
 
@@ -146,21 +151,31 @@ void filesize_ctrl()
 
 void sigfunc(int sig)
 {
-	lidbg("record_klogctl:sigfunc write log to file\n");
-	//if(sig == SIGUSR1)
+	lidbg("record_klogctl:sigfunc write log to file+\n");
+	write(openfd,buf,savesize);
+	readsize = savesize = 0;
+	memset(buf,'\0',BUFSIZE);
+	filesize_ctrl();
+
+	if(sig == SIGUSR1)
 	{
-		write(openfd,buf,savesize);
-		readsize = savesize = 0;
-		memset(buf,'\0',BUFSIZE);	
-		filesize_ctrl();
+		lidbg("record_klogctl:sigfunc SIGUSR1\n");
 	}
-	if (sig == SIGUSR2)
+	else if (sig == SIGUSR2)
 	{
-		lidbg("record_klogctl:change in time mode\n");
+		lidbg("record_klogctl:sigfunc change in time mode\n");
 		MAXINUM = (1024*1024*50);
 		poll_time = 1;
 		save_in_time_mode = 1;
 	}
+	else
+	{
+		lidbg("record_klogctl:sigfunc exit\n");
+		free(buf);
+		close(openfd);
+		exit(1);
+	}
+	lidbg("record_klogctl:sigfunc write log to file-\n");
 }
 
 int main(int argc , char **argv)
@@ -187,14 +202,14 @@ int main(int argc , char **argv)
 	sprintf(newfile,"%s%d-%02d-%02d_%02d-%02d-%02d",PATH,tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min,tm->tm_sec);//将时间转换为字符串
 	creat(newfile,777);//创建目标文件
 	
-	buf = (char *)malloc(BUFSIZE);
 	openfd = open(newfile,O_RDWR | O_CREAT,0777);
 	system("chmod 777 /data/lidbg/reckmsg/* ");
 	system("chmod 777 /sdcard/kmsg/* ");
 
 	signal(SIGUSR1,sigfunc);
 	signal(SIGUSR2,sigfunc);
-	write_log(buf);
+	write_log();
 	free(buf);
+	close(openfd);
 	return 0;
 }

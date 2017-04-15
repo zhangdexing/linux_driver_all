@@ -609,11 +609,13 @@ void parse_cmd(char *pt)
 	    if(g_var.is_fly)
 	    	{
 		 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE &");
+		 msleep(500);
            	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal KILL &");
 	    	}
            else
            	{
                lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
+		 msleep(500);
                lidbg_shell_cmd("/system/lib/modules/out/sendsignal KILL &");
            	}
 		   
