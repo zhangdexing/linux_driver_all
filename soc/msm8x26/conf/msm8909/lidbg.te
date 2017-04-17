@@ -590,3 +590,9 @@ allow lidbg_load mm-pp-daemon:file {getattr};
 allow lidbg_load su:dir {search};
 allow qti_init_shell selinuxfs:file write;
 allow qti_init_shell kernel:security setenforce;
+
+# flyaudio allow selinux 2017-04-17 09:57:19 /dev/shm/logcat2.txt
+allow init surfaceflinger_service:service_manager {find};
+allow lidbg_load mediaserver_service:service_manager {find};
+allow lidbg_load storage_file:dir {search};
+allow system_app default_android_service:service_manager {add};
