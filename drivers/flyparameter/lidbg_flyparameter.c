@@ -333,9 +333,19 @@ int flyparameter_init(void)
 
 int lidbg_flyparameter_init(void)
 {
+    int cnt = 0;
     DUMP_BUILD_TIME;
     LIDBG_GET;
+
     lidbg_chmod(FLYPARAMETER_NODE);
+    while((fs_is_file_exist(FLYPARAMETER_NODE) == 0)&&(cnt <50))
+    {
+    		 lidbg("wait for FLYPARAMETER_NODE !!\n");
+		 lidbg_chmod(FLYPARAMETER_NODE);
+		 msleep(200);
+		 cnt++;
+    }
+	
     flyparameter_init();
     lidbg_fly_hw_info_init();//block other ko before hw_info set
     lidbg_new_cdev(&fly_upate_info_fops, "fly_upate_info0");
