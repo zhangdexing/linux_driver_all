@@ -30,7 +30,10 @@ int remove_old_file()
         if(d == NULL)
         {
                 perror("remove_old_file err");
-                exit(1);
+		closedir(d);
+		free(buf);
+		close(openfd);
+		exit(1);
         }
 	lidbg("remove_old_file\n");
         while((de = readdir(d))!=NULL)
@@ -67,6 +70,7 @@ int remove_old_file()
         }      
         lidbg("now remove %s\n",olderfile.filename);
         remove(olderfile.filename);
+	closedir(d);
         return 0;
 }
 
@@ -109,6 +113,7 @@ void filesize_ctrl()
 	if(d == NULL)
 	{
 		lidbg("record_klogctl:filesize_ctrl err");
+		closedir(d);
 		free(buf);
 		close(openfd);
 		exit(1);
@@ -127,7 +132,7 @@ void filesize_ctrl()
 			lidbg("record_klogctl:Could not stat %s\n",de->d_name);
 		}
 		else
-		totalsize += filebuf.st_size;
+			totalsize += filebuf.st_size;
 		filenum++;
 
 	}
@@ -152,14 +157,14 @@ void filesize_ctrl()
 void sigfunc(int sig)
 {
 	lidbg("record_klogctl:sigfunc write log to file+\n");
-	write(openfd,buf,savesize);
-	readsize = savesize = 0;
-	memset(buf,'\0',BUFSIZE);
-	filesize_ctrl();
 
 	if(sig == SIGUSR1)
 	{
 		lidbg("record_klogctl:sigfunc SIGUSR1\n");
+		write(openfd,buf,savesize);
+		readsize = savesize = 0;
+		memset(buf,'\0',BUFSIZE);
+		filesize_ctrl();
 	}
 	else if (sig == SIGUSR2)
 	{
