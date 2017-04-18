@@ -448,18 +448,9 @@ ssize_t misc_write (struct file *filp, const char __user *buf, size_t size, loff
     }
     else if(argc >= 2 && argv[1] != NULL && (!strcmp(argv[0], "conf_check")))
     {
-	    lidbg(TAG"conf_check\n");
-	    set_udisk_path(argv[1]);
-	    if(!g_var.is_first_update)
-	        complete(&udisk_misc_wait);
-	    else
-	    {
-	        char cmd[128] = {0};
-	        sprintf(cmd, "mv -f %s/conf %s/conf_bak", get_udisk_file_path(NULL, NULL), get_udisk_file_path(NULL, NULL));
-	        lidbg_shell_cmd(cmd);
-	        lidbg_shell_cmd("mv -f /sdcard1/conf /sdcard1/conf_bak");
-	        lidbg(TAG"conf_check.skip\n");
-	    }
+        lidbg(TAG"conf_check\n");
+        set_udisk_path(argv[1]);
+        complete(&udisk_misc_wait);
     }
     else
         LIDBG_ERR(TAG"%d\n", argc);

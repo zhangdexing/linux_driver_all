@@ -552,7 +552,6 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#129--call lidbg_uevent_cold_boot \n");
             fs_mem_log("*158#130--enable red osd ,logcat \n");
             fs_mem_log("*158#131--get kmsg log in time mode \n");
-            fs_mem_log("*158#132--g_var.is_first_update false \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1615,11 +1614,6 @@ void parse_cmd(char *pt)
         else if (!strcmp(argv[1], "*158#131"))
         {
            	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE_IN_TIME &");
-        }
-        else if (!strcmp(argv[1], "*158#132"))
-        {
-           	 lidbg("*158#132--g_var.is_first_update false \n");
-           	 g_var.is_first_update = false;
         }
     }
     else if(!strcmp(argv[0], "flyaudio.code.disable") )
