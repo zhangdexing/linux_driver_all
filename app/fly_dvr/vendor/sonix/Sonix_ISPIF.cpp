@@ -154,7 +154,7 @@ static bool sonix_check_cam(int cam_id, bool isH264, char* dev_name)
 
 	if((front_charcnt == 0) && (back_charcnt == 0))
 	{
-		lidbg("%s: can not found suitable hubpath! \n", __func__ );	
+		adbg("%s: can not found suitable hubpath! \n", __func__ );	
 		return false;
 	}
 	
@@ -162,7 +162,7 @@ static bool sonix_check_cam(int cam_id, bool isH264, char* dev_name)
 
 	if(access(hub_path, R_OK) != 0)
 	{
-		lidbg("%s: hub path access wrong!\n ", __func__ );
+		adbg("%s: hub path access wrong!\n ", __func__ );
 		return false;
 	}
 	
@@ -187,7 +187,7 @@ static bool sonix_check_cam(int cam_id, bool isH264, char* dev_name)
 	}
 	else 
 	{
-		lidbg("%s: openDir error!\n ", __func__ );
+		adbg("%s: openDir error!\n ", __func__ );
 		return false;
 	}
 
@@ -195,21 +195,21 @@ static bool sonix_check_cam(int cam_id, bool isH264, char* dev_name)
 	
 	if(fcnt == 3)	
 	{
-		lidbg("%s: Camera [%d] does not support Sonix Recording!\n",__func__,cam_id);
+		adbg("%s: Camera [%d] does not support Sonix Recording!\n",__func__,cam_id);
 		return false;
 	}
 	else if((fcnt == 0) && (ent == NULL))
 	{
-		lidbg("%s: Hub node is not exist !\n ", __func__);
+		adbg("%s: Hub node is not exist !\n ", __func__);
 		return false;
 	}
 	else if(fcnt < 3)
 	{
-		lidbg("%s: Camera [%d] nothing exist in hub dir!\n",__func__,cam_id);
+		adbg("%s: Camera [%d] nothing exist in hub dir!\n",__func__,cam_id);
 		return false;
 	}	
 
-	lidbg("%s:First node Path:%s\n",__func__ ,temp_devname);      
+	lidbg("%s:First node Path:%s, Second node Path:%s\n",__func__ ,temp_devname,temp_devname2);      
 
 	if(isH264 == true)
 		strncpy(dev_name, temp_devname2, 256);
@@ -279,14 +279,14 @@ static int sonix_video_open(const char *devname)
 
 	dev = open(devname, O_RDWR);
 	if (dev < 0) {
-		lidbg( "Error opening device %s: %d.\n", devname, errno);
+		adbg( "Error opening device %s: %d.\n", devname, errno);
 		return dev;
 	}
 
 	memset(&cap, 0, sizeof cap);
 	ret = ioctl(dev, VIDIOC_QUERYCAP, &cap);
 	if (ret < 0) {
-		lidbg( "Error opening device %s: unable to query device.\n",
+		adbg( "Error opening device %s: unable to query device.\n",
 			devname);
 		close(dev);
 		return ret;
@@ -352,7 +352,7 @@ static int sonix_video_reqbufs(int dev, int nbufs)
 
 	ret = ioctl(dev, VIDIOC_REQBUFS, &rb);
 	if (ret < 0) {
-		lidbg( "Unable to allocate buffers: %d.\n", errno);
+		adbg( "Unable to allocate buffers: %d.\n", errno);
 		return ret;
 	}
 
@@ -395,7 +395,7 @@ static int sonix_video_set_framerate(int dev, int framerate, unsigned int *MaxPa
 
 	ret = ioctl(dev, VIDIOC_G_PARM, &parm);
 	if (ret < 0) {
-		lidbg(  "Unable to get frame rate: %d.\n", errno);
+		adbg(  "Unable to get frame rate: %d.\n", errno);
 		return ret;
 	}
 
@@ -408,7 +408,7 @@ static int sonix_video_set_framerate(int dev, int framerate, unsigned int *MaxPa
 
 	ret = ioctl(dev, VIDIOC_S_PARM, &parm);
 	if (ret < 0) {
-		lidbg(  "Unable to set frame rate: %d.\n", errno);
+		adbg(  "Unable to set frame rate: %d.\n", errno);
 		return ret;
 	}
 
@@ -418,7 +418,7 @@ static int sonix_video_set_framerate(int dev, int framerate, unsigned int *MaxPa
 
 	ret = ioctl(dev, VIDIOC_G_PARM, &parm);
 	if (ret < 0) {
-		lidbg(  "Unable to get frame rate: %d.\n", errno);
+		adbg(  "Unable to get frame rate: %d.\n", errno);
 		return ret;
 	}
 
@@ -1042,7 +1042,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 				front_hw.buf0.memory = V4L2_MEMORY_MMAP;
 				ret = ioctl(front_hw.dev, VIDIOC_DQBUF, &(front_hw.buf0));
 				if (ret < 0) {
-					lidbg( "Unable to dequeue buffer0 (%d).\n", errno);
+					adbg( "%s: Unable to dequeue buffer0 (%d).\n",__func__, errno);
 					//close(front_hw.dev);//notify
 					return (void *)0;
 				}
@@ -1173,8 +1173,8 @@ void dequeue_flush(int count , camera_q_node* mhead)
 				
 				ret = ioctl(front_hw.dev, VIDIOC_QBUF, &(front_hw.buf0));
 				if (ret < 0) {
-					lidbg("Unable to requeue buffer0 (%d).\n", errno);
-					//close(front_hw.dev);	//notify
+					adbg( "%s: Unable to requeue buffer0 (%d).\n",__func__, errno);
+					//close(front_hw.dev);//notify
 					return (void *)0;
 				}
 
@@ -1357,7 +1357,7 @@ void dequeue_flush(int count , camera_q_node* mhead)
 				rear_hw.buf0.memory = V4L2_MEMORY_MMAP;
 				ret = ioctl(rear_hw.dev, VIDIOC_DQBUF, &(rear_hw.buf0));
 				if (ret < 0) {
-					lidbg( "Unable to dequeue buffer0 (%d).\n", errno);
+					adbg( "%s: Unable to dequeue buffer0 (%d).\n",__func__, errno);
 					//close(front_hw.dev);//notify
 					return (void *)0;
 				}
@@ -1485,11 +1485,10 @@ void dequeue_flush(int count , camera_q_node* mhead)
 				
 				ret = ioctl(rear_hw.dev, VIDIOC_QBUF, &(rear_hw.buf0));
 				if (ret < 0) {
-					lidbg("Unable to requeue buffer0 (%d).\n", errno);
-					//close(front_hw.dev);	//notify
+					adbg( "%s: Unable to requeue buffer0 (%d).\n",__func__, errno);
+					//close(front_hw.dev);//notify
 					return (void *)0;
 				}
-
 			}
 
 			//fflush(stdout);
@@ -2155,19 +2154,27 @@ INT32 Sonix_ISP_IF_LIB_StartFrontVR()
 	
 	/* Open the video device. */
 	if(Sonix_ISP_IF_LIB_GetFrontCamDevName(dev_name) == FLY_FALSE)
+	{
+		adbg("%s: Sonix_ISP_IF_LIB_GetFrontCamDevName Failed\n", __func__);
 		return 1;
+	}
 	
 	front_hw.dev = sonix_video_open(dev_name);
 	if (front_hw.dev < 0)
+	{
+		adbg("%s: sonix_video_open Failed\n", __func__);
 		return 1;
+	}
 
 	if (sonix_video_set_format(front_hw.dev, front_hw.VRWidth, front_hw.VRHeight, front_hw.VRFormat) < 0) {
 			lidbg(" === Set Format Failed : skip for H264 ===  \n");
 	}
 
 	/* Set the frame rate. */
-	if (sonix_video_set_framerate(front_hw.dev,  front_hw.VRFps , NULL) < 0) {
-		close(front_hw.dev);		
+	if (sonix_video_set_framerate(front_hw.dev,  front_hw.VRFps , NULL) < 0)		
+	{
+		adbg("%s: sonix_video_set_framerate Failed\n", __func__);
+		close(front_hw.dev);	
 		return 1;
 	}
 
@@ -2199,8 +2206,10 @@ INT32 Sonix_ISP_IF_LIB_StartFrontVR()
 	}
 
 	/* Allocate buffers. */
-	if ((int)(front_hw.nbufs = sonix_video_reqbufs(front_hw.dev, front_hw.nbufs)) < 0) {
-		close(front_hw.dev);
+	if ((int)(front_hw.nbufs = sonix_video_reqbufs(front_hw.dev, front_hw.nbufs)) < 0)
+	{
+		adbg("%s: sonix_video_reqbufs Failed\n", __func__);
+		close(front_hw.dev);	
 		return 1;
 	}
 
@@ -2212,7 +2221,7 @@ INT32 Sonix_ISP_IF_LIB_StartFrontVR()
 		front_hw.buf0.memory = V4L2_MEMORY_MMAP;
 		ret = ioctl(front_hw.dev, VIDIOC_QUERYBUF, &(front_hw.buf0));
 		if (ret < 0) {
-			lidbg( "Unable to query buffer %u (%d).\n", i, errno);
+			adbg( "Unable to query buffer %u (%d).\n", i, errno);
 			close(front_hw.dev);		
 			return 1;
 		}
@@ -2220,7 +2229,7 @@ INT32 Sonix_ISP_IF_LIB_StartFrontVR()
 
 		front_hw.mem0[i] = mmap(0, front_hw.buf0.length, PROT_READ, MAP_SHARED, front_hw.dev, front_hw.buf0.m.offset);
 		if (front_hw.mem0[i] == MAP_FAILED) {
-			lidbg( "Unable to map buffer %u (%d)\n", i, errno);
+			adbg( "Unable to map buffer %u (%d)\n", i, errno);
 			close(front_hw.dev);		
 			return 1;
 		}
@@ -2235,7 +2244,7 @@ INT32 Sonix_ISP_IF_LIB_StartFrontVR()
 		front_hw.buf0.memory = V4L2_MEMORY_MMAP;
 		ret = ioctl(front_hw.dev, VIDIOC_QBUF, &(front_hw.buf0));
 		if (ret < 0) {
-			lidbg( "Unable to queue buffer0(%d).\n", errno);
+			adbg( "Unable to queue buffer0(%d).\n", errno);
 			close(front_hw.dev);		
 			return 1;
 		}
@@ -2302,19 +2311,27 @@ INT32 Sonix_ISP_IF_LIB_StartRearVR()
 	
 	/* Open the video device. */
 	if(Sonix_ISP_IF_LIB_GetRearCamDevName(dev_name) == FLY_FALSE)
+	{
+		adbg("%s: Sonix_ISP_IF_LIB_GetRearCamDevName Failed\n", __func__);
 		return 1;
+	}
 	
 	rear_hw.dev = sonix_video_open(dev_name);
 	if (rear_hw.dev < 0)
+	{
+		adbg("%s: sonix_video_open Failed\n", __func__);
 		return 1;
+	}
 
 	if (sonix_video_set_format(rear_hw.dev, rear_hw.VRWidth, rear_hw.VRHeight, rear_hw.VRFormat) < 0) {
 			lidbg(" === Set Format Failed : skip for H264 ===  \n");
 	}
 
 	/* Set the frame rate. */
-	if (sonix_video_set_framerate(rear_hw.dev,  rear_hw.VRFps , NULL) < 0) {
-		close(rear_hw.dev);		
+	if (sonix_video_set_framerate(rear_hw.dev,  rear_hw.VRFps , NULL) < 0)
+	{
+		adbg("%s: sonix_video_set_framerate Failed\n", __func__);
+		close(rear_hw.dev);	
 		return 1;
 	}
 
@@ -2346,8 +2363,10 @@ INT32 Sonix_ISP_IF_LIB_StartRearVR()
 	}
 
 	/* Allocate buffers. */
-	if ((int)(rear_hw.nbufs = sonix_video_reqbufs(rear_hw.dev, rear_hw.nbufs)) < 0) {
-		close(rear_hw.dev);
+	if ((int)(rear_hw.nbufs = sonix_video_reqbufs(rear_hw.dev, rear_hw.nbufs)) < 0) 
+	{
+		adbg("%s: sonix_video_reqbufs Failed\n", __func__);
+		close(rear_hw.dev);	
 		return 1;
 	}
 
@@ -2359,7 +2378,7 @@ INT32 Sonix_ISP_IF_LIB_StartRearVR()
 		rear_hw.buf0.memory = V4L2_MEMORY_MMAP;
 		ret = ioctl(rear_hw.dev, VIDIOC_QUERYBUF, &(rear_hw.buf0));
 		if (ret < 0) {
-			lidbg( "Unable to query buffer %u (%d).\n", i, errno);
+			adbg( "Unable to query buffer %u (%d).\n", i, errno);
 			close(rear_hw.dev);		
 			return 1;
 		}
@@ -2367,7 +2386,7 @@ INT32 Sonix_ISP_IF_LIB_StartRearVR()
 
 		rear_hw.mem0[i] = mmap(0, rear_hw.buf0.length, PROT_READ, MAP_SHARED, rear_hw.dev, rear_hw.buf0.m.offset);
 		if (rear_hw.mem0[i] == MAP_FAILED) {
-			lidbg( "Unable to map buffer %u (%d)\n", i, errno);
+			adbg( "Unable to map buffer %u (%d)\n", i, errno);
 			close(rear_hw.dev);		
 			return 1;
 		}
@@ -2382,7 +2401,7 @@ INT32 Sonix_ISP_IF_LIB_StartRearVR()
 		rear_hw.buf0.memory = V4L2_MEMORY_MMAP;
 		ret = ioctl(rear_hw.dev, VIDIOC_QBUF, &(rear_hw.buf0));
 		if (ret < 0) {
-			lidbg( "Unable to queue buffer0(%d).\n", errno);
+			adbg( "Unable to queue buffer0(%d).\n", errno);
 			close(rear_hw.dev);		
 			return 1;
 		}
