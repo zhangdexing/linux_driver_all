@@ -154,7 +154,7 @@ static bool sonix_check_cam(int cam_id, bool isH264, char* dev_name)
 
 	if((front_charcnt == 0) && (back_charcnt == 0))
 	{
-		adbg("%s: can not found suitable hubpath! \n", __func__ );	
+		lidbg("%s: can not found suitable hubpath! \n", __func__ );	
 		return false;
 	}
 	
@@ -2141,6 +2141,7 @@ INT32 Sonix_ISP_IF_LIB_StartFrontVR()
 	unsigned int i;
 	int ret = 0;
 	char dev_name[255];
+	int fail_cnt = 0;
 
 	lidbg("%s: E\n", __func__);
 
@@ -2151,7 +2152,8 @@ INT32 Sonix_ISP_IF_LIB_StartFrontVR()
 	}
 
 	sonixInitFrontDefaultParameters();
-	
+
+OpenFrontDev:
 	/* Open the video device. */
 	if(Sonix_ISP_IF_LIB_GetFrontCamDevName(dev_name) == FLY_FALSE)
 	{
@@ -2163,7 +2165,20 @@ INT32 Sonix_ISP_IF_LIB_StartFrontVR()
 	if (front_hw.dev < 0)
 	{
 		adbg("%s: sonix_video_open Failed\n", __func__);
-		return 1;
+		/*Protect Procedue*/
+		fail_cnt++;
+		if(fail_cnt >= 5)
+		{
+			fail_cnt = 0;
+			adbg("%s: Try open timeout!Return!%d\n", __func__,fail_cnt);
+			return 1;
+		}
+		else
+		{
+			adbg("%s: Try open again!%d\n", __func__,fail_cnt);
+			usleep(200*1000);
+			goto OpenFrontDev;
+		}
 	}
 
 	if (sonix_video_set_format(front_hw.dev, front_hw.VRWidth, front_hw.VRHeight, front_hw.VRFormat) < 0) {
@@ -2298,6 +2313,7 @@ INT32 Sonix_ISP_IF_LIB_StartRearVR()
 	unsigned int i;
 	int ret = 0;
 	char dev_name[255];
+	int fail_cnt = 0;
 
 	lidbg("%s: E\n", __func__);
 
@@ -2308,7 +2324,8 @@ INT32 Sonix_ISP_IF_LIB_StartRearVR()
 	}
 
 	sonixInitRearDefaultParameters();
-	
+
+OpenRearDev:
 	/* Open the video device. */
 	if(Sonix_ISP_IF_LIB_GetRearCamDevName(dev_name) == FLY_FALSE)
 	{
@@ -2320,7 +2337,20 @@ INT32 Sonix_ISP_IF_LIB_StartRearVR()
 	if (rear_hw.dev < 0)
 	{
 		adbg("%s: sonix_video_open Failed\n", __func__);
-		return 1;
+		/*Protect Procedue*/
+		fail_cnt++;
+		if(fail_cnt >= 5)
+		{
+			fail_cnt = 0;
+			adbg("%s: Try open timeout!Return!%d\n", __func__,fail_cnt);
+			return 1;
+		}
+		else
+		{
+			adbg("%s: Try open again!%d\n", __func__,fail_cnt);
+			usleep(200*1000);
+			goto OpenRearDev;
+		}
 	}
 
 	if (sonix_video_set_format(rear_hw.dev, rear_hw.VRWidth, rear_hw.VRHeight, rear_hw.VRFormat) < 0) {
