@@ -168,7 +168,7 @@ static void status_fifo_in(unsigned char status)
 		return;
 	}
     
-	lidbg("%s:====fifo in => %d====\n",__func__,status);
+	lidbg("%s:====fifo in => 0x%x====\n",__func__,status);
 	down(&pfly_UsbCamInfo->sem);
 	//if(kfifo_is_full(&camStatus_data_fifo));
 	kfifo_in(&camStatus_data_fifo, &pfly_UsbCamInfo->read_status, 1);
@@ -2033,9 +2033,10 @@ ssize_t  flycam_read(struct file *filp, char __user *buffer, size_t size, loff_t
 	down(&pfly_UsbCamInfo->sem);
 	ret = kfifo_out(&camStatus_data_fifo, camStatus_data_for_hal, 1);
 	up(&pfly_UsbCamInfo->sem);
-	lidbg("%s:====HAL read_status => %d=====\n",__func__,camStatus_data_for_hal[0]);
+	lidbg("%s:====HAL read_status => 0x%x=====\n",__func__,camStatus_data_for_hal[0]);
 	if(copy_to_user(buffer, camStatus_data_for_hal, 1))
     {
+    	lidbg("%s:====copy_to_user fail=> 0x%x=====\n",__func__,camStatus_data_for_hal[0]);
         return -1;
     }
 	return 1;
