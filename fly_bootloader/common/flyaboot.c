@@ -6,6 +6,7 @@
 #endif
 #include "fly_private.h"
 #include "fly_common.h"
+#include "lidbg_bare_para.h"
 /*
 //#define FACTORY_MODEL
 #define 		RED_COL 		0XFF0000
@@ -17,6 +18,7 @@
 //#define 		fontsize16		10
 
 */
+static fly_bare_data *g_bare_data=NULL;
 
 #ifdef MEMBASE
 #define EMMC_BOOT_IMG_HEADER_ADDR (0xFF000+(MEMBASE))
@@ -356,6 +358,7 @@ void  choose_lcd(int lcd_resolution)
 	dsi83_conf_num= 0;
     }
 }
+
 void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
 {
     int model = 0;
@@ -504,6 +507,24 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
         dprintf(INFO, "Unknown Model!\n");
         break;
     }
+
+	if(!(*boot_into_fastboot))
+	{
+	    g_bare_data = (fly_bare_data *)malloc(page_size);//must be page_size
+	    if(g_bare_data && ptn_read("misc", MEM_SIZE_512_KB / page_size, page_size, g_bare_data) == 0)
+	    {
+	        if(g_bare_data->flag_valid == FLAG_VALID)
+	        {
+	            bp_meg = g_bare_data->bare_info.uart_dbg_en;
+	            dprintf(INFO, "fmisc: bp_meg new = %d\n", bp_meg);
+	        }
+	        dprintf(INFO, "fmisc:dbg: MEM_SIZE_512_KB:%d page_size:%d flag_valid= %x  uart_dbg_en = %d\n", MEM_SIZE_512_KB, page_size, g_bare_data->flag_valid, g_bare_data->bare_info.uart_dbg_en);
+	    }
+	    else
+	    {
+	        dprintf(CRITICAL, "fmisc:g_bare_data get failed(%d)\n", (!g_bare_data));
+	    }
+	}
 
     /*
     {

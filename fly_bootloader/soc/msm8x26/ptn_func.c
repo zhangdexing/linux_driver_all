@@ -2,8 +2,62 @@
 #include <string.h>
 #include <partition_parser.h>
 #include "../soc.h"
+#include "../../common/include/lidbg_bare_para.h"
 
 extern unsigned page_mask;
+
+static int read_misc(unsigned page_offset, void *buf, unsigned size)
+{
+	const char *ptn_name = "misc";
+	uint32_t pagesize = get_page_size();
+	unsigned offset;
+
+	if (size == 0 || buf == NULL)
+		return -1;
+
+	offset = page_offset * pagesize;
+
+	if (target_is_emmc_boot())
+	{
+		int index;
+		unsigned long long ptn;
+		unsigned long long ptn_size;
+
+		index = partition_get_index(ptn_name);
+		if (index == INVALID_PTN)
+		{
+			dprintf(CRITICAL, "fmisc:No '%s' partition found\n", ptn_name);
+			return -1;
+		}
+
+		ptn = partition_get_offset(index);
+		ptn_size = partition_get_size(index);
+
+		mmc_set_lun(partition_get_lun(index));
+
+		if (ptn_size < offset + size)
+		{
+			dprintf(CRITICAL, "fmisc:Read request out of '%s' boundaries\n",
+					ptn_name);
+			return -1;
+		}
+
+		dprintf(INFO, "fmisc:read_misc.in ptn:%llu,ptn_size:%llu offset:%d pagesize:%d\n",ptn,ptn_size,offset,pagesize);
+		dprintf(INFO, "fmisc:read_misc.real read\n");
+		if (mmc_read(ptn + offset, (unsigned int *)buf, size))
+		{
+			dprintf(CRITICAL, "fmisc:Reading MMC failed\n");
+			return -1;
+		}
+	}
+	else
+	{
+		dprintf(CRITICAL, "fmisc:Misc partition not supported for NAND targets.\n");
+		return -1;
+	}
+
+	return 0;
+}
 
 int ptn_read(char *ptn_name, unsigned int offset, unsigned long len, unsigned char *buf)
 {
@@ -23,7 +77,7 @@ int ptn_read(char *ptn_name, unsigned int offset, unsigned long len, unsigned ch
 	dprintf(CRITICAL, "partition %s doesn't exist\n", ptn_name);
 	return -1;
     }
-    dprintf(INFO, "Partition %s index[0x%x],len[%lu]\n", ptn_name, index,len);
+    dprintf(INFO, "Partition %s index[0x%x],len[%lu],size[%llu]offset:%d\n", ptn_name, index,len,size,offset);
 
     if(!strcmp(ptn_name, "flyparameter"))
     {
@@ -105,5 +159,15 @@ int ptn_read(char *ptn_name, unsigned int offset, unsigned long len, unsigned ch
     else
         dprintf(INFO, "Please ensure partition %s should be read\n", ptn_name);
 #endif
+    if(!strcmp(ptn_name, "misc"))
+    {
+		if (read_misc(offset, buf, len))
+		{
+			dprintf(CRITICAL, "fmisc:read_misc.error\n");
+			return -1;
+		}
+		dprintf(CRITICAL, "fmisc:read_misc.success\n");
+		return 0;
+    }
 }
 
