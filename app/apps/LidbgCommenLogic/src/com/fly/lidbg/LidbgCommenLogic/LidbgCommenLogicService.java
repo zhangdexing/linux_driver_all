@@ -50,6 +50,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PermissionInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
+import android.media.MediaPlayer;
 
 import java.util.ArrayList;
 
@@ -117,6 +118,7 @@ public class LidbgCommenLogicService extends Service
 
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
         mStorageManager.registerListener(mStorageEventListener);
+	playMusic("/flysystem/lib/out/welcome.mp3");
     }
     private final StorageEventListener mStorageEventListener = new StorageEventListener()
     {
@@ -706,6 +708,23 @@ public class LidbgCommenLogicService extends Service
         }
         return mList;
     }
+	
+public void playMusic(String fileName)
+{
+	MediaPlayer mediaplayer = new MediaPlayer();
+	printKernelMsg("fuplay: "+fileName);
+	try
+	{
+	mediaplayer.reset();
+	mediaplayer.setDataSource(fileName);
+	mediaplayer.setLooping(false);
+	mediaplayer.prepare();
+	mediaplayer.start();
+	} catch (Exception e)
+	{
+	printKernelMsg("fuplay: "+e.getMessage());
+	}
+}
     public String FileRead(String fileName)
     {
         String res = null;
