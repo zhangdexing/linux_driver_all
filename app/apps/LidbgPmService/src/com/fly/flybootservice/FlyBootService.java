@@ -346,6 +346,7 @@ public class FlyBootService extends Service {
 								{
 									setWifiState(true);
 								}
+								 writeToFile("/dev/lidbg_misc0", "flyaudio:am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 11");
 							}else if(pmState == FBS_SCREEN_ON){
 								LIDBG_PRINT(" get pm state: FBS_SCREEN_ON\n");
 								acquireWakeLock();

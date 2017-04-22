@@ -508,6 +508,9 @@ public class LidbgCommenLogicService extends Service
                 printKernelMsg("reboot");
                 reboot();
                 break;
+            case 11:
+                playMusic("/flysystem/lib/out/welcome.mp3");
+                break;
             default:
                 printKernelMsg("unkown:" + action + "\n");
                 break;
