@@ -220,7 +220,7 @@ static int thread_usb_disk_disable_delay(void *data)
 		if(g_var.platformid==ID14_MSM8974_600)
 		{
 			lidbg("umount udisk\n");
-			lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 2");
+			lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 2 &");
 			msleep(5000);
 		}
 
@@ -271,7 +271,7 @@ static int misc_dev_dev_event(struct notifier_block *this,
 	mod_timer(&usb_release_timer,jiffies + 180*HZ);
 	lidbg_shell_cmd("echo backcar_type $(getprop fly.set.cvsb.swit) > /dev/flydev0");
 	lidbg("unmount usb udisk\n");
-	lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 2");
+	lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 2 &");
     break;
 
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_DOWN):
@@ -359,7 +359,7 @@ static int misc_dev_dev_event(struct notifier_block *this,
     if(g_var.platformid==ID11_MSM8909_511&&g_recovery_meg->bootParam.upName.val==1)
         CREATE_KTHREAD(thread_shutdown_bt_power, NULL);
 	lidbg("mount usb udisk\n");
-	lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 1");
+	lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 1 &");
     break;
 
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SIGNAL_EVENT, NOTIFIER_MINOR_SIGNAL_BAKLIGHT_ACK):
