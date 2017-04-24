@@ -640,7 +640,7 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
 #if ANDROID_VERSION >= 600
 			lidbg_shell_cmd("dumpsys battery unplug");
 			lidbg_shell_cmd("dumpsys deviceidle enable");
-			lidbg_shell_cmd("dumpsys deviceidle force-idle");
+			lidbg_shell_cmd("dumpsys deviceidle force-idle &");
 			lidbg("run as doze mode.\n");
 #endif
 
