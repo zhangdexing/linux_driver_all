@@ -789,11 +789,6 @@ static int  knob_probe(struct platform_device *pdev)
     int ret;
     DUMP_FUN;
 
-#ifndef FLY_HAL_NEW_COMM
-    lidbg("%s: FLY_HAL_NEW_COMM Disable!\n", __func__);
-    return 0;
-#endif
-
     left_knob_fifo_buffer = (u8 *)kmalloc(FIFO_SIZE , GFP_KERNEL);
     right_knob_fifo_buffer = (u8 *)kmalloc(FIFO_SIZE , GFP_KERNEL);
     kfifo_init(&left_knob_data_fifo, left_knob_fifo_buffer, FIFO_SIZE);

@@ -577,7 +577,7 @@ case "$DBG_PLATFORM_ID" in
     17)
 	export DBG_PLATFORM=msm8996
 	export SOC_ARCH=arm64
-	export BOARD_VERSION=V2
+	export BOARD_VERSION=V3
 	export ANDROID_VERSION=601
 	export DBG_CROSS_COMPILE=$DBG_SYSTEM_DIR/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-
 	export JAVA_HOME=$PATHJAVA1P7
