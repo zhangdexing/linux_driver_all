@@ -38,9 +38,10 @@ void dump_sysinfo(void)
 	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/location.txt");
 	lidbg_shell_cmd("dumpsys location >> /data/lidbg/pm_info/location.txt");
 	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/meminfo.txt");
-	lidbg_shell_cmd("dumpsys meminfo >> /data/lidbg/pm_info/meminfo.txt");
+	lidbg_shell_cmd("dumpsys meminfo >> /data/lidbg/pm_info/meminfo.txt &");
 	lidbg_shell_cmd("date  > /data/lidbg/pm_info/iptable.txt");
 	lidbg_shell_cmd("iptables -L  >> /data/lidbg/pm_info/iptable.txt");
+	lidbg_shell_cmd("cat /proc/meminfo >> /data/lidbg/pm_info/meminfo2.txt &");
 
 	lidbg_shell_cmd("chmod 777 /data/lidbg/* -R");
 	lidbg_shell_cmd("chmod 777 /data/lidbg/*");

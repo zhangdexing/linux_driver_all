@@ -166,7 +166,7 @@
 	}while(0)
 
 
-#define FLY_GPS_SO  "gps.msm.so"
+#define FLY_GPS_SO  "gps.msm8996.so"
 
 #define WAKEUP_MCU_BEGIN  do{check_gpio(g_hw.gpio_mcu_i2c_wakeup);SOC_IO_Output(0, g_hw.gpio_mcu_i2c_wakeup, 1); }while(0)
 #define WAKEUP_MCU_END  do{check_gpio(g_hw.gpio_mcu_i2c_wakeup);SOC_IO_Output(0, g_hw.gpio_mcu_i2c_wakeup, 0); }while(0)
