@@ -18,6 +18,9 @@ int main(int argc, char **argv)
     lidbg("Build Time:lidbg_iserver: iserver start\n");
     system("mkdir /dev/log");
     system("chmod 777 /dev/log");
+    system("cat /dev/block/bootdevice/by-name/flyparameter > /dev/flyparameter");
+    system("chmod 444 /dev/flyparameter");
+
     module_insmod("/system/lib/modules/out/lidbg_immediate.ko");
     module_insmod("/flysystem/lib/out/lidbg_immediate.ko");
 #if 0
