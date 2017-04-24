@@ -1312,7 +1312,7 @@ static int thread_get_3rd_package_name_list_delay(void *data)
         ssleep(1);
     };
     ssleep(10);
-    lidbg_shell_cmd("pm list packages -3 > "LIDBG_LOG_DIR"pm_3.txt");
+    lidbg_shell_cmd("pm list packages -3 > "LIDBG_LOG_DIR"pm_3.txt &");
     ssleep(5);
     if(fs_fill_list(LIDBG_LOG_DIR"pm_3.txt", FS_CMD_FILE_LISTMODE, &pm_3rd_package_list) < 0)
     {
