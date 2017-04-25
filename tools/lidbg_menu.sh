@@ -174,12 +174,16 @@ function lidbg_handle()
 
 			echo adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 /$2
 			echo adb push $DBG_OUT_PATH/$2 /system/bin/$2
+			echo adb push $DBG_OUT_PATH/$2 /$2
 			echo adb shell "chmod 777 /system/bin/$2"
+			echo adb shell "chmod 777 /$2"
 			adb root
 			adb remount
 			adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 /$2
 			adb push $DBG_OUT_PATH/$2 /system/bin/$2
+			adb push $DBG_OUT_PATH/$2 /$2
 			adb shell "chmod 777 /system/bin/$2"
+			adb shell "chmod 777 /$2"
 			exit;;
 		11)
 			expect $DBG_TOOLS_PATH/fetch_all $2 l
