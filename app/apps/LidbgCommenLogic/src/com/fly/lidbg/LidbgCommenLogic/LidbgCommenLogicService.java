@@ -116,6 +116,18 @@ public class LidbgCommenLogicService extends Service
         mIntentFilter.setPriority(Integer.MAX_VALUE);
         mLidbgCommenLogicService.registerReceiver(mPackageReceiver, mIntentFilter);
 
+        IntentFilter mMediaFilter = new IntentFilter();
+        mMediaFilter.addDataScheme("file");
+        mMediaFilter.addAction(Intent.ACTION_MEDIA_EJECT);
+        mMediaFilter.addAction(Intent.ACTION_MEDIA_UNMOUNTED);
+        mMediaFilter.addAction(Intent.ACTION_MEDIA_REMOVED);
+        mMediaFilter.addAction(Intent.ACTION_MEDIA_CHECKING);
+        mMediaFilter.addAction(Intent.ACTION_MEDIA_MOUNTED);
+        mMediaFilter.addAction(Intent.ACTION_MEDIA_BAD_REMOVAL);
+        mMediaFilter.addAction(Intent.ACTION_MEDIA_UNMOUNTABLE);
+        mMediaFilter.setPriority(Integer.MAX_VALUE);
+        mLidbgCommenLogicService.registerReceiver(mMediaReceiver, mMediaFilter);
+
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
         mStorageManager.registerListener(mStorageEventListener);
 	playMusic("/flysystem/lib/out/welcome.mp3");
@@ -373,6 +385,19 @@ public class LidbgCommenLogicService extends Service
                     printKernelMsg("ignore:" + packageName);
                 return;
             }
+        }
+    };
+    private BroadcastReceiver mMediaReceiver = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            if (intent == null)
+            {
+                printKernelMsg("err.return:intent == null \n");
+                return;
+            }
+            printKernelMsg("mMediaReceiver:[" + intent.getAction() + "]["+intent.getData().getPath()+"]\n");
         }
     };
 
