@@ -147,8 +147,6 @@ bool flyparameter_info_get(void)
             g_var.hw_info.lcd_type = g_recovery_meg->hwInfo.info[4] - '0';
             g_var.hw_info.lcd_manufactor = 10 * (g_recovery_meg->hwInfo.info[8] - '0') + g_recovery_meg->hwInfo.info[9] - '0';
             g_var.hw_info.hw_version2 =  g_recovery_meg->hwInfo.info[10] - '0';
-            if(g_var.hw_info.hw_version2<0)
-            		g_var.hw_info.hw_version2=0;
 #ifdef PLATFORM_msm8996
 	     g_var.hw_info.hw_version = g_var.hw_info.hw_version2 + 2;
 #endif
