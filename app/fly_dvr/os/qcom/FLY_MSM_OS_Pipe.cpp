@@ -37,6 +37,11 @@ UINT8 FLY_MSM_OS_GetMessage(FLY_OS_PIPE* osPipe, FLYDVR_QUEUE_MESSAGE* msg, UINT
 			break;
 		default:
 			len=read(osPipe->fd[0],(char*)msg,sizeof(FLYDVR_QUEUE_MESSAGE));	
+			if(len < 0)
+			{
+				lidbg("%s: read failed,%s", __func__, strerror(errno));
+				usleep(500*1000);
+			}
 			ret = 0;
 			break;
 	}
@@ -59,6 +64,9 @@ UINT8 FLY_MSM_OS_GetMessage(FLY_OS_PIPE* osPipe, FLYDVR_QUEUE_MESSAGE* msg, UINT
 
 UINT8 FLY_MSM_OS_PutMessage(FLY_OS_PIPE* osPipe, FLYDVR_QUEUE_MESSAGE* msg)
 {
-    write(osPipe->fd[1],(char*)msg,sizeof(FLYDVR_QUEUE_MESSAGE));
+	if(write(osPipe->fd[1],(char*)msg,sizeof(FLYDVR_QUEUE_MESSAGE)) < 0)
+	{
+		lidbg("%s: write failed,%s", __func__, strerror(errno));
+	}
 	return 0;
 }
