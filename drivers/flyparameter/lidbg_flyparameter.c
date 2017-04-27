@@ -115,7 +115,6 @@ bool flyparameter_info_get(void)
         lidbg("g_hw.fly_parameter_node == NULL,return\n");
         return 0;
     }
-
     if(p_kmem && fs_file_read(FLYPARAMETER_NODE, p_kmem, 0, sizeof(recovery_meg_t)) >= 0)
     {
         g_recovery_meg = (recovery_meg_t *)p_kmem;
@@ -125,9 +124,10 @@ bool flyparameter_info_get(void)
 
         if(g_recovery_meg->hwInfo.bValid == 0x12345678)
         {
-            int ret;
+            int ret,len;
             char parameter[256];
             memset(parameter, '\0', sizeof(parameter));
+            len=strlen(g_recovery_meg->hwInfo.info);
 
             ret = sprintf(parameter, "setprop HWINFO.FLY.Parameter %s", g_recovery_meg->hwInfo.info);
             if(ret < 0)
@@ -138,15 +138,16 @@ bool flyparameter_info_get(void)
             fs_clear_file("/data/commenPersist/hwinfo.txt");
             fs_file_write2("/data/commenPersist/hwinfo.txt", g_recovery_meg->hwInfo.info);
             lidbg_shell_cmd("chmod 777 /data/commenPersist/hwinfo.txt");
-            lidbg("flyparameter=[%s]\n", g_recovery_meg->hwInfo.info);
-            fs_mem_log("flyparameter=[%s]\n", g_recovery_meg->hwInfo.info);
+            lidbg("flyparameter=[%s] len:%d\n", g_recovery_meg->hwInfo.info,len);
+            fs_mem_log("flyparameter=[%s] len:%d\n", g_recovery_meg->hwInfo.info,len);
 
             lidbg("flyparameter3 :%d,%d,%d,%d,%d\n", g_recovery_meg->hwInfo.info[0] - '0', g_recovery_meg->hwInfo.info[1] - '0', g_recovery_meg->hwInfo.info[2] - '0', g_recovery_meg->hwInfo.info[3] - '0', g_recovery_meg->hwInfo.info[4] - '0');
             g_var.hw_info.ts_config = 10 * (g_recovery_meg->hwInfo.info[0] - '0') + g_recovery_meg->hwInfo.info[1] - '0';
             g_var.hw_info.virtual_key = 10 * (g_recovery_meg->hwInfo.info[2] - '0') + g_recovery_meg->hwInfo.info[3] - '0';
             g_var.hw_info.lcd_type = g_recovery_meg->hwInfo.info[4] - '0';
             g_var.hw_info.lcd_manufactor = 10 * (g_recovery_meg->hwInfo.info[8] - '0') + g_recovery_meg->hwInfo.info[9] - '0';
-            g_var.hw_info.hw_version2 =  g_recovery_meg->hwInfo.info[10] - '0';
+            if(len>10)
+            	g_var.hw_info.hw_version2 =  g_recovery_meg->hwInfo.info[10] - '0';
 #ifdef PLATFORM_msm8996
 	     g_var.hw_info.hw_version = g_var.hw_info.hw_version2 + 2;
 #endif
