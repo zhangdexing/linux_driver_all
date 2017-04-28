@@ -41,6 +41,9 @@ pthread_t thread_cb_media_abnormal_full_restore_id;
 pthread_t thread_driver_daemon_id;
 pthread_t thread_media_daemon_id;
 
+static pthread_cond_t thread_media_daemon_cond;  
+static pthread_mutex_t thread_media_daemon_mutex;  
+
 static int flycam_fd = -1;
 
 FLY_BOOL		isFrontCamFound;
@@ -422,6 +425,17 @@ void *thread_driver_daemon(void* data)
 				if(info.isVRLocked== true)
 					Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_USER_LOCK, 0);
 			break;
+
+			case MSG_VOLD_SD_REMOVE:
+				lidbg("%s:===MSG_VOLD_SD_REMOVE===\n",__func__);
+#if 0				
+				Flydvr_SendMessage(FLYM_DRV, EVENT_DRV_VOLD_SD_REMOVED, 0);
+#else
+				pthread_mutex_lock(&thread_media_daemon_mutex);  
+				pthread_cond_signal(&thread_media_daemon_cond);  
+				pthread_mutex_unlock(&thread_media_daemon_mutex);  
+#endif
+			break;
 	    }
         lidbg("[%s].call driver_abnormal_cb:ret=%d\n", __FUNCTION__, ret );
 		sleep(1);
@@ -433,6 +447,8 @@ void *thread_driver_daemon(void* data)
 /***********media daemon***************/
 void* thread_media_daemon(void* data)
 {
+	struct timeval now;  
+  	struct timespec outtime;  
 	UINT8 byMediaID = FLYDVR_MEDIA_MMC1;
 	UINT8 devtype;
 	UINT32 partition_count;
@@ -440,6 +456,7 @@ void* thread_media_daemon(void* data)
 	UINT32 freeSpace;
 	FLY_BOOL lastStatus = FLY_FALSE;
 	
+	pthread_mutex_lock(&thread_media_daemon_mutex);  
 	while(1)
 	{
 		if(Flydvr_GetStorageMediaGeometry(byMediaID, &devtype, &partition_count, &totalspace) == FLY_TRUE)
@@ -485,8 +502,16 @@ void* thread_media_daemon(void* data)
 			if(lastStatus == FLY_TRUE) isMMC1DisConn = FLY_TRUE;
 			lastStatus = FLY_FALSE;
 		}
+#if 0
 		sleep(5);
+#else
+		gettimeofday(&now, NULL);  
+	    outtime.tv_sec = now.tv_sec + 5;  
+	    outtime.tv_nsec = now.tv_usec * 1000;  
+	    pthread_cond_timedwait(&thread_media_daemon_cond, &thread_media_daemon_mutex, &outtime);
+#endif
 	}
+	pthread_mutex_unlock(&thread_media_daemon_mutex);  
 	return (void*)0;
 }
 
@@ -790,6 +815,8 @@ FLY_BOOL Flydvr_RegisterDriverDaemon()
 FLY_BOOL Flydvr_RegisterMediaDaemon()
 {
 	INT32 ret;
+	pthread_cond_init(&thread_media_daemon_cond, NULL); 
+	pthread_mutex_init(&thread_media_daemon_mutex, NULL); 
 	ret=pthread_create(&thread_media_daemon_id,NULL,thread_media_daemon, (void*)0);
 	if(ret !=0){
 		lidbg ("thread_media_daemon: Create pthread error!\n");

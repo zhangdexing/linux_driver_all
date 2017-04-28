@@ -67,6 +67,7 @@ typedef enum {
   NR_DISABLE_REAR_CAM_POWER,
   NR_CONN_SDCARD,
   NR_DISCONN_SDCARD,
+  NR_VOLD_DISCONN_SDCARD,
 }status_ctrl_t;
 
 typedef enum {
@@ -193,6 +194,7 @@ typedef enum {
   MSG_STOP_ONLINE_VR_NOTIFY,
   MSG_VR_LOCK,
   MSG_GSENSOR_SENSITIVITY,
+  MSG_VOLD_SD_REMOVE,
 }dvr_msg_t;
 
 struct status_info {

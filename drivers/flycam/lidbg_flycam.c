@@ -985,6 +985,11 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				s_info.isSDCardReady = false;
 				return 0;
 		        break;
+			case NR_VOLD_DISCONN_SDCARD:
+				lidbg("%s:NR_VOLD_DISCONN_SDCARD  \n",__func__ );		
+				notify_newDVR(MSG_VOLD_SD_REMOVE);
+				return 0;
+		        break;
 			default:
 		        return -ENOTTY;
 		}

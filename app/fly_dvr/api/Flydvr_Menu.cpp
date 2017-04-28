@@ -218,12 +218,12 @@ void uiStateMachine( UINT32 ulMsgId, UINT32 ulEvent, UINT32 ulParam)
 
 		case UI_ACCOFF_STATE:
 			lidbg("=======UI_ACCOFF_STATE=======\n");
-			StateACCOFFMode(ulEvent,ulParam);
+			StateACCOFFMode(ulMsgId, ulEvent,ulParam);
         break;
 
 		case UI_ACCON_STATE:
 			lidbg("=======UI_ACCON_STATE=======\n");
-			StateACCONMode(ulEvent,ulParam);
+			StateACCONMode(ulMsgId, ulEvent,ulParam);
         break;
 
 		case UI_DEVICEOFF_STATE:
@@ -237,7 +237,7 @@ void uiStateMachine( UINT32 ulMsgId, UINT32 ulEvent, UINT32 ulParam)
 		case UI_VIDEO_STATE:
 			lidbg("=======UI_VIDEO_STATE=======\n");
 			//ulEvent = KeyParser_VideoRecEvent(ulMsgId, ulEvent, ulParam);
-			StateVideoRecMode(ulEvent,ulParam);
+			StateVideoRecMode(ulMsgId, ulEvent,ulParam);
         break;
 
 		case UI_SD_FORMAT_STATE:

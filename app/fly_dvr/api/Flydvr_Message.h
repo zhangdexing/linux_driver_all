@@ -2,8 +2,9 @@
 typedef enum _FLYDVR_MESSAGE {
 	FLYM_USER = 0x0,		
 	FLYM_UI_NOTIFICATION,
+	FLYM_DRV,
 	FLYM_MAX
-}AHC_MESSAGE; 
+}FLY_MESSAGE; 
 
 #define EVENT_INDEX_NONE		0
 
@@ -199,4 +200,10 @@ typedef enum _KeyEventID {
     //EVENT_ID_MAX = EVENT_INDEX_MAX
 	EVENT_ID_MAX 
 }KeyEventID;
+
+typedef enum _EventID {
+	EVENT_DRV_NONE,
+    EVENT_DRV_VOLD_SD_REMOVED,
+	EVENT_DRV_MAX,
+}DRV_MESSAGE; 
 

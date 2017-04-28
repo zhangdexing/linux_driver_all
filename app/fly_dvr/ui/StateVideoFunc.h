@@ -12,4 +12,4 @@ typedef enum _VideoRecordStatus{
 }VideoRecordStatus;
 
 void StateVideoRecMode_FrontCamPrepareProc(UINT32 ulJobEvent);
-void StateVideoRecMode(UINT32 ulEvent, UINT32 ulParam);
+void StateVideoRecMode(UINT32 ulMsgId, UINT32 ulEvent, UINT32 ulParam);
