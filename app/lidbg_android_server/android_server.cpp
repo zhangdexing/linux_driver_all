@@ -20,7 +20,7 @@
 using namespace android;
 
 bool dbg_music = false;
-bool dbg_volume = false;
+bool dbg_volume = true;
 int loop_count = 0;
 int mypid = -1;
 bool playing = false;
@@ -353,7 +353,7 @@ int handle_sound_state(const char *who, int sound)
     char cmd[16];
     sprintf(cmd, "sound %d", (sound > 0 ? 1 : 2));
     LIDBG_WRITE("/dev/fly_sound0", cmd);
-    lidbg(TAG"handle_sound_state:[%d/%s/%d/%d]\n", sound, who, playing, phone_call_state);
+    lidbg(TAG"handle_sound_state:[%s/%s/%d/%d]\n", cmd, who, playing, phone_call_state);
     return 1;
 }
 int main(int argc, char **argv)
