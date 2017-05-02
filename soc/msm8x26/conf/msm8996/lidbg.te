@@ -1534,3 +1534,35 @@ allow lidbg_load dnsmasq:file {read};
 allow lidbg_load dnsmasq:file {open};
 allow lidbg_load dnsmasq:dir {read};
 allow lidbg_load dnsmasq:dir {open};
+
+# flyaudio allow selinux 2017-05-02 19:23:54 /root/.gvfs/8996 on 172.168.1.240/测试组报告/开关机调试信息/20170502-正式完整包-flyupdate-G9II-alpha-20170428_1432.fup/正常AutoSave_COM48(USB).txt
+allow untrusted_app device:chr_file {ioctl};
+allow lidbg_load imscm:dir {search};
+allow lidbg_load imscm:file {read};
+allow lidbg_load imscm:file {open};
+allow lidbg_load imscm:file {getattr};
+allow kernel fuse:dir {read};
+allow kernel fuse:dir {open};
+allow lidbg_load imscm:file {read open};
+allow init untrusted_app:process {signal};
+allow kernel fuse:dir {read open};
+
+# flyaudio allow selinux 2017-05-02 19:24:25 /root/.gvfs/8996 on 172.168.1.240/测试组报告/开关机调试信息/20170502-正式完整包-flyupdate-G9II-alpha-20170428_1432.fup/正常AutoSave_COM44(USB).txt
+allow init mediaserver:process {signal};
+allow mediaserver system_data_file:file {open};
+allow mediaserver system_data_file:file {setattr};
+allow init vfat:dir {setattr};
+
+
+# flyaudio allow selinux 2017-05-02 19:25:19 /root/.gvfs/8996 on 172.168.1.240/测试组报告/开关机调试信息/20170502-正式完整包-flyupdate-G9II-alpha-20170428_1432.fup/复位 读不到u盘AutoSave_COM11(USB).txt
+allow lidbg_load kernel:system {syslog_read};
+allow lidbg_load input_device:dir {read};
+allow lidbg_load input_device:dir {open};
+allow lidbg_load input_device:chr_file {getattr};
+allow lidbg_load input_device:chr_file {setattr};
+allow system_app input_device:dir {read};
+allow system_app input_device:dir {open};
+allow system_app input_device:chr_file {read};
+allow system_app input_device:chr_file {open};
+allow system_app input_device:chr_file {ioctl};
+
