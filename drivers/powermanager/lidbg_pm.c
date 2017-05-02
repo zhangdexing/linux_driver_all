@@ -918,7 +918,7 @@ ssize_t  pm_state_read(struct file *filp, char __user *buffer, size_t size, loff
     {
         lidbg("copy_to_user ERR\n");
     }
-	PM_WARN("%s\n",acc_state);
+	//PM_WARN("%s\n",acc_state);
     return size;
 }
 static  struct file_operations pm_state_fops =
