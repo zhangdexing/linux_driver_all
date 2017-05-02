@@ -30,12 +30,13 @@ int phone_call_state_old = AUDIO_MODE_INVALID;
 
 
 static sp<IAudioPolicyService> gAudioPolicyService = 0;
-
-
+char *trace_step;
+#define TRACE_STEP {trace_step = (char*)__FUNCTION__;} 
 
 void recvSignal(int sig)
 {  
     lidbg(TAG"received signal %d ,restart!!!\n",sig);
+    lidbg("trace_step=%s\n",trace_step);
     system("/flysystem/lib/out/lidbg_android_server &");
     exit(1);
 }  
@@ -43,6 +44,7 @@ void recvSignal(int sig)
 
 void GetAudioPolicyService(bool dbg)
 {
+    TRACE_STEP;
     sp<IServiceManager> sm = defaultServiceManager();
     sp<IBinder> binder;
     if(dbg)
@@ -112,6 +114,7 @@ int max_stream_volume[AUDIO_STREAM_CNT] =
 static sp<IAudioFlinger> gAudioFlingerService = 0;
 void GetAudioFlingerService(bool dbg)
 {
+    TRACE_STEP;
     sp<IServiceManager> sm = defaultServiceManager();
     sp<IBinder> binder;
     if(dbg)
@@ -135,6 +138,7 @@ void GetAudioFlingerService(bool dbg)
 
 int get_stream_volume(bool dbg, audio_stream_type_t stream_type)
 {
+    TRACE_STEP;
     int index;
     audio_devices_t device;
     status_t status ;
@@ -157,6 +161,7 @@ int get_stream_volume(bool dbg, audio_stream_type_t stream_type)
 
 int get_max_volume(bool dbg)
 {
+    TRACE_STEP;
     int volume;
     for (int i = 0; i < AUDIO_STREAM_CNT; i++)
     {
@@ -173,6 +178,7 @@ int get_max_volume(bool dbg)
 
 void print_stream_volume(void)
 {
+    TRACE_STEP;
     for (int i = 0; i < AUDIO_STREAM_CNT; i++)
     {
         get_stream_volume(true, (audio_stream_type_t)i);
@@ -180,6 +186,7 @@ void print_stream_volume(void)
 }
 bool set_stream_volume(audio_stream_type_t mstream, int index)
 {
+    TRACE_STEP;
     int error = ERROR_VALUE;
     audio_devices_t device;
     status_t status ;
@@ -202,6 +209,7 @@ bool set_stream_volume(audio_stream_type_t mstream, int index)
 }
 bool set_all_stream_volume(int index)
 {
+    TRACE_STEP;
     int i, error = ERROR_VALUE;
     if(dbg_volume)
         lidbg(TAG"set_all_stream_volume.in,CNT:%d index:%d\n", AUDIO_STREAM_CNT, index);
@@ -214,6 +222,7 @@ bool set_all_stream_volume(int index)
 }
 bool step_on_stream_volume(audio_stream_type_t mstream, int start_index , int end_index, int total_time)
 {
+    TRACE_STEP;
     int i, error = ERROR_VALUE, old_index = 0;
     int cnt = abs(end_index - start_index), cur_index = start_index, step_delay;
     step_delay = (total_time / cnt);
@@ -265,6 +274,7 @@ bool step_on_stream_volume(audio_stream_type_t mstream, int start_index , int en
 
 void check_ring_stream(void)
 {
+    TRACE_STEP;
     sp<IAudioPolicyService> &aps = gAudioPolicyService;
     ring = //aps->isStreamActive(AUDIO_STREAM_RING, 0) |
         aps->isStreamActive(AUDIO_STREAM_NOTIFICATION, 0) ;
@@ -318,6 +328,7 @@ void check_ring_stream(void)
 }
 static void *thread_check_ring_stream(void *data)
 {
+    TRACE_STEP;
     lidbg( TAG"thread_check_ring_stream:in\n");
     data = data;
     while(1)
@@ -349,17 +360,20 @@ static void *thread_check_ring_stream(void *data)
 
 void init_para(bool dbg)
 {
+    TRACE_STEP;
     max_volume = get_max_volume(dbg);
     music_level = max_volume * DEFAULT_MUSIC_LEVEL_PERCENT / 100;
     music_max_level = max_volume ;
 }
 void print_para(void)
 {
+    TRACE_STEP;
     lidbg(TAG"mypid:%d,delay_step_on_music:[%dms],delay_off_volume_policy:[%dms],music_max_level:%d,music_level:%d,navi_policy_en:[%d],max_volume[%d]count_num[%d]\n",
           mypid, delay_step_on_music, delay_off_volume_policy, music_max_level, music_level, navi_policy_en, max_volume, count_num);
 }
 int handle_sound_state(const char *who, int sound)
 {
+    TRACE_STEP;
     char cmd[16];
     sprintf(cmd, "sound %d", (sound > 0 ? 1 : 2));
     LIDBG_WRITE("/dev/fly_sound0", cmd);
@@ -384,7 +398,7 @@ int main(int argc, char **argv)
         sleep(5);
     }
     if(first_boot == 1)
-		sleep(5);//ensure audioserver.java to init para.
+		{ lidbg(TAG"sleep5s\n");sleep(5);}//ensure audioserver.java to init para.
 
     GetAudioPolicyService(true);
     GetAudioFlingerService(true);
@@ -421,6 +435,7 @@ int main(int argc, char **argv)
 
     while(1)
     {
+        trace_step = (char*)"main while1";
         if(gAudioPolicyService != 0 && gAudioFlingerService != 0)
         {
             sp<IAudioPolicyService> &aps = gAudioPolicyService;
@@ -448,6 +463,8 @@ int main(int argc, char **argv)
                     }
                     else
                         playing = aps->isStreamActive((audio_stream_type_t)i, 0) | playing;
+					
+       	      trace_step = (char*)"main while2";
 
                     //audiomanager.java (setstreammute API ) will broke the navi policy logic,so I should restart it again when there is a mute event happend.
                     if(first_mute_stream_id > 0)
@@ -483,6 +500,7 @@ int main(int argc, char **argv)
             GetAudioPolicyService(true);
             GetAudioFlingerService(true);
         }
+         trace_step = (char*)"main while3";
 
         if(phone_call_state != phone_call_state_old)
         {
@@ -515,6 +533,7 @@ int main(int argc, char **argv)
             GetAudioFlingerService(false);
             loop_count = 0;
         }
+        trace_step = (char*)"main while4";
         if(!(loop_count % 30))//per 3s
         {
             char value[PROPERTY_VALUE_MAX];
