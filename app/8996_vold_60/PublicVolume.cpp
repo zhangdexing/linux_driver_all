@@ -237,6 +237,18 @@ status_t PublicVolume::doUnmount() {
         TEMP_FAILURE_RETRY(waitpid(mFusePid, nullptr, 0));
         mFusePid = 0;
     }
+
+{
+    const char *cpath = getPath().c_str();
+    if(cpath && strstr(cpath, "sdcard1"))
+    {
+        int flycam_fd = open("/dev/lidbg_flycam0", O_RDWR);
+        ioctl(flycam_fd, _IO('s',0x13), (unsigned long)NULL);
+        close(flycam_fd);
+        LOG(ERROR) << getId() << "fuvold:call fly_dvr" << getPath()<<"fflycam_fd:"<<flycam_fd;
+        usleep(5*2*500000); // 500ms
+    }
+}
     LOG(ERROR) << getId() << "fuvold:doUnmount PublicVolume but first kill:"<<getPath();
     KillProcessesUsingPath(getPath()); 
     ForceUnmount(kAsecPath);

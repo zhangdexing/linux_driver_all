@@ -178,6 +178,17 @@ status_t PrivateVolume::doMount() {
 }
 
 status_t PrivateVolume::doUnmount() {
+{
+    const char *cpath = getPath().c_str();
+    if(cpath && strstr(cpath, "sdcard1"))
+    {
+        int flycam_fd = open("/dev/lidbg_flycam0", O_RDWR);
+        ioctl(flycam_fd, _IO('s',0x13), (unsigned long)NULL);
+        close(flycam_fd);
+        LOG(ERROR) << getId() << "fuvold:call fly_dvr" << getPath()<<"fflycam_fd:"<<flycam_fd;
+        usleep(5*2*500000); // 500ms
+    }
+}
     LOG(ERROR) << getId() << "fuvold:doUnmount PrivateVolume but first kill:"<<getPath();
     KillProcessesUsingPath(getPath()); 
     ForceUnmount(mPath);
