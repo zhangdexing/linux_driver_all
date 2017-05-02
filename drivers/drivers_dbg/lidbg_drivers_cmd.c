@@ -76,8 +76,8 @@ int thread_dumpsys_meminfo(void *data)
         {
             fs_file_separator("/sdcard/meminfo.txt");
             lidbg_shell_cmd("dumpsys meminfo >>/sdcard/meminfo.txt &");
-            lidbg_shell_cmd("date  >> /sdcard/ps.txt");				
-            lidbg_shell_cmd("ps -t -m 10 >> /sdcard/ps.txt");
+            lidbg_shell_cmd("date  >> /sdcard/ps.txt");
+            lidbg_shell_cmd("ps -t -m 10 >> /sdcard/ps.txt &");
             lidbg("meminfo size:%d ps:%d\n", fs_get_file_size("/sdcard/meminfo.txt"), fs_get_file_size("/sdcard/ps.txt"));
         }
         else
