@@ -31,6 +31,16 @@ int phone_call_state_old = AUDIO_MODE_INVALID;
 
 static sp<IAudioPolicyService> gAudioPolicyService = 0;
 
+
+
+void recvSignal(int sig)
+{  
+    lidbg(TAG"received signal %d ,restart!!!\n",sig);
+    system("/flysystem/lib/out/lidbg_android_server &");
+    exit(1);
+}  
+
+
 void GetAudioPolicyService(bool dbg)
 {
     sp<IServiceManager> sm = defaultServiceManager();
@@ -361,16 +371,20 @@ int main(int argc, char **argv)
     pthread_t ntid;
     argc = argc;
     argv = argv;
+    bool first_boot = 0;
     lidbg(TAG"main\n");
-    sleep(20);
+	
+    signal(SIGSEGV, recvSignal); 
 
     pthread_create(&ntid, NULL, thread_check_boot_complete, NULL);
     while(boot_completed == 0)
     {
+    	 first_boot = 1;
         lidbg(TAG"wait\n");
         sleep(5);
     }
-    sleep(5);//ensure audioserver.java to init para.
+    if(first_boot == 1)
+		sleep(5);//ensure audioserver.java to init para.
 
     GetAudioPolicyService(true);
     GetAudioFlingerService(true);
@@ -597,6 +611,10 @@ int main(int argc, char **argv)
                         set_all_stream_volume(max_volume);
                     }
                     print_para();
+                    break;
+                case 14 :
+		      lidbg(TAG"do crash\n");
+		     {int* s = 0;  (*s) = 1;}
                     break;
                 default :
                     break;
