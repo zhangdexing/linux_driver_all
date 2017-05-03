@@ -669,6 +669,8 @@ int thread_udisk_stability_test(void *data)
             ssleep(5);
         }
     }
+    return 1;
+
 }
 
 
@@ -693,6 +695,16 @@ static void usb_release_timer_func(unsigned long data)
 	return;
 }
 
+
+int thread_wait_bootcompleted(void *data)
+{
+	while(0==g_var.android_boot_completed)
+	{
+	    msleep(100);
+	}
+	HAL_IS_READY;
+	return 1;
+}
 
 int thread_dev_init(void *data)
 {
@@ -730,6 +742,8 @@ int thread_dev_init(void *data)
 	USB_BACK_WORK_ENABLE;
 	CREATE_KTHREAD(thread_usb_disk_enable_delay, NULL);
 	CREATE_KTHREAD(thread_udisk_stability_test, NULL);
+	CREATE_KTHREAD(thread_wait_bootcompleted, NULL);
+
    }
     return 0;
 }
