@@ -90,6 +90,16 @@ err:
 
 void Sonix_ISP_IF_LIB_Init(void)
 {
+	int cnt = 10;
+	/*In order to display correct Lib version, Wait for Front camera ready (10s)*/
+	while(cnt-- > 0)
+	{
+		if(Sonix_ISP_IF_LIB_CheckFrontCamExist() == FLY_TRUE)
+			break;
+		sleep(1);
+	}
+	if(cnt == 0) lidbg("%s: Wait for Front camera timeout! \n", __func__ );	
+	
 	/*Get Camera Lib Version*/
 	m_Front_IspVer = Sonix_ISP_IF_LIB_LibVer_Init(DVR_ID);
 	sleep(2);//prevent error
