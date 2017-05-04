@@ -69,7 +69,8 @@ bool IsSupported() {
 }
 
 status_t Check(const std::string& source) {
-    if (access(kFsckPath, X_OK)) {
+    //if (access(kFsckPath, X_OK)) 
+    {
         SLOGW("Skipping fs checks\n");
         return 0;
     }
