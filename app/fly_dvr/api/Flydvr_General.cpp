@@ -479,10 +479,10 @@ void* thread_media_daemon(void* data)
 				if(freeSpace < MMC1_REVERSE_SIZE)
 					isMMC1Full = FLY_TRUE;
 				
-				/*SD Space Restore*/
-				if(freeSpace > MMC1_REVERSE_SIZE + 200)
+				/*SD Space Restore*/				
+				if(Flydvr_Get_IsSDMMCFull() == FLY_TRUE)
 				{
-					if(Flydvr_Get_IsSDMMCFull() == FLY_TRUE)
+					if(freeSpace > MMC1_REVERSE_SIZE)
 					{
 						isMediaAbnormalFullRestore = FLY_TRUE;
 						Flydvr_Set_IsSDMMCFull(FLY_FALSE);

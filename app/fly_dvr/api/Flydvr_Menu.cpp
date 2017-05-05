@@ -103,7 +103,10 @@ FLY_BOOL StateSwitchMode(UI_STATE_ID mState)
 				else
 				{
 					wdbg("ACCON SD DETECT!\n");
+					Flydvr_SDMMC_SetMountState(SDMMC_IN);
 					Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_CONN_SDCARD, NULL);
+					Flydvr_SendDriverIoctl(__FUNCTION__, FLYCAM_STATUS_IOC_MAGIC, NR_NEW_DVR_ASYN_NOTIFY, RET_SD_PLUG_IN);
+					Flydvr_SendMessage(FLYM_UI_NOTIFICATION, EVENT_MMC1_DETECT, 0);
 					Flydvr_DelDaysFile(FLYDVR_MEDIA_MMC1, MenuSettingConfig()->uiEmergencySaveDays);
 					Flydvr_DelLostDir(FLYDVR_MEDIA_MMC1);
 				}
