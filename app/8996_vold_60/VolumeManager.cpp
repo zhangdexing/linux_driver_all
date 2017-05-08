@@ -309,6 +309,15 @@ void VolumeManager::handleBlockEvent(NetlinkEvent *evt) {
                     flags |= android::vold::Disk::Flags::kUsb;
                 }
 
+{
+    std::string mSysPath;
+mSysPath = StringPrintf("/sys%s", eventPath.c_str());
+if (access(mSysPath.c_str(), F_OK)) {
+	//errno = ENOENT;
+}
+                PLOG(WARNING) << "fucrash disk->createnew() access1:"<<access(mSysPath.c_str(), F_OK)<<" mSysPath:"<<mSysPath;
+}
+                PLOG(WARNING) << "fucrash disk->createnew() eventPath:"<<eventPath;
                 auto disk = new android::vold::Disk(eventPath, device,
                         source->getNickname(), flags);
                 disk->create();
@@ -320,15 +329,45 @@ void VolumeManager::handleBlockEvent(NetlinkEvent *evt) {
     }
     case NetlinkEvent::Action::kChange: {
         LOG(DEBUG) << "Disk at " << major << ":" << minor << " changed";
+    std::string mSysPath;
+{
+mSysPath = StringPrintf("/sys%s", eventPath.c_str());
+if (access(mSysPath.c_str(), F_OK)) {
+	//errno = ENOENT;
+}
+                PLOG(WARNING) << "fucrash disk->createnew() access2:"<<access(mSysPath.c_str(), F_OK)<<" mSysPath:"<<mSysPath;
+}
+if(access(mSysPath.c_str(), F_OK)==0)
+{
         for (auto disk : mDisks) {
             if (disk->getDevice() == device) {
-                disk->readMetadata();
+                PLOG(WARNING) << "fucrash disk->readMetadata(1)";
+                if(disk->readMetadata()==android::OK)
+                {
+                PLOG(WARNING) << "fucrash disk->readPartitions(1)";
                 disk->readPartitions();
+                }
+                else
+                PLOG(WARNING) << "fucrash skip disk->readPartitions(1)";
             }
         }
+}
+else
+                PLOG(WARNING) << "fucrash disk->createnew() .skip access2:"<<access(mSysPath.c_str(), F_OK)<<" mSysPath:"<<mSysPath;
+
         break;
     }
     case NetlinkEvent::Action::kRemove: {
+    std::string mSysPath;
+{
+mSysPath = StringPrintf("/sys%s", eventPath.c_str());
+if (access(mSysPath.c_str(), F_OK)) {
+	//errno = ENOENT;
+}
+                PLOG(WARNING) << "fucrash disk->createnew() access3,skip check:"<<access(mSysPath.c_str(), F_OK)<<" mSysPath:"<<mSysPath;
+}
+//if(access(mSysPath.c_str(), F_OK)==0)
+{
         auto i = mDisks.begin();
         while (i != mDisks.end()) {
             if ((*i)->getDevice() == device) {
@@ -338,6 +377,9 @@ void VolumeManager::handleBlockEvent(NetlinkEvent *evt) {
                 ++i;
             }
         }
+}
+//else
+//                PLOG(WARNING) << "fucrash disk->createnew() .skip access3:"<<access(mSysPath.c_str(), F_OK)<<" mSysPath:"<<mSysPath;
         break;
     }
     default: {
@@ -634,7 +676,9 @@ int VolumeManager::reset() {
     mInternalEmulated->destroy();
     mInternalEmulated->create();
     for (auto disk : mDisks) {
+    PLOG(WARNING) << "fucrash reset disk->destroy(1)";
         disk->destroy();
+    PLOG(WARNING) << "fucrash reset disk->create(1)";
         disk->create();
     }
     mAddedUsers.clear();
@@ -645,6 +689,7 @@ int VolumeManager::reset() {
 int VolumeManager::shutdown() {
     mInternalEmulated->destroy();
     for (auto disk : mDisks) {
+        PLOG(WARNING) << "fucrash shutdown disk->destroy(1)";
         disk->destroy();
     }
     mDisks.clear();
@@ -659,6 +704,7 @@ int VolumeManager::unmountAll() {
         mInternalEmulated->unmount();
     }
     for (auto disk : mDisks) {
+    PLOG(WARNING) << "fucrash unmountAll disk->unmountAll(1)";
         disk->unmountAll();
     }
 

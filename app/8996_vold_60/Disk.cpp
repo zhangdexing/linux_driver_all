@@ -116,18 +116,31 @@ void Disk::listVolumes(VolumeBase::Type type, std::list<std::string>& list) {
 
 status_t Disk::create() {
     CHECK(!mCreated);
-    mCreated = true;
-    notifyEvent(ResponseCode::DiskCreated, StringPrintf("%d", mFlags));
-    readMetadata();
-    readPartitions();
-    return OK;
+    PLOG(WARNING) << "fucrash Disk::create111,if( readMetadata()== OK),";
+	if( readMetadata()== android::OK)
+	{
+    PLOG(WARNING) << "fucrash Disk::create111,if( readMetadata()== OK),ok";
+	    mCreated = true;
+	    notifyEvent(ResponseCode::DiskCreated, StringPrintf("%d", mFlags));
+	    readPartitions();
+	    return OK;
+	}
+	else
+	{
+    PLOG(WARNING) << "fucrash Disk::create111,if( readMetadata()== OK),errno";
+	    return -errno;
+	}
 }
 
 status_t Disk::destroy() {
-    CHECK(mCreated);
+    //CHECK(mCreated);
+    PLOG(WARNING) << "fucrash Disk::destroy,skip CHECK(mCreated)";
+if(mCreated)
+{
     destroyAllVolumes();
     mCreated = false;
     notifyEvent(ResponseCode::DiskDestroyed);
+}
     return OK;
 }
 
@@ -205,7 +218,7 @@ status_t Disk::readMetadata() {
         std::string path(mSysPath + "/device/vendor");
         std::string tmp;
         if (!ReadFileToString(path, &tmp)) {
-            PLOG(WARNING) << "Failed to read vendor from " << path;
+            PLOG(WARNING) << "fucrash Failed to read vendor from " << path;
             return -errno;
         }
         mLabel = tmp;
@@ -248,6 +261,8 @@ status_t Disk::readPartitions() {
         return -ENOTSUP;
     }
 
+        LOG(WARNING) << "fucrash Disk::readPartitions:access: " <<access(mDevPath.c_str(), F_OK) <<" mDevPath:"<< mDevPath;
+
     destroyAllVolumes();
 
     // Parse partition table
@@ -258,6 +273,12 @@ status_t Disk::readPartitions() {
     cmd.push_back(mDevPath);
 
     std::vector<std::string> output;
+if(access(mDevPath.c_str(), F_OK)!=0)
+ {
+        LOG(WARNING) << "fucrash Disk::readPartitions:return : " <<" mDevPath:"<< mDevPath;
+        return -ENOTSUP;
+ }
+
     status_t res = ForkExecvp(cmd, output);
 
 	std::string strck = output[1];	//PART 1 4f
