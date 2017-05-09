@@ -3,6 +3,7 @@
 #include "Flydvr_Message.h"
 #include "Flydvr_General.h"
 #include "Sonix_ISPIF.h"
+#include "MenuSetting.h"
 #include "../../../inc/lidbg_flycam_app.h"
 
 #include "fw/BurnerApLib//BurnerApLib.h"
@@ -1885,44 +1886,47 @@ void dequeue_flush(int count , camera_q_node* mhead)
 					}
 					if(rear_hw.VREnabledFlag)
 					{
-						if(rear_hw.iswritePermitted == true)
+						if(MenuSettingConfig()->uiRecordMode == RECORD_DUAL_MODE)
 						{
-							sprintf(VR_File_Name, "%s/%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
-							sprintf(EM_VR_File_Name, "%s/E%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
-							
-							if(strncmp(rear_hw.currentVRFileName, "E",1) != 0 && strncmp(rear_hw.currentVRFileName, "L",1) != 0)//prevent multi rename
+							if(rear_hw.iswritePermitted == true)
 							{
-								strcpy(tmpCurrent_File_Name, rear_hw.currentVRFileName);
-								sprintf(rear_hw.currentVRFileName, "E%s", tmpCurrent_File_Name);
-							
-								rear_hw.iswritePermitted = false;
-								lidbg("======== EM_VR_File_Name:%s=======\n",EM_VR_File_Name);	
-								if(rear_hw.rec_fp != NULL) 
-									fclose(rear_hw.rec_fp);
-								if(rename(VR_File_Name, EM_VR_File_Name) < 0)
-									lidbg("========rename fail=======\n");			
-								rear_hw.rec_fp = fopen(EM_VR_File_Name, "a+b");
-								rear_hw.iswritePermitted = true;
+								sprintf(VR_File_Name, "%s/%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
+								sprintf(EM_VR_File_Name, "%s/E%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
+								
+								if(strncmp(rear_hw.currentVRFileName, "E",1) != 0 && strncmp(rear_hw.currentVRFileName, "L",1) != 0)//prevent multi rename
+								{
+									strcpy(tmpCurrent_File_Name, rear_hw.currentVRFileName);
+									sprintf(rear_hw.currentVRFileName, "E%s", tmpCurrent_File_Name);
+								
+									rear_hw.iswritePermitted = false;
+									lidbg("======== EM_VR_File_Name:%s=======\n",EM_VR_File_Name);	
+									if(rear_hw.rec_fp != NULL) 
+										fclose(rear_hw.rec_fp);
+									if(rename(VR_File_Name, EM_VR_File_Name) < 0)
+										lidbg("========rename fail=======\n");			
+									rear_hw.rec_fp = fopen(EM_VR_File_Name, "a+b");
+									rear_hw.iswritePermitted = true;
+								}
+								else lidbg("========Same File! Just Skip and add delay!=======\n");	
+								rear_hw.VRCmdPending++;
+			       				rear_hw.VRCmd         = VR_CMD_GSENSOR_CRASH;
 							}
-							else lidbg("========Same File! Just Skip and add delay!=======\n");	
-							rear_hw.VRCmdPending++;
-		       				rear_hw.VRCmd         = VR_CMD_GSENSOR_CRASH;
-						}
-						else
-						{
-							char timeString[100] = {0};
-							GetCurrentTimeString(timeString);
-							sprintf(rear_hw.currentVRFileName, "ER%s.h264", timeString);
-							sprintf(VR_File_Name, "%s/%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
-							lidbg("=========new EM_File_Name : %s (not write)===========\n", VR_File_Name);	
-							rear_hw.rec_fp = fopen(VR_File_Name, "wb");
-							
-							if(rear_mhead.msize > 150) //just save pre 5s
-								dequeue_flush(rear_mhead.msize - 150, &rear_mhead);
-							dequeue_to_fp(rear_mhead.msize, rear_hw.rec_fp,&rear_hw.iswritePermitted,&rear_mhead);
-							rear_hw.VRCmdPending++;
-	       					rear_hw.VRCmd         = VR_CMD_GSENSOR_CRASH;
-							
+							else
+							{
+								char timeString[100] = {0};
+								GetCurrentTimeString(timeString);
+								sprintf(rear_hw.currentVRFileName, "ER%s.h264", timeString);
+								sprintf(VR_File_Name, "%s/%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
+								lidbg("=========new EM_File_Name : %s (not write)===========\n", VR_File_Name);	
+								rear_hw.rec_fp = fopen(VR_File_Name, "wb");
+								
+								if(rear_mhead.msize > 150) //just save pre 5s
+									dequeue_flush(rear_mhead.msize - 150, &rear_mhead);
+								dequeue_to_fp(rear_mhead.msize, rear_hw.rec_fp,&rear_hw.iswritePermitted,&rear_mhead);
+								rear_hw.VRCmdPending++;
+		       					rear_hw.VRCmd         = VR_CMD_GSENSOR_CRASH;
+								
+							}
 						}
 					}
 				}
@@ -1978,44 +1982,47 @@ void dequeue_flush(int count , camera_q_node* mhead)
 					}
 					if(rear_hw.VREnabledFlag)
 					{
-						if(rear_hw.iswritePermitted == true)
+						if(MenuSettingConfig()->uiRecordMode == RECORD_DUAL_MODE)
 						{
-							sprintf(VR_File_Name, "%s/%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
-							sprintf(EM_VR_File_Name, "%s/L%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
-							
-							if(strncmp(rear_hw.currentVRFileName, "E",1) != 0 || strncmp(rear_hw.currentVRFileName, "L",1) != 0)//prevent multi rename
+							if(rear_hw.iswritePermitted == true)
 							{
-								strcpy(tmpCurrent_File_Name, rear_hw.currentVRFileName);
-								sprintf(rear_hw.currentVRFileName, "L%s", tmpCurrent_File_Name);
-							
-								rear_hw.iswritePermitted = false;
-								lidbg("======== UserLock_File_Name:%s=======\n",EM_VR_File_Name);	
-								if(rear_hw.rec_fp != NULL) 
-									fclose(rear_hw.rec_fp);
-								if(rename(VR_File_Name, EM_VR_File_Name) < 0)
-									lidbg("========rename fail=======\n");			
-								rear_hw.rec_fp = fopen(EM_VR_File_Name, "a+b");
-								rear_hw.iswritePermitted = true;
+								sprintf(VR_File_Name, "%s/%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
+								sprintf(EM_VR_File_Name, "%s/L%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
+								
+								if(strncmp(rear_hw.currentVRFileName, "E",1) != 0 || strncmp(rear_hw.currentVRFileName, "L",1) != 0)//prevent multi rename
+								{
+									strcpy(tmpCurrent_File_Name, rear_hw.currentVRFileName);
+									sprintf(rear_hw.currentVRFileName, "L%s", tmpCurrent_File_Name);
+								
+									rear_hw.iswritePermitted = false;
+									lidbg("======== UserLock_File_Name:%s=======\n",EM_VR_File_Name);	
+									if(rear_hw.rec_fp != NULL) 
+										fclose(rear_hw.rec_fp);
+									if(rename(VR_File_Name, EM_VR_File_Name) < 0)
+										lidbg("========rename fail=======\n");			
+									rear_hw.rec_fp = fopen(EM_VR_File_Name, "a+b");
+									rear_hw.iswritePermitted = true;
+								}
+								else lidbg("========UserLock Same File! Just Skip and add delay!=======\n");	
+								rear_hw.VRCmdPending++;
+			       				rear_hw.VRCmd         = VR_CMD_GSENSOR_CRASH;
 							}
-							else lidbg("========UserLock Same File! Just Skip and add delay!=======\n");	
-							rear_hw.VRCmdPending++;
-		       				rear_hw.VRCmd         = VR_CMD_GSENSOR_CRASH;
-						}
-						else
-						{
-							char timeString[100] = {0};
-							GetCurrentTimeString(timeString);
-							sprintf(rear_hw.currentVRFileName, "LR%s.h264", timeString);
-							sprintf(VR_File_Name, "%s/%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
-							lidbg("=========UserLock_Name : %s (not write)===========\n", VR_File_Name);	
-							rear_hw.rec_fp = fopen(VR_File_Name, "wb");
-							
-							if(rear_mhead.msize > 150) //just save pre 5s
-								dequeue_flush(rear_mhead.msize - 150, &rear_mhead);
-							dequeue_to_fp(rear_mhead.msize, rear_hw.rec_fp,&rear_hw.iswritePermitted,&rear_mhead);
-							rear_hw.VRCmdPending++;
-	       					rear_hw.VRCmd         = VR_CMD_GSENSOR_CRASH;
-							
+							else
+							{
+								char timeString[100] = {0};
+								GetCurrentTimeString(timeString);
+								sprintf(rear_hw.currentVRFileName, "LR%s.h264", timeString);
+								sprintf(VR_File_Name, "%s/%s", MMC1_VR_PATH, rear_hw.currentVRFileName);
+								lidbg("=========UserLock_Name : %s (not write)===========\n", VR_File_Name);	
+								rear_hw.rec_fp = fopen(VR_File_Name, "wb");
+								
+								if(rear_mhead.msize > 150) //just save pre 5s
+									dequeue_flush(rear_mhead.msize - 150, &rear_mhead);
+								dequeue_to_fp(rear_mhead.msize, rear_hw.rec_fp,&rear_hw.iswritePermitted,&rear_mhead);
+								rear_hw.VRCmdPending++;
+		       					rear_hw.VRCmd         = VR_CMD_GSENSOR_CRASH;
+								
+							}
 						}
 					}
 				}
