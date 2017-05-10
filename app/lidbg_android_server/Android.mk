@@ -18,5 +18,6 @@ endif
 
 include $(DBG_BUILD_PATH)/build_cfg.mk
 LOCAL_MODULE_TAGS:= optional
+LOCAL_STRIP_MODULE :=false
 LOCAL_MODULE := lidbg_android_server
 include $(BUILD_EXECUTABLE)
