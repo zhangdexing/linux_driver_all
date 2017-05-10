@@ -105,37 +105,7 @@ void usb_camera_enable(bool enable)
 static int thread_usb_hub_check(void *data)
 {
     msleep(2000);
-     if(g_var.usb_status == 1)
-     {
-	    if(!fs_is_file_exist("/sys/bus/usb/drivers/usb/1-1"))
-	    {
-	    	lidbgerr("thread_usb_hub_check fail!\n");
-#ifdef SOC_msm8x26
-	#ifdef PLATFORM_msm8996
-		 USB_POWER_FRONT_DISABLE;
-		 ssleep(2);
-		 USB_POWER_FRONT_ENABLE;
-	#else
-	         USB_POWER_DISABLE;
-		 msleep(500);
-		 USB_ID_HIGH_DEV;
-	         ssleep(2);
-		 USB_ID_LOW_HOST;
-		 USB_POWER_ENABLE;
-	#endif
-#endif
-
-#ifdef SOC_mt35x
-	 	lidbg("set usb a_host mode\n");
-       	lidbg_readwrite_file("/sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode", NULL, "a_host", strlen("a_host"));
-#endif
-
-	    }
-	    else
-	    {
-	       lidbg("thread_usb_hub_check success\n");
-	    }
-     }
+	
      if(!fs_is_file_exist("/storage/sdcard1"))
      {
           lidbg("sdcard1 reuevent\n");
@@ -143,6 +113,30 @@ static int thread_usb_hub_check(void *data)
      }
      else
           lidbg("sdcard1 success\n");
+
+     while((g_var.usb_status == 1) && ( g_var.acc_flag == FLY_ACC_ON))
+     {
+	    if(!fs_is_file_exist("/sys/bus/usb/drivers/usb/1-1"))
+	    {
+	    	lidbgerr("thread_usb_hub_check fail!\n");
+#ifdef SOC_msm8x26
+	        USB_WORK_DISENABLE;
+	        ssleep(1);
+	        USB_WORK_ENABLE;
+#endif
+
+#ifdef SOC_mt35x
+	 	lidbg("set usb a_host mode\n");
+       	lidbg_readwrite_file("/sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode", NULL, "a_host", strlen("a_host"));
+#endif
+	    }
+	    else
+	    {
+	     //  lidbg("thread_usb_hub_check success\n");
+	    }
+	    msleep(3000);
+     }
+
     return 1;
 }
 #endif
@@ -469,16 +463,6 @@ static void parse_cmd(char *pt)
 			del_timer(&usb_release_timer);
 		  }
     }
-    else if (!strcmp(argv[0], "usb_reboot"))
-    {
-        lidbg("Misc devices ctrl: usb_reboot");
-        USB_POWER_DISABLE;
-	 msleep(500);
-	 USB_ID_HIGH_DEV;
-        ssleep(2);
-	 USB_ID_LOW_HOST;
-	 USB_POWER_ENABLE;
-	}
     else  if(!strcmp(argv[0], "udisk_reset"))
     {
         USB_WORK_DISENABLE;
