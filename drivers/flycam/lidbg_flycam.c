@@ -2441,7 +2441,7 @@ int thread_flycam_init(void *data)
 	if(g_var.recovery_mode == 0)/*do not process when in recovery mode*/
 	{
 		register_lidbg_notifier(&lidbg_notifier);/*ACCON/OFF notifier*/
-		lidbg_shell_cmd("/flysystem/lib/out/lidbg_flydvr&");	
+		lidbg_shell_cmd("/flysystem/bin/lidbg_flydvr&");	
 	}
 	usb_register_notify(&usb_nb_cam);/*USB notifier:must after isDVRFirstInit&isRearViewFirstInit*/
 	lidbg_new_cdev(&flycam_nod_fops, "lidbg_flycam0");
