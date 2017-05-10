@@ -42,7 +42,10 @@ pthread_t thread_driver_daemon_id;
 pthread_t thread_media_daemon_id;
 
 static pthread_cond_t thread_media_daemon_cond;  
-static pthread_mutex_t thread_media_daemon_mutex;  
+static pthread_mutex_t thread_media_daemon_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+static pthread_mutex_t sendMessage_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t sendMessageLP_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static int flycam_fd = -1;
 
@@ -119,6 +122,8 @@ FLY_BOOL Flydvr_SendMessage(UINT32 ulMsgID, UINT32 ulParam1, UINT32 ulParam2)
         return AHC_TRUE;
     }
 */
+    pthread_mutex_lock(&sendMessage_mutex);
+
     if(m_MessageQueueIndex_R == (m_MessageQueueIndex_W+ 1)%FLYDVR_MSG_QUEUE_SIZE) {
         //Message Queue Full !
         if(bShowDBG) {
@@ -140,7 +145,7 @@ FLY_BOOL Flydvr_SendMessage(UINT32 ulMsgID, UINT32 ulParam1, UINT32 ulParam2)
             }
             #endif
         }
-        //AHC_OS_ReleaseSem(m_AHLMessageSemID);
+        pthread_mutex_unlock(&sendMessage_mutex);
         return FLY_FALSE;
     }
 
@@ -153,7 +158,7 @@ FLY_BOOL Flydvr_SendMessage(UINT32 ulMsgID, UINT32 ulParam1, UINT32 ulParam2)
 
     if(ret != 0) {
         lidbg("AHC_OS_PutMessage: ret=%d  Fail!!\r\n", ret);
-        //AHC_OS_ReleaseSem(m_AHLMessageSemID);
+        pthread_mutex_unlock(&sendMessage_mutex);
         return FLY_FALSE;
     }
 
@@ -161,7 +166,7 @@ FLY_BOOL Flydvr_SendMessage(UINT32 ulMsgID, UINT32 ulParam1, UINT32 ulParam2)
 
     m_MessageQueueIndex_W = (m_MessageQueueIndex_W + 1)%FLYDVR_MSG_QUEUE_SIZE;
 
-    //AHC_OS_ReleaseSem(m_AHLMessageSemID);
+    pthread_mutex_unlock(&sendMessage_mutex);
     return FLY_TRUE;
 }
 
@@ -195,6 +200,8 @@ FLY_BOOL Flydvr_SendMessage_LP(UINT32 ulMsgID, UINT32 ulParam1, UINT32 ulParam2)
 
     static FLY_BOOL bShowDBG = FLY_TRUE;
 
+    pthread_mutex_lock(&sendMessageLP_mutex);
+
     if(m_MessageQueueLPIndex_R == (m_MessageQueueLPIndex_W+ 1)%FLYDVR_MSG_QUEUE_SIZE) {
         //Message Queue Full !
         if(bShowDBG) {
@@ -216,7 +223,7 @@ FLY_BOOL Flydvr_SendMessage_LP(UINT32 ulMsgID, UINT32 ulParam1, UINT32 ulParam2)
             }
             #endif
         }
-        //AHC_OS_ReleaseSem(m_AHLMessageSemID);
+        pthread_mutex_unlock(&sendMessageLP_mutex);
         return FLY_FALSE;
     }
 
@@ -229,7 +236,7 @@ FLY_BOOL Flydvr_SendMessage_LP(UINT32 ulMsgID, UINT32 ulParam1, UINT32 ulParam2)
 
     if(ret != 0) {
         lidbg("AHC_OS_PutMessage: ret=%d  Fail!!\r\n", ret);
-        //AHC_OS_ReleaseSem(m_AHLMessageSemID);
+        pthread_mutex_unlock(&sendMessageLP_mutex);
         return FLY_FALSE;
     }
 
@@ -237,7 +244,7 @@ FLY_BOOL Flydvr_SendMessage_LP(UINT32 ulMsgID, UINT32 ulParam1, UINT32 ulParam2)
 
     m_MessageQueueLPIndex_W = (m_MessageQueueLPIndex_W + 1)%FLYDVR_MSG_QUEUE_SIZE;
 
-    //AHC_OS_ReleaseSem(m_AHLMessageSemID);
+    pthread_mutex_unlock(&sendMessageLP_mutex);
     return FLY_TRUE;
 }
 

@@ -645,7 +645,7 @@ typedef struct {
 } camera_q_node;
 
 camera_q_node front_mhead,rear_mhead; /* dummy head */
-pthread_mutex_t alock;
+static pthread_mutex_t alock = PTHREAD_MUTEX_INITIALIZER;
 
 bool enqueue(void *data,int count, camera_q_node* mhead)
 {
