@@ -11,7 +11,7 @@
 LIDBG_DEFINE;
 static struct timer_list usb_release_timer;
 
-#define LCD_ON_DELAY (1500)//acc_on-->lcd_on
+#define LCD_ON_DELAY (1200)//acc_on-->lcd_on
 static struct wake_lock device_wakelock;
 //int usb_request = 0;
 
@@ -27,7 +27,7 @@ int thread_lcd_on_delay(void *data)
 	{
 		lidbg("dsi83.LCD_ON2.real\n");
 		LCD_ON;
-		msleep(1000);
+		msleep(1500);
 		lidbg("LCD_ON2.in.hold_bootanim2.false\n");
 		lidbg_shell_cmd("setprop lidbg.hold_bootanim2 false");
 		lidbg_shell_cmd("echo echoLCD_ON2.hold_bootanim2.false > /dev/lidbg_msg");
