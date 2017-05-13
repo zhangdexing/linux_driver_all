@@ -554,6 +554,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#130--enable red osd ,logcat \n");
             fs_mem_log("*158#131--get kmsg log in time mode \n");
             fs_mem_log("*158#132--g_var.is_first_update false \n");
+            fs_mem_log("*158#133--print_stream_volume \n");
+            fs_mem_log("*158#134--force music start event \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1318,8 +1320,9 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#100"))
         {
-            lidbg("dump log for app upload\n");
-            LPC_CMD_LPC_DEBUG_REPORT;	
+  	     lidbg("dump log for app upload\n");
+  	     lidbg_shell_cmd("echo appcmd *158#133 > /dev/lidbg_drivers_dbg0");
+  	     LPC_CMD_LPC_DEBUG_REPORT;	
   	     lidbg_shell_cmd("echo appcmd *158#021 > /dev/lidbg_drivers_dbg0");
 	     dump_sysinfo();
 	     ssleep(3);
@@ -1328,7 +1331,7 @@ void parse_cmd(char *pt)
 	     lidbg_shell_cmd("cp -rf /data/lidbg /sdcard/FlyLog/DriBugReport/drivers/");
 	     lidbg_shell_cmd("cp -rf /data/anr /sdcard/FlyLog/DriBugReport/drivers/");
 	     lidbg_shell_cmd("cp -rf /data/tombstones /sdcard/FlyLog/DriBugReport/drivers/");
-            lidbg_shell_cmd("cp -rf /system/etc/build_time.txt /FlyLog/DriBugReport/drivers/system_build_time.txt");
+	     lidbg_shell_cmd("cp -rf /system/etc/build_time.txt /FlyLog/DriBugReport/drivers/system_build_time.txt");
 		 lidbg_shell_cmd("chmod 777  /dev/log/DVRERR.txt");	
 		 lidbg_shell_cmd("mkdir  /sdcard/FlyLog/DriBugReport/drivers/DVR");
  		 lidbg_shell_cmd("cp -rf /dev/log/DVRERR.txt /sdcard/FlyLog/DriBugReport/drivers/DVR");
@@ -1622,6 +1625,17 @@ void parse_cmd(char *pt)
            	 lidbg("*158#132--g_var.is_first_update false \n");
            	 g_var.is_first_update = false;
         }
+        else if (!strcmp(argv[1], "*158#133"))
+        {
+           	 lidbg("*158#133--print_stream_volume \n");
+           	 lidbg_shell_cmd("setprop persist.lidbg.sound.dbg \"11 1\"");
+        }
+        else if (!strcmp(argv[1], "*158#134"))
+        {
+           	 lidbg("*158#134--force music start event \n");
+           	 lidbg_shell_cmd("echo sound 1 > /dev/fly_sound0");
+        }
+
     }
     else if(!strcmp(argv[0], "flyaudio.code.disable") )
     {
