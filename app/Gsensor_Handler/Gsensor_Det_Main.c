@@ -7,6 +7,7 @@
 #define GSENSOR_NOTIFY_CHAIN                     _IO(GSENSOR,  0x11)
 
 /*---------------------------------------------*/
+//low
 #define GSENSOR_L0_X_P_THRESHOLD					  900
 #define GSENSOR_L0_X_N_THRESHOLD				-900
 #define GSENSOR_L0_Y_P_THRESHOLD					  1200
@@ -16,6 +17,7 @@
 #define GSENSOR_L0_DEGREE_P_THRESHOLD		   40
 #define GSENSOR_L0_DEGREE_N_THRESHOLD		 -40
 
+//default
 #define GSENSOR_L1_X_P_THRESHOLD					  700
 #define GSENSOR_L1_X_N_THRESHOLD				-700
 #define GSENSOR_L1_Y_P_THRESHOLD					  800
@@ -25,6 +27,7 @@
 #define GSENSOR_L1_DEGREE_P_THRESHOLD		   40
 #define GSENSOR_L1_DEGREE_N_THRESHOLD		 -40
 
+//high
 #define GSENSOR_L2_X_P_THRESHOLD					  500
 #define GSENSOR_L2_X_N_THRESHOLD				-500
 #define GSENSOR_L2_Y_P_THRESHOLD					  600
