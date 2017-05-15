@@ -944,9 +944,9 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				return 0;
 		        break;
 			case NR_ENABLE_CAM_POWER:
-				lidbg("%s:NR_ENABLE_CAM_POWER  \n",__func__ );
-				USB_FRONT_WORK_ENABLE;
-				USB_BACK_WORK_ENABLE;
+				//lidbg("%s:NR_ENABLE_CAM_POWER  \n",__func__ );
+				//USB_FRONT_WORK_ENABLE;
+				//USB_BACK_WORK_ENABLE;
 				return 0;
 		        break;
 			case NR_DISABLE_CAM_POWER:
