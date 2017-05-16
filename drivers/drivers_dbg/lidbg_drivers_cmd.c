@@ -556,6 +556,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#132--g_var.is_first_update false \n");
             fs_mem_log("*158#133--print_stream_volume \n");
             fs_mem_log("*158#134--force music start event \n");
+            fs_mem_log("*158#135--usb id reset \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1634,6 +1635,13 @@ void parse_cmd(char *pt)
         {
            	 lidbg("*158#134--force music start event \n");
            	 lidbg_shell_cmd("echo sound 1 > /dev/fly_sound0");
+        }
+        else if (!strcmp(argv[1], "*158#135"))
+        {
+           	 lidbg("*158#135--usb id reset \n");
+           	 USB_ID_HIGH_DEV;
+           	 ssleep(1);
+           	 USB_ID_LOW_HOST;
         }
 
     }
