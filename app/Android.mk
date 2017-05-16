@@ -1,4 +1,4 @@
-
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,apps)
 ifeq ($(CONFIG_HAL_VOLD_8996_vold_60),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,8996_vold_60)
 endif
@@ -14,7 +14,6 @@ SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,halAndJni/jni)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,halAndJni/inc)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,record_klogctl)
 
-SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,apps)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,lidbg_umount)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,apk)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,Gsensor_Handler)
