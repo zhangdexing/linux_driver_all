@@ -99,7 +99,7 @@ int  sound_on = 0;
 int count_num = 0;
 
 int music_level ;
-int music_max_level ;
+int music_max_level = 15;
 int delay_off_volume_policy_cnt = 0;
 int delay_off_volume_policy = 1000;//ms
 int delay_step_on_music = 500;//ms
@@ -143,6 +143,11 @@ int get_stream_volume(bool dbg, audio_stream_type_t stream_type)
     audio_devices_t device;
     status_t status ;
     sp<IAudioPolicyService> &aps = gAudioPolicyService;
+    if(gAudioPolicyService == 0)
+    {
+        lidbg(TAG "get_stream_volume:gAudioPolicyService == 0\n");
+        return -1;
+    }
     device = aps->getDevicesForStream(stream_type) ;
     status = aps->getStreamVolumeIndex(stream_type, &index, AUDIO_DEVICE_OUT_DEFAULT);
     if(0 != device && NO_ERROR == status )
@@ -380,6 +385,20 @@ int handle_sound_state(const char *who, int sound)
     lidbg(TAG"handle_sound_state:[%s/%s/%d/%d]\n", cmd, who, playing, phone_call_state);
     return 1;
 }
+int check_and_restore_volume(const char *who, int dbg)
+{
+    if(dbg)
+        lidbg(TAG"check_and_restore_volume:[%s]\n", who);
+    if( get_stream_volume(false, AUDIO_STREAM_MUSIC) < 5)
+    {
+        print_stream_volume();
+        lidbg(TAG"check_and_restore_volume:%d\n", music_max_level);
+        if(music_max_level < 15)
+            music_max_level = 15;
+        set_all_stream_volume(music_max_level);
+    }
+    return 1;
+}
 int main(int argc, char **argv)
 {
     pthread_t ntid;
@@ -536,6 +555,8 @@ int main(int argc, char **argv)
             GetAudioFlingerService(false);
             loop_count = 0;
         }
+        if(!(loop_count % 30))//per 3s
+            check_and_restore_volume("after20:", false);
         trace_step = (char *)"main while4";
         if(!(loop_count % 30))//per 3s
         {
@@ -568,12 +589,9 @@ int main(int argc, char **argv)
                     break;
                 case 3 :
                     navi_policy_en = (para[1] == 1);
-                    if(max_volume == -1)
-                    {
-                        lidbg(TAG"init_para\n");
-                        init_para(true);
-                        print_para();
-                    }
+                    lidbg(TAG"init_para,add check\n");
+                    init_para(true);
+                    print_para();
 
                     if(navi_policy_en == false)
                     {
