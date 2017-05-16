@@ -546,7 +546,11 @@ public class FlyBootService extends Service {
 				intentBoot.putExtra("flyauduio_accon", "accon");
 				sendBroadcast(intentBoot);
 			break;
-					
+			case 27:
+			fbPm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+			msgTokenal("flyaudio gotosleep TEST");
+			fbPm.goToSleep(SystemClock.uptimeMillis());
+			break;
 			default:
 			LIDBG_PRINT("BroadcastReceiver.action:unkown"+action+"\n");
 			break;
