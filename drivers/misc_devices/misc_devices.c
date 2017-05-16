@@ -369,6 +369,14 @@ static int misc_dev_dev_event(struct notifier_block *this,
     return NOTIFY_DONE;
 }
 
+static int thread_back_cam_reset(void *data)
+{
+	DUMP_FUN;
+	USB_POWER_BACK_DISABLE;
+	ssleep(1);
+	USB_POWER_BACK_ENABLE;
+	return 1;
+}
 
 static struct notifier_block lidbg_notifier =
 {
@@ -478,6 +486,11 @@ static void parse_cmd(char *pt)
 			GPS_POWER_ON;
 		}
     }
+    else  if(!strcmp(argv[0], "back_cam_reset"))
+    {
+        CREATE_KTHREAD(thread_back_cam_reset, NULL);
+    }
+
     else if (!strcmp(argv[0], "gps_unrequest"))
     {
         	lidbg("Misc devices ctrl: gps_unrequest");

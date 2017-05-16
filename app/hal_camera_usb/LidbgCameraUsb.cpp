@@ -1021,6 +1021,7 @@ try_open_again:
                 else
                 {
                     ALOGE("%s: VIDIOC_ENUM_FMT failed", __func__);
+		      system("echo 'back_cam_reset' > /dev/flydev0");
                 }
             }
             if(V4L2_PIX_FMT_MJPEG == fmtdesc.pixelformat)
@@ -1395,6 +1396,7 @@ try_open_again:
             {
                 ALOGE("%s: VIDIOC_S_FMT failed", __func__);
 				wdbg("%s: Camera [%d] VIDIOC_S_FMT failed\n",__func__, cam_id);
+		  system("echo 'back_cam_reset' > /dev/flydev0");
                 return -1;
             }
 						
@@ -1436,7 +1438,10 @@ try_open_again:
 
         v4l2BufType = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         if (-1 == ioctlLoop(camHal->fd, VIDIOC_STREAMON, &v4l2BufType))
+        {
             ALOGE("%s: VIDIOC_STREAMON failed", __func__);
+	     system("echo 'back_cam_reset' > /dev/flydev0");
+        }
         else
         {
             ALOGD("%s: VIDIOC_STREAMON success", __func__);
@@ -1535,6 +1540,7 @@ try_open_again:
                 case EAGAIN:
                     ALOGE("%s: EAGAIN error", __func__);
 					wdbg("%s: Camera [%d] EAGAIN error\n",__func__, cam_id);
+			system("echo 'back_cam_reset' > /dev/flydev0");
                     return 1;
                 case EIO:
                     /* Could ignore EIO, see spec. */
@@ -1901,6 +1907,7 @@ try_open_again:
 			    camHal->notify_cb(CAMERA_MSG_ERROR, 0, 0, camHal->cb_ctxt);
 			    camHal->lock.lock();
 				ALOGE("%s: get_buf_from_cam error", __func__);
+				system("echo 'back_cam_reset' > /dev/flydev0");
 				return (void *)0;
 			}              
 
@@ -2043,6 +2050,7 @@ try_open_again:
             if(rc < 0)
             {
                 ALOGE("%s: Failed to startUsbCamCapture", __func__);
+		  system("echo 'back_cam_reset' > /dev/flydev0");
             }
             else
             {
@@ -2563,7 +2571,10 @@ ION_OPEN_FAILED:
         if (0 == get_buf_from_cam(camHal))
             ALOGD("%s: get_buf_from_cam success", __func__);
         else
+        {
             ALOGE("%s: get_buf_from_cam error", __func__);
+	     system("echo 'back_cam_reset' > /dev/flydev0");
+        }
 
         /************************************************************************/
         /* - Send capture buffer to JPEG encoder for JPEG compression           */
