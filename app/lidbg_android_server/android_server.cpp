@@ -31,15 +31,15 @@ int phone_call_state_old = AUDIO_MODE_INVALID;
 
 static sp<IAudioPolicyService> gAudioPolicyService = 0;
 char *trace_step;
-#define TRACE_STEP {trace_step = (char*)__FUNCTION__;} 
+#define TRACE_STEP {trace_step = (char*)__FUNCTION__;}
 
 void recvSignal(int sig)
-{  
-    lidbg(TAG"received signal %d ,restart!!!\n",sig);
-    lidbg("trace_step=%s\n",trace_step);
+{
+    lidbg(TAG"received signal %d ,restart!!!\n", sig);
+    lidbg("trace_step=%s\n", trace_step);
     system("/flysystem/lib/out/lidbg_android_server &");
     exit(1);
-}  
+}
 
 
 void GetAudioPolicyService(bool dbg)
@@ -387,18 +387,21 @@ int main(int argc, char **argv)
     argv = argv;
     bool first_boot = 0;
     lidbg(TAG"main\n");
-	
-    signal(SIGSEGV, recvSignal); 
+
+    signal(SIGSEGV, recvSignal);
 
     pthread_create(&ntid, NULL, thread_check_boot_complete, NULL);
     while(boot_completed == 0)
     {
-    	 first_boot = 1;
+        first_boot = 1;
         lidbg(TAG"wait\n");
         sleep(5);
     }
     if(first_boot == 1)
-		{ lidbg(TAG"sleep5s\n");sleep(5);}//ensure audioserver.java to init para.
+    {
+        lidbg(TAG"sleep5s\n");    //ensure audioserver.java to init para.
+        sleep(5);
+    }
 
     GetAudioPolicyService(true);
     GetAudioFlingerService(true);
@@ -435,7 +438,7 @@ int main(int argc, char **argv)
 
     while(1)
     {
-        trace_step = (char*)"main while1";
+        trace_step = (char *)"main while1";
         if(gAudioPolicyService != 0 && gAudioFlingerService != 0)
         {
             sp<IAudioPolicyService> &aps = gAudioPolicyService;
@@ -463,8 +466,8 @@ int main(int argc, char **argv)
                     }
                     else
                         playing = aps->isStreamActive((audio_stream_type_t)i, 0) | playing;
-					
-       	      trace_step = (char*)"main while2";
+
+                    trace_step = (char *)"main while2";
 
                     //audiomanager.java (setstreammute API ) will broke the navi policy logic,so I should restart it again when there is a mute event happend.
                     if(first_mute_stream_id > 0)
@@ -500,7 +503,7 @@ int main(int argc, char **argv)
             GetAudioPolicyService(true);
             GetAudioFlingerService(true);
         }
-         trace_step = (char*)"main while3";
+        trace_step = (char *)"main while3";
 
         if(phone_call_state != phone_call_state_old)
         {
@@ -533,7 +536,7 @@ int main(int argc, char **argv)
             GetAudioFlingerService(false);
             loop_count = 0;
         }
-        trace_step = (char*)"main while4";
+        trace_step = (char *)"main while4";
         if(!(loop_count % 30))//per 3s
         {
             char value[PROPERTY_VALUE_MAX];
@@ -565,12 +568,12 @@ int main(int argc, char **argv)
                     break;
                 case 3 :
                     navi_policy_en = (para[1] == 1);
-		if(max_volume == -1)
-		{
-		    lidbg(TAG"init_para\n");
-		    init_para(true);
-		    print_para();
-		}
+                    if(max_volume == -1)
+                    {
+                        lidbg(TAG"init_para\n");
+                        init_para(true);
+                        print_para();
+                    }
 
                     if(navi_policy_en == false)
                     {
@@ -581,7 +584,7 @@ int main(int argc, char **argv)
                     lidbg(TAG"force disable navi_policy_en\n");
                     navi_policy_en = false;
 #endif
-                    if(navi_policy_en == true)//skip set VENDOR_MTK 
+                    if(navi_policy_en == true)//skip set VENDOR_MTK
                     {
                         lidbg(TAG"init all Stream to max:[%d]\n", max_volume);
                         set_all_stream_volume(max_volume);
@@ -632,8 +635,11 @@ int main(int argc, char **argv)
                     print_para();
                     break;
                 case 14 :
-		      lidbg(TAG"do crash\n");
-		     {int* s = 0;  (*s) = 1;}
+                    lidbg(TAG"do crash\n");
+                    {
+                        int *s = 0;
+                        (*s) = 1;
+                    }
                     break;
                 default :
                     break;

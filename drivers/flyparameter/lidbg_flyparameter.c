@@ -124,10 +124,10 @@ bool flyparameter_info_get(void)
 
         if(g_recovery_meg->hwInfo.bValid == 0x12345678)
         {
-            int ret,len;
+            int ret, len;
             char parameter[256];
             memset(parameter, '\0', sizeof(parameter));
-            len=strlen(g_recovery_meg->hwInfo.info);
+            len = strlen(g_recovery_meg->hwInfo.info);
 
             ret = sprintf(parameter, "setprop HWINFO.FLY.Parameter %s", g_recovery_meg->hwInfo.info);
             if(ret < 0)
@@ -138,21 +138,21 @@ bool flyparameter_info_get(void)
             fs_clear_file("/data/commenPersist/hwinfo.txt");
             fs_file_write2("/data/commenPersist/hwinfo.txt", g_recovery_meg->hwInfo.info);
             lidbg_shell_cmd("chmod 777 /data/commenPersist/hwinfo.txt");
-            lidbg("flyparameter=[%s] len:%d\n", g_recovery_meg->hwInfo.info,len);
-            fs_mem_log("flyparameter=[%s] len:%d\n", g_recovery_meg->hwInfo.info,len);
+            lidbg("flyparameter=[%s] len:%d\n", g_recovery_meg->hwInfo.info, len);
+            fs_mem_log("flyparameter=[%s] len:%d\n", g_recovery_meg->hwInfo.info, len);
 
             lidbg("flyparameter3 :%d,%d,%d,%d,%d\n", g_recovery_meg->hwInfo.info[0] - '0', g_recovery_meg->hwInfo.info[1] - '0', g_recovery_meg->hwInfo.info[2] - '0', g_recovery_meg->hwInfo.info[3] - '0', g_recovery_meg->hwInfo.info[4] - '0');
             g_var.hw_info.ts_config = 10 * (g_recovery_meg->hwInfo.info[0] - '0') + g_recovery_meg->hwInfo.info[1] - '0';
             g_var.hw_info.virtual_key = 10 * (g_recovery_meg->hwInfo.info[2] - '0') + g_recovery_meg->hwInfo.info[3] - '0';
             g_var.hw_info.lcd_type = g_recovery_meg->hwInfo.info[4] - '0';
             g_var.hw_info.lcd_manufactor = 10 * (g_recovery_meg->hwInfo.info[8] - '0') + g_recovery_meg->hwInfo.info[9] - '0';
-            if(len>10)
-            	g_var.hw_info.hw_version2 =  g_recovery_meg->hwInfo.info[10] - '0';
+            if(len > 10)
+                g_var.hw_info.hw_version2 =  g_recovery_meg->hwInfo.info[10] - '0';
 #ifdef PLATFORM_msm8996
-	     g_var.hw_info.hw_version = g_var.hw_info.hw_version2 + 2;
+            g_var.hw_info.hw_version = g_var.hw_info.hw_version2 + 2;
 #endif
 
-            lidbg("ts_config:%d,virtual_key:%d,lcd_manufactor:%d,hw_version:%d\n", g_var.hw_info.ts_config, g_var.hw_info.virtual_key,g_var.hw_info.lcd_manufactor, g_var.hw_info.hw_version2);
+            lidbg("ts_config:%d,virtual_key:%d,lcd_manufactor:%d,hw_version:%d\n", g_var.hw_info.ts_config, g_var.hw_info.virtual_key, g_var.hw_info.lcd_manufactor, g_var.hw_info.hw_version2);
 
             is_ublox_so_exist = fs_is_file_exist("/flysystem/lib/out/"FLY_GPS_SO);
             lidbg("ts_config5:gps:%c,%d\n", g_recovery_meg->hwInfo.info[5] , is_ublox_so_exist);
@@ -163,31 +163,31 @@ bool flyparameter_info_get(void)
                 lidbg_shell_cmd("rm /flysystem/lib/out/"FLY_GPS_SO);
                 lidbg_shell_cmd("mount -o remount,ro /flysystem");
             }
-	     {
-	            char set_car_type[256];
-	            memset(set_car_type, '\0', sizeof(set_car_type));
-		     g_var.car_type = g_recovery_meg->bootParam.upName.flags;
-	            lidbg("car_type=%s\n",g_var.car_type);
+            {
+                char set_car_type[256];
+                memset(set_car_type, '\0', sizeof(set_car_type));
+                g_var.car_type = g_recovery_meg->bootParam.upName.flags;
+                lidbg("car_type=%s\n", g_var.car_type);
 
-	            ret = sprintf(set_car_type, "setprop HWINFO.FLY.car_type %s", g_var.car_type);
-	            if(ret < 0)
-	            {
-	                lidbg("fail to cpy car_type\n");
-	            }
-	            lidbg_shell_cmd( set_car_type );
-	            lidbg_shell_cmd( "mount -o remount /" );
-	            lidbg_shell_cmd( "chmod 777 /flyconfig" );
-	            lidbg_shell_cmd( "/flysystem/bin/decodeFlyconfig &" );
-	            lidbg("bring up:/flysystem/bin/decodeFlyconfig &\n");
-	            fs_mem_log("car_type=[%s]\n", g_var.car_type);
-	     }
-		 
+                ret = sprintf(set_car_type, "setprop HWINFO.FLY.car_type %s", g_var.car_type);
+                if(ret < 0)
+                {
+                    lidbg("fail to cpy car_type\n");
+                }
+                lidbg_shell_cmd( set_car_type );
+                lidbg_shell_cmd( "mount -o remount /" );
+                lidbg_shell_cmd( "chmod 777 /flyconfig" );
+                lidbg_shell_cmd( "/flysystem/bin/decodeFlyconfig &" );
+                lidbg("bring up:/flysystem/bin/decodeFlyconfig &\n");
+                fs_mem_log("car_type=[%s]\n", g_var.car_type);
+            }
+
 #if 0
             if( !strncmp(g_var.car_type, "822", 3))//Israel
-            	{
-            		 lidbg("Israel car_type,suspend_airplane_mode\n");
-		 	g_var.suspend_airplane_mode = true;
-            	}
+            {
+                lidbg("Israel car_type,suspend_airplane_mode\n");
+                g_var.suspend_airplane_mode = true;
+            }
 #endif
             return true;
         }
@@ -344,14 +344,14 @@ int lidbg_flyparameter_init(void)
     LIDBG_GET;
 
     lidbg_chmod(FLYPARAMETER_NODE);
-    while((fs_is_file_exist(FLYPARAMETER_NODE) == 0)&&(cnt <50))
+    while((fs_is_file_exist(FLYPARAMETER_NODE) == 0) && (cnt < 50))
     {
-    		 lidbg("wait for FLYPARAMETER_NODE !!\n");
-		 lidbg_chmod(FLYPARAMETER_NODE);
-		 msleep(200);
-		 cnt++;
+        lidbg("wait for FLYPARAMETER_NODE !!\n");
+        lidbg_chmod(FLYPARAMETER_NODE);
+        msleep(200);
+        cnt++;
     }
-	
+
     flyparameter_init();
     lidbg_fly_hw_info_init();//block other ko before hw_info set
     lidbg_new_cdev(&fly_upate_info_fops, "fly_upate_info0");
