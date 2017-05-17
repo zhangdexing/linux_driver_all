@@ -107,6 +107,8 @@ void filesize_ctrl()
 	int totalsize;
         int filenum = 0;
 	char filename[128];
+redo:
+	memset(filename,'\0',sizeof(filename));
 	/********计算文件夹大小***********/
 	d = opendir(PATH);
 	
@@ -150,6 +152,7 @@ void filesize_ctrl()
 		{
 			remove_old_file();
 		}
+		goto redo;
 	}
 }
 
