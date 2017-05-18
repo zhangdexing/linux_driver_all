@@ -35,6 +35,7 @@ char *insmod_list[] =
     "lidbg_main.ko",
     "lidbg_interface.ko",
     "lidbg_flyparameter.ko",
+    "lidbg_bare_para.ko",
     "lidbg_drivers_loader.ko",
     NULL,
 };

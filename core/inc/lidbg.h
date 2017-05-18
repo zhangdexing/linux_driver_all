@@ -96,6 +96,7 @@
 #include "lidbg_trace_msg.h"
 #include "lidbg_immediate.h"
 #include "lidbg_soc.h"
+#include "lidbg_bare_para.h"
 
 #ifdef PLATFORM_msm8909
 #include "lidbg_soc_msm8909.h"

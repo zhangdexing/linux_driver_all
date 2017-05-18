@@ -370,7 +370,7 @@ bool copy_file(char *from, char *to, bool encode)
     string = (unsigned char *)vmalloc(file_len);
     if(string == NULL)
     {
-        FS_ALWAYS(" <vmalloc>\n");
+        FS_ALWAYS(" <vmalloc.%d>\n",file_len);
         return false;
     }
 
