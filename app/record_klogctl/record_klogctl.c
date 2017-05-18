@@ -70,7 +70,7 @@ int remove_old_file()
         }      
         lidbg("now remove %s\n",olderfile.filename);
         remove(olderfile.filename);
-	closedir(d);
+	 closedir(d);
         return 0;
 }
 
@@ -105,9 +105,11 @@ void filesize_ctrl()
 	struct stat filebuf;
 	int exists;
 	int totalsize;
-        int filenum = 0;
+        int filenum;
 	char filename[128];
 redo:
+	filenum = 0;
+	totalsize = 0;
 	memset(filename,'\0',sizeof(filename));
 	/********计算文件夹大小***********/
 	d = opendir(PATH);
@@ -121,7 +123,7 @@ redo:
 		exit(1);
 	}
 
-	totalsize = 0;
+
 	while((de = readdir(d))!=NULL)
 	{
 		if(strncmp(de->d_name,".",1) == 0)//跳过目录.和..
@@ -143,7 +145,7 @@ redo:
 	
 	if(totalsize > MAXINUM)
 	{
-		if(filenum == 1)
+		if(filenum <= 1)
 		{
 			if(lseek(openfd, 0, SEEK_CUR) >= MAXINUM)
 				lseek(openfd,0,SEEK_SET);
@@ -151,8 +153,9 @@ redo:
 		else
 		{
 			remove_old_file();
+			lidbg("remove file retry\n");
+		       goto redo;
 		}
-		goto redo;
 	}
 }
 
