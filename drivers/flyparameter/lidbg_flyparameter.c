@@ -3,6 +3,7 @@
 #define RECOVERY_PATH_FLY_HW_INFO_CONFIG RECOVERY_USB_MOUNT_POINT"/machine_info.conf"
 
 #define FLAG_HW_INFO_VALID (0x12345678)
+#define PATA_TAG "flypara_tag:"
 
 LIDBG_DEFINE;
 
@@ -21,7 +22,7 @@ enum update_info_enum
 enum update_info_enum update_info  = NOT_NEED_UPDATE;
 void fly_hw_info_show(char *when, fly_hw_data *p_info)
 {
-    lidbg("flyparameter:%s:g_fly_hw_data:flag=%x,%x,hw=%d,ts=%d,%d,lcd=%d\n", when,
+    lidbg(PATA_TAG"flyparameter:%s:g_fly_hw_data:flag=%x,%x,hw=%d,ts=%d,%d,lcd=%d\n", when,
           p_info->flag_hw_info_valid,
           p_info->flag_need_update,
           p_info->hw_info.hw_version,
@@ -63,7 +64,7 @@ bool fly_hw_info_get(fly_hw_data *p_info)
 {
     if(FLYPARAMETER_NODE == NULL)
     {
-        lidbg("g_hw.fly_parameter_node == NULL,return\n");
+        lidbg(PATA_TAG"g_hw.fly_parameter_node == NULL,return\n");
         return 0;
     }
     if(p_info && fs_file_read(FLYPARAMETER_NODE, (char *)p_info, MEM_SIZE_512_KB , sizeof(fly_hw_data)) >= 0)
@@ -79,17 +80,17 @@ bool fly_hw_info_save(fly_hw_data *p_info)
     DUMP_FUN;
     if(FLYPARAMETER_NODE == NULL)
     {
-        lidbg("g_hw.fly_parameter_node == NULL,return\n");
+        lidbg(PATA_TAG"g_hw.fly_parameter_node == NULL,return\n");
         return 0;
     }
     read_fly_hw_config_file(p_info);
     if( p_info && fs_file_write(FLYPARAMETER_NODE, false, (void *) p_info, MEM_SIZE_512_KB , sizeof(fly_hw_data)) >= 0)
     {
-        lidbg("fly_hw_data:save success\n");
+        lidbg(PATA_TAG"fly_hw_data:save success\n");
         update_info = UPDATE_SUC;
         return true;
     }
-    lidbg("fly_hw_data:save err\n");
+    lidbg(PATA_TAG"fly_hw_data:save err\n");
     update_info = UPDATE_FAIL;
     return false;
 }
@@ -112,15 +113,15 @@ bool flyparameter_info_get(void)
 
     if(FLYPARAMETER_NODE == NULL)
     {
-        lidbg("g_hw.fly_parameter_node == NULL,return\n");
+        lidbg(PATA_TAG"g_hw.fly_parameter_node == NULL,return\n");
         return 0;
     }
     if(p_kmem && fs_file_read(FLYPARAMETER_NODE, p_kmem, 0, sizeof(recovery_meg_t)) >= 0)
     {
         g_recovery_meg = (recovery_meg_t *)p_kmem;
-        lidbg("flyparameter1:%s,%s,%s\n", g_recovery_meg->recoveryLanguage.flags, g_recovery_meg->bootParam.bootParamsLen.flags, g_recovery_meg->bootParam.upName.flags);
-        lidbg("flyparameter2:%d,%s,%x\n", g_recovery_meg->bootParam.upName.val, g_recovery_meg->bootParam.autoUp.flags, g_recovery_meg->bootParam.autoUp.val);
-        lidbg("g_recovery_meg %x\n", g_recovery_meg->hwInfo.bValid);
+        lidbg(PATA_TAG"flyparameter1:%s,%s,%s\n", g_recovery_meg->recoveryLanguage.flags, g_recovery_meg->bootParam.bootParamsLen.flags, g_recovery_meg->bootParam.upName.flags);
+        lidbg(PATA_TAG"flyparameter2:%d,%s,%x\n", g_recovery_meg->bootParam.upName.val, g_recovery_meg->bootParam.autoUp.flags, g_recovery_meg->bootParam.autoUp.val);
+        lidbg(PATA_TAG"g_recovery_meg %x\n", g_recovery_meg->hwInfo.bValid);
 
         if(g_recovery_meg->hwInfo.bValid == 0x12345678)
         {
@@ -132,16 +133,16 @@ bool flyparameter_info_get(void)
             ret = sprintf(parameter, "setprop HWINFO.FLY.Parameter %s", g_recovery_meg->hwInfo.info);
             if(ret < 0)
             {
-                lidbg("fail to cpy parameter\n");
+                lidbg(PATA_TAG"fail to cpy parameter\n");
             }
             lidbg_shell_cmd( parameter );
             fs_clear_file("/data/commenPersist/hwinfo.txt");
             fs_file_write2("/data/commenPersist/hwinfo.txt", g_recovery_meg->hwInfo.info);
             lidbg_shell_cmd("chmod 777 /data/commenPersist/hwinfo.txt");
-            lidbg("flyparameter=[%s] len:%d\n", g_recovery_meg->hwInfo.info, len);
+            lidbg(PATA_TAG"flyparameter=[%s] len:%d\n", g_recovery_meg->hwInfo.info, len);
             fs_mem_log("flyparameter=[%s] len:%d\n", g_recovery_meg->hwInfo.info, len);
 
-            lidbg("flyparameter3 :%d,%d,%d,%d,%d\n", g_recovery_meg->hwInfo.info[0] - '0', g_recovery_meg->hwInfo.info[1] - '0', g_recovery_meg->hwInfo.info[2] - '0', g_recovery_meg->hwInfo.info[3] - '0', g_recovery_meg->hwInfo.info[4] - '0');
+            lidbg(PATA_TAG"flyparameter3 :%d,%d,%d,%d,%d\n", g_recovery_meg->hwInfo.info[0] - '0', g_recovery_meg->hwInfo.info[1] - '0', g_recovery_meg->hwInfo.info[2] - '0', g_recovery_meg->hwInfo.info[3] - '0', g_recovery_meg->hwInfo.info[4] - '0');
             g_var.hw_info.ts_config = 10 * (g_recovery_meg->hwInfo.info[0] - '0') + g_recovery_meg->hwInfo.info[1] - '0';
             g_var.hw_info.virtual_key = 10 * (g_recovery_meg->hwInfo.info[2] - '0') + g_recovery_meg->hwInfo.info[3] - '0';
             g_var.hw_info.lcd_type = g_recovery_meg->hwInfo.info[4] - '0';
@@ -152,13 +153,13 @@ bool flyparameter_info_get(void)
             g_var.hw_info.hw_version = g_var.hw_info.hw_version2 + 2;
 #endif
 
-            lidbg("ts_config:%d,virtual_key:%d,lcd_manufactor:%d,hw_version:%d\n", g_var.hw_info.ts_config, g_var.hw_info.virtual_key, g_var.hw_info.lcd_manufactor, g_var.hw_info.hw_version2);
+            lidbg(PATA_TAG"ts_config:%d,virtual_key:%d,lcd_manufactor:%d,hw_version:%d\n", g_var.hw_info.ts_config, g_var.hw_info.virtual_key, g_var.hw_info.lcd_manufactor, g_var.hw_info.hw_version2);
 
             is_ublox_so_exist = fs_is_file_exist("/flysystem/lib/out/"FLY_GPS_SO);
-            lidbg("ts_config5:gps:%c,%d\n", g_recovery_meg->hwInfo.info[5] , is_ublox_so_exist);
+            lidbg(PATA_TAG"ts_config5:gps:%c,%d\n", g_recovery_meg->hwInfo.info[5] , is_ublox_so_exist);
             if((g_recovery_meg->hwInfo.info[5] == '1') && (is_ublox_so_exist))// 0 - ublox ,1 -qualcomm gps
             {
-                lidbg("rm ublox so\n");
+                lidbg(PATA_TAG"rm ublox so\n");
                 lidbg_shell_cmd("mount -o remount /flysystem");
                 lidbg_shell_cmd("rm /flysystem/lib/out/"FLY_GPS_SO);
                 lidbg_shell_cmd("mount -o remount,ro /flysystem");
@@ -167,25 +168,25 @@ bool flyparameter_info_get(void)
                 char set_car_type[256];
                 memset(set_car_type, '\0', sizeof(set_car_type));
                 g_var.car_type = g_recovery_meg->bootParam.upName.flags;
-                lidbg("car_type=%s\n", g_var.car_type);
+                lidbg(PATA_TAG"car_type=%s\n", g_var.car_type);
 
                 ret = sprintf(set_car_type, "setprop HWINFO.FLY.car_type %s", g_var.car_type);
                 if(ret < 0)
                 {
-                    lidbg("fail to cpy car_type\n");
+                    lidbg(PATA_TAG"fail to cpy car_type\n");
                 }
                 lidbg_shell_cmd( set_car_type );
                 lidbg_shell_cmd( "mount -o remount /" );
                 lidbg_shell_cmd( "chmod 777 /flyconfig" );
                 lidbg_shell_cmd( "/flysystem/bin/decodeFlyconfig &" );
-                lidbg("bring up:/flysystem/bin/decodeFlyconfig &\n");
+                lidbg(PATA_TAG"bring up:/flysystem/bin/decodeFlyconfig &\n");
                 fs_mem_log("car_type=[%s]\n", g_var.car_type);
             }
 
 #if 0
             if( !strncmp(g_var.car_type, "822", 3))//Israel
             {
-                lidbg("Israel car_type,suspend_airplane_mode\n");
+                lidbg(PATA_TAG"Israel car_type,suspend_airplane_mode\n");
                 g_var.suspend_airplane_mode = true;
             }
 #endif
@@ -194,7 +195,7 @@ bool flyparameter_info_get(void)
     }
     else
     {
-        lidbgerr("\n===flyparameter.disable===\n");
+        lidbgerr(PATA_TAG"\n===flyparameter.disable===\n");
         g_recovery_meg = &default_recovery_meg;
     }
     return false;
@@ -204,15 +205,15 @@ bool flyparameter_info_save(recovery_meg_t *p_info)
 {
     if(FLYPARAMETER_NODE == NULL)
     {
-        lidbg("g_hw.fly_parameter_node == NULL,return\n");
+        lidbg(PATA_TAG"g_hw.fly_parameter_node == NULL,return\n");
         return 0;
     }
     if( p_info && fs_file_write(FLYPARAMETER_NODE, false, (void *) p_info, 0, sizeof(recovery_meg_t)) >= 0)
     {
-        lidbg("flyparameter:save success\n");
+        lidbg(PATA_TAG"flyparameter:save success\n");
         return true;
     }
-    lidbg("flyparameter:save err\n");
+    lidbg(PATA_TAG"flyparameter:save err\n");
     return false;
 }
 
@@ -232,7 +233,7 @@ int thread_fix_fly_update_info(void *data)
     char info;
     msleep(20000);
     fs_file_read("/dev/fly_upate_info0", &info, 0, sizeof(info));
-    lidbg("read info is %c\n", info);
+    lidbg(PATA_TAG"read info is %c\n", info);
     msleep(40000);
     lidbg_chmod(FLYPARAMETER_NODE);
     return 1;
@@ -251,17 +252,17 @@ int lidbg_fly_hw_info_init(void)
 {
     g_fly_hw_data = kzalloc(sizeof(fly_hw_data), GFP_KERNEL);
     if(!g_fly_hw_data)
-        lidbgerr("kzalloc.g_fly_hw_data\n");
+        lidbgerr(PATA_TAG"kzalloc.g_fly_hw_data\n");
 
     /*
         if(fs_is_file_exist(PATH_MACHINE_INFO_FILE))
         {
-            lidbgerr("return.%s,miss\n", PATH_MACHINE_INFO_FILE);
+            lidbgerr(PATA_TAG"return.%s,miss\n", PATH_MACHINE_INFO_FILE);
             return -1;
         }
     */
     if(!fly_hw_info_get(g_fly_hw_data))
-        lidbgerr("fly_hw_info_get\n");
+        lidbgerr(PATA_TAG"fly_hw_info_get\n");
 
     if(g_var.recovery_mode)
     {
@@ -289,7 +290,7 @@ int lidbg_fly_hw_info_init(void)
         int i;
         for(i = 0; i < sizeof(struct hw_info) / 4; i++)
         {
-            //lidbg("i=%d,val1=%d,val2=%d\n",i,((int*)(&g_fly_hw_data->hw_info))[i],((int*)(&g_var.hw_info))[i]);
+            //lidbg(PATA_TAG"i=%d,val1=%d,val2=%d\n",i,((int*)(&g_fly_hw_data->hw_info))[i],((int*)(&g_var.hw_info))[i]);
             if(((int *)(&g_fly_hw_data->hw_info))[i] != 0)
             {
                 ((int *)(&g_var.hw_info))[i] = ((int *)(&g_fly_hw_data->hw_info))[i];
@@ -313,9 +314,9 @@ ssize_t  fly_upate_info_read(struct file *filp, char __user *buffer, size_t size
     sprintf(tmp, "%d", update_info);
     if (copy_to_user(buffer, tmp, sizeof(tmp)))
     {
-        lidbg("copy_to_user ERR\n");
+        lidbg(PATA_TAG"copy_to_user ERR\n");
     }
-    lidbg("update_info = %d,read size =%zd\n\n", update_info, size);
+    lidbg(PATA_TAG"update_info = %d,read size =%zd\n\n", update_info, size);
     return size;
 
 }
@@ -329,10 +330,10 @@ int flyparameter_init(void)
 {
     p_kmem = kzalloc(sizeof(recovery_meg_t), GFP_KERNEL);
     if(!p_kmem)
-        lidbgerr("kzalloc.p_kmem\n");
+        lidbgerr(PATA_TAG"kzalloc.p_kmem\n");
 
     if(!flyparameter_info_get())
-        lidbg("flyparameter_info_get\n");
+        lidbg(PATA_TAG"flyparameter_info_get\n");
 
     return 0;
 }
@@ -346,7 +347,7 @@ int lidbg_flyparameter_init(void)
     lidbg_chmod(FLYPARAMETER_NODE);
     while((fs_is_file_exist(FLYPARAMETER_NODE) == 0) && (cnt < 50))
     {
-        lidbg("wait for FLYPARAMETER_NODE !!\n");
+        lidbg(PATA_TAG"wait for FLYPARAMETER_NODE !!\n");
         lidbg_chmod(FLYPARAMETER_NODE);
         msleep(200);
         cnt++;
