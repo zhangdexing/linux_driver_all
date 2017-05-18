@@ -4,6 +4,7 @@
 
 #define FLAG_HW_INFO_VALID (0x12345678)
 #define PATA_TAG "flypara_tag:"
+#define EXTRA_FLYPARA_MIRROR "/dev/flyparameter"
 
 LIDBG_DEFINE;
 
@@ -12,6 +13,7 @@ recovery_meg_t *g_recovery_meg = NULL;
 recovery_meg_t default_recovery_meg ;
 char *p_kmem = NULL;
 int update_hw_info = 0;
+static char *p_flyparameter_node = NULL;
 enum update_info_enum
 {
     NO_FLIE = 0,
@@ -62,12 +64,12 @@ void read_fly_hw_config_file(fly_hw_data *p_info)
 
 bool fly_hw_info_get(fly_hw_data *p_info)
 {
-    if(FLYPARAMETER_NODE == NULL)
+    if(p_flyparameter_node == NULL)
     {
         lidbg(PATA_TAG"g_hw.fly_parameter_node == NULL,return\n");
         return 0;
     }
-    if(p_info && fs_file_read(FLYPARAMETER_NODE, (char *)p_info, MEM_SIZE_512_KB , sizeof(fly_hw_data)) >= 0)
+    if(p_info && fs_file_read(p_flyparameter_node, (char *)p_info, MEM_SIZE_512_KB , sizeof(fly_hw_data)) >= 0)
     {
         fly_hw_info_show("fly_hw_info_get", p_info);
         return true;
@@ -78,13 +80,13 @@ bool fly_hw_info_get(fly_hw_data *p_info)
 bool fly_hw_info_save(fly_hw_data *p_info)
 {
     DUMP_FUN;
-    if(FLYPARAMETER_NODE == NULL)
+    if(p_flyparameter_node == NULL)
     {
         lidbg(PATA_TAG"g_hw.fly_parameter_node == NULL,return\n");
         return 0;
     }
     read_fly_hw_config_file(p_info);
-    if( p_info && fs_file_write(FLYPARAMETER_NODE, false, (void *) p_info, MEM_SIZE_512_KB , sizeof(fly_hw_data)) >= 0)
+    if( p_info && fs_file_write(p_flyparameter_node, false, (void *) p_info, MEM_SIZE_512_KB , sizeof(fly_hw_data)) >= 0)
     {
         lidbg(PATA_TAG"fly_hw_data:save success\n");
         update_info = UPDATE_SUC;
@@ -111,12 +113,13 @@ bool flyparameter_info_get(void)
 {
     bool is_ublox_so_exist = false;
 
-    if(FLYPARAMETER_NODE == NULL)
+    if(p_flyparameter_node == NULL)
     {
         lidbg(PATA_TAG"g_hw.fly_parameter_node == NULL,return\n");
         return 0;
     }
-    if(p_kmem && fs_file_read(FLYPARAMETER_NODE, p_kmem, 0, sizeof(recovery_meg_t)) >= 0)
+
+    if(p_kmem && fs_file_read(p_flyparameter_node, p_kmem, 0, sizeof(recovery_meg_t)) >= 0)
     {
         g_recovery_meg = (recovery_meg_t *)p_kmem;
         lidbg(PATA_TAG"flyparameter1:%s,%s,%s\n", g_recovery_meg->recoveryLanguage.flags, g_recovery_meg->bootParam.bootParamsLen.flags, g_recovery_meg->bootParam.upName.flags);
@@ -203,12 +206,12 @@ bool flyparameter_info_get(void)
 //simple_strtoul(argv[0], 0, 0);
 bool flyparameter_info_save(recovery_meg_t *p_info)
 {
-    if(FLYPARAMETER_NODE == NULL)
+    if(p_flyparameter_node == NULL)
     {
         lidbg(PATA_TAG"g_hw.fly_parameter_node == NULL,return\n");
         return 0;
     }
-    if( p_info && fs_file_write(FLYPARAMETER_NODE, false, (void *) p_info, 0, sizeof(recovery_meg_t)) >= 0)
+    if( p_info && fs_file_write(p_flyparameter_node, false, (void *) p_info, 0, sizeof(recovery_meg_t)) >= 0)
     {
         lidbg(PATA_TAG"flyparameter:save success\n");
         return true;
@@ -235,7 +238,7 @@ int thread_fix_fly_update_info(void *data)
     fs_file_read("/dev/fly_upate_info0", &info, 0, sizeof(info));
     lidbg(PATA_TAG"read info is %c\n", info);
     msleep(40000);
-    lidbg_chmod(FLYPARAMETER_NODE);
+    lidbg_chmod(p_flyparameter_node);
     return 1;
 }
 
@@ -343,12 +346,26 @@ int lidbg_flyparameter_init(void)
     int cnt = 0;
     DUMP_BUILD_TIME;
     LIDBG_GET;
-
+    p_flyparameter_node = FLYPARAMETER_NODE;
+    lidbg(PATA_TAG"p_flyparameter_node:%s\n", p_flyparameter_node);
     lidbg_chmod(FLYPARAMETER_NODE);
-    while((fs_is_file_exist(FLYPARAMETER_NODE) == 0) && (cnt < 50))
+    while((fs_is_file_exist(p_flyparameter_node) == 0) && (cnt < 50))
     {
         lidbg(PATA_TAG"wait for FLYPARAMETER_NODE !!\n");
-        lidbg_chmod(FLYPARAMETER_NODE);
+        lidbg_chmod(p_flyparameter_node);
+        msleep(200);
+        cnt++;
+    }
+    if(fs_is_file_exist(EXTRA_FLYPARA_MIRROR))
+        p_flyparameter_node = EXTRA_FLYPARA_MIRROR;
+    else
+        lidbg(PATA_TAG"p_flyparameter_node,use default\n");
+
+    lidbg(PATA_TAG"p_flyparameter_node.in:EXTRA_FLYPARA_MIRROR:%d %s\n", fs_is_file_exist(EXTRA_FLYPARA_MIRROR), p_flyparameter_node);
+    cnt = 0;
+    while((fs_is_file_exist(p_flyparameter_node) == 0) && (cnt < 200))
+    {
+        lidbg(PATA_TAG"p_flyparameter_node:exist:%d %s\n", fs_is_file_exist(p_flyparameter_node), p_flyparameter_node);
         msleep(200);
         cnt++;
     }
@@ -357,6 +374,8 @@ int lidbg_flyparameter_init(void)
     lidbg_fly_hw_info_init();//block other ko before hw_info set
     lidbg_new_cdev(&fly_upate_info_fops, "fly_upate_info0");
     CREATE_KTHREAD(thread_fix_fly_update_info, NULL);
+    p_flyparameter_node = FLYPARAMETER_NODE;
+    lidbg(PATA_TAG"p_flyparameter_node.restore:%s\n", p_flyparameter_node);
     LIDBG_MODULE_LOG;
     return 0;
 
