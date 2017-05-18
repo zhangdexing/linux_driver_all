@@ -727,22 +727,24 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#019"))
         {
+            fly_bare_data *mdata = bare_data_get("158019");
+            mdata->bare_info.uart_dbg_en = 1;
             g_recovery_meg->bootParam.upName.val = 1;
-            if(flyparameter_info_save(g_recovery_meg))
+            flyparameter_info_save(g_recovery_meg);
+            if(bare_data_write("158019", mdata))
             {
-                lidbg_domineering_ack();
-                msleep(3000);
-                lidbg_reboot();
+		        lidbg_shell_cmd("reboot enable_uart");
             }
         }
         else if (!strcmp(argv[1], "*158#020"))
         {
+            fly_bare_data *mdata = bare_data_get("158020");
+            mdata->bare_info.uart_dbg_en = 0;
             g_recovery_meg->bootParam.upName.val = 2;
-            if(flyparameter_info_save(g_recovery_meg))
+            flyparameter_info_save(g_recovery_meg);
+            if(bare_data_write("158020", mdata))
             {
-                lidbg_domineering_ack();
-                msleep(3000);
-                lidbg_reboot();
+		        lidbg_shell_cmd("reboot disable_uart");
             }
         }
         else if (!strcmp(argv[1], "*158#021"))
