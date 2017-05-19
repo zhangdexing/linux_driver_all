@@ -179,7 +179,7 @@ bool flyparameter_info_get(void)
                     lidbg(PATA_TAG"fail to cpy car_type\n");
                 }
                 lidbg_shell_cmd( set_car_type );
-                lidbg_shell_cmd( "mount -o remount /" );
+                lidbg_shell_cmd( "mount -o rw,remount rootfs /" );
                 lidbg_shell_cmd( "chmod 777 /flyconfig" );
                 lidbg_shell_cmd( "/flysystem/bin/decodeFlyconfig &" );
                 lidbg(PATA_TAG"bring up:/flysystem/bin/decodeFlyconfig &\n");
