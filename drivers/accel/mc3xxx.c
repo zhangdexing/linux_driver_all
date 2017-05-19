@@ -48,9 +48,6 @@
 //#include <mach/system.h>
 #include <mach/hardware.h>
 #include <linux/fs.h>*/
-#ifndef SOC_mt35x
-#include <linux/sensors.h>
-#endif
 #include "lidbg.h"
 #include "lidbg_servicer.h"
 //#include "lidbg_crash_detect.c"
