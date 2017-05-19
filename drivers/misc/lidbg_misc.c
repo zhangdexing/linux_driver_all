@@ -559,12 +559,12 @@ void check_display_mode(void)
 #else
         {
             char shell_cmd[256] = {0};
-            sprintf(shell_cmd, "/flysystem/flytheme/config/flyaudio_lcd_calib_%d_%02d.xml ",  g_var.hw_info.lcd_type, g_var.hw_info.lcd_manufactor);
+            sprintf(shell_cmd, "/flysystem/flytheme/config/flyaudio_lcd_calib_mode_%d_%02d.xml ",  g_var.hw_info.lcd_type, g_var.hw_info.lcd_manufactor);
             LIDBG_WARN(TAG"<others.use %s-->%d>\n", shell_cmd, fs_is_file_exist(shell_cmd));
 
-            sprintf(shell_cmd, "cp -rf /flysystem/flytheme/config/flyaudio_lcd_calib_%d_%02d.xml /data/misc/display/qdcm_calib_data_nt35596_1080p_video_mode_dsi_panel.xml",  g_var.hw_info.lcd_type, g_var.hw_info.lcd_manufactor);
+            sprintf(shell_cmd, "cp -rf /flysystem/flytheme/config/flyaudio_lcd_calib_mode_%d_%02d.xml /data/misc/display/disp_user_calib_data_nt35596_1080p_video_mode_dsi_panel.xml",  g_var.hw_info.lcd_type, g_var.hw_info.lcd_manufactor);
             lidbg_shell_cmd(shell_cmd);
-            lidbg_shell_cmd("chmod 777 /data/misc/display/qdcm_calib_data_nt35596_1080p_video_mode_dsi_panel.xml");
+            lidbg_shell_cmd("chmod 777 /data/misc/display/disp_user_calib_data_nt35596_1080p_video_mode_dsi_panel.xml");
         }
 #endif
     }
