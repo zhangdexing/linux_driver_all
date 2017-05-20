@@ -524,7 +524,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#100--dump log for app upload\n");
             fs_mem_log("*158#101--trigge_SD_uevent\n");
             fs_mem_log("*158#102--copy /persist/display/* to udisk\n");
-            fs_mem_log("*158#103--copy udisk QDCM.apk to system/app\n");
+            fs_mem_log("*158#103--copy /sdcard/app  to system/app\n");
             fs_mem_log("*158#104--save gps raw data to sdcard\n");
             fs_mem_log("*158#105--MTK USB HOST MODE\n");
             fs_mem_log("*158#106--MTK USB SLAVE MODE\n");
@@ -1350,14 +1350,20 @@ void parse_cmd(char *pt)
         else if (!strcmp(argv[1], "*158#102"))
         {
             lidbg("*158#102--copy /persist/display/* to udisk\n");
-            lidbg_shell_cmd("cp -rf /persist/display/* /storage/udisk/");	
+            lidbg_shell_cmd("mount -o remount /system");	
+            lidbg_shell_cmd("chmod 777 /data");	
+            lidbg_shell_cmd("chmod 777 /data/misc");	
+            lidbg_shell_cmd("chmod 777 /data/misc/display/");	
+            lidbg_shell_cmd("cp -rf /data/misc/display /sdcard/display8996up");	
+            lidbg_shell_cmd("cp -rf /persist/display /sdcard/display8909");	
+            lidbg_shell_cmd("echo ws toast \u62f7\u8d1d\u5b8c\u6bd5 1 > /dev/lidbg_pm0");	
             lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#103"))
         {
-            lidbg("*158#103--copy udisk QDCM.apk to flysystem/app\n");
+            lidbg("*158#103--copy /sdcard/app  to system/app\n");
             lidbg_shell_cmd("mount -o remount /system");	
-            lidbg_shell_cmd("cp -rf /storage/udisk/app/* /system/app/");	
+            lidbg_shell_cmd("cp -rf /sdcard/app/* /system/app/");	
             lidbg_shell_cmd("chmod 777 /system/app/*");	
             lidbg_shell_cmd("reboot");	
             lidbg_domineering_ack();
