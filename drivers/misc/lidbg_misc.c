@@ -10,6 +10,27 @@ static int loop_warning_en = 0;
 #include "system_switch.c"
 
 #define TAG "lidbg_misc: "
+
+char *white_udisk[] =
+{
+    "/storage/udisk-2E8D-9DD3",
+    NULL,
+};
+bool is_white_udisk(char *path)
+{
+    int j;
+    if(path == NULL)
+        return false;
+    for(j = 0; white_udisk[j] != NULL; j++)
+    {
+        if (!strcmp(path, white_udisk[j]))
+        {
+            lidbg(TAG"\nwhite_udisk:%s\n", path);
+            return true;
+        }
+    }
+    return false;
+}
 void lidbg_enable_logcat(void)
 {
     char cmd[128] = {0};
@@ -450,7 +471,7 @@ ssize_t misc_write (struct file *filp, const char __user *buf, size_t size, loff
     {
 	    lidbg(TAG"conf_check\n");
 	    set_udisk_path(argv[1]);
-	    if(!g_var.is_first_update)
+	    if(is_white_udisk(argv[1])||!g_var.is_first_update)
 	        complete(&udisk_misc_wait);
 	    else
 	    {
