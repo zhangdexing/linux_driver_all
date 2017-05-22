@@ -1356,7 +1356,7 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("chmod 777 /data/misc/display/");	
             lidbg_shell_cmd("cp -rf /data/misc/display /sdcard/display8996up");	
             lidbg_shell_cmd("cp -rf /persist/display /sdcard/display8909");	
-            lidbg_shell_cmd("echo ws toast \u62f7\u8d1d\u5b8c\u6bd5 1 > /dev/lidbg_pm0");	
+            lidbg_shell_cmd("echo ws toast Copy.Completely 1 > /dev/lidbg_pm0");	
             lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#103"))
