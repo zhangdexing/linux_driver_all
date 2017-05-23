@@ -1801,7 +1801,7 @@ try_open_again:
 
         //tid = androidGetTid();
         tid  = gettid();
-        androidSetThreadPriority(tid, ANDROID_PRIORITY_NORMAL);
+        androidSetThreadPriority(tid, ANDROID_PRIORITY_AUDIO);
         prctl(PR_SET_NAME, (unsigned long)"Camera HAL preview thread", 0, 0, 0);
         threadPriority = androidGetThreadPriority(tid);
         while(1)
