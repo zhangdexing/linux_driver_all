@@ -116,6 +116,16 @@ static int thread_usb_hub_check(void *data)
 
      while((g_var.usb_status == 1) && ( g_var.acc_flag == FLY_ACC_ON))
      {
+
+		char buff[32] = {0};
+		fs_file_read("/sys/class/android_usb/android0/state", buff, 0, sizeof(buff));
+		lidbg("state:%s\n", buff);
+		if(!strncmp(buff, "CONFIGURED", strlen("CONFIGURED")))
+		{
+		     lidbg("usb_hub_check:adb mode return\n");
+		     break;
+		}
+	
 	    if(!fs_is_file_exist("/sys/bus/usb/drivers/usb/1-1"))
 	    {
 	    	lidbgerr("thread_usb_hub_check fail!\n");
@@ -134,7 +144,7 @@ static int thread_usb_hub_check(void *data)
 	    {
 	     //  lidbg("thread_usb_hub_check success\n");
 	    }
-	    msleep(3000);
+	    msleep(6000);
      }
 
     return 1;
