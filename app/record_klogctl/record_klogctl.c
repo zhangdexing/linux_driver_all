@@ -2,85 +2,39 @@
 #include "lidbg_servicer.h"
 
 int BUFSIZE;
-int MAXINUM = (1024*1024*15);
+int MAXINUM = (1024*1024*200);
 int poll_time = 5;
 bool save_in_time_mode = 0;
 char * PATH =  "/data/lidbg/reckmsg/";
-
-int openfd;
+int openfd,seekfd;
 int readsize = 0,savesize = 0;
 char * buf = NULL;
+char timebuf[32];
 char newfile[128];
+char file_seek[128];
 void filesize_ctrl();
 
-
-int remove_old_file()
+void update_seek()
 {
-        DIR *d;
-        struct OLDERFILE{
-                long mtime;
-            	char filename[128];
-        }olderfile;
-        struct dirent *de;
-        char fname[128];
-        struct stat filebuf;
-        int findnum = 0;
-        d = opendir(PATH);
-        long mtime = 0;
-        if(d == NULL)
-        {
-                perror("remove_old_file err");
-		closedir(d);
-		free(buf);
-		close(openfd);
-		exit(1);
-        }
-	lidbg("remove_old_file\n");
-        while((de = readdir(d))!=NULL)
-        {
-		if(strncmp(de->d_name,".",1) == 0)
-                        continue;
-                sprintf(fname,"%s%s",PATH,de->d_name);
-		if(strcmp(fname,newfile) == 0)
-			continue;
-                int exists = stat(fname,&filebuf);
-                if(exists < 0)
-                {
-                        lidbg("Could not stat %s\n",de->d_name);
-                }
-                else
-                {
-                        if(findnum == 0)
-                        {
-                                olderfile.mtime = filebuf.st_mtime;
-                                sprintf(olderfile.filename,"%s%s",PATH,de->d_name);
-                                findnum ++;
-                        }
-                        else
-                        {
-                                if(filebuf.st_mtime<olderfile.mtime)
-                                {
-                                        olderfile.mtime = filebuf.st_mtime;
-                                        sprintf(olderfile.filename,"%s%s",PATH,de->d_name);
-                                }
-                                findnum ++;
-                        }
-                        lidbg("%s:file->st_mtime is%d\n",de->d_name,filebuf.st_mtime);
-                }
-        }      
-        lidbg("now remove %s\n",olderfile.filename);
-        remove(olderfile.filename);
-	 closedir(d);
-        return 0;
+	int seek = lseek(openfd, 0, SEEK_CUR);
+	lseek(seekfd,0,SEEK_SET);
+	write(seekfd,&seek,sizeof(seek));
 }
-
 
 void write_log()
 {
 	int total_size = klogctl(10,0,0);
+	int seek = 0;
 	BUFSIZE = total_size * 4;
         buf = (char *)malloc(BUFSIZE);
 	memset(buf,'\0',BUFSIZE);
+
+	lseek(seekfd,0,SEEK_SET);
+	read(seekfd,&seek,sizeof(seek));
+        lseek(openfd,seek,SEEK_SET);
+
+	write(openfd,timebuf,strlen(timebuf));
+
 	while(1)
 	{
 		readsize = klogctl(4,buf+savesize,total_size);
@@ -93,69 +47,26 @@ void write_log()
 			readsize = savesize = 0;
 			memset(buf,'\0',BUFSIZE);
 			filesize_ctrl();
+			update_seek();
 		}
 		sleep(poll_time);
 	}
 }
 
+
+
 void filesize_ctrl()
 {
-	DIR *d;
-	struct dirent *de;
-	struct stat filebuf;
-	int exists;
-	int totalsize;
-        int filenum;
-	char filename[128];
-redo:
-	filenum = 0;
-	totalsize = 0;
-	memset(filename,'\0',sizeof(filename));
-	/********计算文件夹大小***********/
-	d = opendir(PATH);
-	
-	if(d == NULL)
-	{
-		lidbg("record_klogctl:filesize_ctrl err");
-		closedir(d);
-		free(buf);
-		close(openfd);
-		exit(1);
+	struct stat statbuff;  
+	if(stat(newfile, &statbuff) < 0)
+	{  
+		lidbg("record_klogctl:get file size err\n");
 	}
 
-
-	while((de = readdir(d))!=NULL)
+	if(statbuff.st_size > MAXINUM)
 	{
-		if(strncmp(de->d_name,".",1) == 0)//跳过目录.和..
-			continue;
-			
-		sprintf(filename,"%s%s",PATH,de->d_name);
-		exists = stat(filename,&filebuf);
-		if(exists < 0)
-		{
-			lidbg("record_klogctl:Could not stat %s\n",de->d_name);
-		}
-		else
-			totalsize += filebuf.st_size;
-		filenum++;
-
-	}
-	//lidbg("record_klogctl:totalsize:%d\n",totalsize);
-	closedir(d);
-	
-	if(totalsize > MAXINUM)
-	{
-		if(filenum <= 1)
-		{
-			if(lseek(openfd, 0, SEEK_CUR) >= MAXINUM)
-				lseek(openfd,0,SEEK_SET);
-		}
-		else
-		{
-			remove_old_file();
-			lidbg("remove file retry\n");
-		       goto redo;
-		}
+		if(lseek(openfd, 0, SEEK_CUR) >= MAXINUM)
+			lseek(openfd,0,SEEK_SET);
 	}
 }
 
@@ -171,11 +82,12 @@ void sigfunc(int sig)
 		readsize = savesize = 0;
 		memset(buf,'\0',BUFSIZE);
 		filesize_ctrl();
+		update_seek();
 	}
 	else if (sig == SIGUSR2)
 	{
 		lidbg("record_klogctl:sigfunc change in time mode\n");
-		MAXINUM = (1024*1024*50);
+		MAXINUM = (1024*1024*500);
 		poll_time = 1;
 		save_in_time_mode = 1;
 	}
@@ -193,7 +105,8 @@ int main(int argc , char **argv)
 {
 	time_t ctime;
 	struct tm *tm;
-	save_in_time_mode = strtoul(argv[1], 0, 0);
+	if(argc > 1)
+		save_in_time_mode = strtoul(argv[1], 0, 0);
 	if(save_in_time_mode == 1)
 	{
 		lidbg("record_klogctl:in time mode\n");
@@ -206,14 +119,18 @@ int main(int argc , char **argv)
 	int fd = mkdir(PATH,777);	
 	if((fd < 0) && (errno != EEXIST))
 	{
-		lidbg("record_klogctl:mkdir file erro");
+		lidbg("record_klogctl:mkdir file err");
 	}
+
 	ctime = time(NULL);
 	tm = localtime(&ctime);
-	sprintf(newfile,"%s%d-%02d-%02d_%02d-%02d-%02d",PATH,tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min,tm->tm_sec);//将时间转换为字符串
-	creat(newfile,777);//创建目标文件
-	
+	sprintf(timebuf,"\n====#### %d-%02d-%02d_%02d-%02d-%02d\n",tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min,tm->tm_sec);//将时间转换为字符串
+
+	sprintf(newfile,"%skmsg.txt",PATH);
+	sprintf(file_seek,"%sseek",PATH);
+
 	openfd = open(newfile,O_RDWR | O_CREAT,0777);
+	seekfd = open(file_seek,O_RDWR | O_CREAT,0777);
 	system("chmod 777 /data/lidbg/reckmsg/* ");
 	system("chmod 777 /sdcard/kmsg/* ");
 
@@ -222,5 +139,6 @@ int main(int argc , char **argv)
 	write_log();
 	free(buf);
 	close(openfd);
+	close(seekfd);
 	return 0;
 }
