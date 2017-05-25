@@ -585,7 +585,7 @@ void parse_cmd(char *pt)
         {
             lidbg_chmod("/sdcard");
             CREATE_KTHREAD(thread_enable_logcat2, NULL);
-	     lidbg_shell_cmd("ps -t > /data/ps.txt");
+            lidbg_shell_cmd("ps -t > /data/ps.txt");
             lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#002"))
