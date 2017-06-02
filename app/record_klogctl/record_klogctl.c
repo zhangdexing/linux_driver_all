@@ -5,7 +5,7 @@ int BUFSIZE;
 int MAXINUM = (1024*1024*200);
 int poll_time = 5;
 bool save_in_time_mode = 0;
-char * PATH =  "/data/lidbg/reckmsg/";
+char * PATH =  "/data/reckmsg";
 int openfd,seekfd;
 int readsize = 0,savesize = 0;
 char * buf = NULL;
@@ -112,7 +112,7 @@ int main(int argc , char **argv)
 		lidbg("record_klogctl:in time mode\n");
 		MAXINUM = (1024*1024*500);
 		poll_time = 1;
-		PATH = "/sdcard/kmsg/";
+		PATH = "/sdcard/kmsg";
 	}
 	
 	umask(0);//屏蔽创建文件权限
@@ -126,12 +126,15 @@ int main(int argc , char **argv)
 	tm = localtime(&ctime);
 	sprintf(timebuf,"\n====#### %d-%02d-%02d_%02d-%02d-%02d\n",tm->tm_year+1900,tm->tm_mon+1,tm->tm_mday,tm->tm_hour,tm->tm_min,tm->tm_sec);//将时间转换为字符串
 
-	sprintf(newfile,"%skmsg.txt",PATH);
-	sprintf(file_seek,"%sseek",PATH);
+	sprintf(newfile,"%s/kmsg.txt",PATH);
+	sprintf(file_seek,"%s/seek",PATH);
 
 	openfd = open(newfile,O_RDWR | O_CREAT,0777);
 	seekfd = open(file_seek,O_RDWR | O_CREAT,0777);
-	system("chmod 777 /data/lidbg/reckmsg/* ");
+	sprintf(newfile,"chmod 777 %s",PATH);
+	system(newfile);
+	sprintf(newfile,"chmod 777 %s/*",PATH);
+	system(newfile);
 	system("chmod 777 /sdcard/kmsg/* ");
 
 	signal(SIGUSR1,sigfunc);
