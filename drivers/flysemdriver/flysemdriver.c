@@ -219,12 +219,8 @@ static int __init  flysemdriver_init(void)
 {
 
     int result;
-    if(!lidbg_new_cdev(&flysemdriver_fops, DEVICE_NAME) )
-    {
-        return -1;
-    }
-    sem_devp = kmalloc(sizeof(struct sem_dev), GFP_KERNEL);
 
+    sem_devp = kmalloc(sizeof(struct sem_dev), GFP_KERNEL);
     if(!sem_devp)
     {
         printk(KERN_INFO "kmalloc error\n");
@@ -238,7 +234,11 @@ static int __init  flysemdriver_init(void)
     init_MUTEX_LOCKED(&sem_devp->c_read_sem);
     init_MUTEX(&sem_devp->java_mutex_sem);
     init_MUTEX(&sem_devp->c_mutex_sem);
-
+	
+    if(!lidbg_new_cdev(&flysemdriver_fops, DEVICE_NAME) )
+    {
+        return -1;
+    }
     printk(KERN_INFO "flysemdriver_success\n");
     return 0;
 
