@@ -586,7 +586,6 @@ void parse_cmd(char *pt)
             lidbg_chmod("/sdcard");
             CREATE_KTHREAD(thread_enable_logcat2, NULL);
             lidbg_shell_cmd("ps -t > /data/ps.txt");
-            lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#002"))
         {
@@ -1316,12 +1315,13 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#100"))
         {
-  	     lidbg("dump log for app upload\n");
+  	     lidbg("dump log for app upload,add doc_filter\n");
   	     lidbg_shell_cmd("echo appcmd *158#133 > /dev/lidbg_drivers_dbg0");
   	     LPC_CMD_LPC_DEBUG_REPORT;	
   	     lidbg_shell_cmd("echo appcmd *158#021 > /dev/lidbg_drivers_dbg0");
 	     dump_sysinfo();
 	     ssleep(3);
+  	     lidbg_shell_cmd("/flysystem/lib/out/doc_filter -s /data/reckmsg/kmsg.txt -d /sdcard/kmsg_b.txt -w /data/lidbg/kmsg_w.txt -t /flysystem/lib/out/kmsg_wl.conf -y /flysystem/lib/out/kmsg_bl.conf -c /data/lidbg/kmsg_e.txt -m 1 -p 0 -b 0 &");
 	     lidbg_shell_cmd("chmod 777  /sdcard/FlyLog/DriBugReport");	
 	     lidbg_shell_cmd("mkdir  /sdcard/FlyLog/DriBugReport/drivers");	     
 	     lidbg_shell_cmd("cp -rf /data/lidbg /sdcard/FlyLog/DriBugReport/drivers/");
