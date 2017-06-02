@@ -1,3 +1,5 @@
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,doc_split)
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,doc_filter)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,apps)
 ifeq ($(CONFIG_HAL_VOLD_8996_vold_60),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,8996_vold_60)
