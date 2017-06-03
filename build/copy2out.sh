@@ -12,6 +12,8 @@ cp -u $src_dir/*.ko	$dest_dir/	&> /dev/null
 cp -u $src_dir/bin/*.ko	$dest_dir/	&> /dev/null
 cp $src_dir/conf/*.conf	$dest_dir/	&> /dev/null
 cp $DBG_ROOT_PATH/conf/*.conf	$dest_dir/	&> /dev/null
+cp $src_dir/conf/*.sh	$dest_dir/	&> /dev/null
+cp $DBG_ROOT_PATH/conf/*.sh	$dest_dir/	&> /dev/null
 
 src_dir=$DBG_CORE_PATH
 cp -u $src_dir/*.ko	$dest_dir/	&> /dev/null
