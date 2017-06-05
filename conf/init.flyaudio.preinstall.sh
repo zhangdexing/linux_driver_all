@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /flyapdata/install/
+cd /flyapdata/preinstall/
 if [ -s /data/app/preinstall.txt ]; then  
     echo "3rddon't need to copy preinstall files" 
     echo "3rddon't need to copy preinstall files"  > /dev/dbg_msg
