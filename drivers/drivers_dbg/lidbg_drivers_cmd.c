@@ -10,10 +10,9 @@ void dump_sysinfo(void)
 	lidbg_shell_cmd("chmod 777 /data/lidbg/*");
 	lidbg_shell_cmd("mkdir -p /data/lidbg/machine");
 	lidbg_shell_cmd("chmod 777 /data/lidbg/machine");
-	lidbg_shell_cmd("date > /data/lidbg/machine/machine.txt");
-	lidbg_shell_cmd("cat /proc/cmdline >> /data/lidbg/machine/machine.txt");
-	lidbg_shell_cmd("getprop fly.version.mcu >> /data/lidbg/machine/machine.txt");
-	lidbg_shell_cmd("getprop ro.release.version >> /data/lidbg/machine/machine.txt");
+	lidbg_shell_cmd("cat /proc/cmdline > /data/lidbg/machine/machine.txt");
+	lidbg_shell_cmd("getprop fly.version.mcu > /data/lidbg/machine/machine.txt");
+	lidbg_shell_cmd("getprop ro.release.version > /data/lidbg/machine/machine.txt");
 	lidbg_shell_cmd("top -n 1 -t -d 1 -m 25 >/data/lidbg/machine/top.txt");
 	lidbg_shell_cmd("procrank > /data/lidbg/machine/procrank.txt");
 	lidbg_shell_cmd("ps > /data/lidbg/machine/ps.txt");
@@ -23,25 +22,18 @@ void dump_sysinfo(void)
 	lidbg_shell_cmd("cat /proc/buddyinfo > /data/lidbg/machine/buddyinfo.txt");
 
 	//power
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/wakeup_sources.txt");
-	lidbg_shell_cmd("cat /sys/kernel/debug/wakeup_sources >> /data/lidbg/pm_info/wakeup_sources.txt");
-	lidbg_shell_cmd("cat /proc/wakelocks >> /data/lidbg/pm_info/wakeup_sources.txt");
+	lidbg_shell_cmd("cat /sys/kernel/debug/wakeup_sources > /data/lidbg/pm_info/wakeup_sources.txt");
+	lidbg_shell_cmd("cat /proc/wakelocks > /data/lidbg/pm_info/wakeup_sources.txt");
 
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/dumpsys_media.player.txt");
-	lidbg_shell_cmd("dumpsys media.player >> /data/lidbg/pm_info/dumpsys_media.player.txt");
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/dumpsys_power.txt");
-	lidbg_shell_cmd("dumpsys power >> /data/lidbg/pm_info/dumpsys_power.txt");
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/dumpsys_audio.txt");
-	lidbg_shell_cmd("dumpsys audio >> /data/lidbg/pm_info/dumpsys_audio.txt");
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/dumpsys_alarm.txt");
-	lidbg_shell_cmd("dumpsys alarm >> /data/lidbg/pm_info/dumpsys_alarm.txt");
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/location.txt");
-	lidbg_shell_cmd("dumpsys location >> /data/lidbg/pm_info/location.txt");
-	lidbg_shell_cmd("date  >> /data/lidbg/pm_info/meminfo.txt");
-	lidbg_shell_cmd("dumpsys meminfo >> /data/lidbg/pm_info/meminfo.txt &");
-	lidbg_shell_cmd("date  > /data/lidbg/pm_info/iptable.txt");
-	lidbg_shell_cmd("iptables -L  >> /data/lidbg/pm_info/iptable.txt");
-	lidbg_shell_cmd("cat /proc/meminfo >> /data/lidbg/pm_info/meminfo2.txt &");
+	lidbg_shell_cmd("date  > /data/lidbg/pm_info/date.txt");
+	lidbg_shell_cmd("dumpsys media.player > /data/lidbg/pm_info/dumpsys_media.player.txt");
+	lidbg_shell_cmd("dumpsys power > /data/lidbg/pm_info/dumpsys_power.txt");
+	lidbg_shell_cmd("dumpsys audio > /data/lidbg/pm_info/dumpsys_audio.txt");
+	lidbg_shell_cmd("dumpsys alarm > /data/lidbg/pm_info/dumpsys_alarm.txt");
+	lidbg_shell_cmd("dumpsys location > /data/lidbg/pm_info/location.txt");
+	lidbg_shell_cmd("dumpsys meminfo > /data/lidbg/pm_info/meminfo.txt &");
+	lidbg_shell_cmd("iptables -L  > /data/lidbg/pm_info/iptable.txt");
+	lidbg_shell_cmd("cat /proc/meminfo > /data/lidbg/pm_info/meminfo2.txt &");
 
 	lidbg_shell_cmd("chmod 777 /data/lidbg/* -R");
 	lidbg_shell_cmd("chmod 777 /data/lidbg/*");
