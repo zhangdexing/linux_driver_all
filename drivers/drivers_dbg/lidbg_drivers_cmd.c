@@ -1769,13 +1769,19 @@ void parse_cmd(char *pt)
         lidbg("SOC_IO_ISR_Add[%d]\n", irq);
     }
     else if (!strcmp(argv[0], "vol"))
-    {
-        //   #ifndef SOC_mt3360
-        //       int vol;
-        //       vol = simple_strtoul(argv[1], 0, 0);
-        //       SAF7741_Volume(vol);
-        //   #endif
-    }
+	{
+	    //   #ifndef SOC_mt3360
+	    //       int vol;
+	    //       vol = simple_strtoul(argv[1], 0, 0);
+	    //       SAF7741_Volume(vol);
+	    //   #endif
+	    u8 lpc_buf[10] = {0x10, 0x10, 0x0D, 0x10, 0x50, 0x00};
+	    lpc_buf[6] = simple_strtoul(argv[ 1], 0, 0);
+	    lidbg("vol:%d ", lpc_buf[6]);
+	    SOC_LPC_Send(lpc_buf, 7);
+	    lpc_buf[4] = 0x51;
+	    SOC_LPC_Send(lpc_buf, 7);
+	}
     else if (!strcmp(argv[0], "screen_shot"))
     {
         CREATE_KTHREAD(thread_screenshot, NULL);
