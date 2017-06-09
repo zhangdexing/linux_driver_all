@@ -1,5 +1,6 @@
 #!/bin/bash
 cd /flyapdata/install/
+rm -rf /data/app/*.apk
 if [ -s /data/app/preinstall.txt ]; then  
     echo "3rddon't need to copy preinstall files" 
     echo "3rddon't need to copy preinstall files"  > /dev/dbg_msg
