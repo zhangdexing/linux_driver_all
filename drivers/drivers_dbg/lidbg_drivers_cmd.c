@@ -602,7 +602,6 @@ void parse_cmd(char *pt)
                lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
 
 		 lidbg_shell_cmd("chmod 777 /data/lidbg/reckmsg/* ");
-#endif
 	    if(g_var.is_fly)
 	    	{
 		 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE &");
@@ -621,8 +620,8 @@ void parse_cmd(char *pt)
            	 lidbg_shell_cmd("/flysystem/lib/out/record_klogctl 1 &");
            else
                lidbg_shell_cmd("/system/lib/modules/out/record_klogctl 1 &");
-
-		   
+		 #endif
+           	 lidbg_shell_cmd("chmod 777 /data");
             lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#073"))
