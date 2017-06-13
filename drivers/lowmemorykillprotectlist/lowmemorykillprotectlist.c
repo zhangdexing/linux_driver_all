@@ -60,6 +60,7 @@ char *lmk_protect_list[] =
 	"lidbg_userver",
 	"system",
 	"logcat",
+	"com.waze",
 	NULL,
 };
 void dump_list(void)
