@@ -2,6 +2,17 @@
 #include "lidbg_servicer.h"
 #include "lidbg_insmod.h"
 
+#include <sys/statfs.h>
+int getPathFreeSpace(char *path)
+{
+    struct statfs diskInfo;
+    statfs(path, &diskInfo);
+    unsigned long long totalBlocks = diskInfo.f_bsize;
+    unsigned long long freeDisk = diskInfo.f_bfree * totalBlocks;
+    size_t mbFreedisk = freeDisk >> 20;
+    return mbFreedisk;
+}
+
 int main(int argc, char **argv)
 {
     argc = argc;
@@ -13,7 +24,7 @@ int main(int argc, char **argv)
     system("setenforce 0");
 
     system("chmod 777 /dev/dbg_msg");
-    
+
     DUMP_BUILD_TIME_FILE;
     lidbg("Build Time:lidbg_iserver: iserver start\n");
     system("mkdir /dev/log");
@@ -138,7 +149,7 @@ int main(int argc, char **argv)
             system("chmod 777 /flysystem/lib/out/lidbg_userver");
             system("chmod 777 /flysystem/lib/out/*");
             lidbg("lidbg_iserver: waitting flyaudio lidbg_uevent...\n");
-            usleep(100*1000);
+            usleep(100 * 1000);
         }
     }
 
@@ -152,9 +163,18 @@ int main(int argc, char **argv)
         //system("/sbin/recovery &");
     }
 
+    sleep(300);// give more time to deal the situation
     while(1)
     {
-        sleep(10);
+        int size = getPathFreeSpace("/data");
+        lidbg("lidbg_iserver: getPathFreeSpace:%d\n", size);
+        if( size  < 300)
+        {
+            //system("echo ws toast data_size_low 1 > /dev/lidbg_pm0");
+            //sleep(2);
+            system("reboot data_size_low");
+        }
+        sleep(3);
     }
     return 0;
 }
