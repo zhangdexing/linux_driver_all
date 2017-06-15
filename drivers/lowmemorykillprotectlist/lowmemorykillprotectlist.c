@@ -61,6 +61,11 @@ char *lmk_protect_list[] =
 	"system",
 	"logcat",
 	"com.waze",
+	"baidu.car.radio",
+	"codriver:remote",
+	".baidu.naviauto",
+	"du.che.codriver",
+	"odriverlauncher",
 	NULL,
 };
 void dump_list(void)
