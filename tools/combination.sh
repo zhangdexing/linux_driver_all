@@ -8,10 +8,10 @@ function combination_menu()
 	echo "[63] 编译lidbg和basesystem并提交到产品二进制仓库"
 	echo "[64] 拷贝lidbg和basesystem到二进制仓库后生成升级包"
 
-    	echo "[66] 编译拷贝lidbg或basesystem提交到测试分支并生成测试包"
+    	echo "[66] 编译拷贝lidbg或basesystem提交到测试分支(新建)并生成测试包"
     	echo "[67] 编译拷贝lidbg和basesystem并生成原生系统的升级包,拷贝到服务器"
         echo "[68] 完整编译BP并提交到二进制仓库"
-	echo "[69] 编译拷贝lidbg或basesystem提交到远程分支并生成测试包"
+	echo "[69] 编译拷贝lidbg或basesystem提交到远程分支(已存在)并生成测试包"
 	echo "[70] 编译烧写boot.img后重启"
 }
 
