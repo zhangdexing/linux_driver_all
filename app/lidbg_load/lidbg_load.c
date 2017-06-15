@@ -167,9 +167,9 @@ int main(int argc, char **argv)
     while(1)
     {
         int size = getPathFreeSpace("/data");
-        lidbg("lidbg_iserver: getPathFreeSpace:%d\n", size);
         if( size  < 300)
         {
+            lidbg("lidbg_iserver: getPathFreeSpace:%d\n", size);
             //system("echo ws toast data_size_low 1 > /dev/lidbg_pm0");
             //sleep(2);
             system("reboot data_size_low");
