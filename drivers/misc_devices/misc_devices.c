@@ -119,7 +119,7 @@ static int thread_usb_hub_check(void *data)
 
 		char buff[32] = {0};
 		fs_file_read("/sys/class/android_usb/android0/state", buff, 0, sizeof(buff));
-		lidbg("state:%s\n", buff);
+		//lidbg("state:%s\n", buff);
 		if(!strncmp(buff, "CONFIGURED", strlen("CONFIGURED")))
 		{
 		     lidbg("usb_hub_check:adb mode return\n");
