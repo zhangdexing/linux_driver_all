@@ -596,7 +596,8 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
 	if(g_var.system_status == FLY_SCREEN_OFF)
 	{
 	    lidbg("LCD_ON:fake suspend,open lcd immedia...\n");
-	    LCD_ON;
+	    if((g_var.led_hal_status & g_var.led_app_status))
+	    	LCD_ON;
 	}
             SOC_System_Status(FLY_SCREEN_ON);
             if(SOC_Hal_Acc_Callback)
