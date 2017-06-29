@@ -66,6 +66,7 @@ char *lmk_protect_list[] =
 	".baidu.naviauto",
 	"du.che.codriver",
 	"odriverlauncher",
+	"roup.wazehelper",
 	NULL,
 };
 void dump_list(void)
