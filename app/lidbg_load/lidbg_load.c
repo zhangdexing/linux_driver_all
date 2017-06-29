@@ -2,6 +2,7 @@
 #include "lidbg_servicer.h"
 #include "lidbg_insmod.h"
 
+#include <cutils/properties.h>
 #include <sys/statfs.h>
 int getPathFreeSpace(char *path)
 {
@@ -164,6 +165,17 @@ int main(int argc, char **argv)
     }
 
     sleep(300);// give more time to deal the situation
+    while(1)
+    {
+        char value[PROPERTY_VALUE_MAX];
+        property_get("fly.system.cleanup.page", value, "0");
+        lidbg(" fly.system.cleanup.page = %c\n", value[0]);
+        if (value[0] != '1')
+        {
+            break;
+        }
+        sleep(1);
+    }
     while(1)
     {
         int size = getPathFreeSpace("/data");
