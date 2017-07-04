@@ -509,6 +509,79 @@ case "$USERS_ID" in
 		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/mt3561/mt3561
 		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/mt3561/mt3561-release;;
 	esac;;
+   	10)
+	export DBG_PLATFORM_PATH=/home/jiangdepeng
+	export PATHJAVA1P6=/opt/JDK/jdk1.6.0_31
+	export PATHJAVA1P7=/opt/JDK/java-7-openjdk-amd64
+	export PATHJAVA1P8=/opt/JDK/java-8-openjdk-amd64
+	export WORK_REMOTE=0
+	case "$DBG_PLATFORM_ID" in
+	   	0)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/R8625SSNSKQLYA10145451;;
+	    	1)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/R8625QSOSKQLYA3060-v2
+		export RELEASE_REPOSITORY=/8x25q-release;;
+	    	2)
+		export BP_SOURCE_PATH=$DBG_PLATFORM_PATH/8228_bp_v103
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/msm8226
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8x26-release;;
+	    	3)
+		export BP_SOURCE_PATH=$DBG_PLATFORM_PATH/msm8926-la-2-1-2_amss_qrd_no-l1-tds
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/M8926AAAAANLYD212005
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8x26-release;;
+	    	4)
+		export BP_SOURCE_PATH=$DBG_PLATFORM_PATH/AMSS_M8974_40_R4120
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/M8974AAAAANLYD4120
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8x26-release;;
+	    	6)
+		export BP_SOURCE_PATH=$DBG_PLATFORM_PATH/AMSS_M8974_40_R4120
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/M8626AAAAANLYD1431
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8x26-release;;
+	    	7)
+		export DBG_SYSTEM_DIR=/home/swlee/flyaudio/release/M8974AAAAANLYD4275
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8x26-release;;
+		8)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/rk3188/rk3188_rk3066_r-box_android4.4.2_sdk;;
+		9)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/rk3188/px3_git
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8x26-release;;
+		10)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/M8974AAAAANLYD4120
+		export BP_SOURCE_PATH=~/swlee/msm8626-la-1-0-4_amss_oem-xtra_no-l1-tds;;
+		11)
+		export DBG_SYSTEM_DIR=/home/jiangdepeng/yangxiaofang/M8974AAAAANLYD4275
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8909-release;;
+	    	12)
+		export BP_SOURCE_PATH=$DBG_PLATFORM_PATH/8228_bp_v103
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/msm8226
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8x26-release;;
+                14)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/M8974AAAAANLYD4275
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8x26-release;;
+                15)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/imx6qdl-sabresd;;
+                16)
+		export DBG_SYSTEM_DIR=/home/msm/swlee/mt3561
+		export RELEASE_REPOSITORY=/home/swlee/flyaudio/mt3561-release;;
+                17)
+		export DBG_SYSTEM_DIR=/home/msm/swlee/msm8996_6.0/M8974AAAAANLYD4275
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8996-release;;
+                18)
+		export DBG_SYSTEM_DIR=/home/msm/swlee/mt3561
+		export RELEASE_REPOSITORY=/home/swlee/flyaudio/mt3561-release;;
+                19)
+		export DBG_SYSTEM_DIR=/home/msm/swlee/mt3561
+		export RELEASE_REPOSITORY=/home/swlee/flyaudio/mt3561-release;;
+                21)
+		export DBG_SYSTEM_DIR=/home/msm/swlee/mt3561
+		export RELEASE_REPOSITORY=/home/swlee/flyaudio/mt3561-release;;
+                22)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/M8974AAAAANLYD4275
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8996-release;;
+		23)
+		export DBG_SYSTEM_DIR=/home/msm/swlee/M8974AAAAANLYD4275
+		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8909-release;;
+	esac;;
 esac
 
 

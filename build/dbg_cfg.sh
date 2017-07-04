@@ -28,6 +28,7 @@
 # 0--root@192.168.9.222
 # 1--futengfei.Notebook.huasuo
 # 2--gaobenneng.Notebook
+#10 jiangdepeng-dingyafeng server jiangdepeng flyaudio
 
 
 export DBG_PLATFORM_ID=13
