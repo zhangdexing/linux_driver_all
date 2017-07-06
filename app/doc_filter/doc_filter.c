@@ -518,6 +518,7 @@ out:
         gettimeofday(&end, NULL);
         waste_time_ms = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000;
         DEBUGMSG(TAG"split:waste_time_ms:%d\n", waste_time_ms);
+        system("cp -rf /data/lidbg /sdcard/FlyLog/DriBugReport/drivers/");
         system("am broadcast -a cn.flyaudio.uploadlog.driver");
         gettimeofday(&end, NULL);
         waste_time_ms = (end.tv_sec - start.tv_sec) * 1000 + (end.tv_usec - start.tv_usec) / 1000;
