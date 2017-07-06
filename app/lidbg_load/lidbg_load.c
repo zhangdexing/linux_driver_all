@@ -168,8 +168,8 @@ int main(int argc, char **argv)
     while(1)
     {
         char value[PROPERTY_VALUE_MAX];
-        property_get("fly.system.cleanup.page", value, "0");
-        lidbg(" fly.system.cleanup.page = %c\n", value[0]);
+        property_get("persist.fly.system.cleanup", value, "0");
+        lidbg("persist.fly.system.cleanup = %c\n", value[0]);
         if (value[0] != '1')
         {
             break;
