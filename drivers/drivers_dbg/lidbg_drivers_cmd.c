@@ -195,21 +195,23 @@ bool set_wifi_adb_mode(bool on)
 int thread_dump_log_cp2_udisk(void *data)
 {
 	dump_sysinfo();
-	ssleep(10);
-	lidbg_shell_cmd("am start -n com.mypftf.android.BugReport/.MainActivity &");
-	ssleep(50);
-//	lidbg_shell_cmd("screencap -p /data/lidbg/screenshot.png &");
-	ssleep(2);
+	//ssleep(10);
+	//lidbg_shell_cmd("am start -n com.mypftf.android.BugReport/.MainActivity &");
+	//ssleep(50);
+      // lidbg_shell_cmd("screencap -p /data/lidbg/screenshot.png &");
+	//ssleep(2);
+
 	{
 	    char shell_cmd[128] = {0}, tbuff[128] = {0};
 	    lidbg_get_current_time(tbuff, NULL);
+	//copy to  sdcard
 	    sprintf(shell_cmd, "mkdir /sdcard/ID-%d-%s", get_machine_id() , tbuff);
 	    lidbg_shell_cmd(shell_cmd);
 	    sprintf(shell_cmd, "cp -rf "LIDBG_LOG_DIR"* /sdcard/ID-%d-%s", get_machine_id() , tbuff);
 	    lidbg_shell_cmd(shell_cmd);
 	    sprintf(shell_cmd, "cp -rf /sdcard/logcat*.txt /sdcard/ID-%d-%s", get_machine_id() , tbuff);
 	    lidbg_shell_cmd(shell_cmd);
-	    sprintf(shell_cmd, "cp -rf /sdcard/kmsg*.txt /sdcard/ID-%d-%s", get_machine_id() , tbuff);
+	    sprintf(shell_cmd, "cp -rf /data/reckmsg/*.txt /sdcard/ID-%d-%s", get_machine_id() , tbuff);
 	    lidbg_shell_cmd(shell_cmd);
 	    sprintf(shell_cmd, "cp -rf /data/anr /sdcard/ID-%d-%s", get_machine_id() , tbuff);
 	    lidbg_shell_cmd(shell_cmd);
@@ -220,15 +222,15 @@ int thread_dump_log_cp2_udisk(void *data)
 	    sprintf(shell_cmd, "cp -rf /sdcard/ID-%d-%s %s", get_machine_id() , tbuff , get_udisk_file_path(NULL, NULL));
 	    lidbg_shell_cmd(shell_cmd);
 
-	    ssleep(10);
+	    ssleep(20);
 	    lidbg_shell_cmd("sync");
 	    ssleep(1);
 	}
     lidbg_domineering_ack();
     lidbg_toast_show("158013--", "可拔掉U盘,调试信息以ID开头");
-    lidbg_shell_cmd("am start -n com.mypftf.android.BugReport/.MainActivity &");
-    ssleep(60);
-    lidbg_shell_cmd("pm uninstall com.mypftf.android.BugReport");
+    //lidbg_shell_cmd("am start -n com.mypftf.android.BugReport/.MainActivity &");
+    //ssleep(60);
+    //lidbg_shell_cmd("pm uninstall com.mypftf.android.BugReport");
     return 0;
 }
 static bool logcat_enabled = false;
@@ -550,6 +552,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#133--print_stream_volume \n");
             fs_mem_log("*158#134--force music start event \n");
             fs_mem_log("*158#135--usb id reset \n");
+            fs_mem_log("*158#136--install TC \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -689,7 +692,8 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#013"))
         	{
-            lidbg_toast_show("158013--", "确认插入U盘并等待下条提醒,大约60S...");
+            lidbg_toast_show("158013--", "确认插入U盘并等待下条提醒,大约30S...");
+	     lidbg_shell_cmd("echo appcmd *158#133 > /dev/lidbg_drivers_dbg0");
             lidbg_shell_cmd("echo appcmd *158#001 > /dev/lidbg_drivers_dbg0");
             lidbg_shell_cmd("echo appcmd *158#021 > /dev/lidbg_drivers_dbg0");
             CREATE_KTHREAD(thread_dump_log_cp2_udisk, NULL);
@@ -1643,7 +1647,13 @@ void parse_cmd(char *pt)
            	 ssleep(1);
            	 USB_ID_LOW_HOST;
         }
-
+        if (!strcmp(argv[1], "*158#136"))
+        {
+            char buff[50] = {0};
+            lidbg_shell_cmd("setenforce 0");
+            lidbg_pm_install(get_lidbg_file_path(buff, "TC.ko"));
+            lidbg_domineering_ack();
+        }
     }
     else if(!strcmp(argv[0], "flyaudio.code.disable") )
     {
