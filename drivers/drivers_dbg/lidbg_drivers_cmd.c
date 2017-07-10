@@ -221,7 +221,6 @@ int thread_dump_log_cp2_udisk(void *data)
 	//for udisk
 	    sprintf(shell_cmd, "cp -rf /sdcard/ID-%d-%s %s", get_machine_id() , tbuff , get_udisk_file_path(NULL, NULL));
 	    lidbg_shell_cmd(shell_cmd);
-	    LIDBG_WARN("shell_cmd<%s>\n", shell_cmd);
 
 	    ssleep(20);
 	    lidbg_shell_cmd("sync");

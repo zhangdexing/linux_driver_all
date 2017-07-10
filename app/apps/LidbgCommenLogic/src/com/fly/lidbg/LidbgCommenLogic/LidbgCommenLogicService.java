@@ -295,8 +295,6 @@ public class LidbgCommenLogicService extends Service
             printKernelMsg("Build.VERSION.SDK_INT <23.return" );
             return;
         }
-        printKernelMsg("mountUmountUdiskUp6_0,error" );
-/*
         try
         {
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
@@ -325,7 +323,7 @@ public class LidbgCommenLogicService extends Service
         {
             printKernelMsg("mountUmountUdiskUp6_0.error:" + e.getMessage());
         }
-*/
+
     }
 
     protected void wakeUpSystem()
