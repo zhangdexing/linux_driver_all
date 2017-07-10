@@ -1,0 +1,1 @@
+编译6.0以上版本系统时须把节点[lidbgcommenlogic屏蔽mountUmountUdiskUp6_0接口]还原再编译，否者可能照成U盘或者SD卡没有挂载上的问题

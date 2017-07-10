@@ -1,11 +1,11 @@
 
 
 ifeq ($(call is-platform-sdk-version-at-least,23),true)
-SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,LidbgCommenLogic)
+$(warning   =========================)
+$(warning   skip LidbgPmService build,should add mount api:ensure xxx_release/app/LidbgPmService.apk exist)
+$(warning   =========================)
 else
-$(warning   =========================)
-$(warning   skip LidbgPmService build:ensure xxx_release/app/LidbgPmService.apk exist)
-$(warning   =========================)
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,LidbgCommenLogic)
 endif
 
 ifeq ($(CONFIG_APP_LIDBGPMSERVICE),y)
