@@ -2445,7 +2445,7 @@ int thread_flycam_init(void *data)
 	}
 	usb_register_notify(&usb_nb_cam);/*USB notifier:must after isDVRFirstInit&isRearViewFirstInit*/
 	lidbg_new_cdev(&flycam_nod_fops, "lidbg_flycam0");
-	lidbg_chmod("/dev/lidbg_flycam0");
+	lidbg_shell_cmd("chmod 777 /dev/lidbg_flycam0");
     return 0;
 }
 

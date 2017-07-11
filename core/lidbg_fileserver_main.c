@@ -46,18 +46,6 @@ void lidbg_fileserver_main(int argc, char **argv)
         break;
     case 6:
         break;
-    case 7:
-        fs_mem_log("fs_upload_machine_log\n");
-        fs_upload_machine_log();
-        break;
-    case 8:
-        fs_mem_log("fs_clean_all\n");
-        fs_clean_all();
-        break;
-    case 9:
-        FS_WARN("<lidbg_mount>\n");
-        lidbg_mount("/system");
-        break;
     case 10:
         FS_WARN("<fs_show_filename_list>\n");
         fs_show_filename_list();
@@ -103,18 +91,13 @@ void check_conf_file(void)
     {
         FS_ALWAYS( "<overwrite:push,update?>\n");
         fs_mem_log( "<overwrite:push,update?>\n");
-        //        fs_remount_system();
         is_out_updated = true;
-#ifdef SOC_msm8x25
-        analysis_copylist(get_lidbg_file_path(buff, "copylist.conf"));
-#endif
         copy_all_conf_file();
-       //lidbg_rm(MACHINE_ID_FILE);
-        lidbg_rm("/data/kmsg.txt");
-        lidbg_rm(LIDBG_KMSG_FILE_PATH);
-        lidbg_rm(LIDBG_LOG_DIR"lidbg_mem_log.txt");
-        lidbg_rm(PATH_FS_FIFO_FILE);
-        lidbg_rm(LIDBG_TRACE_MSG_PATH);
+        lidbg_shell_cmd("rm -rf /data/kmsg.txt");
+        lidbg_shell_cmd("rm -rf "LIDBG_KMSG_FILE_PATH);
+        lidbg_shell_cmd("rm -rf "LIDBG_LOG_DIR"lidbg_mem_log.txt");
+        lidbg_shell_cmd("rm -rf "PATH_FS_FIFO_FILE);
+        lidbg_shell_cmd("rm -rf "LIDBG_TRACE_MSG_PATH);
     }
 
 }
@@ -131,8 +114,8 @@ void lidbg_fileserver_main_prepare(void)
 
     FS_WARN("<%s>\n", FS_VERSION);
 
-    lidbg_mkdir(LIDBG_LOG_DIR);
-    lidbg_mkdir(LIDBG_OSD_DIR);
+    lidbg_shell_cmd("mkdir "LIDBG_LOG_DIR);
+    lidbg_shell_cmd("mkdir "LIDBG_OSD_DIR);
 
     check_conf_file();
 
@@ -142,7 +125,6 @@ void lidbg_fileserver_main_prepare(void)
     fs_fill_list(PATH_CORE_CONF, FS_CMD_FILE_CONFIGMODE, &lidbg_core_list);
     fs_fill_list(PATH_DRIVERS_CONF, FS_CMD_FILE_CONFIGMODE, &lidbg_drivers_list);
     fs_fill_list(PATH_MACHINE_INFO_FILE, FS_CMD_FILE_CONFIGMODE, &lidbg_machine_info_list);
-    fs_fill_list(PATH_STATE_CONF, FS_CMD_FILE_CONFIGMODE, &fs_state_list);
 
     fs_copy_file(get_lidbg_file_path(buff, "build_time.conf"), LIDBG_MEM_DIR"build_time.txt");
     if(fs_slient_level != 4)
@@ -152,13 +134,6 @@ void lidbg_fileserver_main_prepare(void)
 }
 void lidbg_fileserver_main_init(void)
 {
-    fs_register_filename_list(PATH_LIDBG_MEM_LOG_FILE, false);
-    fs_register_filename_list(LIDBG_LOG_DIR"build_time.txt", false);
-    fs_register_filename_list(LIDBG_KMSG_FILE_PATH, true);
-    fs_register_filename_list(MACHINE_ID_FILE, false);
-    fs_register_filename_list(PATH_DRIVERS_CONF, false);
-    fs_register_filename_list(PATH_CORE_CONF, false);
-    fs_register_filename_list(PATH_FS_FIFO_FILE, true);
 }
 //zone end
 
@@ -170,7 +145,6 @@ static int __init lidbg_fileserver_init(void)
 
     lidbg_fs_keyvalue_init();
     lidbg_fs_log_init();
-    lidbg_fs_update_init();
     lidbg_fs_conf_init();
     lidbg_fs_cmn_init();
 

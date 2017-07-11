@@ -522,7 +522,7 @@ static int lidbg_rmtctrl_probe(struct platform_device *pdev)
 	sema_init(&rmtctrl_sem, 1);
 	kfifo_init(&rmtctrl_state_fifo, rmtctrl_state_buffer, rmtctrl_FIFO_SIZE);
 	lidbg_new_cdev(&rmtctrl_fops, "flyaudio_pm0");
-	lidbg_chmod("/dev/flyaudio_pm0");
+	lidbg_shell_cmd("chmod 777 /dev/flyaudio_pm0");
 	
 	//enable_irq_wake(GPIO_TO_INT(MCU_IIC_REQ_GPIO));
 	 INIT_WORK(&work_acc_status, work_acc_status_handle);

@@ -30,7 +30,7 @@ char *get_cpu_status(void);
 int thread_limit_temp(void *data)
 {
     int mem_temp, cpu_temp;
-    lidbg_chmod(CPU_MAX_NODE);
+    lidbg_shell_cmd("chmod 777 "CPU_MAX_NODE);
 
     while(g_hw.thermal_ctrl_en == 0)
     {
@@ -462,7 +462,7 @@ int thread_start_cpu_tmp_test(void *data)
         lidbg(TAG"%d,temp=%d,time=%d,freq=%s:\n", freq_pos, cur_temp, int_time_count * 2, group[freq_pos]);
         msleep(1000);
         if(int_time_count  > cpu_temp_time_minute * 60)
-            lidbg_reboot();
+            lidbg_shell_cmd("reboot");
     }
     return 0;
 
@@ -470,7 +470,7 @@ err:
     is_cpu_temp_enabled = false;
     sprintf(buff, "cpu_tmp_test.stop:%d,%d", freq_pos, group_num);
     lidbg_toast_show("temp:", buff);
-    lidbg_rm(TEMP_FREQ_COUNTER);
+    lidbg_shell_cmd("rm -rf "TEMP_FREQ_COUNTER);
     fs_string2file(100, TEMP_FREQ_TEST_RESULT, "-------stop-------\n");
     return 0;
 }
@@ -482,10 +482,10 @@ void cb_kv_cpu_temp_test(char *key, char *value)
 {
     if(value && *value == '1')
     {
-        lidbg_rm(TEMP_FREQ_TEST_RESULT);
+        lidbg_shell_cmd("rm -rf "TEMP_FREQ_TEST_RESULT);
         fs_file_write(TEMP_FREQ_COUNTER, true, "0", 0, strlen("0"));
         ssleep(1);
-        lidbg_reboot();
+            lidbg_shell_cmd("reboot");
     }
     else
         fs_mem_log("cb_kv_cpu_temp_test:fail,%s\n", value);
@@ -493,7 +493,6 @@ void cb_kv_cpu_temp_test(char *key, char *value)
 void temp_init(void)
 {
     FS_REGISTER_KEY( "cpu_temp_test", cb_kv_cpu_temp_test);
-    fs_register_filename_list(TEMP_FREQ_TEST_RESULT, true);
     FS_REGISTER_INT(cpu_temp_time_minute, "cpu_temp_time_minute", 20, NULL);
     FS_REGISTER_INT(temp_log_freq, "temp_log_freq", 50, NULL);
     FS_REGISTER_INT(cpu_temp_show, "cpu_temp_show", 0, cb_kv_show_temp);
@@ -509,10 +508,6 @@ void temp_init(void)
 
     //if(antutu_test)
     //	CREATE_KTHREAD(thread_antutu_test, NULL);
-
-    fs_register_filename_list(TEMP_LOG_PATH, true);
-    fs_regist_state("cpu_temp", &(g_var.temp));
-
     //FS_REGISTER_INT(fan_onoff_temp, "fan_onoff_temp", 65, NULL);
 }
 

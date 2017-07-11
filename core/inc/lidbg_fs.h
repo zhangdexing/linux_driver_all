@@ -24,9 +24,7 @@ extern struct lidbg_fifo_device *fs_msg_fifo;
 #define PATH_STATE_CONF LIDBG_LOG_DIR"state.txt"
 #define PATH_STATE_MEM LIDBG_MEM_DIR"state.txt"
 
-extern struct list_head fs_state_list;
 void fs_msg_fifo_to_file(char *key, char *value);
-extern int analysis_copylist(const char *copy_list);
 extern int update_list(const char *filename, struct list_head *client_list);
 extern int bfs_file_amend(char *file2amend, char *str_append, int file_limit_M);
 extern void save_list_to_file(struct list_head *client_list, char *filename);
@@ -36,7 +34,6 @@ extern void lidbg_fs_cmn_init(void);
 extern void lidbg_fs_conf_init(void);
 extern void lidbg_fs_keyvalue_init(void);
 extern void lidbg_fs_log_init(void);
-extern void lidbg_fs_update_init(void);
 extern void update_file_tm(void);
 extern bool get_file_mftime(const char *filename, struct rtc_time *ptm);
 extern bool get_file_tmstring(char *filename, char *tmstring);

@@ -354,7 +354,6 @@ static int  lidbg_trace_msg_probe(struct platform_device *ppdev)
         fs_fill_list("/system/lib/modules/out/lidbg_trace_msg_string_list.conf", FS_CMD_FILE_LISTMODE, &lidbg_trace_msg_string_list);
 
     fs_file_separator(LIDBG_TRACE_MSG_PATH);
-    fs_register_filename_list(LIDBG_TRACE_MSG_PATH, true);
 	
 #if (defined(PLATFORM_ID_14) || defined(SOC_mt35x))
     pdev->disable_flag = 1;
@@ -370,11 +369,7 @@ static int  lidbg_trace_msg_probe(struct platform_device *ppdev)
     CREATE_KTHREAD(thread_trace_msg_out, NULL);
 
     lidbg_new_cdev(&lidbg_trace_msg_fops, DEVICE_NAME);
-//#ifndef USE_CALL_USERHELPER
- //   lidbg_uevent_focus("USB_STATE=CONFIGURED", callback_disable_trace_msg ); //USB_STATE=DISCONNECTED
-//#endif
     lidbg_trace_msg_cb_register("USB_STATE=CONFIGURED", NULL, callback_disable_trace_msg);
-
     {
         char buff[32] = {0};
         fs_file_read("/sys/class/android_usb/android0/state", buff, 0, sizeof(buff));

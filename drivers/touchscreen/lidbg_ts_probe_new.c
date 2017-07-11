@@ -344,7 +344,6 @@ void ts_probe_prepare(void)
     }
 
     lidbg_insmod(get_lidbg_file_path(buff, "lidbg_ts_to_recov.ko"));
-    fs_register_filename_list(TS_LOG_PATH, true);
     ts_devices_init();
 }
 //zone end
@@ -668,7 +667,7 @@ static int  flyts_hal_init(void)
     init_waitqueue_head(&wait_queue);
     sema_init(&sem, 1);
     kfifo_init(&flyts_hal_data_fifo, flyts_hal_fifo_buffer, FIFO_SIZE);
-    lidbg_chmod("/dev/lidbg_ts_probe0");
+    lidbg_shell_cmd("chmod 777 /dev/lidbg_ts_probe0");
     return 0;
 }
 

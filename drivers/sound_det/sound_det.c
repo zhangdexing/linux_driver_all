@@ -12,7 +12,6 @@ struct misc_device
 
 };
 struct misc_device *dev;
-static int sound_detect_dbg = 0;
 int snd_status = -1;
 int snd_dbg = 0;
 volatile int flag = 0;
@@ -35,15 +34,9 @@ int sound_detect_event(int state)
     return 1;
 }
 
-void cb_sound_detect(char *key, char *value )
-{
-    lidbg_setprop("persist.lidbg.sound.dbg", value);
-    lidbg(TAG"persist.lidbg.sound.dbg=%s\n", value);
-}
 int sound_detect_init(void)
 {
     init_completion(&snd_status_sem);
-    FS_REGISTER_INT(sound_detect_dbg, "sound_detect_dbg", 0, cb_sound_detect);
     lidbg(TAG"sound_detect_init\n");
     return 1;
 }

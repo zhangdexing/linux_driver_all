@@ -118,7 +118,7 @@ static int __init msg_init(void)
 
     CREATE_KTHREAD(thread_msg, NULL);
 
-    lidbg_chmod("/dev/lidbg_msg");
+    lidbg_shell_cmd("chmod 777 /dev/lidbg_msg");
 
     LIDBG_MODULE_LOG;
 

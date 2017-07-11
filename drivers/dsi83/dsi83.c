@@ -418,17 +418,6 @@ static const struct file_operations dsi83_p_fops =
 {
     .read  = dsi83_set_pattern_proc,
 };
-
-static int kv_dsi83_rst = 0;
-void cb_dsi83_rst(char *key, char *value )
-{
-    is_dsi83_inited = false;
-    fs_mem_log("call:%s\n", __func__);
-    lidbg("%s:enter\n", __func__);
-    dsi83_resume();
-}
-
-
 static int thread_dsi83_check(void *data)
 {
     //dsi83_dump_reg();
@@ -542,10 +531,8 @@ static int dsi83_probe(struct platform_device *pdev)
     proc_create("dsi83_n", 0, NULL, &dsi83_n_fops);
     proc_create("dsi83_p", 0, NULL, &dsi83_p_fops);
 
-    FS_REGISTER_INT(kv_dsi83_rst, "kv_dsi83_rst", 0, cb_dsi83_rst);
     INIT_DELAYED_WORK(&dsi83_work, dsi83_work_func);
     dsi83_workqueue = create_workqueue("dsi83");
-
 
     if((g_var.is_fly == 0)&&(g_var.recovery_mode == 0))
     {

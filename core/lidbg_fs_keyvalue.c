@@ -365,10 +365,6 @@ void fs_save_list_to_file(void)
     fs_copy_file(PATH_STATE_MEM, PATH_STATE_CONF);
     update_file_tm();
 }
-int fs_regist_state(char *key, int *value)
-{
-    return fileserver_deal_cmd( &fs_state_list, FS_CMD_LIST_SAVEINFO, NULL, key, NULL, value, NULL);
-}
 int fs_get_intvalue(struct list_head *client_list, char *key, int *int_value, void (*callback)(char *key, char *value))
 {
     return get_int_value(client_list, key, int_value, callback);
@@ -408,7 +404,6 @@ void lidbg_fs_keyvalue_init(void)
 
 
 EXPORT_SYMBOL(fs_save_list_to_file);
-EXPORT_SYMBOL(fs_regist_state);
 EXPORT_SYMBOL(fs_get_intvalue);
 EXPORT_SYMBOL(fs_get_value);
 EXPORT_SYMBOL(fs_set_value);

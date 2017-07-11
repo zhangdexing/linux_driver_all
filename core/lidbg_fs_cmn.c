@@ -352,7 +352,11 @@ bool copy_file(char *from, char *to, bool encode)
     pfileto = filp_open(to, O_CREAT | O_RDWR | O_TRUNC, 0777);
     if(IS_ERR(pfileto))
     {
-        lidbg_rm(to);
+		{
+        		char cmd[128] = {0};
+      		sprintf(cmd, "rm -rf %s", to);
+        		lidbg_shell_cmd(cmd);
+		}
         msleep(500);
         pfileto = filp_open(to, O_CREAT | O_RDWR | O_TRUNC, 0777);
         if(IS_ERR(pfileto))

@@ -226,7 +226,7 @@ void cb_password_te_enable(char *password )
 {
     g_is_te_enable = 1;
     is_fs_work_enable = true;
-    lidbg_chmod( "/data");
+    lidbg_shell_cmd("chmod 777 /data");
     lidbg_shell_cmd("chmod 777 /data/lidbg/* -R");
     lidbg_shell_cmd("chmod 777 "LIDBG_MEM_DIR"*.txt");
 }

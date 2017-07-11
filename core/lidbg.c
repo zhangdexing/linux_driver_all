@@ -307,7 +307,7 @@ int lidbg_init(void)
 
     lidbg_create_proc();
 
-    lidbg_chmod("/dev/mlidbg0");
+    lidbg_shell_cmd("chmod 777 /dev/mlidbg0");
     LIDBG_MODULE_LOG;
 
     return 0;

@@ -1,10 +1,8 @@
 #include "lidbg.h"
 LIDBG_DEFINE;
 
-static int logcat_en;
 static int reboot_delay_s = 0;
 static int delete_out_dir_after_update = 1;
-static int dump_mem_log = 0;
 static int loop_warning_en = 0;
 
 #include "system_switch.c"
@@ -31,182 +29,6 @@ bool is_white_udisk(char *path)
     }
     return false;
 }
-void lidbg_enable_logcat(void)
-{
-    char cmd[128] = {0};
-    char logcat_file_name[256] = {0};
-    char time_buf[32] = {0};
-
-    lidbg(TAG"\n\n\nthread_enable_logcat:logcat+\n");
-
-    lidbg_get_current_time(time_buf, NULL);
-    sprintf(logcat_file_name, "logcat_%d_%s.txt", get_machine_id(), time_buf);
-
-    sprintf(cmd, "date >/sdcard/%s", logcat_file_name);
-    lidbg_shell_cmd(cmd);
-    memset(cmd, '\0', sizeof(cmd));
-    ssleep(1);
-    lidbg_shell_cmd("chmod 777 /sdcard/logcat*");
-    ssleep(1);
-    sprintf(cmd, "logcat  -v time>> /sdcard/%s &", logcat_file_name);
-
-#ifdef SOC_mt3360
-    lidbg_enable_kmsg();
-#endif
-
-    lidbg_shell_cmd(cmd);
-    lidbg(TAG"logcat-\n");
-
-}
-
-void lidbg_enable_logcat2(void)
-{
-    int size, sizeold = 0, loop = 0;
-    lidbg(TAG"logcat+\n");
-    lidbg_shell_cmd("rm /sdcard/logcat.txt");
-    lidbg_shell_cmd("rm /sdcard/logcat_old.txt");
-    ssleep(2);
-
-    lidbg_shell_cmd("date >/sdcard/logcat.txt");
-    ssleep(1);
-    lidbg_shell_cmd("chmod 777 /sdcard/logcat.txt");
-    ssleep(1);
-    lidbg_shell_cmd("logcat -b main -b system -v threadtime -f /sdcard/logcat.txt &");
-
-    while(1)
-    {
-        size = fs_get_file_size("/sdcard/logcat.txt") ;
-        if(size >= MEM_SIZE_1_MB * 200)
-        {
-            lidbg(TAG"logcat file_len over\n");
-            lidbg_shell_cmd("rm /sdcard/logcat_old.txt");
-            ssleep(1);
-            lidbg_shell_cmd("cp -rf /sdcard/logcat.txt /sdcard/logcat_old.txt");
-            ssleep(5);
-            lidbg_shell_cmd("date > /sdcard/logcat.txt");
-            ssleep(1);
-            lidbg_shell_cmd("chmod 777 /sdcard/logcat.txt");
-        }
-        if((size == sizeold) && ( g_var.is_fly == 1))
-        {
-            lidbg_shell_cmd("logcat  -b main -b system -v threadtime -f /sdcard/logcat.txt &");
-            lidbg(TAG"run logcat again \n");
-        }
-        sizeold = size ;
-        if(0)
-        {
-            for(loop = 0; loop < 10; loop++)
-            {
-                static char buff[64] ;
-                int mtime = ktime_to_ms(ktime_get_boottime());
-                snprintf(buff, 63, "log -t lidbg logcatping:%d.%d",  mtime / 1000, mtime % 1000);
-                lidbg(TAG"[%s]\n", buff);
-                lidbg_shell_cmd(buff);
-                ssleep(5);
-            }
-        }
-        else
-            ssleep(50);
-    }
-    lidbg(TAG"logcat-\n");
-
-}
-
-
-
-void lidbg_enable_kmsg(void)
-{
-    char cmd[256] = {0};
-    char dmesg_file_name[256] = {0};
-    char dmesg_file_path[256] = {0};
-    char time_buf[32] = {0};
-    int size;
-    lidbg(TAG"\n\n\nthread_enable_dmesg:kmsg+\n");
-
-   // lidbg_trace_msg_disable(1);
-    lidbg_get_current_time(time_buf, NULL);
-    sprintf(dmesg_file_name, "kmsg_%d_%s.txt", get_machine_id(), time_buf);
-    sprintf(dmesg_file_path, "/sdcard/%s", dmesg_file_name);
-
-    sprintf(cmd, "date >/sdcard/%s", dmesg_file_name);
-    lidbg_shell_cmd(cmd);
-    memset(cmd, '\0', sizeof(cmd));
-    ssleep(1);
-    lidbg_shell_cmd("chmod 777 /sdcard/kmsg*");
-    ssleep(1);
-    sprintf(cmd, "cat /proc/kmsg >> /sdcard/%s &", dmesg_file_name);
-
-    lidbg_shell_cmd(cmd);
-    while(1)
-    {
-        size = fs_get_file_size(dmesg_file_path) ;
-        if(size >= MEM_SIZE_1_MB * 300)
-        {
-            lidbg(TAG"kmsg file_len over\n");
-            sprintf(cmd, "rm /sdcard/%s.old", dmesg_file_name);
-            lidbg_shell_cmd(cmd);
-            ssleep(1);
-            sprintf(cmd, "cp -rf /sdcard/%s /sdcard/%s.old", dmesg_file_name, dmesg_file_name);
-            lidbg_shell_cmd(cmd);
-            ssleep(5);
-            sprintf(cmd, "date > /sdcard/%s", dmesg_file_name);
-            lidbg_shell_cmd(cmd);
-            ssleep(1);
-            sprintf(cmd, "chmod 777 /sdcard/%s", dmesg_file_name);
-            lidbg_shell_cmd(cmd);
-        }
-        ssleep(60);
-    }
-    lidbg(TAG"kmsg-\n");
-}
-void cb_password_chmod(char *password )
-{
-    fs_mem_log("<called:%s>\n", __func__ );
-
-    lidbg_chmod("/system/bin/mount");
-    lidbg_mount("/system");
-    lidbg_chmod("/data");
-}
-void cb_password_upload(char *password )
-{
-    fs_mem_log("<called:%s>\n", __func__ );
-    fs_upload_machine_log();
-}
-void cb_password_clean_all(char *password )
-{
-    fs_mem_log("<called:%s>\n", __func__ );
-    fs_clean_all();
-}
-
-void cb_password_gui_kmsg(char *password )
-{
-    if(lidbg_exe("/flysystem/lib/out/lidbg_gui", "/proc/kmsg", "1", NULL, NULL, NULL, NULL) < 0)
-        LIDBG_ERR(TAG"Exe lidbg_kmsg failed !\n");
-}
-
-void cb_password_gui_state(char *password )
-{
-
-    if(lidbg_exe("/flysystem/lib/out/lidbg_gui", "/dev/log/state.txt", "1", NULL, NULL, NULL, NULL) < 0)
-        LIDBG_ERR(TAG"Exe status failed !\n");
-}
-
-void cb_password_mem_log(char *password )
-{
-    lidbg_fifo_get(glidbg_msg_fifo, LIDBG_LOG_DIR"lidbg_mem_log.txt", 0);
-}
-void cb_int_mem_log(char *key, char *value )
-{
-    if(dump_mem_log != 0)
-        cb_password_mem_log(NULL);
-}
-
-int thread_kmsg_fifo_save(void *data)
-{
-    //ssleep(30);
-    //kmsg_fifo_save();
-    return 0;
-}
 
 void unhandled_monitor(char *key_word, void *data)
 {
@@ -216,9 +38,7 @@ void unhandled_monitor(char *key_word, void *data)
     if( !fs_is_file_exist("/dev/log/no_reboot"))
     {
         lidbg_fs_log("/dev/log/no_reboot", "unhandled find");
-        lidbg_chmod("/data");
-        CREATE_KTHREAD(thread_kmsg_fifo_save, NULL);
-        lidbg_enable_logcat();
+        lidbg_shell_cmd("chmod 777 /data");
         lidbg_loop_warning();
     }
 }
@@ -292,14 +112,6 @@ int thread_reboot(void *data)
     return 0;
 }
 
-void logcat_lunch(char *key, char *value )
-{
-#ifdef SOC_msm8x25
-    k2u_write(LOG_LOGCAT);
-#else
-    lidbg_enable_logcat();
-#endif
-}
 int loop_warnning(void *data)
 {
 
@@ -581,50 +393,20 @@ int misc_init(void *data)
 {
     LIDBG_WARN(TAG"<==IN==>\n");
     init_completion(&udisk_misc_wait);
-
     system_switch_init();
-
     CREATE_KTHREAD(thread_check_display_mode, NULL);
-
-    te_regist_password("001101", cb_password_upload);
-    te_regist_password("001110", cb_password_clean_all);
-    te_regist_password("001111", cb_password_chmod);
-    te_regist_password("001120", cb_password_gui_kmsg);
-    te_regist_password("001121", cb_password_gui_state);
-    te_regist_password("011200", cb_password_mem_log);
-
-    FS_REGISTER_INT(dump_mem_log, "dump_mem_log", 0, cb_int_mem_log);
-    FS_REGISTER_INT(logcat_en, "logcat_en", 0, logcat_lunch);
     FS_REGISTER_INT(reboot_delay_s, "reboot_delay_s", 0, NULL);
     FS_REGISTER_INT(delete_out_dir_after_update, "delete_out_dir_after_update", 0, NULL);
     FS_REGISTER_INT(loop_warning_en, "loop_warning_en", 0, NULL);
-
     FS_REGISTER_KEY( "cmdstring", cb_kv_cmd);
     FS_REGISTER_KEY( "reboot_recovery", cb_kv_reboot_recovery);
     FS_REGISTER_KEY( "lidbg_origin_system", cb_kv_lidbg_origin_system);
-
-    fs_register_filename_list("/data/kmsg.txt", true);
-    fs_register_filename_list("/data/top.txt", true);
-    fs_register_filename_list("/data/ps.txt", true);
-    fs_register_filename_list("/data/df.txt", true);
-    fs_register_filename_list("/data/machine.txt", true);
-    fs_register_filename_list("/data/dumpsys.txt", true);
-    fs_register_filename_list("/data/screenshot.png", true);
-    fs_register_filename_list(LIDBG_LOG_DIR"lidbg_mem_log.txt", true);
-
     CREATE_KTHREAD(thread_reboot, NULL);
-
     CREATE_KTHREAD(thread_udisk_misc, NULL);
     usb_register_notify(&usb_nb_misc);
-
     checkif_wifiap_error();
-
-
     LIDBG_WARN(TAG"<==OUT==>\n\n");
     LIDBG_MODULE_LOG;
-
-    if(1 == logcat_en)
-        logcat_lunch(NULL, NULL);
 
     //lidbg_trace_msg_cb_register("unhandled",NULL,unhandled_monitor);
    // lidbg_trace_msg_cb_register("lidbgerr", NULL, lidbgerr_monitor);
@@ -654,10 +436,7 @@ module_init(lidbg_misc_init);
 module_exit(lidbg_misc_exit);
 
 EXPORT_SYMBOL(lidbg_loop_warning);
-EXPORT_SYMBOL(lidbg_enable_logcat);
-EXPORT_SYMBOL(lidbg_enable_logcat2);
 
-EXPORT_SYMBOL(lidbg_enable_kmsg);
 EXPORT_SYMBOL(lidbg_system_switch);
 
 

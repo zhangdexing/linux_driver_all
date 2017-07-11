@@ -810,8 +810,8 @@ static int  knob_probe(struct platform_device *pdev)
     init_waitqueue_head(&pfly_KeyEncoderInfo->right_wait_queue);
     spin_lock_init(&pfly_KeyEncoderInfo->right_fifo_lock);
 
-    lidbg_chmod("/dev/lidbg_volume_ctl0");
-    lidbg_chmod("/dev/lidbg_tune_ctl0");
+    lidbg_shell_cmd("chmod 777 /dev/lidbg_volume_ctl0");
+    lidbg_shell_cmd("chmod 777 /dev/lidbg_tune_ctl0");
 
     // 3creat thread
     CREATE_KTHREAD(thread_knob_init, NULL);

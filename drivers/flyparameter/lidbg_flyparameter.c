@@ -238,8 +238,12 @@ int thread_fix_fly_update_info(void *data)
     fs_file_read("/dev/fly_upate_info0", &info, 0, sizeof(info));
     lidbg(PATA_TAG"read info is %c\n", info);
     msleep(40000);
-    lidbg_chmod(p_flyparameter_node);
-    return 1;
+    {
+        char cmd[128] = {0};
+        sprintf(cmd, "chmod 777 %s", p_flyparameter_node);
+        lidbg_shell_cmd(cmd);
+    }
+		return 1;
 }
 
 static bool fly_get_cmdline(void)
@@ -348,11 +352,19 @@ int lidbg_flyparameter_init(void)
     LIDBG_GET;
     p_flyparameter_node = FLYPARAMETER_NODE;
     lidbg(PATA_TAG"p_flyparameter_node:%s\n", p_flyparameter_node);
-    lidbg_chmod(FLYPARAMETER_NODE);
+    {
+        char cmd[128] = {0};
+        sprintf(cmd, "chmod 777 %s", FLYPARAMETER_NODE);
+        lidbg_shell_cmd(cmd);
+    }
     while((fs_is_file_exist(p_flyparameter_node) == 0) && (cnt < 50))
     {
         lidbg(PATA_TAG"wait for FLYPARAMETER_NODE !!\n");
-        lidbg_chmod(p_flyparameter_node);
+        {
+            char cmd[128] = {0};
+            sprintf(cmd, "chmod 777 %s", p_flyparameter_node);
+            lidbg_shell_cmd(cmd);
+        }
         msleep(200);
         cnt++;
     }

@@ -69,7 +69,7 @@ suc:
     lidbg_shell_cmd("chmod 777 /system/priv-app/*");
     lidbg_shell_cmd("rm -r /data");
     ssleep(2);
-    lidbg_reboot();
+            lidbg_shell_cmd("reboot");
 }
 
 

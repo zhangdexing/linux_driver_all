@@ -18,5 +18,5 @@ obj-m	+= lidbg_loader.o
 obj-m	+= lidbg_mem_log.o
 lidbg_touch-objs :=  lidbg_ts.o lidbg_ts_event.o
 lidbg_common-objs :=  lidbg_cmn.o  lidbg_mem.o lidbg_display.o lidbg_notifier.o
-lidbg_fileserver-objs :=  lidbg_fileserver_main.o lidbg_fs_cmn.o lidbg_fs_keyvalue.o lidbg_fs_update.o lidbg_fs_log.o lidbg_fs_conf.o
+lidbg_fileserver-objs :=  lidbg_fileserver_main.o lidbg_fs_cmn.o lidbg_fs_keyvalue.o lidbg_fs_log.o lidbg_fs_conf.o
 lidbg_main-objs := lidbg.o

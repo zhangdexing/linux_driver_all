@@ -64,9 +64,6 @@
 #include <mach/msm_rpcrouter.h>
 #include <mach/msm_smsm.h>
 
-#ifdef SOC_msm8x25
-#define USE_CALL_USERHELPER
-#endif
 #define TRACE_MSG_FROM_KMSG
 
 #if 0

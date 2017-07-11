@@ -85,7 +85,11 @@ void userspace_wakelock_action(int action_enum, char *file_path)
                     else if(p2)
                         kill = pos->package_name;
                     if(kill && !is_safety_apk(kill))
-                        lidbg_force_stop_apk(kill);
+                        {
+						char cmd[128] = {0};
+						sprintf(cmd, "am force-stop %s", kill);
+						lidbg_shell_cmd(cmd);
+                        }
                 }
                 break;
                 case 2:
@@ -587,7 +591,7 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
                 SOC_Hal_Acc_Callback(0);
             }
             if(!g_var.is_fly && fs_is_file_exist("/system/app/NfcNci.apk"))
-                lidbg_rm("/system/app/NfcNci.apk");
+                lidbg_shell_cmd("rm -rf /system/app/NfcNci.apk");
             LPC_PRINT(true, g_var.sleep_counter, "PM:screen_off");
         }
         else  if(!strcmp(cmd[1], "screen_on"))
@@ -753,11 +757,7 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
     if(!strcmp(cmd[0], "ws"))
     {
         lidbg("ws:case:[%s]\n", cmd[1]);
-        if(!strcmp(cmd[1], "chmod"))
-            lidbg_chmod(cmd[2]);
-        else if(!strcmp(cmd[1], "rm"))
-            lidbg_rm(cmd[2]);
-        else  if(!strcmp(cmd[1], "list"))
+        if(!strcmp(cmd[1], "list"))
         {
             int  ws_action_type = simple_strtoul(cmd[2], 0, 0);
             /*	0:show wakelock		1:force unlock		2:kill has lock apk		3:save lock		4:find wakelock*/
@@ -820,11 +820,13 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
         }
         else  if(!strcmp(cmd[1], "apk"))
         {
-            lidbg_pm_install(cmd[2]);
+            lidbg_shell_cmd(format_string(true, "pm install -r %s ",cmd[2]));
         }
         else  if(!strcmp(cmd[1], "kill"))
         {
-            lidbg_force_stop_apk(cmd[2]);
+            char shell_cmd[128] = {0};
+            sprintf(shell_cmd, "am force-stop %s", cmd[2]);
+            lidbg_shell_cmd(shell_cmd);
         }
         else  if(!strcmp(cmd[1], "toast"))
         {
@@ -978,14 +980,12 @@ void observer_prepare(void)
 {
 #ifdef VENDOR_QCOM
     char cmd[128] = {0};
-    lidbg_chmod("/sys/module/msm_show_resume_irq/parameters/debug_mask");
+    lidbg_shell_cmd("chmod 777 /sys/module/msm_show_resume_irq/parameters/debug_mask");
     ssleep(1);
     fs_file_write("/sys/module/msm_show_resume_irq/parameters/debug_mask", false, "1", 0, strlen("1"));
     sprintf(cmd, "cat /proc/interrupts > %sinterrupts.txt &", LIDBG_LOG_DIR);
     lidbg_shell_cmd(cmd);
-    fs_register_filename_list(LIDBG_LOG_DIR"interrupts.txt", true);
 #endif
-    fs_register_filename_list(PM_INFO_FILE, true);
 }
 void observer_start(void)
 {
@@ -1335,7 +1335,7 @@ static int __init lidbg_pm_init(void)
     DUMP_FUN;
     LIDBG_GET;
     set_func_tbl();
-    lidbg_mkdir(PM_DIR);
+    lidbg_shell_cmd("mkdir "PM_DIR);
 
     wake_lock_init(&pm_wakelock, WAKE_LOCK_SUSPEND, "lidbg_pm");
     wake_lock_init(&user_wakelock, WAKE_LOCK_SUSPEND, "lidbg_pm_user");

@@ -9,35 +9,6 @@ int g_iskmsg_ready = 1;
 
 //zone below [fs.log.driver]
 
-bool upload_machine_log(void)
-{
-    char buff[50] = {0};
-    if(lidbg_exe(get_lidbg_file_path(buff, "client_mobile"), NULL, NULL, NULL, NULL, NULL, NULL) < 0)
-        FS_ERR("client_mobile");
-    return true;
-}
-void remount_system(void)
-{
-    static int g_is_remountd_system = 0;
-    if(!g_is_remountd_system)
-    {
-        g_is_remountd_system = 1;
-        lidbg_chmod("/system/bin/mount");
-        lidbg_mount("/system");
-        lidbg_mount("/flysystem");
-#ifdef SOC_msm8x25
-        msleep(3000);
-#endif
-        lidbg_chmod("/system");
-        lidbg_chmod("/flysystem");
-        lidbg_chmod("/system/bin");
-        lidbg_chmod("/flysystem/bin");
-        lidbg_chmod("/system/lib/hw");
-        lidbg_chmod("/flysystem/lib/hw");
-        lidbg_chmod("/flysystem/lib/out");
-        lidbg_chmod("/system/app");
-    }
-}
 int bfs_file_amend(char *file2amend, char *str_append, int file_limit_M)
 {
     struct file *filep;
@@ -137,16 +108,6 @@ int fs_mem_log( const char *fmt, ... )
 
     return 1;
 }
-bool fs_upload_machine_log(void)
-{
-    lidbg_rm(LIDBG_MEM_DIR"mobile.txt");
-    remount_system();
-    return upload_machine_log();
-}
-void fs_remount_system(void)
-{
-    remount_system();
-}
 //zone end
 
 
@@ -158,8 +119,6 @@ void lidbg_fs_log_init(void)
 EXPORT_SYMBOL(fs_file_separator);
 EXPORT_SYMBOL(fs_string2file);
 EXPORT_SYMBOL(fs_mem_log);
-EXPORT_SYMBOL(fs_upload_machine_log);
-EXPORT_SYMBOL(fs_remount_system);
 EXPORT_SYMBOL(bfs_file_amend);
 
 

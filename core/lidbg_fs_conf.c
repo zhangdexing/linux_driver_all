@@ -5,24 +5,17 @@
 LIST_HEAD(lidbg_drivers_list);
 LIST_HEAD(lidbg_core_list);
 LIST_HEAD(lidbg_machine_info_list);
-LIST_HEAD(fs_state_list);
 static int g_pollfile_ms = 7000;
-static int g_pollstate_ms = 1000;
 static int machine_id = 0;
 struct rtc_time precorefile_tm;
 struct rtc_time predriverfile_tm;
 struct rtc_time precmdfile_tm;
 struct rtc_time pre_machine_info_tm;
-static struct task_struct *fs_statetask;
 static struct task_struct *filepoll_task;
 //zone end
 
 
 //zone below [fs.confops.driver]
-void clean_all(void)
-{
-    lidbg_rmdir(LIDBG_LOG_DIR);
-}
 int launch_file_cmd(const char *filename)
 {
     struct file *filep;
@@ -156,30 +149,10 @@ void set_machine_id(void)
         bfs_file_amend(MACHINE_ID_FILE, string, 0);
     }
 }
-static int thread_pollstate_func(void *data)
-{
-    allow_signal(SIGKILL);
-    allow_signal(SIGSTOP);
-    while(!kthread_should_stop())
-    {
-        if(g_pollstate_ms && is_fs_work_enable)
-        {
-            msleep(g_pollstate_ms);
-            save_list_to_file(&fs_state_list, PATH_STATE_MEM);
-        }
-        else
-            ssleep(1);
-    }
-    return 1;
-}
 //zone end
 
 
 //zone below [fs.confops.interface]
-void fs_clean_all(void)
-{
-    clean_all();
-}
 int get_machine_id(void)
 {
     return machine_id;
@@ -195,15 +168,12 @@ void fs_save_state(void)
 void lidbg_fs_conf_init(void)
 {
     fs_get_intvalue(&lidbg_core_list, "fs_pollfile_ms", &g_pollfile_ms, NULL);
-    fs_get_intvalue(&lidbg_core_list, "fs_updatestate_ms", &g_pollstate_ms, NULL);
     filepoll_task = kthread_run(thread_pollfile_func, NULL, "ftf_filepolltask");
-    fs_statetask = kthread_run(thread_pollstate_func, NULL, "ftf_statetask");
 }
 
 EXPORT_SYMBOL(lidbg_machine_info_list);
 EXPORT_SYMBOL(lidbg_drivers_list);
 EXPORT_SYMBOL(lidbg_core_list);
-EXPORT_SYMBOL(fs_clean_all);
 EXPORT_SYMBOL(get_machine_id);
 EXPORT_SYMBOL(fs_save_state);
 

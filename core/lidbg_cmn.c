@@ -4,10 +4,6 @@
 #include "lidbg.h"
 #include "cmn_func.c"
 
-
-char g_binpath[50];
-
-
 #if(LINUX_VERSION_CODE > KERNEL_VERSION(3, 11, 0))
 struct lidbg_dir_ctx {
         struct dir_context ctx;
@@ -15,30 +11,23 @@ struct lidbg_dir_ctx {
 };
 #endif
 
+ static char str_append[768] = {0};
+char *format_string(bool debug, const char *fmt, ... )
+{
+    va_list args;
+    int n;
+    memset(str_append, '\0', sizeof(str_append));
+    va_start ( args, fmt );
+    n = vsprintf ( str_append, (const char *)fmt, args );
+    va_end ( args );
+    if(debug)
+        lidbg("format_string:%s\n", str_append);
+    return str_append;
+}
 
 void lidbg_shell_cmd(char *shell_cmd)
 {
-#ifndef USE_CALL_USERHELPER
     lidbg_uevent_shell(shell_cmd);
-#endif
-}
-
-
-char *get_bin_path( char *buf)
-{
-#ifdef USE_CALL_USERHELPER
-    if(!strchr(buf, '/'))
-    {
-        char *path;
-        path = (is_file_exist(RECOVERY_MODE_DIR)) ? "/sbin/" : "/system/bin/";
-        sprintf(g_binpath, "%s%s", path, buf);
-        return g_binpath;
-    }
-    else
-        return buf;
-#else
-    return buf;
-#endif
 }
 
 char *get_lidbg_file_path(char *buff, char *filename)
@@ -47,7 +36,6 @@ char *get_lidbg_file_path(char *buff, char *filename)
     path = (gboot_mode == MD_FLYSYSTEM) ? "/flysystem/lib/out/" : "/system/lib/modules/out/";
     if(gboot_mode == MD_DEBUG)
 		path = "/data/out/";
-	
     sprintf(buff, "%s%s", path, filename);
     return buff;
 }
@@ -97,7 +85,7 @@ void set_cpu_governor(int state)
         len = sprintf(buf, "%s", "powersave");
 
     }
-    lidbg_chmod("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
+    lidbg_shell_cmd("chmod 777 /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
     lidbg_readwrite_file("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor", NULL, buf, len);
 }
 
@@ -193,29 +181,6 @@ char *lidbg_get_current_time(char *time_string, struct rtc_time *ptm)
         *ptm = tm;
     return time_string;
 }
-int  lidbg_launch_user( char bin_path[], char argv1[], char argv2[], char argv3[], char argv4[], char argv5[], char argv6[])
-{
-#ifdef USE_CALL_USERHELPER
-    int ret;
-    char *argv[] = { bin_path, argv1, argv2, argv3, argv4, argv5, argv6, NULL };
-    static char *envp[] = { "HOME=/", "TERM=linux", "PATH=/system/bin:/sbin", NULL };
-    lidbg("%s ,%s\n", bin_path, argv1);
-    ret = call_usermodehelper(bin_path, argv, envp, UMH_WAIT_EXEC);
-    //NOTE:  I test that:use UMH_NO_WAIT can't lunch the exe; UMH_WAIT_PROCwill block the ko,
-    //UMH_WAIT_EXEC  is recommended.
-    if (ret < 0)
-        lidbg("lunch [%s %s] fail!\n", bin_path, argv1);
-    return ret;
-#else
-    char shell_cmd[512] = {0};
-    sprintf(shell_cmd, "%s %s %s %s %s %s %s ", bin_path, argv1 == NULL ? "" : argv1, argv2 == NULL ? "" : argv2, argv3 == NULL ? "" : argv3, argv4 == NULL ? "" : argv4, argv5 == NULL ? "" : argv5, argv6 == NULL ? "" : argv6);
-    lidbg_shell_cmd(shell_cmd);
-    return 1;
-#endif
-}
-
-
-
 u32 lidbg_get_random_number(u32 num_max)
 {
     u32 ret;
@@ -227,77 +192,11 @@ void lidbg_domineering_ack(void)
     DUMP_FUN;
     lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_SIGNAL_EVENT, NOTIFIER_MINOR_SIGNAL_BAKLIGHT_ACK));
 }
-int  lidbg_exe(char path[], char argv1[], char argv2[], char argv3[], char argv4[], char argv5[], char argv6[])
-{
-    return lidbg_launch_user(get_bin_path(path), argv1, argv2, argv3, argv4, argv5, argv6);
-}
-int  lidbg_mount(char path[])
-{
-    lidbg("warnning,remount is unsafe!\n");
-    return lidbg_launch_user(MOUNT_PATH, "-o", "remount", path, NULL, NULL, NULL);
-}
-int  lidbg_chmod(char path[])
-{
-    return lidbg_launch_user(CHMOD_PATH, "777", path, NULL, NULL, NULL, NULL);
-}
-int  lidbg_mv(char from[], char to[])
-{
-    return lidbg_launch_user(MV_PATH, from, to, NULL, NULL, NULL, NULL);
-}
-int  lidbg_rm(char path[])
-{
-    return lidbg_launch_user(RM_PATH, path, NULL, NULL, NULL, NULL, NULL);
-}
-int  lidbg_rmdir(char path[])
-{
-    return lidbg_launch_user(RMDIR_PATH, "-r", path, NULL, NULL, NULL, NULL);
-}
-int  lidbg_mkdir(char path[])
-{
-    return lidbg_launch_user(MKDIR_PATH, path, NULL, NULL, NULL, NULL, NULL);
-}
-int  lidbg_touch(char path[])
-{
-    return lidbg_launch_user(TOUCH_PATH, path, NULL, NULL, NULL, NULL, NULL);
-}
-int  lidbg_reboot(void)
-{
-    return lidbg_launch_user(REBOOT_PATH, NULL, NULL, NULL, NULL, NULL, NULL);
-}
-int  lidbg_setprop(char key[], char value[])
-{
-    return lidbg_launch_user(SETPROP_PATH, key, value, NULL, NULL, NULL, NULL);
-}
-int  lidbg_start(char server[])
-{
-    return lidbg_launch_user(get_bin_path("start"), server, NULL, NULL, NULL, NULL, NULL);
-}
-int  lidbg_stop(char server[])
-{
-    return lidbg_launch_user(get_bin_path("stop"), server, NULL, NULL, NULL, NULL, NULL);
-}
-int  lidbg_force_stop_apk(char packagename[])
-{
-    return lidbg_launch_user(get_bin_path("am"), "force-stop", packagename, "&", NULL, NULL, NULL);
-}
 int  lidbg_toast_show(char *who,char *what)
 {
     char para[128] = {0};
     sprintf(para, "am broadcast -a com.lidbg.flybootserver.action --es toast  \"%s%s\" &", who ? who : "",what ? what : "null");
     lidbg_shell_cmd(para);
-    return 1;
-}
-
-void pm_install_apk(char apkpath[])
-{
-    lidbg_launch_user(get_bin_path("pm"), "install", "-r", apkpath, "&", NULL, NULL);
-}
-
-int  lidbg_pm_install(char apkpath_or_apkdirpath[])
-{
-    if(!apkpath_or_apkdirpath)
-        return 0;
-    pm_install_apk(apkpath_or_apkdirpath);
     return 1;
 }
 
@@ -679,33 +578,18 @@ EXPORT_SYMBOL(lidbg_strrpl);
 EXPORT_SYMBOL(lidbg_strstrrpl);
 EXPORT_SYMBOL(lidbgstrtrim);
 EXPORT_SYMBOL(lidbg_get_random_number);
-EXPORT_SYMBOL(lidbg_exe);
-EXPORT_SYMBOL(lidbg_mount);
-EXPORT_SYMBOL(lidbg_chmod);
-EXPORT_SYMBOL(lidbg_mv);
-EXPORT_SYMBOL(lidbg_rm);
-EXPORT_SYMBOL(lidbg_rmdir);
-EXPORT_SYMBOL(lidbg_mkdir);
-EXPORT_SYMBOL(lidbg_touch);
-EXPORT_SYMBOL(lidbg_reboot);
-EXPORT_SYMBOL(lidbg_setprop);
-EXPORT_SYMBOL(lidbg_start);
-EXPORT_SYMBOL(lidbg_stop);
-EXPORT_SYMBOL(lidbg_pm_install);
 EXPORT_SYMBOL(lidbg_toast_show);
-EXPORT_SYMBOL(lidbg_force_stop_apk);
 EXPORT_SYMBOL(lidbg_get_usb_device_type);
 EXPORT_SYMBOL(lidbg_domineering_ack);
 EXPORT_SYMBOL(mod_cmn_main);
 EXPORT_SYMBOL(lidbg_get_ns_count);
 EXPORT_SYMBOL(get_tick_count);
-EXPORT_SYMBOL(lidbg_launch_user);
 EXPORT_SYMBOL(lidbg_readwrite_file);
 EXPORT_SYMBOL(lidbg_task_kill_select);
 EXPORT_SYMBOL(lidbg_get_current_time);
 EXPORT_SYMBOL(set_power_state);
-EXPORT_SYMBOL(get_bin_path);
 EXPORT_SYMBOL(get_lidbg_file_path);
+EXPORT_SYMBOL(format_string);
 EXPORT_SYMBOL(set_udisk_path);
 EXPORT_SYMBOL(get_udisk_file_path);
 EXPORT_SYMBOL(lidbg_shell_cmd);
