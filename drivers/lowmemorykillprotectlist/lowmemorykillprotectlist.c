@@ -67,6 +67,8 @@ char *lmk_protect_list[] =
 	"du.che.codriver",
 	"odriverlauncher",
 	"roup.wazehelper",
+	"r4u.cellokeypad",
+	"m.ituran.mbkusb",
 	NULL,
 };
 void dump_list(void)
