@@ -69,6 +69,7 @@ char *lmk_protect_list[] =
 	"roup.wazehelper",
 	"r4u.cellokeypad",
 	"m.ituran.mbkusb",
+	"m.mgroup.opener",
 	NULL,
 };
 void dump_list(void)
