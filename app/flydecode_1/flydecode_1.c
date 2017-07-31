@@ -331,6 +331,7 @@ static void usage(const char *pname)
              "   -t: file type -t txt\n"
              "   -m: rwx 777\n"
              "   -c: delete source path\n"
+             "   -b: broascast:default 1\n"
              "   -f: is Dir Path\n", pname
             );
 }
@@ -338,9 +339,9 @@ int main(int argc, char **argv)
 {
     char *spath = NULL, *dpath = NULL, *type = NULL;
     int c, ret;
-    int isDirPath = -1, mode = -1, isCleanSource = -1;
+    int isDirPath = -1, mode = -1, isCleanSource = -1, isbroadCast = 1;
     DEBUGMSG(TAG" \n");
-    while ((c = getopt(argc, argv, "s:d:f:t:m:c:h")) != -1)
+    while ((c = getopt(argc, argv, "s:d:f:t:m:c:b:h")) != -1)
     {
         DEBUGMSG(TAG"  %c-->%s\n", c, optarg);
         switch (c)
@@ -356,6 +357,9 @@ int main(int argc, char **argv)
             break;
         case 'f':
             isDirPath = atoi(optarg);
+            break;
+        case 'b':
+            isbroadCast = atoi(optarg);
             break;
         case 'c':
             isCleanSource = atoi(optarg);
@@ -376,7 +380,8 @@ int main(int argc, char **argv)
         usage("check para.");
         return FALSE;
     }
-    system("am broadcast -a cn.flyaudio.updateappAction --ei action 1");
+    if(isbroadCast)
+        system("am broadcast -a cn.flyaudio.updateappAction --ei action 1");
 
     if(!isDirPath)
         ret = flyDecodeFile(spath, dpath, mode);
@@ -390,7 +395,8 @@ int main(int argc, char **argv)
         system(cmd);
         DEBUGMSG(TAG"  clean dir stop:%s\n", cmd);
     }
-    system("am broadcast -a cn.flyaudio.updateappAction --ei action 0");
+    if(isbroadCast)
+        system("am broadcast -a cn.flyaudio.updateappAction --ei action 0");
     DEBUGMSG(TAG"  success exit\n");
     return ret;
 }

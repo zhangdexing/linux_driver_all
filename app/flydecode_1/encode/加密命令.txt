@@ -1,1 +1,2 @@
 ./encrypt -F FLYAUDIOBP -f test.txt -o test1.txt -v 1.0.0.1
+./app/flydecode_1/encode/encrypt -F FLYAUDIOBP -f /home/wqrftf99/futengfei/lidbg_qrdgit/dumplog_origin -o /home/wqrftf99/futengfei/lidbg_qrdgit/dumplog -v 1.0.0.1

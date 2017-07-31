@@ -243,7 +243,7 @@ int thread_fix_fly_update_info(void *data)
         sprintf(cmd, "chmod 777 %s", p_flyparameter_node);
         lidbg_shell_cmd(cmd);
     }
-		return 1;
+    return 1;
 }
 
 static bool fly_get_cmdline(void)
