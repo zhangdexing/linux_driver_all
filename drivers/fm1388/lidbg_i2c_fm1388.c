@@ -37,8 +37,27 @@
 LIDBG_DEFINE;
 
 #define FM1388_I2C_ADDR 0x2c
+#define FM1388_I2C_BUS	1
+#define FM1388_RESET_PIN 130
 
+#define FM1388_IOC_MAGIC 'k'
+#define FM1388_IOC_MAXNR  7
+#define FM1388_CM8K_MODE               _IOW(FM1388_IOC_MAGIC,0,int)
+#define FM1388_CM16K_MODE              _IOW(FM1388_IOC_MAGIC,1,int)
+#define FM1388_VR_MODE                 _IOW(FM1388_IOC_MAGIC,2,int)
+#define FM1388_SIRI_MODE               _IOW(FM1388_IOC_MAGIC,3,int)
+#define FM1388_FACETIME_MODE           _IOW(FM1388_IOC_MAGIC,4,int)
+#define FM1388_MEDIAPLAY_MODE          _IOW(FM1388_IOC_MAGIC,5,int)
+#define FM1388_GET_MODE                _IOR(FM1388_IOC_MAGIC,6,int)
+#define FM1388_GET_STATUS              _IOR(FM1388_IOC_MAGIC,7,int)
 
+enum FM1388_BOOT_STATE
+{
+	FM1388_COLD_BOOT,
+	FM1388_HOT_BOOT
+};
+int fm1388_boot_status;
+int fm1388_config_status=false;
 //
 // Following address may be changed by different firmware release
 //
@@ -52,7 +71,7 @@ LIDBG_DEFINE;
 #endif
 #define DSP_PARAMETER_READY 0x5ffdffea
 
-char filepath[] = "/system/etc/firmware/";
+char filepath[] = "/flysystem/firmware/";
 
 char filepath_name[255];
 
@@ -68,7 +87,8 @@ static struct platform_device *fm1388_pdev;
 static bool fm1388_is_dsp_on = false;	// is dsp power on? dsp is off in init time
 //static unsigned int fm1388_dsp_mode = FM_SMVD_CFG_BARGE_IN;
 static int fm1388_dsp_mode = -1;	// DSP working mode, user define mode in .cfg file
-static struct mutex fm1388_index_lock, fm1388_dsp_lock;
+static struct mutex fm1388_index_lock, fm1388_dsp_lock,fm1388_mode_change_lock;
+static struct mutex fm1388_init_lock;
 static struct delayed_work dsp_start_vr;
 
 //#define FM1388_IRQ
@@ -446,12 +466,24 @@ static int fm1388_run_dsp_addr_list(struct  fm1388_dsp_addr_list *list, size_t l
 	return 0;
 }
 #endif
-static void fm1388_reset(void)
+static void fm1388_software_reset(void)
 {
 	//pr_err("%s\n", __func__);
-	fm1388_write(0x00, 0x10ec);
+//	fm1388_write(0x00, 0x10ec);
 }
 
+static void fm1388_hardware_reset(void)
+{
+	GPIO_MultiFun_Set(FM1388_RESET_PIN, 0xFF);//config for gpio
+	gpio_direction_output(FM1388_RESET_PIN,1);
+	msleep(10);
+	gpio_direction_output(FM1388_RESET_PIN,0);
+	msleep(500);
+	gpio_direction_output(FM1388_RESET_PIN,1);
+	msleep(10);
+}
+
+#if 0
 static void fm1388_set_default_mode(unsigned int mode)
 {
 	fm1388_dsp_mode = mode;
@@ -461,6 +493,7 @@ static void fm1388_set_default_mode(unsigned int mode)
 		pr_err("%s file open error!\n", combine_path_name(filepath_name, "FM1388_mode.cfg"));
 	}
 }
+#endif
 
 static void fm1388_dsp_mode_change(unsigned int mode)
 {
@@ -468,7 +501,7 @@ static void fm1388_dsp_mode_change(unsigned int mode)
 
 	fm1388_dsp_mode = mode;
 
-	pr_err("%s: fm1388_dsp_mode = %d\n", __func__, fm1388_dsp_mode);
+//	pr_err("%s: fm1388_dsp_mode = %d\n", __func__, fm1388_dsp_mode);
     if(load_fm1388_vec(combine_path_name(filepath_name, "FM1388_sleep.vec"))==OPEN_NO_ERROR){
 #if 1
 		// wait for DSP default setting ready
@@ -634,16 +667,17 @@ static void fm1388_dsp_load_fw(void) {
 	release_firmware(fw3);
 	fw3 = NULL;
 #else
-	pr_err("%s: with SPI\n", __func__);
+//	pr_err("%s: with SPI\n", __func__);
+#if 0
 #ifdef SHOW_DL_TIME
 	do_gettimeofday(&(txc.time));
 	rtc_time_to_tm(txc.time.tv_sec,&tm);
 	pr_err("%s: start time: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
 #endif
-
+#endif
 	request_firmware(&fw, "FM1388_50000000.dat", &fm1388_pdev->dev);
 	if (fw) {
-		pr_err("%s: firmware FM1388_50000000.dat.\n", __func__);
+//		pr_err("%s: firmware FM1388_50000000.dat.\n", __func__);
 		fm1388_spi_burst_write(0x50000000, fw->data,
 			((fw->size/8)+1)*8);
 
@@ -652,7 +686,7 @@ static void fm1388_dsp_load_fw(void) {
 	}
 	request_firmware(&fw, "FM1388_5FFC0000.dat", &fm1388_pdev->dev);
 	if (fw) {
-		pr_err("%s: firmware FM1388_5FFC0000.dat.\n", __func__);
+//		pr_err("%s: firmware FM1388_5FFC0000.dat.\n", __func__);
 
 		fm1388_spi_burst_write(0x5ffc0000, fw->data,
 			((fw->size/8)+1)*8);
@@ -662,7 +696,7 @@ static void fm1388_dsp_load_fw(void) {
 	}
 	request_firmware(&fw, "FM1388_5FFE0000.dat", &fm1388_pdev->dev);
 	if (fw) {
-		pr_err("%s: firmware FM1388_5FFE0000.dat.\n", __func__);
+//		pr_err("%s: firmware FM1388_5FFE0000.dat.\n", __func__);
 
 		fm1388_spi_burst_write(0x5ffe0000, fw->data,
 			((fw->size/8)+1)*8);
@@ -672,7 +706,7 @@ static void fm1388_dsp_load_fw(void) {
 	}
 	request_firmware(&fw, "FM1388_60000000.dat", &fm1388_pdev->dev);
 	if (fw) {
-		pr_err("%s: firmware FM1388_60000000.dat.\n", __func__);
+//		pr_err("%s: firmware FM1388_60000000.dat.\n", __func__);
 
 		fm1388_spi_burst_write(0x60000000, fw->data,
 			((fw->size/8)+1)*8);
@@ -680,14 +714,16 @@ static void fm1388_dsp_load_fw(void) {
 		release_firmware(fw);
 		fw = NULL;
 	}
+#if 0
 #ifdef SHOW_DL_TIME
 	do_gettimeofday(&(txc.time));
 	rtc_time_to_tm(txc.time.tv_sec,&tm);
-	pr_err("%s: end   time: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+	pr_err("%s:end time: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+#endif
 #endif
 #endif
 
-	pr_err("%s: firmware loaded\n", __func__);
+//	pr_err("%s: firmware loaded\n", __func__);
 }
 
 mm_segment_t oldfs;
@@ -883,7 +919,7 @@ int load_fm1388_init_vec(char* file_src)
     char s[255];	//assume each line of the opened file is below 255 characters
 	dev_cmd payload;
 
-	pr_err("%s: file %s\n", __func__, file_src);
+//	pr_err("%s: file %s\n", __func__, file_src);
 
     initKernelEnv();
     fp = openFile(file_src, O_RDONLY, 0);
@@ -893,14 +929,14 @@ int load_fm1388_init_vec(char* file_src)
        set_fs(oldfs);
        return OPEN_ERROR;
     } else {
-       pr_err ("File %s opened!...\n", file_src);
+//       pr_err ("File %s opened!...\n", file_src);
 	   while (fgets(s, 255, fp, &word_count) != NULL) {
           if(s[0] == '#' || s[0] == '/' || s[0] == 0xD || s[0] == 0x0){
             continue;
           } else {
               //parse addr, value,
               if (parser_reg_mem(s, &payload)>=2) {
-				pr_err("payload.reg_addr=0x%08x, payload.val=0x%08x\n", (unsigned int)payload.reg_addr, (unsigned int)payload.val);
+//				pr_err("payload.reg_addr=0x%08x, payload.val=0x%08x\n", (unsigned int)payload.reg_addr, (unsigned int)payload.val);
 				//write to device
 				fm1388_write((unsigned int)payload.reg_addr, (unsigned int)payload.val);
 				msleep(2);
@@ -924,7 +960,7 @@ int load_fm1388_vec(char* file_src)
     char s[255];	//assume each line of the opened file is below 255 characters
 	dev_cmd payload;
 
-	pr_err("%s: file %s\n", __func__, file_src);
+//	pr_err("%s: file %s\n", __func__, file_src);
 
     initKernelEnv();
     fp = openFile(file_src, O_RDONLY, 0);
@@ -935,7 +971,7 @@ int load_fm1388_vec(char* file_src)
        return OPEN_ERROR;
     }
     else{
-       pr_err ("File %s opened!...\n", file_src);
+//       pr_err ("File %s opened!...\n", file_src);
 	   while (fgets(s, 255, fp, &word_count) != NULL) {
           if(s[0] == '#' || s[0] == '/' || s[0] == 0xD || s[0] == 0x0){
             continue;
@@ -965,7 +1001,7 @@ int load_fm1388_mode_cfg(char* file_src, unsigned int choosed_mode)
     cfg_mode_cmd cfg_mode;
     char s[255];	//assume each line of the opened file is below 255 characters
 
-	pr_err("%s: file %s\n", __func__, file_src);
+//	pr_err("%s: file %s\n", __func__, file_src);
 
     initKernelEnv();
     fp = openFile(file_src, O_RDONLY, 0);
@@ -975,7 +1011,7 @@ int load_fm1388_mode_cfg(char* file_src, unsigned int choosed_mode)
        set_fs(oldfs);
        return OPEN_ERROR;
     } else {
-       pr_err ("File %s opened!...\n", file_src);
+//       pr_err ("File %s opened!...\n", file_src);
  	   while (fgets(s, 255, fp, &word_count) != NULL) {
           if(s[0] == '#' || s[0] == '/' || s[0] == 0xD || s[0] == 0x0){
             continue;
@@ -983,7 +1019,7 @@ int load_fm1388_mode_cfg(char* file_src, unsigned int choosed_mode)
             //parse mode, path vec, dsp vec, comment
 			if (parser_mode(s, &cfg_mode) >= 3) {
 				if(choosed_mode==cfg_mode.mode){
-                  pr_err("mode=%d, path=%s, dsp_setting=%s, comment=%s\n", cfg_mode.mode, cfg_mode.path_setting_file_name, cfg_mode.dsp_setting_file_name, cfg_mode.comment);
+//                  pr_err("mode=%d, path=%s, dsp_setting=%s, comment=%s\n", cfg_mode.mode, cfg_mode.path_setting_file_name, cfg_mode.dsp_setting_file_name, cfg_mode.comment);
 			      break;
 				}
 			}
@@ -1010,30 +1046,48 @@ int load_fm1388_mode_cfg(char* file_src, unsigned int choosed_mode)
 static int fm1388_fw_loaded(void *data)
 {
 	unsigned int val;
-
-    pr_err("%s: entering...\n", __func__);
-   // release_firmware(fw);
-
+	mutex_lock(&fm1388_init_lock);
+	fm1388_dsp_mode = -1;
+	fm1388_is_dsp_on = false;
+	fm1388_config_status=false;
+#ifdef SHOW_DL_TIME
+		do_gettimeofday(&(txc.time));
+		rtc_time_to_tm(txc.time.tv_sec,&tm);
+		pr_err("%s#########:: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+#endif
+	fm1388_hardware_reset();
+	fm1388_software_reset();
+	if(fm1388_boot_status==FM1388_HOT_BOOT)
+	{
+		fm1388_spi_device_reload();
+	}
     load_fm1388_init_vec(combine_path_name(filepath_name, "FM1388_init.vec"));
     fm1388_is_dsp_on = true;	// set falg due to the last command of init VEC file will power on DSP
 
 
-    msleep(100);	// wait HW ready to load firmware
+    msleep(10);	// wait HW ready to load firmware
     fm1388_dsp_load_fw();
     msleep(10);
 
 	// TODO:
 	//   example to set default mode to mode 0
 	//   user may change preferred default mode here
-	fm1388_set_default_mode(0);	// set default mode, parse from .cfg
-
     load_fm1388_vec(combine_path_name(filepath_name, "FM1388_run.vec"));
     msleep(10);
+	fm1388_dsp_mode_change(5);	// set default mode, parse from .cfg
+#ifdef SHOW_DL_TIME
+		do_gettimeofday(&(txc.time));
+		rtc_time_to_tm(txc.time.tv_sec,&tm);
+		pr_err("%s#########:: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+#endif
 	fm1388_dsp_mode_i2c_read_addr_2(0x180200CA, &val);	// check register 0x65 to make sure DSP is running
 	pr_err("addr=0x180200CA, val=0x%x (value must be 0x7fe)\n", val);
+	fm1388_config_status=true;
 	spi_test();
-	return 1;
+	mutex_unlock(&fm1388_init_lock);
+	return 0;
 }
+
 
 static bool fm1388_readable_register(unsigned int reg)
 {
@@ -1268,6 +1322,57 @@ static ssize_t fm1388_addr_store(struct device *dev,
 }
 static DEVICE_ATTR(fm1388_addr, 0666, fm1388_addr_show, fm1388_addr_store);
 
+static ssize_t fm1388_status_show(struct device *dev,struct device_attribute *attr, char *buf)
+{
+	unsigned int addr, val;
+	addr = FRAME_CNT;
+	fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
+	pr_err("%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, val);
+	addr = CRC_STATUS;
+	fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
+	if (val == 0x8888) {
+			pr_err("%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
+	} else {
+			pr_err("%s: CRC_STAUS 0x%x = 0x%x, CRC FAIL!\n", __func__, addr, val);
+	}
+	return sprintf(buf, "%x\n",val);
+}
+
+static ssize_t fm1388_reinit_show(struct device *dev,struct device_attribute *attr, char *buf)
+{
+	CREATE_KTHREAD(fm1388_fw_loaded,NULL);
+	return sprintf(buf, "fm1388_reinit\n");
+}
+
+static ssize_t fm1388_test_show(struct device *dev,struct device_attribute *attr, char *buf)
+{
+	unsigned int addr, val;
+	unsigned int sendconfig_count=0;
+	unsigned int successful_count=0;
+	unsigned int i;
+	for(i=0;i<1;i++)
+	{
+		fm1388_fw_loaded(NULL);
+		sendconfig_count++;
+		addr = FRAME_CNT;
+		fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
+		pr_err("%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, val);
+		addr = CRC_STATUS;
+		fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
+		if (val == 0x8888) {
+			pr_err("%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
+			successful_count++;
+		} else {
+			pr_err("%s: CRC_STAUS 0x%x = 0x%x, CRC FAIL!\n", __func__, addr, val);
+	    }
+		lidbg("sendconfig_count %d successful_count %d\n",sendconfig_count,successful_count);
+	}
+	return sprintf(buf, "sendconfig_count %d successful_count %d\n",sendconfig_count,successful_count);
+}
+
+static DEVICE_ATTR(fm1388_status, 0666, fm1388_status_show, NULL);
+static DEVICE_ATTR(fm1388_reinit, 0666, fm1388_reinit_show, NULL);
+static DEVICE_ATTR(fm1388_test,   0666, fm1388_test_show, NULL);
 
 static ssize_t fm1388_device_read(struct file *file, char __user * buffer,
 	size_t length, loff_t * offset)
@@ -1457,15 +1562,62 @@ static void fm1388_framecnt_handling_work(struct work_struct *work)
 			pr_err("%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
 		} else {
 			pr_err("%s: CRC_STAUS 0x%x = 0x%x, CRC FAIL!\n", __func__, addr, val);
+			fm1388_fw_loaded(NULL);
+			pr_err("reinit fm1388!!!!!\n");
 		}
 	}
 }
 #endif
 
+static long fm1388_device_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+  if(_IOC_TYPE(cmd) != FM1388_IOC_MAGIC)
+	return -ENOTTY;
+  if(_IOC_NR(cmd) > FM1388_IOC_MAXNR)
+	return -ENOTTY;
+  mutex_lock(&fm1388_mode_change_lock);
+  switch(cmd)
+  {
+	case FM1388_CM8K_MODE:
+		fm1388_dsp_mode_change(0);
+		break;
+	case FM1388_CM16K_MODE:
+		fm1388_dsp_mode_change(1);
+		break;
+	case FM1388_VR_MODE:
+		fm1388_dsp_mode_change(2);
+		break;
+	case FM1388_SIRI_MODE:
+		fm1388_dsp_mode_change(3);
+		break;
+	case FM1388_FACETIME_MODE:
+		fm1388_dsp_mode_change(4);
+		break;
+	case FM1388_MEDIAPLAY_MODE:
+		fm1388_dsp_mode_change(5);
+		break;
+	case FM1388_GET_MODE:
+		 //__put_user(fm1388_dsp_mode,(int __user *)arg);
+		copy_to_user((int __user *)arg,&fm1388_dsp_mode,4);
+		lidbg("get mode %d\n",fm1388_dsp_mode);
+		break;
+	case FM1388_GET_STATUS:
+		copy_to_user((int __user *)arg,&fm1388_config_status,4);
+		lidbg("fm1388 config status %d\n",fm1388_config_status);
+		break;
+	default:
+		lidbg("unknow mode\n");
+		break;
+  }
+  mutex_unlock(&fm1388_mode_change_lock);
+  return 0;
+}
+
 struct file_operations fm1388_fops = {
 	.owner = THIS_MODULE,
 	.read = fm1388_device_read,
 	.write = fm1388_device_write,
+	.unlocked_ioctl = fm1388_device_ioctl,
 };
 
 static struct miscdevice fm1388_dev = {
@@ -1487,15 +1639,16 @@ static int fm1388_i2c_suspend(struct device *dev)
 
 static int fm1388_i2c_resume(struct device *dev)
 {
-	pr_err("%s: entering\n", __func__);
+	//pr_err("%s: entering\n", __func__);
 	//Todo: something after driver's resume
 	is_host_slept = 0;
-
+	fm1388_boot_status=FM1388_HOT_BOOT;
+	CREATE_KTHREAD(fm1388_fw_loaded,NULL);
 	return 0;
 }
 #endif
 
-static const struct dev_pm_ops fm1388_ops = {
+static const struct dev_pm_ops fm1388_i2c_ops = {
 	.suspend = fm1388_i2c_suspend,
 	.resume  = fm1388_i2c_resume,
 };
@@ -1509,14 +1662,15 @@ static int fm1388_probe(struct platform_device *pdev)
 	fm1388_pdev=pdev;
 	mutex_init(&fm1388_index_lock);
 	mutex_init(&fm1388_dsp_lock);
-#if 1
+	mutex_init(&fm1388_mode_change_lock);
+	mutex_init(&fm1388_init_lock);
 	pr_err("%s: device_create_file - dev_attr_fm1388_reg.\n", __func__);
 	ret = device_create_file(&pdev->dev, &dev_attr_fm1388_reg);
 	if (ret != 0) {
 		dev_err(&fm1388_pdev->dev,"Failed to create fm1388_reg sysfs files: %d\n", ret);
 		return ret;
 	}
-	
+
 	pr_err("%s: device_create_file - dev_attr_index_reg.\n", __func__);
 	ret = device_create_file(&pdev->dev, &dev_attr_index_reg);
 	if (ret != 0) {
@@ -1530,20 +1684,40 @@ static int fm1388_probe(struct platform_device *pdev)
 		dev_err(&fm1388_pdev->dev,"Failed to create fm1388_addr sysfs files: %d\n", ret);
 		return ret;
 	}
+
+	ret = device_create_file(&pdev->dev, &dev_attr_fm1388_status);
+	if (ret != 0) {
+		dev_err(&fm1388_pdev->dev,"Failed to create fm1388_status sysfs files: %d\n", ret);
+		return ret;
+	}
+
+	ret = device_create_file(&pdev->dev, &dev_attr_fm1388_reinit);
+	if (ret != 0) {
+		dev_err(&fm1388_pdev->dev,"Failed to create fm1388_reinit sysfs files: %d\n", ret);
+		return ret;
+	}
+	ret = device_create_file(&pdev->dev, &dev_attr_fm1388_test);
+	if (ret != 0) {
+		dev_err(&fm1388_pdev->dev,"Failed to create fm1388_test sysfs files: %d\n", ret);
+		return ret;
+	}
+
+#ifdef SOC_mt3360
+	ret= GPIO_MultiFun_Set(FM1388_RESET_PIN, PINMUX_LEVEL_GPIO_END_FLAG);
+	lidbg("GPIO_MultiFun_Set %d\n",ret);
 #endif
-	pr_err("%s: fm1388_reset.\n", __func__);
-	fm1388_reset();
+	gpio_request(FM1388_RESET_PIN,"fm1388_reset");
 #if 0
 	request_firmware_nowait(THIS_MODULE, FW_ACTION_HOTPLUG,
 		"fm1388_fw", &i2c->dev, GFP_KERNEL, i2c,
 		fm1388_fw_loaded);
 #endif
-	CREATE_KTHREAD(fm1388_fw_loaded, NULL);
-	pr_err("%s: lidbg_new_cdev.\n", __func__);
-    if(!lidbg_new_cdev(&fm1388_fops, "fm1388") )
-    {
-        dev_err(&pdev->dev, "Couldn't register control device\n");
-    }
+	fm1388_boot_status=FM1388_COLD_BOOT;
+	CREATE_KTHREAD(fm1388_fw_loaded,NULL);
+	pr_err("%s: misc_register.\n", __func__);
+	ret = misc_register(&fm1388_dev);
+	if (ret)
+		dev_err(&pdev->dev, "Couldn't register control device\n");
 
 	INIT_DELAYED_WORK(&dsp_start_vr, dsp_start_vr_work);
 
@@ -1592,7 +1766,7 @@ static struct platform_driver fm1388_driver =
         .name = "fm1388",
         .owner = THIS_MODULE,
 #ifdef CONFIG_PM
-        .pm = &fm1388_ops,
+        .pm = &fm1388_i2c_ops,
 #endif
     },
 };

@@ -11,7 +11,7 @@
 #define __FM1388_SPI_H__
 
 //#define FM1388_SPI_BUF_LEN 240
-#define FM1388_SPI_BUF_LEN 48	//changed to 48 due to dma issue
+#define FM1388_SPI_BUF_LEN 256	//changed to 48 due to dma issue
 
 /* SPI Command */
 enum {

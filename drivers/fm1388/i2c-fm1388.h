@@ -224,6 +224,7 @@ static struct fm1388_init_mem32 fm1388_dsp_run = {
 //extern int __init fm1388_spi_init(void);
 //extern struct spi_driver fm1388_spi_driver;
 extern void spi_test(void);
+extern void fm1388_spi_device_reload(void);
 extern int fm1388_spi_read(unsigned int addr, unsigned int *val, size_t len);
 extern int fm1388_spi_write(unsigned int addr, unsigned int val, size_t len);
 extern int fm1388_spi_burst_read(unsigned int addr, u8 *rxbuf, size_t len);
