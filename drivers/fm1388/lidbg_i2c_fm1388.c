@@ -37,7 +37,7 @@
 LIDBG_DEFINE;
 
 #define FM1388_I2C_ADDR 0x2c
-#define FM1388_I2C_BUS	1
+#define FM1388_I2C_BUS	0
 #define FM1388_RESET_PIN 130
 
 #define FM1388_IOC_MAGIC 'k'
@@ -474,12 +474,11 @@ static void fm1388_software_reset(void)
 
 static void fm1388_hardware_reset(void)
 {
-	GPIO_MultiFun_Set(FM1388_RESET_PIN, 0xFF);//config for gpio
-	gpio_direction_output(FM1388_RESET_PIN,1);
+//	SOC_IO_Output(0, FM1388_RESET_PIN, 1);
 	msleep(10);
-	gpio_direction_output(FM1388_RESET_PIN,0);
+//	SOC_IO_Output(0, FM1388_RESET_PIN, 0);
 	msleep(500);
-	gpio_direction_output(FM1388_RESET_PIN,1);
+//	SOC_IO_Output(0, FM1388_RESET_PIN, 1);
 	msleep(10);
 }
 
@@ -667,7 +666,7 @@ static void fm1388_dsp_load_fw(void) {
 	release_firmware(fw3);
 	fw3 = NULL;
 #else
-//	pr_err("%s: with SPI\n", __func__);
+	pr_err("[zhl]%s: with SPI\n", __func__);
 #if 0
 #ifdef SHOW_DL_TIME
 	do_gettimeofday(&(txc.time));
@@ -677,7 +676,7 @@ static void fm1388_dsp_load_fw(void) {
 #endif
 	request_firmware(&fw, "FM1388_50000000.dat", &fm1388_pdev->dev);
 	if (fw) {
-//		pr_err("%s: firmware FM1388_50000000.dat.\n", __func__);
+		pr_err("[zhl]%s: firmware FM1388_50000000.dat.\n", __func__);
 		fm1388_spi_burst_write(0x50000000, fw->data,
 			((fw->size/8)+1)*8);
 
@@ -686,7 +685,7 @@ static void fm1388_dsp_load_fw(void) {
 	}
 	request_firmware(&fw, "FM1388_5FFC0000.dat", &fm1388_pdev->dev);
 	if (fw) {
-//		pr_err("%s: firmware FM1388_5FFC0000.dat.\n", __func__);
+		pr_err("[zhl]%s: firmware FM1388_5FFC0000.dat.\n", __func__);
 
 		fm1388_spi_burst_write(0x5ffc0000, fw->data,
 			((fw->size/8)+1)*8);
@@ -696,7 +695,7 @@ static void fm1388_dsp_load_fw(void) {
 	}
 	request_firmware(&fw, "FM1388_5FFE0000.dat", &fm1388_pdev->dev);
 	if (fw) {
-//		pr_err("%s: firmware FM1388_5FFE0000.dat.\n", __func__);
+		pr_err("[zhl]%s: firmware FM1388_5FFE0000.dat.\n", __func__);
 
 		fm1388_spi_burst_write(0x5ffe0000, fw->data,
 			((fw->size/8)+1)*8);
@@ -706,7 +705,7 @@ static void fm1388_dsp_load_fw(void) {
 	}
 	request_firmware(&fw, "FM1388_60000000.dat", &fm1388_pdev->dev);
 	if (fw) {
-//		pr_err("%s: firmware FM1388_60000000.dat.\n", __func__);
+		pr_err("[zhl]%s: firmware FM1388_60000000.dat.\n", __func__);
 
 		fm1388_spi_burst_write(0x60000000, fw->data,
 			((fw->size/8)+1)*8);
@@ -1192,7 +1191,7 @@ static ssize_t fm1388_reg_store(struct device *dev,
 	}
 	return count;
 }
-static DEVICE_ATTR(fm1388_reg, 0666, fm1388_reg_show, fm1388_reg_store);
+static DEVICE_ATTR(fm1388_reg, 0555, fm1388_reg_show, fm1388_reg_store);
 
 static ssize_t fm1388_index_show(struct device *dev,
 	struct device_attribute *attr, char *buf)
@@ -1258,7 +1257,7 @@ static ssize_t fm1388_index_store(struct device *dev,
 
 	return count;
 }
-static DEVICE_ATTR(index_reg, 0666, fm1388_index_show, fm1388_index_store);
+static DEVICE_ATTR(index_reg, 0555, fm1388_index_show, fm1388_index_store);
 
 static ssize_t fm1388_addr_show(struct device *dev,struct device_attribute *attr, char *buf)
 {
@@ -1320,7 +1319,7 @@ static ssize_t fm1388_addr_store(struct device *dev,
 
 	return count;
 }
-static DEVICE_ATTR(fm1388_addr, 0666, fm1388_addr_show, fm1388_addr_store);
+static DEVICE_ATTR(fm1388_addr, 0555, fm1388_addr_show, fm1388_addr_store);
 
 static ssize_t fm1388_status_show(struct device *dev,struct device_attribute *attr, char *buf)
 {
@@ -1370,9 +1369,9 @@ static ssize_t fm1388_test_show(struct device *dev,struct device_attribute *attr
 	return sprintf(buf, "sendconfig_count %d successful_count %d\n",sendconfig_count,successful_count);
 }
 
-static DEVICE_ATTR(fm1388_status, 0666, fm1388_status_show, NULL);
-static DEVICE_ATTR(fm1388_reinit, 0666, fm1388_reinit_show, NULL);
-static DEVICE_ATTR(fm1388_test,   0666, fm1388_test_show, NULL);
+static DEVICE_ATTR(fm1388_status, 0555, fm1388_status_show, NULL);
+static DEVICE_ATTR(fm1388_reinit, 0555, fm1388_reinit_show, NULL);
+static DEVICE_ATTR(fm1388_test,   0555, fm1388_test_show, NULL);
 
 static ssize_t fm1388_device_read(struct file *file, char __user * buffer,
 	size_t length, loff_t * offset)

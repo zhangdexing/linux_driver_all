@@ -30,6 +30,8 @@
 //#include "fm1388.h"
 #include "spi-fm1388.h"
 #include "lidbg.h"
+#define TAG "lidbg_fm1388:"
+
 
 LIDBG_DEFINE;
 #define FM1388_SPI_BUS 0
@@ -115,7 +117,7 @@ int fm1388_spi_write(unsigned int addr, unsigned int val, size_t len)
 		(len == 4) ? sizeof(write_buf) : sizeof(write_buf) - 2);
 
 	if (status)
-		dev_err(&spi->dev, "%s error %d\n", __FUNCTION__, status);
+		lidbg(TAG"%s error %d\n", __FUNCTION__, status);
 
 	return status;
 }
@@ -212,7 +214,7 @@ int fm1388_spi_burst_write(u32 addr, const u8 *txbuf, size_t len)
 	unsigned int i , end, offset = 0;
 	int status;
 
-//	pr_err("%s: begin...\n", __func__);
+	lidbg(TAG"[zhl]%s: begin...\n", __func__);
 	write_buf = kmalloc(FM1388_SPI_BUF_LEN + 6, GFP_KERNEL);
 
 	if (write_buf == NULL)
@@ -245,10 +247,10 @@ int fm1388_spi_burst_write(u32 addr, const u8 *txbuf, size_t len)
 
 		write_buf[end + 5] = spi_cmd;
 
-		//pr_err("%s: spi_write.\n", __func__);
+		lidbg(TAG"[zhl]%s: spi_write.offset(%d).len(%d)\n", __func__, offset, len);
 		status = spi_write(fm1388_spi, write_buf, end + 6);
 		if (status) {
-			dev_err(&fm1388_spi->dev, "%s error %d\n", __FUNCTION__,
+			lidbg(TAG"%s error %d\n", __FUNCTION__,
 				status);
 			kfree(write_buf);
 			return status;
@@ -282,9 +284,9 @@ void spi_test(void)
 	fm1388_spi_write(address,write_value,4);
 	fm1388_spi_read(address,&read_value,4);
 	printk("write_value=0x%x,read_value=0x%0x\n",write_value,read_value);
-	for(j=0;j<len/0x100;j++)
+	for(j=0;j<len/0x100;j++))
 	{
-		lidbg("-----------0x%x\n",0x100*j);
+		lidbg(TAG"-----------0x%x\n",0x100*j);
 		fm1388_spi_burst_read(address+0x100*j,read_buf,0x100);
 		for(i=0;i<0x100;)
 		printk("0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x---0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n",
@@ -311,24 +313,27 @@ void register_fm1388_spi_device(void)
         .chip_select = 0,
 //		.max_speed_hz = 2000000,
     };
-	master = spi_busnum_to_master(FM1388_SPI_BUS);
+    lidbg(TAG"%s:%d\n",__func__,FM1388_SPI_BUS);
+    master = spi_busnum_to_master(FM1388_SPI_BUS);
     if (!master)
     {
         status = -ENODEV;
+        lidbg(TAG"%s:spi_busnum_to_master\n",__func__);
         goto error_busnum;
     }
     spi = spi_new_device(master, &chip);
     if (!spi)
     {
         status = -EBUSY;
+        lidbg(TAG"%s:spi_new_device\n",__func__);
         goto error_mem;
     }
-	return status;
+	return ;
 
 error_mem:
 error_busnum:
-	lidbg("register fm1388 spi device err!\n");
-    return status;
+	lidbg(TAG"register fm1388 spi device err!\n");
+    return ;
 
 }
 void fm1388_spi_device_reload(void)
@@ -337,7 +342,7 @@ void fm1388_spi_device_reload(void)
 	{
 		fm1388_spi->master->setup(fm1388_spi);
 	}
-	lidbg("fm1388_spi_device_reload\n");
+	lidbg(TAG"fm1388_spi_device_reload\n");
 }
 EXPORT_SYMBOL_GPL(fm1388_spi_device_reload);
 
@@ -359,7 +364,7 @@ static int fm1388_spi_probe(struct spi_device *spi)
 {
 	//spi->max_speed_hz=500*1000;
 	//spi->bits_per_word=8;
-	pr_err("%s: max_speed = %d, chip_select = %d, mode = %d, modalias = %s,bits_per_word = %d\n", __func__, spi->max_speed_hz, spi->chip_select, spi->mode, spi->modalias,spi->bits_per_word);
+	lidbg(TAG"%s: max_speed = %d, chip_select = %d, mode = %d, modalias = %s,bits_per_word = %d\n", __func__, spi->max_speed_hz, spi->chip_select, spi->mode, spi->modalias,spi->bits_per_word);
 	fm1388_spi = spi;
 	return 0;
 }
@@ -407,13 +412,14 @@ static int  fm1388_spi_init(void)
 
 	int status;
 	DUMP_BUILD_TIME;
-    LIDBG_GET;
+	LIDBG_GET;
+	lidbg(TAG"%s:\n",__func__);
 	register_fm1388_spi_device();
 	status = spi_register_driver(&fm1388_spi_driver);
 	if (status < 0) {
-		pr_err("%s: spi_register_driver fm1388_spi_driver failure. status = %d\n", __func__, status);
+		lidbg(TAG"%s:fm1388_spi_driver failure. status = %d\n", __func__, status);
 	}
-	pr_err("%s: spi_register_driver fm1388_spi_driver success. status = %d\n", __func__, status);
+	lidbg(TAG"%s:fm1388_spi_driver success. status = %d\n", __func__, status);
     return status;
 }
 
