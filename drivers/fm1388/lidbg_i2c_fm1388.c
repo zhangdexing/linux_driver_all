@@ -36,6 +36,8 @@
 #include "lidbg.h"
 LIDBG_DEFINE;
 
+#define TAG "fm1388_i2c:"
+
 #define FM1388_I2C_ADDR 0x2c
 #define FM1388_I2C_BUS	0
 #define FM1388_RESET_PIN 130

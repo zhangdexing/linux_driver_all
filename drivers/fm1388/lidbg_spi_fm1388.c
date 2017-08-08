@@ -30,7 +30,7 @@
 //#include "fm1388.h"
 #include "spi-fm1388.h"
 #include "lidbg.h"
-#define TAG "lidbg_fm1388:"
+#define TAG "fm1388_spi:"
 
 
 LIDBG_DEFINE;
