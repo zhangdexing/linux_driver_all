@@ -276,6 +276,20 @@ bool step_on_stream_volume(audio_stream_type_t mstream, int start_index , int en
     set_stream_volume(mstream, end_index);
     return (error == NO_ERROR);
 }
+int check_and_restore_volume(const char *who, int dbg, int minlevel)
+{
+    if(dbg)
+        lidbg(TAG"check_and_restore_volume:[%s]\n", who);
+    if( get_stream_volume(false, AUDIO_STREAM_MUSIC) < minlevel)
+    {
+        print_stream_volume();
+        lidbg(TAG"check_and_restore_volume:%d\n", music_max_level);
+        if(music_max_level < 15)
+            music_max_level = 15;
+        set_all_stream_volume(music_max_level);
+    }
+    return 1;
+}
 
 void check_ring_stream(void)
 {
@@ -333,6 +347,7 @@ void check_ring_stream(void)
 }
 static void *thread_check_ring_stream(void *data)
 {
+    static int loop = 0;
     TRACE_STEP;
     lidbg( TAG"thread_check_ring_stream:in\n");
     data = data;
@@ -359,6 +374,10 @@ static void *thread_check_ring_stream(void *data)
             sleep(3);
         }
         usleep(100000);//100ms
+
+        loop++;
+        if(!ring && delay_off_volume_policy_cnt == 0 && (!(loop % 30)))
+            check_and_restore_volume("checkstep1:", false, 15);
     }
     return ((void *) 0);
 }
@@ -385,20 +404,7 @@ int handle_sound_state(const char *who, int sound)
     lidbg(TAG"handle_sound_state:[%s/%s/%d/%d]\n", cmd, who, playing, phone_call_state);
     return 1;
 }
-int check_and_restore_volume(const char *who, int dbg)
-{
-    if(dbg)
-        lidbg(TAG"check_and_restore_volume:[%s]\n", who);
-    if( get_stream_volume(false, AUDIO_STREAM_MUSIC) < 5)
-    {
-        print_stream_volume();
-        lidbg(TAG"check_and_restore_volume:%d\n", music_max_level);
-        if(music_max_level < 15)
-            music_max_level = 15;
-        set_all_stream_volume(music_max_level);
-    }
-    return 1;
-}
+
 int main(int argc, char **argv)
 {
     pthread_t ntid;
@@ -428,7 +434,7 @@ int main(int argc, char **argv)
     mypid = getpid();
     lidbg(TAG"start:navi_policy_en=%d  max_volume=%d,mypid:%d\n", navi_policy_en, max_volume, mypid);
 
-    pthread_create(&ntid, NULL, thread_check_ring_stream, NULL);
+    pthread_create(&ntid, NULL, thread_check_ring_stream, NULL);//double check:it must be in running state.
 
     //sync:some platform as mtk,not the value [AUDIO_MODE_INVALID],we should sync it first.
     if(gAudioPolicyService != 0)
@@ -555,8 +561,6 @@ int main(int argc, char **argv)
             GetAudioFlingerService(false);
             loop_count = 0;
         }
-        if(!(loop_count % 30))//per 3s
-            check_and_restore_volume("after20:", false);
         trace_step = (char *)"main while4";
         if(!(loop_count % 30))//per 3s
         {
