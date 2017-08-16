@@ -30,7 +30,7 @@
 //#include "fm1388.h"
 #include "spi-fm1388.h"
 #include "lidbg.h"
-#define TAG "fm1388_spi:"
+#define TAG "dfm1388_spi:"
 
 
 LIDBG_DEFINE;
@@ -85,6 +85,7 @@ int fm1388_spi_read(unsigned int addr, unsigned int *val, size_t len)
 	else
 		*val = read_buf[1] | read_buf[0] << 8;
 
+	lidbg(TAG"%s status:%d\n", __FUNCTION__, status);
 	return status;
 }
 EXPORT_SYMBOL(fm1388_spi_read);
@@ -94,7 +95,7 @@ int fm1388_spi_write(unsigned int addr, unsigned int val, size_t len)
 	struct spi_device *spi = fm1388_spi;
 	int status;
 	u8 write_buf[10];
-
+	//lidbg(TAG"%s begin write: addr:%d,val:%d,len:%d\n", __FUNCTION__, addr, val, len);
 
 	write_buf[1] = (addr & 0xff000000) >> 24;
 	write_buf[2] = (addr & 0x00ff0000) >> 16;
@@ -118,7 +119,7 @@ int fm1388_spi_write(unsigned int addr, unsigned int val, size_t len)
 
 	if (status)
 		lidbg(TAG"%s error %d\n", __FUNCTION__, status);
-
+	//lidbg(TAG"%s over write: addr:%d,val:%d,len:%d\n", __FUNCTION__, addr, val, len);
 	return status;
 }
 EXPORT_SYMBOL_GPL(fm1388_spi_write);
@@ -214,7 +215,6 @@ int fm1388_spi_burst_write(u32 addr, const u8 *txbuf, size_t len)
 	unsigned int i , end, offset = 0;
 	int status;
 
-	lidbg(TAG"[zhl]%s: begin...\n", __func__);
 	write_buf = kmalloc(FM1388_SPI_BUF_LEN + 6, GFP_KERNEL);
 
 	if (write_buf == NULL)
@@ -243,11 +243,11 @@ int fm1388_spi_burst_write(u32 addr, const u8 *txbuf, size_t len)
 			write_buf[i +  6] = txbuf[offset + i + 6];
 			write_buf[i +  5] = txbuf[offset + i + 7];
 		}
-
+		
 
 		write_buf[end + 5] = spi_cmd;
 
-		lidbg(TAG"[zhl]%s: spi_write.offset(%d).len(%d)\n", __func__, offset, len);
+		//lidbg(TAG"%s: spi_write.offset(%d).len(%d)\n", __func__, offset, len);
 		status = spi_write(fm1388_spi, write_buf, end + 6);
 		if (status) {
 			lidbg(TAG"%s error %d\n", __FUNCTION__,
@@ -277,19 +277,23 @@ void spi_test(void)
 	unsigned int len=256*100;
 	unsigned int i=0,j=0;
 	unsigned char *read_buf;
+	int ret1,ret2;
 
 	read_buf=kmalloc(len,GFP_KERNEL);
 	if(!read_buf)
-		printk("alloc buf for fm1388 burst read err!");
-	fm1388_spi_write(address,write_value,4);
-	fm1388_spi_read(address,&read_value,4);
-	printk("write_value=0x%x,read_value=0x%0x\n",write_value,read_value);
-	for(j=0;j<len/0x100;j++))
+		lidbg(TAG"alloc buf for fm1388 burst read err!");
+	ret1=fm1388_spi_write(address,write_value,4);
+	ret2=fm1388_spi_read(address,&read_value,4);
+	
+	lidbg(TAG"write_addr:%x,write_value=0x%x,read_value=0x%0x,writeRet:%d,readRet:%d\n",address, write_value,read_value,ret1,ret2);
+
+	
+	for(j=0;j<len/0x100;j++)
 	{
 		lidbg(TAG"-----------0x%x\n",0x100*j);
 		fm1388_spi_burst_read(address+0x100*j,read_buf,0x100);
 		for(i=0;i<0x100;)
-		printk("0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x---0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n",
+		lidbg(TAG"0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x---0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n",
 		read_buf[9+i++],read_buf[9+i++],read_buf[9+i++],read_buf[9+i++],
 		read_buf[9+i++],read_buf[9+i++],read_buf[9+i++],read_buf[9+i++],
 		read_buf[9+i++],read_buf[9+i++],read_buf[9+i++],read_buf[9+i++],
@@ -311,21 +315,21 @@ void register_fm1388_spi_device(void)
         .mode       = 0x00,
         .bus_num	= 0,
         .chip_select = 0,
-//		.max_speed_hz = 2000000,
+	//	.max_speed_hz = 2000000,
     };
     lidbg(TAG"%s:%d\n",__func__,FM1388_SPI_BUS);
     master = spi_busnum_to_master(FM1388_SPI_BUS);
     if (!master)
     {
         status = -ENODEV;
-        lidbg(TAG"%s:spi_busnum_to_master\n",__func__);
+        lidbg(TAG"%s:spi_busnum_to_master error\n",__func__);
         goto error_busnum;
     }
     spi = spi_new_device(master, &chip);
     if (!spi)
     {
         status = -EBUSY;
-        lidbg(TAG"%s:spi_new_device\n",__func__);
+        lidbg(TAG"%s:spi_new_device error\n",__func__);
         goto error_mem;
     }
 	return ;

@@ -36,7 +36,7 @@
 #include "lidbg.h"
 LIDBG_DEFINE;
 
-#define TAG "fm1388_i2c:"
+#define TAG "dfm1388_i2c:"
 
 #define FM1388_I2C_ADDR 0x2c
 #define FM1388_I2C_BUS	0
@@ -177,22 +177,22 @@ static int fm1388_dsp_mode_i2c_write_addr(unsigned int addr, unsigned int value,
 
 	mutex_lock(&fm1388_dsp_lock);
 
-//	pr_err("%s: addr = %08x, value = %04x, opcode = %d\n", __func__, addr, value, opcode);
+	//lidbg(TAG"%s: addr = %08x, value = %04x, opcode = %d\n", __func__, addr, value, opcode);
 	ret = fm1388_i2c_write(FM1388_DSP_I2C_ADDR_LSB, addr & 0xffff);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set addr lsb value: %d\n", ret);
+		lidbg(TAG"Failed to set addr lsb value: %d\n", ret);
 		goto err;
 	}
 
 	ret = fm1388_i2c_write(FM1388_DSP_I2C_ADDR_MSB, addr >> 16);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set addr msb value: %d\n", ret);
+		lidbg(TAG"Failed to set addr msb value: %d\n", ret);
 		goto err;
 	}
 
 	ret = fm1388_i2c_write(FM1388_DSP_I2C_DATA_LSB, value & 0xffff);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set data lsb value: %d\n", ret);
+		lidbg(TAG"Failed to set data lsb value: %d\n", ret);
 		goto err;
 	}
 
@@ -200,22 +200,23 @@ static int fm1388_dsp_mode_i2c_write_addr(unsigned int addr, unsigned int value,
 	if (opcode == FM1388_I2C_CMD_16_WRITE) {
 		ret = fm1388_i2c_write(FM1388_DSP_I2C_DATA_MSB, value & 0xffff);
 		if (ret < 0) {
-			dev_err(&fm1388_pdev->dev,"Failed to set data msb value: %d\n", ret);
+			lidbg(TAG"Failed to set data msb value: %d\n", ret);
 			goto err;
 		}
 	} else {
 		ret = fm1388_i2c_write(FM1388_DSP_I2C_DATA_MSB, value >> 16);
 		if (ret < 0) {
-			dev_err(&fm1388_pdev->dev,"Failed to set data msb value: %d\n", ret);
+			lidbg(TAG"Failed to set data msb value: %d\n", ret);
 			goto err;
 		}
 	}
 
 	ret = fm1388_i2c_write(FM1388_DSP_I2C_OP_CODE, opcode);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set op code value: %d\n", ret);
+		lidbg(TAG"Failed to set op code value: %d\n", ret);
 		goto err;
 	}
+	//lidbg(TAG"%s: write over \n", __func__);
 err:
 	mutex_unlock(&fm1388_dsp_lock);
 
@@ -235,26 +236,26 @@ static int fm1388_dsp_mode_i2c_read_addr(unsigned int addr, unsigned int *value)
 
 	ret = fm1388_i2c_write(FM1388_DSP_I2C_ADDR_MSB, addr >> 16);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set addr msb value: %d\n", ret);
+		lidbg(TAG"Failed to set addr msb value: %d\n", ret);
 		goto err;
 	}
 
 	ret = fm1388_i2c_write(FM1388_DSP_I2C_ADDR_LSB, addr & 0xffff);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set addr lsb value: %d\n", ret);
+		lidbg(TAG"Failed to set addr lsb value: %d\n", ret);
 		goto err;
 	}
 
 	ret = fm1388_i2c_write(FM1388_DSP_I2C_OP_CODE, FM1388_I2C_CMD_32_READ);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set op code value: %d\n", ret);
+		lidbg(TAG"Failed to set op code value: %d\n", ret);
 		goto err;
 	}
 
 	fm1388_i2c_read(FM1388_DSP_I2C_DATA_MSB, &msb);
 	fm1388_i2c_read(FM1388_DSP_I2C_DATA_LSB, &lsb);
 	*value = (msb << 16) | lsb;
-	pr_err("%s: addr = %04x, value = %04x\n", __func__, addr, *value);
+	lidbg(TAG"%s: addr = %04x, value = %04x\n", __func__, addr, *value);
 
 err:
 	mutex_unlock(&fm1388_dsp_lock);
@@ -275,19 +276,19 @@ static int fm1388_dsp_mode_i2c_read_addr_2(unsigned int addr, unsigned int *valu
 
 	ret = fm1388_i2c_write(FM1388_DSP_I2C_ADDR_MSB, addr >> 16);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set addr msb value: %d\n", ret);
+		lidbg(TAG"Failed to set addr msb value: %d\n", ret);
 		goto err;
 	}
 
 	ret = fm1388_i2c_write(FM1388_DSP_I2C_ADDR_LSB, addr & 0xffff);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set addr lsb value: %d\n", ret);
+		lidbg(TAG"Failed to set addr lsb value: %d\n", ret);
 		goto err;
 	}
 
 	ret = fm1388_i2c_write(FM1388_DSP_I2C_OP_CODE, FM1388_I2C_CMD_32_READ);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set op code value: %d\n", ret);
+		lidbg(TAG"Failed to set op code value: %d\n", ret);
 		goto err;
 	}
 
@@ -296,7 +297,7 @@ static int fm1388_dsp_mode_i2c_read_addr_2(unsigned int addr, unsigned int *valu
 	} else {
 		fm1388_i2c_read(FM1388_DSP_I2C_DATA_MSB, value);
 	}
-	//pr_err("%s: addr = %x, value = %x, lsb = %x\n", __func__, addr, *value);
+	lidbg(TAG"%s: addr = %x, value = %x, lsb = %x\n", __func__, addr, *value);
 
 err:
 	mutex_unlock(&fm1388_dsp_lock);
@@ -322,14 +323,14 @@ static int fm1388_dsp_mode_update_bits_addr(unsigned int addr, unsigned int mask
 	if (ret < 0)
 		return ret;
 
-	//pr_err("%s: addr = %04x, value = %04x, mask = %d\n", __func__, addr, value, mask);
+	//lidbg(TAG"%s: addr = %04x, value = %04x, mask = %d\n", __func__, addr, value, mask);
 	return change;
 }
 #endif
 // register write
 static int fm1388_dsp_mode_i2c_write(unsigned int reg, unsigned int value)
 {
-	//pr_err("%s: reg = %04x, value = %04x\n", __func__, reg, value);
+	//lidbg(TAG"%s: reg = %04x, value = %04x\n", __func__, reg, value);
 	return fm1388_dsp_mode_i2c_write_addr(0x18020000 + reg * 2, value, FM1388_I2C_CMD_16_WRITE);
 }
 
@@ -338,7 +339,7 @@ static int fm1388_dsp_mode_i2c_read(unsigned int reg, unsigned int *value)
 {
 	int ret = fm1388_dsp_mode_i2c_read_addr_2(0x18020000 + reg * 2, value);
 
-	//pr_err("%s: reg = %04x, value = %04x\n", __func__, reg, *value);
+	//lidbg(TAG"%s: reg = %04x, value = %04x\n", __func__, reg, *value);
 
 	return ret;
 }
@@ -347,7 +348,7 @@ static int fm1388_dsp_mode_i2c_read(unsigned int reg, unsigned int *value)
 static int fm1388_write(unsigned int reg,
 	unsigned int value)
 {
-	//pr_err("%s %02x = %04x\n", __FUNCTION__, reg, value);
+	//lidbg(TAG"%s %02x = %04x\n", __FUNCTION__, reg, value);
 
 	return fm1388_is_dsp_on ? fm1388_dsp_mode_i2c_write(reg, value) :
 		fm1388_i2c_write(reg, value);
@@ -362,7 +363,7 @@ static int fm1388_read(unsigned int reg,
 	ret = fm1388_is_dsp_on ? fm1388_dsp_mode_i2c_read(reg, value) :
 		fm1388_i2c_read(reg, value);
 
-	//pr_err("%s %02x = %04x\n", __FUNCTION__, reg, *value);
+	//lidbg(TAG"%s %02x = %04x\n", __FUNCTION__, reg, *value);
 
 	return ret;
 }
@@ -380,7 +381,7 @@ static int fm1388_update_bits(unsigned int reg,unsigned int mask, unsigned int v
 	new = (old & ~mask) | (value & mask);
 	change = old != new;
 
-	//pr_err("%s: reg = %04x, mask = %04x, value = %04x, old = %04x, new =%04x, change = %d\n", __func__, reg, mask, value, old, new, change);
+	//lidbg(TAG"%s: reg = %04x, mask = %04x, value = %04x, old = %04x, new =%04x, change = %d\n", __func__, reg, mask, value, old, new, change);
 
 	if (change)
 		ret = fm1388_write(reg, new);
@@ -397,15 +398,15 @@ static int fm1388_index_write(unsigned int reg,unsigned int value)
 
 	mutex_lock(&fm1388_index_lock);
 
-	pr_err("%s: reg = %04x, value = %04x\n", __func__, reg, value);
+	lidbg(TAG"%s: reg = %04x, value = %04x\n", __func__, reg, value);
 	ret = fm1388_write(0x6a, reg);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set private addr: %d\n", ret);
+		lidbg(TAG"Failed to set private addr: %d\n", ret);
 		goto err;
 	}
 	ret = fm1388_write(0x6c, value);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set private value: %d\n", ret);
+		lidbg(TAG"Failed to set private value: %d\n", ret);
 		goto err;
 	}
 
@@ -427,7 +428,7 @@ static unsigned int fm1388_index_read(unsigned int reg)
 
 	ret = fm1388_write(0x6a, reg);
 	if (ret < 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to set private addr: %d\n", ret);
+		lidbg(TAG"Failed to set private addr: %d\n", ret);
 		mutex_unlock(&fm1388_index_lock);
 		return ret;
 	}
@@ -435,7 +436,7 @@ static unsigned int fm1388_index_read(unsigned int reg)
 	fm1388_read(0x6c, &ret);
 
 	mutex_unlock(&fm1388_index_lock);
-	pr_err("%s: reg = %04x, value = %04x\n", __func__, reg, ret);
+	lidbg(TAG"%s: reg = %04x, value = %04x\n", __func__, reg, ret);
 
 	return ret;
 }
@@ -461,7 +462,7 @@ static int fm1388_run_dsp_addr_list(struct  fm1388_dsp_addr_list *list, size_t l
 {
 	int i;
 
-	//pr_err("%s\n", __func__);
+	//lidbg(TAG"%s\n", __func__);
 	for (i = 0; i < list_size; i++) {
 		fm1388_dsp_mode_i2c_write_addr((unsigned int)list[i].addr, list[i].val, FM1388_I2C_CMD_16_WRITE);
 	}
@@ -470,7 +471,7 @@ static int fm1388_run_dsp_addr_list(struct  fm1388_dsp_addr_list *list, size_t l
 #endif
 static void fm1388_software_reset(void)
 {
-	//pr_err("%s\n", __func__);
+	//lidbg(TAG"%s\n", __func__);
 //	fm1388_write(0x00, 0x10ec);
 }
 
@@ -489,9 +490,9 @@ static void fm1388_set_default_mode(unsigned int mode)
 {
 	fm1388_dsp_mode = mode;
 
-	pr_err("%s: default mode = %d\n", __func__, fm1388_dsp_mode);
+	lidbg(TAG"%s: default mode = %d\n", __func__, fm1388_dsp_mode);
     if(load_fm1388_mode_cfg(combine_path_name(filepath_name, "FM1388_mode.cfg"), fm1388_dsp_mode)==OPEN_ERROR){
-		pr_err("%s file open error!\n", combine_path_name(filepath_name, "FM1388_mode.cfg"));
+		lidbg(TAG"%s file open error!\n", combine_path_name(filepath_name, "FM1388_mode.cfg"));
 	}
 }
 #endif
@@ -502,7 +503,7 @@ static void fm1388_dsp_mode_change(unsigned int mode)
 
 	fm1388_dsp_mode = mode;
 
-//	pr_err("%s: fm1388_dsp_mode = %d\n", __func__, fm1388_dsp_mode);
+//	lidbg(TAG"%s: fm1388_dsp_mode = %d\n", __func__, fm1388_dsp_mode);
     if(load_fm1388_vec(combine_path_name(filepath_name, "FM1388_sleep.vec"))==OPEN_NO_ERROR){
 #if 1
 		// wait for DSP default setting ready
@@ -510,13 +511,13 @@ static void fm1388_dsp_mode_change(unsigned int mode)
 			addr = DSP_PARAMETER_READY;
 			fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
 
-			//pr_err("*** reg_addr=0x%08x, val=0x%04x\n", DSP_PARAMETER_READY, val);
+			lidbg(TAG"*** reg_addr=0x%08x, val=0x%04x\n", DSP_PARAMETER_READY, val);
 			if((val & 0x100)==0x100){	// ready: bit 8 = 1
 				break;
 			} else {
 				times--;
 				if(times==0){
-					pr_err("timeout: wait for DSP default setting ready\n");
+					lidbg(TAG"timeout: wait for DSP default setting ready\n");
 					break;
 				}
 			}
@@ -527,7 +528,7 @@ static void fm1388_dsp_mode_change(unsigned int mode)
 		if(load_fm1388_mode_cfg(combine_path_name(filepath_name, "FM1388_mode.cfg"), fm1388_dsp_mode)==OPEN_NO_ERROR){
 			load_fm1388_vec(combine_path_name(filepath_name, "FM1388_wakeup.vec"));
 		} else {
-			pr_err("%s file open error!\n", combine_path_name(filepath_name, "FM1388_mode.cfg"));
+			lidbg(TAG"%s file open error!\n", combine_path_name(filepath_name, "FM1388_mode.cfg"));
 		}
 	}
 }
@@ -544,7 +545,7 @@ bool DSP_Write16(u32 addr, u16 data16)
 	addr_msb = (u16)(addr >> 16);
 	addr_lsb = (u16)addr;
 
-	//pr_err("%s: addr = %04x, data = %02x\n", __func__, addr, data16);
+	//lidbg(TAG"%s: addr = %04x, data = %02x\n", __func__, addr, data16);
 	fm1388_i2c_write( 0x01, addr_lsb);
 	fm1388_i2c_write( 0x02, addr_msb);
 	fm1388_i2c_write( 0x03, data16);
@@ -562,7 +563,7 @@ bool DSP_Write32(u32 addr, u32 data32)
 {
 	u16 addr_msb, addr_lsb;
 
-	//pr_err("%s: addr = %04x, data32 = %04x\n", __func__, addr, data32);
+	//lidbg(TAG"%s: addr = %04x, data32 = %04x\n", __func__, addr, data32);
 	addr_msb = (u16)(addr >> 16);
 	addr_lsb = (u16)addr;
 
@@ -593,7 +594,7 @@ void FM1388_Burst_Write(u8* pfEEProm[4], u32 fEEPromLen[4])
 #ifdef SHOW_DL_TIME
 		do_gettimeofday(&(txc.time));
 		rtc_time_to_tm(txc.time.tv_sec,&tm);
-		pr_err("%s: (%d) start time: %d-%d-%d %d:%d:%d \n", __func__, i, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+		lidbg(TAG"%s: (%d) start time: %d-%d-%d %d:%d:%d \n", __func__, i, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
 #endif
 		// Skip Empty File
 		pEEPromBuf = (u32 *)pfEEProm[i];	// pfEEProm[i] is pointer of the i_th file
@@ -623,7 +624,7 @@ void FM1388_Burst_Write(u8* pfEEProm[4], u32 fEEPromLen[4])
 #ifdef SHOW_DL_TIME
 		do_gettimeofday(&(txc.time));
 		rtc_time_to_tm(txc.time.tv_sec,&tm);
-		pr_err("%s: (%d) end   time: %d-%d-%d %d:%d:%d \n", __func__, i, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+		lidbg(TAG"%s: (%d) end   time: %d-%d-%d %d:%d:%d \n", __func__, i, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
 #endif
 	}
 
@@ -645,7 +646,7 @@ static void fm1388_dsp_load_fw(void) {
 
 	//fm1388_set_dsp_on(fm1388_i2c, true);
 
-	pr_err("%s: with I2C\n", __func__);
+	lidbg(TAG"%s: with I2C\n", __func__);
 	request_firmware(&fw, "FM1388_50000000.dat", &fm1388_pdev->dev);
 	request_firmware(&fw1, "FM1388_5FFC0000.dat", &fm1388_pdev->dev);
 	request_firmware(&fw2, "FM1388_5FFE0000.dat", &fm1388_pdev->dev);
@@ -668,26 +669,27 @@ static void fm1388_dsp_load_fw(void) {
 	release_firmware(fw3);
 	fw3 = NULL;
 #else
-	pr_err("[zhl]%s: with SPI\n", __func__);
+	lidbg(TAG"%s: with SPI\n", __func__);
 #if 0
 #ifdef SHOW_DL_TIME
 	do_gettimeofday(&(txc.time));
 	rtc_time_to_tm(txc.time.tv_sec,&tm);
-	pr_err("%s: start time: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+	lidbg(TAG"%s: start time: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
 #endif
 #endif
 	request_firmware(&fw, "FM1388_50000000.dat", &fm1388_pdev->dev);
 	if (fw) {
-		pr_err("[zhl]%s: firmware FM1388_50000000.dat.\n", __func__);
+		lidbg(TAG"%s: firmware FM1388_50000000.dat.\n", __func__);
 		fm1388_spi_burst_write(0x50000000, fw->data,
 			((fw->size/8)+1)*8);
 
 		release_firmware(fw);
 		fw = NULL;
 	}
+	//lidbg(TAG"%s: FM1388_50000000.dat over.\n", __func__);
 	request_firmware(&fw, "FM1388_5FFC0000.dat", &fm1388_pdev->dev);
 	if (fw) {
-		pr_err("[zhl]%s: firmware FM1388_5FFC0000.dat.\n", __func__);
+		lidbg(TAG"%s: firmware FM1388_5FFC0000.dat.\n", __func__);
 
 		fm1388_spi_burst_write(0x5ffc0000, fw->data,
 			((fw->size/8)+1)*8);
@@ -695,9 +697,10 @@ static void fm1388_dsp_load_fw(void) {
 		release_firmware(fw);
 		fw = NULL;
 	}
+	//lidbg(TAG"%s: FM1388_5FFC0000.dat over.\n", __func__);
 	request_firmware(&fw, "FM1388_5FFE0000.dat", &fm1388_pdev->dev);
 	if (fw) {
-		pr_err("[zhl]%s: firmware FM1388_5FFE0000.dat.\n", __func__);
+		lidbg(TAG"%s: firmware FM1388_5FFE0000.dat.\n", __func__);
 
 		fm1388_spi_burst_write(0x5ffe0000, fw->data,
 			((fw->size/8)+1)*8);
@@ -705,9 +708,10 @@ static void fm1388_dsp_load_fw(void) {
 		release_firmware(fw);
 		fw = NULL;
 	}
+	//lidbg(TAG"%s: FM1388_5FFE0000.dat over.\n", __func__);
 	request_firmware(&fw, "FM1388_60000000.dat", &fm1388_pdev->dev);
 	if (fw) {
-		pr_err("[zhl]%s: firmware FM1388_60000000.dat.\n", __func__);
+		lidbg(TAG"%s: firmware FM1388_60000000.dat.\n", __func__);
 
 		fm1388_spi_burst_write(0x60000000, fw->data,
 			((fw->size/8)+1)*8);
@@ -715,16 +719,17 @@ static void fm1388_dsp_load_fw(void) {
 		release_firmware(fw);
 		fw = NULL;
 	}
+	//lidbg(TAG"%s: FM1388_60000000.dat over.\n", __func__);
 #if 0
 #ifdef SHOW_DL_TIME
 	do_gettimeofday(&(txc.time));
 	rtc_time_to_tm(txc.time.tv_sec,&tm);
-	pr_err("%s:end time: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+	lidbg(TAG"%s:end time: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
 #endif
 #endif
 #endif
 
-//	pr_err("%s: firmware loaded\n", __func__);
+	lidbg(TAG"%s: firmware loaded over\n", __func__);
 }
 
 mm_segment_t oldfs;
@@ -805,7 +810,7 @@ int  parser_mode(char* src_argv, cfg_mode_cmd* data)
     int argc = 0;
 
     while((pch = strsep(&src_argv,delim))!=NULL){
-	  //pr_err("token=<%s>\n", pch);
+	  //lidbg(TAG"token=<%s>\n", pch);
 	  if (*pch == 0) continue;
       if(argc==0){
 		  del_space(pch);
@@ -834,7 +839,7 @@ int  parser_reg_mem(char* src_argv, dev_cmd* data)
 	int argc=0;
 	
 	while ((pch = strsep(&src_argv,delim)) != NULL) {
-		//pr_err("token=<%s>\n", pch);
+		//lidbg(TAG"token=<%s>\n", pch);
 		if (*pch == 0) continue;
 		if (argc==0) {
 			data->reg_addr = simple_strtoul(pch, NULL, 16);
@@ -860,8 +865,8 @@ int fgetc(struct file *fp)
 	cnt = readFile(fp, &c, 1);
 
 	if (cnt <= 0){
-//      pr_err ("0x%x, %d: EOF? ",c,c);
-//      pr_err ("Read file fail");
+//      lidbg(TAG"0x%x, %d: EOF? ",c,c);
+//      lidbg(TAG"Read file fail");
       return EOF;
 	}
     else{
@@ -920,24 +925,24 @@ int load_fm1388_init_vec(char* file_src)
     char s[255];	//assume each line of the opened file is below 255 characters
 	dev_cmd payload;
 
-//	pr_err("%s: file %s\n", __func__, file_src);
+//	lidbg(TAG"%s: file %s\n", __func__, file_src);
 
     initKernelEnv();
     fp = openFile(file_src, O_RDONLY, 0);
 
     if (fp == NULL){
-       pr_err ("File %s could not be opened\n", file_src);
+       lidbg(TAG"File %s could not be opened\n", file_src);
        set_fs(oldfs);
        return OPEN_ERROR;
     } else {
-//       pr_err ("File %s opened!...\n", file_src);
+//       lidbg(TAG"File %s opened!...\n", file_src);"
 	   while (fgets(s, 255, fp, &word_count) != NULL) {
           if(s[0] == '#' || s[0] == '/' || s[0] == 0xD || s[0] == 0x0){
             continue;
           } else {
               //parse addr, value,
               if (parser_reg_mem(s, &payload)>=2) {
-//				pr_err("payload.reg_addr=0x%08x, payload.val=0x%08x\n", (unsigned int)payload.reg_addr, (unsigned int)payload.val);
+//				lidbg(TAG"payload.reg_addr=0x%08x, payload.val=0x%08x\n", (unsigned int)payload.reg_addr, (unsigned int)payload.val);
 				//write to device
 				fm1388_write((unsigned int)payload.reg_addr, (unsigned int)payload.val);
 				msleep(2);
@@ -948,7 +953,7 @@ int load_fm1388_init_vec(char* file_src)
        /* Close stream; skip error-checking for brevity of example */
        closeFile(fp);
        set_fs(oldfs);
-	   
+
        return OPEN_NO_ERROR;
     }
 }
@@ -961,25 +966,25 @@ int load_fm1388_vec(char* file_src)
     char s[255];	//assume each line of the opened file is below 255 characters
 	dev_cmd payload;
 
-//	pr_err("%s: file %s\n", __func__, file_src);
+//	lidbg(TAG"%s: file %s\n", __func__, file_src);
 
     initKernelEnv();
     fp = openFile(file_src, O_RDONLY, 0);
 
     if (fp == NULL){
-       pr_err ("File %s could not be opened\n", file_src);
+       lidbg(TAG"File %s could not be opened\n", file_src);
        set_fs(oldfs);
        return OPEN_ERROR;
     }
     else{
-//       pr_err ("File %s opened!...\n", file_src);
+       lidbg(TAG"File %s opened!...\n", file_src);
 	   while (fgets(s, 255, fp, &word_count) != NULL) {
           if(s[0] == '#' || s[0] == '/' || s[0] == 0xD || s[0] == 0x0){
             continue;
           } else {
               //parse addr, value,
-              if (parser_reg_mem(s, &payload)>=2) {
-				//pr_err("payload.reg_addr=0x%08x, payload.val=0x%08x\n", (unsigned int)payload.reg_addr, (unsigned int)payload.val);
+	      if (parser_reg_mem(s, &payload)>=2) {
+				//lidbg(TAG"payload.reg_addr=0x%08x, payload.val=0x%08x\n", (unsigned int)payload.reg_addr, (unsigned int)payload.val);
 				//write to device
 				fm1388_dsp_mode_i2c_write_addr((unsigned int)payload.reg_addr, payload.val, FM1388_I2C_CMD_16_WRITE);
 			  }
@@ -1002,25 +1007,26 @@ int load_fm1388_mode_cfg(char* file_src, unsigned int choosed_mode)
     cfg_mode_cmd cfg_mode;
     char s[255];	//assume each line of the opened file is below 255 characters
 
-//	pr_err("%s: file %s\n", __func__, file_src);
+//	lidbg(TAG"%s: file %s\n", __func__, file_src);
 
     initKernelEnv();
     fp = openFile(file_src, O_RDONLY, 0);
 
     if (fp == NULL){
-       pr_err ("File %s could not be opened\n", file_src);
+       lidbg(TAG"File %s could not be opened\n", file_src);
        set_fs(oldfs);
        return OPEN_ERROR;
     } else {
-//       pr_err ("File %s opened!...\n", file_src);
+//       lidbg(TAG"File %s opened!...\n", file_src);
  	   while (fgets(s, 255, fp, &word_count) != NULL) {
           if(s[0] == '#' || s[0] == '/' || s[0] == 0xD || s[0] == 0x0){
             continue;
           } else {
             //parse mode, path vec, dsp vec, comment
 			if (parser_mode(s, &cfg_mode) >= 3) {
+				lidbg(TAG"mode=%d, path=%s, dsp_setting=%s, comment=%s\n", cfg_mode.mode, cfg_mode.path_setting_file_name, cfg_mode.dsp_setting_file_name, cfg_mode.comment);
 				if(choosed_mode==cfg_mode.mode){
-//                  pr_err("mode=%d, path=%s, dsp_setting=%s, comment=%s\n", cfg_mode.mode, cfg_mode.path_setting_file_name, cfg_mode.dsp_setting_file_name, cfg_mode.comment);
+                  //lidbg(TAG"mode=%d, path=%s, dsp_setting=%s, comment=%s\n", cfg_mode.mode, cfg_mode.path_setting_file_name, cfg_mode.dsp_setting_file_name, cfg_mode.comment);
 			      break;
 				}
 			}
@@ -1032,14 +1038,13 @@ int load_fm1388_mode_cfg(char* file_src, unsigned int choosed_mode)
        set_fs(oldfs);
 
        if(choosed_mode==cfg_mode.mode){
-           pr_err("Set to Mode %d: %s\n", choosed_mode, cfg_mode.comment);
+           lidbg(TAG"Set to Mode %d: %s\n", choosed_mode, cfg_mode.comment);
            load_fm1388_vec(combine_path_name(filepath_name, cfg_mode.path_setting_file_name));	// load path VEC
            load_fm1388_vec(combine_path_name(filepath_name, cfg_mode.dsp_setting_file_name));	// load DSP parameter VEC
        } else {
-           pr_err("Cannot find Mode %d in cfg file\n", choosed_mode);
+           lidbg(TAG"Cannot find Mode %d in cfg file\n", choosed_mode);
            return OPEN_ERROR;
 	   }
-
        return OPEN_NO_ERROR;
     }
 }
@@ -1054,7 +1059,7 @@ static int fm1388_fw_loaded(void *data)
 #ifdef SHOW_DL_TIME
 		do_gettimeofday(&(txc.time));
 		rtc_time_to_tm(txc.time.tv_sec,&tm);
-		pr_err("%s#########:: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+		lidbg(TAG"%s#########:: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
 #endif
 	fm1388_hardware_reset();
 	fm1388_software_reset();
@@ -1064,9 +1069,9 @@ static int fm1388_fw_loaded(void *data)
 	}
     load_fm1388_init_vec(combine_path_name(filepath_name, "FM1388_init.vec"));
     fm1388_is_dsp_on = true;	// set falg due to the last command of init VEC file will power on DSP
+    lidbg(TAG"%s: FM1388_init.vec over\n", __func__);
 
-
-    msleep(10);	// wait HW ready to load firmware
+    msleep(10);	// wait HWfm1388_spi_device_reload ready to load firmware
     fm1388_dsp_load_fw();
     msleep(10);
 
@@ -1074,15 +1079,16 @@ static int fm1388_fw_loaded(void *data)
 	//   example to set default mode to mode 0
 	//   user may change preferred default mode here
     load_fm1388_vec(combine_path_name(filepath_name, "FM1388_run.vec"));
+    lidbg(TAG"%s: FM1388_run.vec over\n", __func__);
     msleep(10);
 	fm1388_dsp_mode_change(5);	// set default mode, parse from .cfg
 #ifdef SHOW_DL_TIME
 		do_gettimeofday(&(txc.time));
 		rtc_time_to_tm(txc.time.tv_sec,&tm);
-		pr_err("%s#########:: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
+		lidbg(TAG"%s#########:: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year+1900,tm.tm_mon, tm.tm_mday,tm.tm_hour,tm.tm_min,tm.tm_sec);
 #endif
 	fm1388_dsp_mode_i2c_read_addr_2(0x180200CA, &val);	// check register 0x65 to make sure DSP is running
-	pr_err("addr=0x180200CA, val=0x%x (value must be 0x7fe)\n", val);
+	lidbg(TAG"addr=0x180200CA, val=0x%x (value must be 0x7fe)\n", val);
 	fm1388_config_status=true;
 	spi_test();
 	mutex_unlock(&fm1388_init_lock);
@@ -1092,7 +1098,7 @@ static int fm1388_fw_loaded(void *data)
 
 static bool fm1388_readable_register(unsigned int reg)
 {
-	//pr_err("%s\n", __func__);
+	//lidbg(TAG"%s\n", __func__);
 	switch (reg) {
 	case 0x00 ... 0x04:
 	case 0x07 ... 0x09:
@@ -1134,7 +1140,7 @@ static ssize_t fm1388_reg_show(struct device *dev,
 	unsigned int i, value;
 	int ret;
 
-	pr_err("%s: fm1388_reg_show\n", __func__);
+	lidbg(TAG"%s: fm1388_reg_show\n", __func__);
 	for (i = 0x0; i <= 0xff; i++) {
 		if (fm1388_readable_register(i)) {
 			ret = fm1388_read(i, &value);
@@ -1159,7 +1165,7 @@ static ssize_t fm1388_reg_store(struct device *dev,
 	unsigned int val = 0, addr = 0;
 	int i;
 
-	pr_err("%s: fm1388_reg_store\n", __func__);
+	lidbg(TAG"%s: fm1388_reg_store\n", __func__);
 	for (i = 0; i < count; i++) {
 		if (*(buf + i) <= '9' && *(buf + i) >= '0')
 			addr = (addr << 4) | (*(buf + i)-'0');
@@ -1201,7 +1207,7 @@ static ssize_t fm1388_index_show(struct device *dev,
 	unsigned int val;
 	int cnt = 0, i;
 
-	pr_err("%s: fm1388_index_show\n", __func__);
+	lidbg(TAG"%s: fm1388_index_show\n", __func__);
 	for (i = 0; i < 0xff; i++) {
 		if (cnt + 10 >= PAGE_SIZE)
 			break;
@@ -1224,7 +1230,7 @@ static ssize_t fm1388_index_store(struct device *dev,
 	unsigned int val = 0, addr = 0;
 	int i;
 
-	pr_err("%s: fm1388_index_store\n", __func__);
+	lidbg(TAG"%s: fm1388_index_store\n", __func__);
 	for (i = 0; i < count; i++) {
 		if (*(buf + i) <= '9' && *(buf + i) >= '0')
 			addr = (addr << 4) | (*(buf + i) - '0');
@@ -1272,7 +1278,7 @@ static ssize_t fm1388_addr_store(struct device *dev,
 	unsigned int val = 0, addr = 0;
 	int i;
 
-	pr_err("%s: fm1388_addr_store\n", __func__);
+	lidbg(TAG"%s: fm1388_addr_store\n", __func__);
 	for (i = 0; i < count; i++) {
 		if (*(buf + i) <= '9' && *(buf + i) >= '0')
 			addr = (addr << 4) | (*(buf + i)-'0');
@@ -1328,13 +1334,13 @@ static ssize_t fm1388_status_show(struct device *dev,struct device_attribute *at
 	unsigned int addr, val;
 	addr = FRAME_CNT;
 	fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
-	pr_err("%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, val);
+	lidbg(TAG"%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, val);
 	addr = CRC_STATUS;
 	fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
 	if (val == 0x8888) {
-			pr_err("%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
+			lidbg(TAG"%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
 	} else {
-			pr_err("%s: CRC_STAUS 0x%x = 0x%x, CRC FAIL!\n", __func__, addr, val);
+			lidbg(TAG"%s: CRC_STAUS 0x%x = 0x%x, CRC FAIL!\n", __func__, addr, val);
 	}
 	return sprintf(buf, "%x\n",val);
 }
@@ -1357,14 +1363,14 @@ static ssize_t fm1388_test_show(struct device *dev,struct device_attribute *attr
 		sendconfig_count++;
 		addr = FRAME_CNT;
 		fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
-		pr_err("%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, val);
+		lidbg(TAG"%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, val);
 		addr = CRC_STATUS;
 		fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
 		if (val == 0x8888) {
-			pr_err("%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
+			lidbg(TAG"%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
 			successful_count++;
 		} else {
-			pr_err("%s: CRC_STAUS 0x%x = 0x%x, CRC FAIL!\n", __func__, addr, val);
+			lidbg(TAG"%s: CRC_STAUS 0x%x = 0x%x, CRC FAIL!\n", __func__, addr, val);
 	    }
 		lidbg("sendconfig_count %d successful_count %d\n",sendconfig_count,successful_count);
 	}
@@ -1392,35 +1398,35 @@ static ssize_t fm1388_device_read(struct file *file, char __user * buffer,
 
 	local_buffer = (char *)kmalloc(length * sizeof(char), GFP_KERNEL);
 	if (!local_buffer) {
-		pr_err("%s: local_buffer allocation failure.\n", __func__);
+		lidbg(TAG"%s: local_buffer allocation failure.\n", __func__);
 		goto out;
 	}
 	if(copy_from_user(local_buffer, buffer, length))
 	{
         printk("copy_from_user ERR\n");
     }
-    //pr_err("local_buffer = %d:, length = %d\n", local_buffer[0], length);
+    //lidbg(TAG"local_buffer = %d:, length = %d\n", local_buffer[0], length);
 
 	switch(local_buffer[0]) {
 	case FM_SMVD_REG_READ:
         get_reg_ret_data = (dev_cmd_reg_rw*)local_buffer;
         fm1388_read(get_reg_ret_data->reg_addr, &get_reg_ret_data->reg_val);
         ret = sizeof(dev_cmd_reg_rw);
-        //pr_err("get_reg_ret_data->reg_addr = %d:, get_reg_ret_data->reg_val = 0x%4x, ret=%d\n", get_reg_ret_data->reg_addr, get_reg_ret_data->reg_val, ret);
+        //lidbg(TAG"get_reg_ret_data->reg_addr = %d:, get_reg_ret_data->reg_val = 0x%4x, ret=%d\n", get_reg_ret_data->reg_addr, get_reg_ret_data->reg_val, ret);
 		break;
 	case FM_SMVD_DSP_ADDR_READ:
         get_addr_ret_data = (dev_cmd_long*)local_buffer;
 		fm1388_dsp_mode_i2c_read_addr_2(get_addr_ret_data->addr, &get_addr_ret_data->val);
         ret = sizeof(dev_cmd_long);
-        //pr_err("get_addr_ret_data->addr = %d:, get_addr_ret_data->val = 0x%4x, ret=%d\n", get_addr_ret_data->addr, get_addr_ret_data->val, ret);
+        //lidbg(TAG"get_addr_ret_data->addr = %d:, get_addr_ret_data->val = 0x%4x, ret=%d\n", get_addr_ret_data->addr, get_addr_ret_data->val, ret);
         break;
 	case FM_SMVD_MODE_GET:
-//        pr_err("local_buffer = %d:, length = %d, ret = %d\n", local_buffer[0], length, ret);
+//        lidbg(TAG"local_buffer = %d:, length = %d, ret = %d\n", local_buffer[0], length, ret);
         get_mode_ret_data = (dev_cmd_mode_gs*)local_buffer;
         get_mode_ret_data->dsp_mode = (char)fm1388_dsp_mode;
         ret = sizeof(dev_cmd_mode_gs);
-//        pr_err("local_buffer = %d:, length = %d, ret = %d\n", local_buffer[0], length, ret);
-//        pr_err("local_buffer = %d:, length = %d, return_data->dsp_mode = %d\n", local_buffer[0], length, return_data->dsp_mode);
+//        lidbg(TAG"local_buffer = %d:, length = %d, ret = %d\n", local_buffer[0], length, ret);
+//        lidbg(TAG"local_buffer = %d:, length = %d, return_data->dsp_mode = %d\n", local_buffer[0], length, return_data->dsp_mode);
         break;
 	default:
         ret = sprintf(str, "0");
@@ -1447,10 +1453,10 @@ static ssize_t fm1388_device_write(struct file *file,
 	unsigned int cmd_name, cmd_addr, cmd_val;
 	int dsp_mode;
 
-	pr_err("%s: entering...\n", __func__);
+	lidbg(TAG"%s: entering...\n", __func__);
 	local_dev_cmd = (dev_cmd_long *)kmalloc(sizeof(dev_cmd_long), GFP_KERNEL);
 	if (!local_dev_cmd) {
-		pr_err("%s: local_dev_cmd allocation failure.\n", __func__);
+		lidbg(TAG"%s: local_dev_cmd allocation failure.\n", __func__);
 		goto out;
 	}
 	if(copy_from_user(local_dev_cmd, buffer, length))
@@ -1458,7 +1464,7 @@ static ssize_t fm1388_device_write(struct file *file,
         printk("copy_from_user ERR\n");
     }
 
-    pr_err("local_dev_cmd->cmd_name = %d, length = %d\n", local_dev_cmd->cmd_name, length);
+    lidbg(TAG"local_dev_cmd->cmd_name = %d, length = %d\n", local_dev_cmd->cmd_name, length);
 	cmd_name = local_dev_cmd->cmd_name;
 
 	switch(cmd_name) {
@@ -1468,7 +1474,7 @@ static ssize_t fm1388_device_write(struct file *file,
 	case FM_SMVD_REG_WRITE:		//Command #1
 		cmd_addr = local_dev_cmd->addr;
 		cmd_val = local_dev_cmd->val;
-        //pr_err("cmd_addr = 0x%02x, cmd_val = 0x%04x\n", cmd_addr, cmd_val);
+        //lidbg(TAG"cmd_addr = 0x%02x, cmd_val = 0x%04x\n", cmd_addr, cmd_val);
 		fm1388_dsp_mode_i2c_write(cmd_addr, cmd_val);
 		break;
 	case FM_SMVD_DSP_ADDR_READ:	//Command #2
@@ -1476,11 +1482,11 @@ static ssize_t fm1388_device_write(struct file *file,
 	case FM_SMVD_DSP_ADDR_WRITE:	//Command #3
 		cmd_addr = local_dev_cmd->addr;
 		cmd_val = local_dev_cmd->val;
-        //pr_err("cmd_addr = 0x%08x:, cmd_val = 0x%04x\n", cmd_addr, cmd_val);
+        //lidbg(TAG"cmd_addr = 0x%08x:, cmd_val = 0x%04x\n", cmd_addr, cmd_val);
 		fm1388_dsp_mode_i2c_write_addr(cmd_addr, cmd_val, FM1388_I2C_CMD_16_WRITE);
 		break;
 	case FM_SMVD_MODE_SET:		//Command #4
-		pr_err("%s: FM_SMVD_MODE_SET dsp_mode = %d\n", __func__, local_dev_cmd->addr);
+		lidbg(TAG"%s: FM_SMVD_MODE_SET dsp_mode = %d\n", __func__, local_dev_cmd->addr);
 		dsp_mode = local_dev_cmd->addr;
 		fm1388_dsp_mode_change(dsp_mode);
 		break;
@@ -1502,7 +1508,7 @@ out:
 
 static void dsp_start_vr_work(struct work_struct *work)
 {
-	pr_err("%s: entering.\n", __func__);
+	lidbg(TAG"%s: entering.\n", __func__);
 	//Todo: something for VR mode
 }
 
@@ -1511,7 +1517,7 @@ static void fm1388_irq_handling_work(struct work_struct *work)
 {
 	int reg_val;
 
-	pr_err("%s: going to clear the interrupt bit.\n", __func__);
+	lidbg(TAG"%s: going to clear the interrupt bit.\n", __func__);
 	//Todo: clear the interrupt bit.
 
 	//Todo: notify the application about the interrupt.
@@ -1522,16 +1528,16 @@ static u32 fm1388_irq_handler(void *para)
 {
 	unsigned long status;
 
-	pr_err("%s: irq handler entering...\n", __func__);
+	lidbg(TAG"%s: irq handler entering...\n", __func__);
 
 	if (is_host_slept == 0)
 	{
-		pr_err("%s: going to execute the irq_handling_work.\n", __func__);
+		lidbg(TAG"%s: going to execute the irq_handling_work.\n", __func__);
 		queue_work(fm1388_irq_wq, &fm1388_irq_work);
 	}
 	else if (is_host_slept == 1)
 	{
-		pr_err("%s: set fm1388 to the VR mode.\n", __func__);
+		lidbg(TAG"%s: set fm1388 to the VR mode.\n", __func__);
 		//Todo: start scheduled work for the VR mode.
 		//schedule_delayed_work(&dsp_start_bypass, msecs_to_jiffies(50));
 
@@ -1548,23 +1554,23 @@ static void fm1388_framecnt_handling_work(struct work_struct *work)
 {
 	unsigned int addr, val;
 
-	//pr_err("%s: going to read the frame count.\n", __func__);
+	//lidbg(TAG"%s: going to read the frame count.\n", __func__);
 
 	while (1) {
 		msleep(20000);
-
+		spi_test();
 		addr = FRAME_CNT;
 		fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
-		pr_err("%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, val);
+		lidbg(TAG"%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, val);
 
 		addr = CRC_STATUS;
 		fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
 		if (val == 0x8888) {
-			pr_err("%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
+			lidbg(TAG"%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
 		} else {
-			pr_err("%s: CRC_STAUS 0x%x = 0x%x, CRC FAIL!\n", __func__, addr, val);
+			lidbg(TAG"%s: CRC_STAUS 0x%x = 0x%x, CRC FAIL!\n", __func__, addr, val);
 			fm1388_fw_loaded(NULL);
-			pr_err("reinit fm1388!!!!!\n");
+			lidbg(TAG"reinit fm1388!!!!!\n");
 		}
 	}
 }
@@ -1631,7 +1637,7 @@ static struct miscdevice fm1388_dev = {
 #ifdef CONFIG_PM
 static int fm1388_i2c_suspend(struct device *dev)
 {
-	pr_err("%s: entering...\n", __func__);
+	//lidbg(TAG"%s: entering...\n", __func__);
 	//Todo: something before driver's suspend.
 	is_host_slept = 1;
 
@@ -1640,7 +1646,7 @@ static int fm1388_i2c_suspend(struct device *dev)
 
 static int fm1388_i2c_resume(struct device *dev)
 {
-	//pr_err("%s: entering\n", __func__);
+	//lidbg(TAG"%s: entering\n", __func__);
 	//Todo: something after driver's resume
 	is_host_slept = 0;
 	fm1388_boot_status=FM1388_HOT_BOOT;
@@ -1659,47 +1665,47 @@ static int fm1388_probe(struct platform_device *pdev)
 	int ret;
 	DUMP_FUN;
 	LIDBG_GET;
-	pr_err("%s: FM1388 Driver Version %s\n", __func__, VERSION);
+	lidbg(TAG"%s: FM1388 Driver Version %s\n", __func__, VERSION);
 	fm1388_pdev=pdev;
 	mutex_init(&fm1388_index_lock);
 	mutex_init(&fm1388_dsp_lock);
 	mutex_init(&fm1388_mode_change_lock);
 	mutex_init(&fm1388_init_lock);
-	pr_err("%s: device_create_file - dev_attr_fm1388_reg.\n", __func__);
+	lidbg(TAG"%s: device_create_file - dev_attr_fm1388_reg.\n", __func__);
 	ret = device_create_file(&pdev->dev, &dev_attr_fm1388_reg);
 	if (ret != 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to create fm1388_reg sysfs files: %d\n", ret);
+		lidbg(TAG"Failed to create fm1388_reg sysfs files: %d\n", ret);
 		return ret;
 	}
 
-	pr_err("%s: device_create_file - dev_attr_index_reg.\n", __func__);
+	lidbg(TAG"%s: device_create_file - dev_attr_index_reg.\n", __func__);
 	ret = device_create_file(&pdev->dev, &dev_attr_index_reg);
 	if (ret != 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to create index_reg sysfs files: %d\n", ret);
+		lidbg(TAG"Failed to create index_reg sysfs files: %d\n", ret);
 		return ret;
 	}
 
-	pr_err("%s: device_create_file - dev_attr_fm1388_addr.\n", __func__);
+	lidbg(TAG"%s: device_create_file - dev_attr_fm1388_addr.\n", __func__);
 	ret = device_create_file(&pdev->dev, &dev_attr_fm1388_addr);
 	if (ret != 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to create fm1388_addr sysfs files: %d\n", ret);
+		lidbg(TAG"Failed to create fm1388_addr sysfs files: %d\n", ret);
 		return ret;
 	}
 
 	ret = device_create_file(&pdev->dev, &dev_attr_fm1388_status);
 	if (ret != 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to create fm1388_status sysfs files: %d\n", ret);
+		lidbg(TAG"Failed to create fm1388_status sysfs files: %d\n", ret);
 		return ret;
 	}
 
 	ret = device_create_file(&pdev->dev, &dev_attr_fm1388_reinit);
 	if (ret != 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to create fm1388_reinit sysfs files: %d\n", ret);
+		lidbg(TAG"Failed to create fm1388_reinit sysfs files: %d\n", ret);
 		return ret;
 	}
 	ret = device_create_file(&pdev->dev, &dev_attr_fm1388_test);
 	if (ret != 0) {
-		dev_err(&fm1388_pdev->dev,"Failed to create fm1388_test sysfs files: %d\n", ret);
+		lidbg(TAG"Failed to create fm1388_test sysfs files: %d\n", ret);
 		return ret;
 	}
 
@@ -1715,7 +1721,7 @@ static int fm1388_probe(struct platform_device *pdev)
 #endif
 	fm1388_boot_status=FM1388_COLD_BOOT;
 	CREATE_KTHREAD(fm1388_fw_loaded,NULL);
-	pr_err("%s: misc_register.\n", __func__);
+	lidbg(TAG"%s: misc_register.\n", __func__);
 	ret = misc_register(&fm1388_dev);
 	if (ret)
 		dev_err(&pdev->dev, "Couldn't register control device\n");
@@ -1723,6 +1729,7 @@ static int fm1388_probe(struct platform_device *pdev)
 	INIT_DELAYED_WORK(&dsp_start_vr, dsp_start_vr_work);
 
 #ifdef FM1388_IRQ
+	lidbg(TAG"%s: into FM1388_IRQ.\n", __func__);
 	INIT_WORK(&fm1388_irq_work, fm1388_irq_handling_work);
 	fm1388_irq_wq = create_singlethread_workqueue("fm1388_irq_wq");
 
@@ -1732,17 +1739,18 @@ static int fm1388_probe(struct platform_device *pdev)
 	fm1388_irq = sw_gpio_irq_request(GPIOH(16), TRIG_EDGE_POSITIVE, (peint_handle)fm1388_irq_handler, (int *)fm1388_idx);
 
 	if (fm1388_irq == 0) {
-		pr_err("%s: sw_gpio_irq_request failed\n", __func__);
+		lidbg(TAG"%s: sw_gpio_irq_request failed\n", __func__);
 	}
 #endif
 
 #ifdef SHOW_FRAMECNT
+	lidbg(TAG"%s: into SHOW_FRAMECNT.\n", __func__);
 	INIT_WORK(&fm1388_framecnt_work, fm1388_framecnt_handling_work);
 	fm1388_framecnt_wq = create_singlethread_workqueue("fm1388_framecnt_wq");
 	//msleep(180000);
 	queue_work(fm1388_framecnt_wq, &fm1388_framecnt_work);
 #endif
-
+	lidbg(TAG"%s: probe over\n", __func__);
 	return 0;
 }
 
