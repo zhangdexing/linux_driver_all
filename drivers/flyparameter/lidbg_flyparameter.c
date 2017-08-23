@@ -368,7 +368,7 @@ int lidbg_flyparameter_init(void)
         msleep(200);
         cnt++;
     }
-    if(fs_is_file_exist(EXTRA_FLYPARA_MIRROR))
+    if(fs_get_file_size(EXTRA_FLYPARA_MIRROR)>0)
         p_flyparameter_node = EXTRA_FLYPARA_MIRROR;
     else
         lidbg(PATA_TAG"p_flyparameter_node,use default\n");
