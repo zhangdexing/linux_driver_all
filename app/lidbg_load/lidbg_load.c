@@ -30,7 +30,10 @@ int main(int argc, char **argv)
     lidbg("Build Time:lidbg_iserver: iserver start\n");
     system("mkdir /dev/log");
     system("chmod 777 /dev/log");
-    system("cat /dev/block/bootdevice/by-name/flyparameter > /dev/flyparameter");
+    if(is_file_exist("/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/flyparameter"))
+        system("cat /dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/flyparameter > /dev/flyparameter");
+	else
+        system("cat /dev/block/bootdevice/by-name/flyparameter > /dev/flyparameter");
     system("chmod 444 /dev/flyparameter");
 
     module_insmod("/system/lib/modules/out/lidbg_immediate.ko");
