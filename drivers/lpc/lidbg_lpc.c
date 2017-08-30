@@ -17,6 +17,7 @@ static bool lpc_work_en = true;
 #define SUSPEND_DATA_WAIT_TIME   (5*HZ)
 
 #define HAL_NOTIFY_FIFO_SIZE (1024*32)
+#define TAG "lidbg_lpc:"
 
 u8 *notify_fifo_buffer;
 static struct kfifo notify_data_fifo;
@@ -66,7 +67,7 @@ int LPCCombinDataStream(BYTE *p, UINT len)
 
     if((!lpc_work_en) || (g_hw.lpc_disable))
     {
-        if(len >= 3 )lidbg("ToMCU.skip:%x %x %x\n", p[0], p[1], p[2]);
+        if(len >= 3 )lidbg(TAG"ToMCU.skip:%x %x %x\n", p[0], p[1], p[2]);
         return 1;
     }
 
@@ -101,7 +102,7 @@ static void LPCWriteDataEnqueue(BYTE *buff, short length)
 
     if((!lpc_work_en) || (g_hw.lpc_disable))
     {
-        if(length >= 3 )pr_debug("ToMCU.skip:%x %x %x\n", buff[0], buff[1], buff[2]);
+        if(length >= 3 )pr_debug(TAG"ToMCU.skip:%x %x %x\n", buff[0], buff[1], buff[2]);
         return;
     }
 
@@ -120,7 +121,7 @@ static void LPCWriteDataEnqueue(BYTE *buff, short length)
     spin_lock_irqsave(&wbuf_fifo_lock, irqflags);
     if(kfifo_is_full(&wbuf_data_fifo))
     {
-        lidbg("%s:kfifo full!!!!!\n", __func__);
+        lidbg(TAG"%s:kfifo full!!!!!\n", __func__);
         spin_unlock_irqrestore(&wbuf_fifo_lock, irqflags);
         return;
     }
@@ -137,7 +138,7 @@ static void LPCReadDataEnqueue(BYTE *buff, short length)
     spin_lock_irqsave(&notify_fifo_lock, irqflags);
     if(kfifo_is_full(&notify_data_fifo))
     {
-        lidbg("%s:kfifo full!!!!!\n", __func__);
+        lidbg(TAG"%s:kfifo full!!!!!\n", __func__);
         spin_unlock_irqrestore(&notify_fifo_lock, irqflags);
         return;
     }
@@ -199,7 +200,7 @@ static BOOL readFromMCUProcessor(BYTE *p, UINT length)
                 }
                 else
                 {
-                    lidbg("\nRead From MCU CRC Error");
+                    lidbg(TAG"\nRead From MCU CRC Error\n");
                 }
             }
             break;
@@ -228,7 +229,7 @@ BOOL actualReadFromMCU(BYTE *p, UINT length)
     SOC_I2C_Rec_Simple(LPC_I2_ID, MCU_ADDR , p, length);
     if (readFromMCUProcessor(p, length))
     {
-        pr_debug("LPC Read len=%d\n", length);
+        pr_debug(TAG"LPC Read len=%d\n", length);
         return TRUE;
     }
     else
@@ -243,7 +244,7 @@ irqreturn_t MCUIIC_isr(int irq, void *dev_id)
         return IRQ_HANDLED;
 
     //SOC_IO_ISR_Disable(MCU_IIC_REQ_GPIO);
-
+    pr_debug(TAG"MCUIIC_isr\n");
     wake_lock_timeout(&lpc_wakelock, SUSPEND_DATA_WAIT_TIME);
     schedule_work(&pGlobalHardwareInfo->FlyIICInfo.iic_work);
     return IRQ_HANDLED;
@@ -266,7 +267,7 @@ irqreturn_t MCUDQBuf_isr(int irq, void *dev_id)
 {
     if(!lpc_work_en)
         return IRQ_HANDLED;
-    pr_debug("%s: isr\n", __func__);
+    pr_debug(TAG"%s: isr\n", __func__);
     if(!work_pending(&wBuf_work))
         schedule_work(&wBuf_work);
     return IRQ_HANDLED;
@@ -298,7 +299,7 @@ static void workFlyMCUDQBuf(struct work_struct *work)
             ret = kfifo_out(&wbuf_data_fifo, data_buf, length_buf);
             spin_unlock_irqrestore(&wbuf_fifo_lock, irqflags);
 
-            pr_debug("%s: length:%d,0x%x, 0x%x,0x%x,0x%x,0x%x\n", __func__, length_buf, data_buf[0], data_buf[1], data_buf[2], data_buf[3], data_buf[4]);
+            pr_debug(TAG"%s: length:%d,0x%x, 0x%x,0x%x,0x%x,0x%x\n", __func__, length_buf, data_buf[0], data_buf[1], data_buf[2], data_buf[3], data_buf[4]);
 
 #ifdef SEND_DATA_WITH_UART
             ret = SOC_Uart_Send(data_buf);
@@ -310,7 +311,7 @@ static void workFlyMCUDQBuf(struct work_struct *work)
             spin_unlock_irqrestore(&wbuf_fifo_lock, irqflags);
     }
 
-    lidbg("workFlyMCUDQBuf wait for LPC ready!\n");
+    lidbg(TAG"workFlyMCUDQBuf wait for LPC ready!\n");
     return;
 }
 
@@ -340,7 +341,7 @@ void lpc_linux_sync(bool print, int mint, char *extra_info)
 
     SOC_LPC_Send(buff, strlen(buff + 2) + 2);
     if(print)
-        lidbg("[%s]\n", buff + 2);
+        lidbg(TAG"[%s]\n", buff + 2);
 }
 
 
@@ -380,11 +381,11 @@ ssize_t  lpc_read(struct file *filp, char __user *buffer, size_t size, loff_t *o
         ret = kfifo_out(&notify_data_fifo, data_buf, length_buf);
         spin_unlock_irqrestore(&notify_fifo_lock, irqflags);
 
-        pr_debug("%s:lpc_read, length:%d \n", __func__, length_buf);
+        pr_debug(TAG"%s:lpc_read, length:%d \n", __func__, length_buf);
 
         if(copy_to_user(buffer, data_buf, length_buf))
         {
-            lidbg("%s:copy_to_user ERR\n", __func__);
+            lidbg(TAG"%s:copy_to_user ERR\n", __func__);
         }
     }
     else
@@ -398,15 +399,15 @@ static ssize_t lpc_write(struct file *filp, const char __user *buf,
     char mem[size];
     if(copy_from_user(mem, buf, size))
     {
-        lidbg("copy_from_user ERR\n");
+        lidbg(TAG"copy_from_user ERR\n");
     }
 #if 0
     LPCCombinDataStream(mem, size);//Pack and send
 #else
     LPCWriteDataEnqueue(mem, size);//Pack and enqueue
 #endif
-    // if(size >= 3 ) pr_debug("write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
-    pr_debug("size:%d,write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", (int)size, mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
+    // if(size >= 3 ) pr_debug(TAG"write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
+    pr_debug(TAG"size:%d,write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", (int)size, mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
     if(!work_pending(&wBuf_work))
         schedule_work(&wBuf_work);
     return size;
@@ -415,17 +416,17 @@ static unsigned int lpc_poll(struct file *filp, struct poll_table_struct *wait)
 {
     unsigned int mask = 0;
     unsigned long irqflags;
-    pr_debug("lpc_poll+\n");
+    pr_debug(TAG"lpc_poll+\n");
 
     poll_wait(filp, &wait_queue, wait);
     spin_lock_irqsave(&notify_fifo_lock, irqflags);
     if(!kfifo_is_empty(&notify_data_fifo))
     {
         mask |= POLLIN | POLLRDNORM;
-        pr_debug("lpc  poll have data!!!\n");
+        pr_debug(TAG"lpc  poll have data!!!\n");
     }
     spin_unlock_irqrestore(&notify_fifo_lock, irqflags);
-    pr_debug("lpc_poll-\n");
+    pr_debug(TAG"lpc_poll-\n");
 
     return mask;
 
@@ -448,6 +449,7 @@ static int  lpc_probe(struct platform_device *pdev)
     DUMP_FUN;
     if(g_hw.lpc_disable)
     {
+        lidbg(TAG"lpc_probe.fail\n");
         return 0;
     }
     notify_fifo_buffer = (u8 *)kmalloc(HAL_NOTIFY_FIFO_SIZE , GFP_KERNEL);
