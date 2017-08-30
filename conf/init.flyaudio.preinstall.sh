@@ -1,10 +1,10 @@
 #!/bin/bash
 cd /flyapdata/install/
-rm -rf /data/app/*.apk
 if [ -s /data/app/preinstall.txt ]; then  
     echo "3rddon't need to copy preinstall files" 
     echo "3rddon't need to copy preinstall files"  > /dev/dbg_msg
-else  
+else
+rm -rf /data/app/*.apk
 echo appcheck > /data/app/preinstall.txt 
 apklist="$(ls *.apk)"  
 for apkfile in ${apklist}; do  
