@@ -222,11 +222,15 @@ static BOOL readFromMCUProcessor(BYTE *p, UINT length)
 
 BOOL actualReadFromMCU(BYTE *p, UINT length)
 {
-
+    int ret = 0;
     if(!lpc_work_en)
+    	{
+        pr_debug(TAG"lpc_work_en=%d,return\n", lpc_work_en);
         return FALSE;
+	}
 
-    SOC_I2C_Rec_Simple(LPC_I2_ID, MCU_ADDR , p, length);
+    ret=SOC_I2C_Rec_Simple(LPC_I2_ID, MCU_ADDR , p, length);
+    pr_debug(TAG"SOC_I2C_Rec_Simple.length=%d,ret=%d\n", length,ret);
     if (readFromMCUProcessor(p, length))
     {
         pr_debug(TAG"LPC Read len=%d\n", length);
@@ -244,7 +248,7 @@ irqreturn_t MCUIIC_isr(int irq, void *dev_id)
         return IRQ_HANDLED;
 
     //SOC_IO_ISR_Disable(MCU_IIC_REQ_GPIO);
-    pr_debug(TAG"MCUIIC_isr\n");
+    pr_debug(TAG"MCUIIC_isr,suspend\n");
     wake_lock_timeout(&lpc_wakelock, SUSPEND_DATA_WAIT_TIME);
     schedule_work(&pGlobalHardwareInfo->FlyIICInfo.iic_work);
     return IRQ_HANDLED;
@@ -254,12 +258,13 @@ static void workFlyMCUIIC(struct work_struct *work)
 {
     BYTE buff[16];
     BYTE iReadLen = 12;
-
+    pr_debug(TAG"%s:in. lpc_work_en:%d\n", __func__,lpc_work_en);
     while ((SOC_IO_Input(MCU_IIC_REQ_GPIO, MCU_IIC_REQ_GPIO, 0) == 0) && (lpc_work_en == 1))
     {
         actualReadFromMCU(buff, iReadLen);
         iReadLen = 16;
     }
+    pr_debug(TAG"%s:out. lpc_work_en:%d\n", __func__,lpc_work_en);
     //SOC_IO_ISR_Enable(MCU_IIC_REQ_GPIO);
 }
 
@@ -319,6 +324,8 @@ static void workFlyMCUDQBuf(struct work_struct *work)
 void mcuFirstInit(void)
 {
     DUMP_FUN;
+    lidbg(TAG"MCU_IIC_REQ_GPIO:%d LPC_I2_ID:%d MCU_ADDR:0x%x\n", MCU_IIC_REQ_GPIO,LPC_I2_ID, MCU_ADDR);
+
     pGlobalHardwareInfo = &GlobalHardwareInfo;
     INIT_WORK(&pGlobalHardwareInfo->FlyIICInfo.iic_work, workFlyMCUIIC);
     SOC_IO_ISR_Add(MCU_IIC_REQ_GPIO, IRQF_TRIGGER_FALLING | IRQF_ONESHOT, MCUIIC_isr, pGlobalHardwareInfo);
@@ -479,6 +486,7 @@ static int  lpc_remove(struct platform_device *pdev)
 static int lpc_suspend(struct device *dev)
 {
     DUMP_FUN;
+    schedule_work(&pGlobalHardwareInfo->FlyIICInfo.iic_work);
     SOC_IO_ISR_Disable(MCU_IIC_REQ_GPIO);
 #ifdef CHECK_MCU_BUSY
     SOC_IO_ISR_Disable(MCU_READ_BUSY_GPIO);
