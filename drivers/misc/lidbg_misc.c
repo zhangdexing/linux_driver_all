@@ -242,8 +242,8 @@ static int usb_nb_misc_func(struct notifier_block *nb, unsigned long action, voi
         }
         if(dev->portnum == 1)
         {
-            lidbg(TAG"stop fuse udisk server \n");
-            lidbg_shell_cmd("setprop persist.fuseusb.enable 0");
+            lidbg(TAG"stop fuse udisk server.fuudiskskip \n");
+            //lidbg_shell_cmd("setprop persist.fuseusb.enable 0");
         }
         else
             LIDBG_WARN(TAG"stop fuse udisk server skip:%d\n", dev->portnum);
