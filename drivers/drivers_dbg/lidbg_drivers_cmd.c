@@ -660,6 +660,9 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#135--usb id reset \n");
             fs_mem_log("*158#136--install TC \n");
             fs_mem_log("*158#140--pr_debug lpc_debug \n");
+            fs_mem_log("*158#141--add flycam kmsg whitelist \n");
+
+
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1674,6 +1677,12 @@ void parse_cmd(char *pt)
         {
             lidbg("*158#140--pr_debug lpc_debug \n");
             lidbg_shell_cmd("echo -n 'file lidbg_lpc.c +p' > /sys/kernel/debug/dynamic_debug/control");
+        }
+        else if (!strcmp(argv[1], "*158#141"))
+        {
+            lidbg("*158#141--add flycam kmsg whitelist \n");
+            lidbg_shell_cmd("mount -o remount /system");
+            lidbg_shell_cmd("echo Tflycam  >> /flysystem/lib/out/kmsg_wl.conf");
         }
     }
     else if(!strcmp(argv[0], "flyaudio.code.disable") )
