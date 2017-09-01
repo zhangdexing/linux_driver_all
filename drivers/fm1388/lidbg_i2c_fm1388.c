@@ -297,7 +297,7 @@ static int fm1388_dsp_mode_i2c_read_addr_2(unsigned int addr, unsigned int *valu
 	} else {
 		fm1388_i2c_read(FM1388_DSP_I2C_DATA_MSB, value);
 	}
-	lidbg(TAG"%s: addr = %x, value = %x, lsb = %x\n", __func__, addr, *value);
+	//lidbg(TAG"%s: addr = %x, value = %x, lsb = %x\n", __func__, addr, *value);
 
 err:
 	mutex_unlock(&fm1388_dsp_lock);
@@ -669,7 +669,7 @@ static void fm1388_dsp_load_fw(void) {
 	release_firmware(fw3);
 	fw3 = NULL;
 #else
-	lidbg(TAG"%s: with SPI\n", __func__);
+	//lidbg(TAG"%s: with SPI\n", __func__);
 #if 0
 #ifdef SHOW_DL_TIME
 	do_gettimeofday(&(txc.time));
@@ -729,7 +729,6 @@ static void fm1388_dsp_load_fw(void) {
 #endif
 #endif
 
-	lidbg(TAG"%s: firmware loaded over\n", __func__);
 }
 
 mm_segment_t oldfs;
@@ -1024,7 +1023,6 @@ int load_fm1388_mode_cfg(char* file_src, unsigned int choosed_mode)
           } else {
             //parse mode, path vec, dsp vec, comment
 			if (parser_mode(s, &cfg_mode) >= 3) {
-				lidbg(TAG"mode=%d, path=%s, dsp_setting=%s, comment=%s\n", cfg_mode.mode, cfg_mode.path_setting_file_name, cfg_mode.dsp_setting_file_name, cfg_mode.comment);
 				if(choosed_mode==cfg_mode.mode){
                   //lidbg(TAG"mode=%d, path=%s, dsp_setting=%s, comment=%s\n", cfg_mode.mode, cfg_mode.path_setting_file_name, cfg_mode.dsp_setting_file_name, cfg_mode.comment);
 			      break;
@@ -1069,7 +1067,6 @@ static int fm1388_fw_loaded(void *data)
 	}
     load_fm1388_init_vec(combine_path_name(filepath_name, "FM1388_init.vec"));
     fm1388_is_dsp_on = true;	// set falg due to the last command of init VEC file will power on DSP
-    lidbg(TAG"%s: FM1388_init.vec over\n", __func__);
 
     msleep(10);	// wait HWfm1388_spi_device_reload ready to load firmware
     fm1388_dsp_load_fw();
@@ -1079,7 +1076,6 @@ static int fm1388_fw_loaded(void *data)
 	//   example to set default mode to mode 0
 	//   user may change preferred default mode here
     load_fm1388_vec(combine_path_name(filepath_name, "FM1388_run.vec"));
-    lidbg(TAG"%s: FM1388_run.vec over\n", __func__);
     msleep(10);
 	fm1388_dsp_mode_change(5);	// set default mode, parse from .cfg
 #ifdef SHOW_DL_TIME
@@ -1729,7 +1725,6 @@ static int fm1388_probe(struct platform_device *pdev)
 	INIT_DELAYED_WORK(&dsp_start_vr, dsp_start_vr_work);
 
 #ifdef FM1388_IRQ
-	lidbg(TAG"%s: into FM1388_IRQ.\n", __func__);
 	INIT_WORK(&fm1388_irq_work, fm1388_irq_handling_work);
 	fm1388_irq_wq = create_singlethread_workqueue("fm1388_irq_wq");
 
@@ -1744,13 +1739,11 @@ static int fm1388_probe(struct platform_device *pdev)
 #endif
 
 #ifdef SHOW_FRAMECNT
-	lidbg(TAG"%s: into SHOW_FRAMECNT.\n", __func__);
 	INIT_WORK(&fm1388_framecnt_work, fm1388_framecnt_handling_work);
 	fm1388_framecnt_wq = create_singlethread_workqueue("fm1388_framecnt_wq");
 	//msleep(180000);
 	queue_work(fm1388_framecnt_wq, &fm1388_framecnt_work);
 #endif
-	lidbg(TAG"%s: probe over\n", __func__);
 	return 0;
 }
 
