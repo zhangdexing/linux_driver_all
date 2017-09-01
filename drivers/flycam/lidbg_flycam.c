@@ -3,6 +3,7 @@
 #include "lidbg_flycam_par.h"
 LIDBG_DEFINE;
 
+#define TAG	"Tflycam:"
 
 static void work_format_done(struct work_struct *work);
 static int checkSDCardStatus(char *path);
@@ -113,7 +114,7 @@ struct status_info s_info;
 
 static void notify_online(int arg)
 {
-	lidbg("%s:====[%d]====\n",__func__,arg);
+	lidbg(TAG"%s:====[%d]====\n",__func__,arg);
 	pfly_UsbCamInfo->onlineNotify_status = arg;
 	isOnlineNotifyReady = 1;
 	wake_up_interruptible(&pfly_UsbCamInfo->onlineNotify_wait_queue);
@@ -123,7 +124,7 @@ static void notify_online(int arg)
 static void notify_newDVR(unsigned char msg)
 {
 	unsigned char tmpval;
-	lidbg("%s:====[%d]====\n",__func__,msg);
+	lidbg(TAG"%s:====[%d]====\n",__func__,msg);
 	//s_info = *info;
 	//pfly_UsbCamInfo->newdvr_status = msg;
 	tmpval = msg;
@@ -137,7 +138,7 @@ static void notify_newDVR(unsigned char msg)
         int tempbyte;
         //kfifo_reset(&knob_data_fifo);
         tempbyte = kfifo_out(&notify_data_fifo, &temp_reset_data, 1);
-        lidbg("%s: kfifo clear!!!!!\n",__func__);
+        lidbg(TAG"%s: kfifo clear!!!!!\n",__func__);
     }
 	
 	kfifo_in(&notify_data_fifo, &tmpval, 1);
@@ -163,12 +164,12 @@ static void status_fifo_in(unsigned char status)
 	if(status == RET_DEFALUT || status== RET_DVR_START || status == RET_DVR_STOP
 		|| status== RET_REAR_START || status == RET_REAR_STOP)
 	{
-		lidbg("%s:====receive msg => %d====\n",__func__,status);
+		lidbg(TAG"%s:====receive msg => %d====\n",__func__,status);
 		wake_up_interruptible(&pfly_UsbCamInfo->camStatus_wait_queue);
 		return;
 	}
     
-	lidbg("%s:====fifo in => 0x%x====\n",__func__,status);
+	lidbg(TAG"%s:====fifo in => 0x%x====\n",__func__,status);
 	down(&pfly_UsbCamInfo->sem);
 	//if(kfifo_is_full(&camStatus_data_fifo));
 	kfifo_in(&camStatus_data_fifo, &pfly_UsbCamInfo->read_status, 1);
@@ -192,16 +193,16 @@ static int lidbg_flycam_event(struct notifier_block *this,
                        unsigned long event, void *ptr)
 {
     DUMP_FUN;
-	lidbg("flycam event: %ld\n", event);
+	lidbg(TAG"flycam event: %ld\n", event);
     switch (event)
     {
 	    case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON):
-			lidbg("flycam event:resume %ld\n", event);
+			lidbg(TAG"flycam event:resume %ld\n", event);
 			s_info.isACCOFF = false;
 			notify_newDVR(MSG_ACCON_NOTIFY);
 			break;
 	    case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_OFF):
-			lidbg("flycam event:suspend %ld\n", event);
+			lidbg(TAG"flycam event:suspend %ld\n", event);
 			s_info.isACCOFF = true;
 			notify_newDVR(MSG_ACCOFF_NOTIFY);
 			notify_online(RET_EM_ISREC_OFF);
@@ -210,10 +211,10 @@ static int lidbg_flycam_event(struct notifier_block *this,
 			lidbg_shell_cmd("setprop lidbg.uvccam.isDelDaysFile 1");
 			break;
 		case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_DOWN):
-			lidbg("flycam event:device_down %ld\n", event);
+			lidbg(TAG"flycam event:device_down %ld\n", event);
 			break;
 		case NOTIFIER_VALUE(NOTIFIER_MAJOR_GSENSOR_STATUS_CHANGE, NOTIFIER_MINOR_EXCEED_THRESHOLD):
-			lidbg("flycam event:emergency recording %ld\n", event);
+			lidbg(TAG"flycam event:emergency recording %ld\n", event);
 			notify_newDVR(MSG_GSENSOR_NOTIFY);
 			break;
 	    default:
@@ -290,19 +291,19 @@ static int checkSDCardStatus(char *path)
 		file_path = filp_open(path, O_RDONLY | O_DIRECTORY, 0);
 		if(IS_ERR(storage_path))
 		{
-			lidbg("%s:EMMC ERR!!%ld\n",__func__,PTR_ERR(storage_path));
+			lidbg(TAG"%s:EMMC ERR!!%ld\n",__func__,PTR_ERR(storage_path));
 			ret = 1;
 		}
 		else if(IS_ERR(file_path))
 		{
-			lidbg("%s: New Rec Dir => %s\n",__func__,path);
+			lidbg(TAG"%s: New Rec Dir => %s\n",__func__,path);
 			sprintf(temp_cmd, "mkdir -p %s", path);
 			lidbg_shell_cmd(temp_cmd);
 			sprintf(temp_cmd, "mkdir -p %s/BlackBox/.tmp", path);
 			lidbg_shell_cmd(temp_cmd);
 			ret = 3;
 		}
-		else lidbg("%s: Check Rec Dir OK => %s\n",__func__,path);
+		else lidbg(TAG"%s: Check Rec Dir OK => %s\n",__func__,path);
 	}
 	else if(!strncmp(path, EMMC_MOUNT_POINT1, strlen(EMMC_MOUNT_POINT1)))
 	{
@@ -311,24 +312,24 @@ static int checkSDCardStatus(char *path)
 		if(IS_ERR(storage_path))
 		{
 #if 0
-			lidbg("%s:SDCARD1 ERR!!Reset to %s/camera_rec/\n",__func__, EMMC_MOUNT_POINT0);
+			lidbg(TAG"%s:SDCARD1 ERR!!Reset to %s/camera_rec/\n",__func__, EMMC_MOUNT_POINT0);
 			strcpy(path, EMMC_MOUNT_POINT0"/camera_rec/");
 #else
-			lidbg("%s:SDCARD1 ERR!!\n",__func__);
+			lidbg(TAG"%s:SDCARD1 ERR!!\n",__func__);
 			//strcpy(path, EMMC_MOUNT_POINT1"/camera_rec/");
 #endif
 			ret = 2;
 		}
 		else if(IS_ERR(file_path))
 		{
-			lidbg("%s: New Rec Dir => %s\n",__func__,path);
+			lidbg(TAG"%s: New Rec Dir => %s\n",__func__,path);
 			sprintf(temp_cmd, "mkdir -p %s", path);
 			lidbg_shell_cmd(temp_cmd);
 			sprintf(temp_cmd, "mkdir -p %s/BlackBox/.tmp", path);
 			lidbg_shell_cmd(temp_cmd);
 			ret = 3;
 		}
-		else lidbg("%s: Check Rec Dir OK => %s\n",__func__,path);
+		else lidbg(TAG"%s: Check Rec Dir OK => %s\n",__func__,path);
 	}
 	if(!IS_ERR(storage_path)) filp_close(storage_path, 0);
 	if(!IS_ERR(file_path)) filp_close(file_path, 0);
@@ -354,7 +355,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	unsigned char ret_st = 0;
 	char temp_cmd[256];
 	struct file *file_path;
-	//lidbg("=====camStatus => %d======\n",pfly_UsbCamInfo->camStatus);
+	//lidbg(TAG"=====camStatus => %d======\n",pfly_UsbCamInfo->camStatus);
 #if 0	
 	if(_IOC_TYPE(cmd) == FLYCAM_FRONT_REC_IOC_MAGIC)//front cam recording mode
 	{
@@ -363,17 +364,17 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			/*check camera status before doing ioctl*/
 			if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISVALID))
 			{
-				lidbg("%s:DVR not found,ioctl fail!\n",__func__);
+				lidbg(TAG"%s:DVR not found,ioctl fail!\n",__func__);
 				return RET_NOTVALID;
 			}
 			else if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX))
 			{
-				lidbg("%s:Is not SonixCam ,ioctl fail!\n",__func__);
+				lidbg(TAG"%s:Is not SonixCam ,ioctl fail!\n",__func__);
 				return RET_NOTSONIX;
 			}
 			else if((pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX) && !isDVRAfterFix)
 			{
-				lidbg("%s:Fix proc running!But ignore !\n",__func__);
+				lidbg(TAG"%s:Fix proc running!But ignore !\n",__func__);
 				//return RET_NOTVALID;
 				isDVRAfterFix = 1;//force to 1 tmp
 			}
@@ -382,70 +383,70 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		switch(_IOC_NR(cmd))
 		{
 			case NR_BITRATE:
-				lidbg("%s:DVR NR_REC_BITRATE = [%ld]\n",__func__,arg);
+				lidbg(TAG"%s:DVR NR_REC_BITRATE = [%ld]\n",__func__,arg);
 				f_rec_bitrate = arg;
 		        break;
 		    case NR_RESOLUTION:
-				lidbg("%s:DVR NR_REC_RESOLUTION  = [%s]\n",__func__,(char*)arg);
+				lidbg(TAG"%s:DVR NR_REC_RESOLUTION  = [%s]\n",__func__,(char*)arg);
 				strcpy(f_rec_res,(char*)arg);
 		        break;
 			case NR_PATH:
-				lidbg("%s:DVR NR_REC_PATH  = [%s]\n",__func__,(char*)arg);
+				lidbg(TAG"%s:DVR NR_REC_PATH  = [%s]\n",__func__,(char*)arg);
 #if 0				
 				ret_st = checkSDCardStatus((char*)arg);
 				if(ret_st != 1) 
 					strcpy(f_rec_path,(char*)arg);
 				else
-					lidbg("%s: f_rec_path access wrong! %d", __func__ ,EFAULT);//not happend
+					lidbg(TAG"%s: f_rec_path access wrong! %d", __func__ ,EFAULT);//not happend
 				if(ret_st > 0) ret = RET_FAIL;
 #endif				
 		        break;
 			case NR_TIME:
-				lidbg("%s:DVR NR_REC_TIME = [%ld]\n",__func__,arg);
+				lidbg(TAG"%s:DVR NR_REC_TIME = [%ld]\n",__func__,arg);
 				f_rec_time = arg;
 		        break;
 			case NR_FILENUM:
-				lidbg("%s:DVR NR_REC_FILENUM = [%ld]\n",__func__,arg);
+				lidbg(TAG"%s:DVR NR_REC_FILENUM = [%ld]\n",__func__,arg);
 				f_rec_filenum = arg;
 		        break;
 			case NR_TOTALSIZE:
-				lidbg("%s:DVR NR_REC_TOTALSIZE = [%ld]\n",__func__,arg);
+				lidbg(TAG"%s:DVR NR_REC_TOTALSIZE = [%ld]\n",__func__,arg);
 				f_rec_totalsize= arg;
 		        break;
 			case NR_ISDUALCAM:
-				lidbg("%s:DVR NR_ISDUALCAM\n",__func__);
+				lidbg(TAG"%s:DVR NR_ISDUALCAM\n",__func__);
 				isDualCam = arg;
 		        break;
 			case NR_ISCOLDBOOTREC:
-				lidbg("%s:DVR NR_ISCOLDBOOTREC\n",__func__);
+				lidbg(TAG"%s:DVR NR_ISCOLDBOOTREC\n",__func__);
 				isColdBootRec= arg;
 		        break;
 			case NR_ISEMPERMITTED:
-				lidbg("%s:DVR NR_ISEMPERMITTED\n",__func__);
+				lidbg(TAG"%s:DVR NR_ISEMPERMITTED\n",__func__);
 				isEmRecPermitted= arg;
 		        break;
 			case NR_ISVIDEOLOOP:
-				lidbg("%s:DVR NR_ISVIDEOLOOP %ld\n",__func__,arg);
+				lidbg(TAG"%s:DVR NR_ISVIDEOLOOP %ld\n",__func__,arg);
 				isDVRVideoLoop= arg;
 				break;
 			case NR_DELDAYS:
-				lidbg("%s:DVR NR_DELDAYS %ld\n",__func__,arg);
+				lidbg(TAG"%s:DVR NR_DELDAYS %ld\n",__func__,arg);
 				delDays= arg;
 				break;
 			case NR_START_REC:
-		        lidbg("%s:DVR NR_START_REC\n",__func__);
+		        lidbg(TAG"%s:DVR NR_START_REC\n",__func__);
 				setDVRProp(DVR_ID);
 				ret_st = checkSDCardStatus(f_rec_path);
 				if(ret_st == 2 || ret_st == 1) return RET_FAIL;
 				
 				if(isDVRRec)
 				{
-					lidbg("%s:====DVR start cmd repeatedly====\n",__func__);
+					lidbg(TAG"%s:====DVR start cmd repeatedly====\n",__func__);
 					ret = RET_REPEATREQ;
 				}
 				else if(isOnlineRec) 
 				{
-					lidbg("%s:====DVR restart rec====\n",__func__);
+					lidbg(TAG"%s:====DVR restart rec====\n",__func__);
 					isDVRRec = 1;
 					isOnlineRec = 0;
 					if(stop_rec(DVR_ID,1)) goto dvrfailproc;
@@ -454,32 +455,32 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				}
 				else 
 				{
-					lidbg("%s:====DVR start rec====\n",__func__);
+					lidbg(TAG"%s:====DVR start rec====\n",__func__);
 					isDVRRec = 1;
 					if(start_rec(DVR_ID,1)) goto dvrfailproc;
 				}
 		        break;
 			case NR_STOP_REC:
-		        lidbg("%s:DVR NR_STOP_REC\n",__func__);
+		        lidbg(TAG"%s:DVR NR_STOP_REC\n",__func__);
 				if(isDVRRec)
 				{
-					lidbg("%s:====DVR stop rec====\n",__func__);
+					lidbg(TAG"%s:====DVR stop rec====\n",__func__);
 					if(stop_rec(DVR_ID,1)) goto dvrfailproc;
 					isDVRRec = 0;
 				}
 				else if(isOnlineRec) 
 				{
-					lidbg("%s:====DVR stop cmd neglected====\n",__func__);
+					lidbg(TAG"%s:====DVR stop cmd neglected====\n",__func__);
 					ret = RET_IGNORE;
 				}
 				else
 				{
-					lidbg("%s:====DVR stop cmd repeatedly====\n",__func__);
+					lidbg(TAG"%s:====DVR stop cmd repeatedly====\n",__func__);
 					ret = RET_REPEATREQ;
 				}
 		        break;
 			case NR_SET_PAR:
-				lidbg("%s:DVR NR_SET_PAR\n",__func__);
+				lidbg(TAG"%s:DVR NR_SET_PAR\n",__func__);
 				if(isDVRRec)
 				{
 					if(stop_rec(DVR_ID,1)) goto dvrfailproc;
@@ -496,33 +497,33 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				}
 		        break;
 			case NR_GET_RES:
-				lidbg("%s:DVR NR_GET_RES\n",__func__);
+				lidbg(TAG"%s:DVR NR_GET_RES\n",__func__);
 				//invoke_AP_ID_Mode(DVR_GET_RES_ID_MODE);
 				if(!wait_for_completion_timeout(&DVR_res_get_wait , 3*HZ)) ret = RET_FAIL;
 				strcpy((char*)arg,camera_DVR_res);
-				lidbg("%s:DVR NR_GET_RES => %s\n",__func__,(char*)arg);
+				lidbg(TAG"%s:DVR NR_GET_RES => %s\n",__func__,(char*)arg);
 		        break;
 			case NR_SATURATION:
-				lidbg("%s:DVR NR_SATURATION\n",__func__);
-				lidbg("saturationVal = %ld\n",arg);
+				lidbg(TAG"%s:DVR NR_SATURATION\n",__func__);
+				lidbg(TAG"saturationVal = %ld\n",arg);
 				sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --ef-set saturation=%ld ", arg);
 				lidbg_shell_cmd(temp_cmd);
 		        break;
 			case NR_TONE:
-				lidbg("%s:DVR NR_TONE\n",__func__);
-				lidbg("hueVal = %ld\n",arg);
+				lidbg(TAG"%s:DVR NR_TONE\n",__func__);
+				lidbg(TAG"hueVal = %ld\n",arg);
 				sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --ef-set hue=%ld ", arg);
 				lidbg_shell_cmd(temp_cmd);
 		        break;
 			case NR_BRIGHT:
-				lidbg("%s:DVR NR_BRIGHT\n",__func__);
-				lidbg("brightVal = %ld\n",arg);
+				lidbg(TAG"%s:DVR NR_BRIGHT\n",__func__);
+				lidbg(TAG"brightVal = %ld\n",arg);
 				sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --ef-set bright=%ld ", arg);
 				lidbg_shell_cmd(temp_cmd);
 		        break;
 			case NR_CONTRAST:
-				lidbg("%s:DVR NR_CONTRAST\n",__func__);
-				lidbg("contrastVal = %ld\n",arg);
+				lidbg(TAG"%s:DVR NR_CONTRAST\n",__func__);
+				lidbg(TAG"contrastVal = %ld\n",arg);
 				sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 1 --ef-set contrast=%ld ", arg);
 				lidbg_shell_cmd(temp_cmd);
 		        break;
@@ -536,12 +537,12 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		char temp_cmd[256];
 		if((s_info.isACCOFF == true) && ((_IOC_NR(cmd) == NR_START_REC) ||(_IOC_NR(cmd) == NR_CAPTURE)))
 		{
-			lidbg("%s:====Online VR: udisk_request===\n",__func__);
+			lidbg(TAG"%s:====Online VR: udisk_request===\n",__func__);
 			lidbg_shell_cmd("echo 'udisk_request' > /dev/flydev0");
-			lidbg("%s:====Online VR: ACCOFF CHECK====\n",__func__);
+			lidbg(TAG"%s:====Online VR: ACCOFF CHECK====\n",__func__);
 			if(!wait_event_interruptible_timeout(pfly_UsbCamInfo->DVR_ready_wait_queue, (s_info.isFrontCamReady == true), 10*HZ))
 			{
-				lidbg("%s:====Online VR: udisk_unrequest==suspend online timeout==\n",__func__);
+				lidbg(TAG"%s:====Online VR: udisk_unrequest==suspend online timeout==\n",__func__);
 				lidbg_shell_cmd("echo 'udisk_unrequest' > /dev/flydev0");
 				return RET_NOTVALID;
 			}
@@ -552,12 +553,12 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			/*check camera status before doing ioctl*/
 			if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISVALID))
 			{
-				lidbg("%s:DVR[online] not found,ioctl fail!\n",__func__);
+				lidbg(TAG"%s:DVR[online] not found,ioctl fail!\n",__func__);
 				return RET_NOTVALID;
 			}
 			if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX))
 			{
-				lidbg("%s:is not SonixCam ,ioctl fail!\n",__func__);
+				lidbg(TAG"%s:is not SonixCam ,ioctl fail!\n",__func__);
 				return RET_NOTSONIX;
 			}
 		}
@@ -565,39 +566,39 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		switch(_IOC_NR(cmd))
 		{
 			case NR_BITRATE:
-				lidbg("%s:Online NR_REC_BITRATE = [%ld]\n",__func__,arg);
+				lidbg(TAG"%s:Online NR_REC_BITRATE = [%ld]\n",__func__,arg);
 				f_online_bitrate = arg;
 		        break;
 		    case NR_RESOLUTION:
-				lidbg("%s:Online NR_REC_RESOLUTION  = [%s]\n",__func__,(char*)arg);
+				lidbg(TAG"%s:Online NR_REC_RESOLUTION  = [%s]\n",__func__,(char*)arg);
 				strcpy(f_online_res,(char*)arg);
 		        break;
 			case NR_PATH:
-				lidbg("%s:Online NR_REC_PATH  = [%s]\n",__func__,(char*)arg);
+				lidbg(TAG"%s:Online NR_REC_PATH  = [%s]\n",__func__,(char*)arg);
 				/*
 				ret_st = checkSDCardStatus((char*)arg);
 				if(ret_st != 1) 
 					strcpy(f_online_path,(char*)arg);
 				else
-					lidbg("%s: f_online_path access wrong! %d", __func__ ,EFAULT);//not happend
+					lidbg(TAG"%s: f_online_path access wrong! %d", __func__ ,EFAULT);//not happend
 				if(ret_st > 0) ret = RET_FAIL;
 				*/
 				strcpy(f_online_path,(char*)arg);
 		        break;
 			case NR_TIME:
-				lidbg("%s:Online NR_REC_TIME = [%ld]\n",__func__,arg);
+				lidbg(TAG"%s:Online NR_REC_TIME = [%ld]\n",__func__,arg);
 				f_online_time = arg;
 		        break;
 			case NR_FILENUM:
-				lidbg("%s:Online NR_REC_FILENUM = [%ld]\n",__func__,arg);
+				lidbg(TAG"%s:Online NR_REC_FILENUM = [%ld]\n",__func__,arg);
 				f_online_filenum = arg;
 		        break;
 			case NR_TOTALSIZE:
-				lidbg("%s:Online NR_REC_TOTALSIZE = [%ld]\n",__func__,arg);
+				lidbg(TAG"%s:Online NR_REC_TOTALSIZE = [%ld]\n",__func__,arg);
 				f_online_totalsize= arg;
 		        break;
 			case NR_START_REC:
-		        lidbg("%s:Online NR_START_REC\n",__func__);
+		        lidbg(TAG"%s:Online NR_START_REC\n",__func__);
 				if(s_info.isACCOFF == true) 
 				{
 					if(isOnlineRunning == false)
@@ -611,7 +612,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				else return RET_IGNORE;
 		        break;
 			case NR_STOP_REC:
-		        lidbg("%s:Online NR_STOP_REC\n",__func__);
+		        lidbg(TAG"%s:Online NR_STOP_REC\n",__func__);
 				if(s_info.isACCOFF == true) 
 				{		
 					if(isOnlineRunning == true)
@@ -626,23 +627,23 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				else return RET_IGNORE;
 		        break;
 			case NR_CAPTURE:
-				lidbg("%s:Online NR_CAPTURE\n",__func__);
+				lidbg(TAG"%s:Online NR_CAPTURE\n",__func__);
 				lidbg_shell_cmd("./flysystem/lib/out/lidbg_testuvccam /dev/video0 -b 1 -c -f mjpg -S");
 				break;
 			case NR_CAPTURE_PATH:
-				lidbg("%s:Online NR_CAPTURE_PATH  = [%s]\n",__func__,(char*)arg);
+				lidbg(TAG"%s:Online NR_CAPTURE_PATH  = [%s]\n",__func__,(char*)arg);
 				sprintf(temp_cmd, "mkdir -p %s", (char*)arg);
 				lidbg_shell_cmd(temp_cmd);
 
 				file_path = filp_open((char*)arg, O_RDONLY | O_DIRECTORY, 0);
 				if(IS_ERR(file_path))
 				{
-					lidbg("%s:CAPTURE_PATH ERR!!\n",__func__);
+					lidbg(TAG"%s:CAPTURE_PATH ERR!!\n",__func__);
 					lidbg_shell_cmd("setprop persist.uvccam.capturepath "EMMC_MOUNT_POINT0"/preview_cache/");
 				}
 				else
 				{
-					lidbg("%s:CAPTURE_PATH OK!!\n",__func__);
+					lidbg(TAG"%s:CAPTURE_PATH OK!!\n",__func__);
 					strcpy(capture_path,(char*)arg);
 					sprintf(temp_cmd, "setprop persist.uvccam.capturepath %s", capture_path);
 					lidbg_shell_cmd(temp_cmd);
@@ -658,7 +659,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		switch(_IOC_NR(cmd))
 		{
 			case NR_CAPTURE:
-				lidbg("%s:Online NR_CAPTURE\n",__func__);
+				lidbg(TAG"%s:Online NR_CAPTURE\n",__func__);
 				lidbg_shell_cmd("./flysystem/lib/out/lidbg_testuvccam /dev/video0 -b 0  -c -f mjpg -S");
 				break;
 			default:
@@ -673,17 +674,17 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			/*check camera status before doing ioctl*/
 			if(!((pfly_UsbCamInfo->camStatus >> 4) & FLY_CAM_ISVALID))
 			{
-				lidbg("%s:Rear not found,ioctl fail!\n",__func__);
+				lidbg(TAG"%s:Rear not found,ioctl fail!\n",__func__);
 				return RET_NOTVALID;
 			}
 			else if(!((pfly_UsbCamInfo->camStatus >> 4)  & FLY_CAM_ISSONIX))
 			{
-				lidbg("%s:Rear Is not SonixCam ,ioctl fail!\n",__func__);
+				lidbg(TAG"%s:Rear Is not SonixCam ,ioctl fail!\n",__func__);
 				return RET_NOTSONIX;
 			}
 			else if(((pfly_UsbCamInfo->camStatus >> 4)  & FLY_CAM_ISSONIX) && !isRearViewAfterFix)
 			{
-				lidbg("%s:Rear Fix proc running!But ignore !\n",__func__);
+				lidbg(TAG"%s:Rear Fix proc running!But ignore !\n",__func__);
 				//return RET_NOTVALID;
 				isRearViewAfterFix = 1;//force to 1 tmp
 			}
@@ -692,77 +693,77 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		switch(_IOC_NR(cmd))
 		{
 			case NR_BITRATE:
-				lidbg("%s:Rear NR_REC_BITRATE = [%ld]\n",__func__,arg);
+				lidbg(TAG"%s:Rear NR_REC_BITRATE = [%ld]\n",__func__,arg);
 				r_rec_bitrate = arg;
 		        break;
 		    case NR_RESOLUTION:
-				lidbg("%s:Rear NR_REC_RESOLUTION  = [%s]\n",__func__,(char*)arg);
+				lidbg(TAG"%s:Rear NR_REC_RESOLUTION  = [%s]\n",__func__,(char*)arg);
 				strcpy(r_rec_res,(char*)arg);
 		        break;
 			case NR_PATH:
-				lidbg("%s:Rear NR_REC_PATH  = [%s]\n",__func__,(char*)arg);
+				lidbg(TAG"%s:Rear NR_REC_PATH  = [%s]\n",__func__,(char*)arg);
 #if 0				
 				ret_st = checkSDCardStatus((char*)arg);
 				if(ret_st != 1) 
 					strcpy(r_rec_path,(char*)arg);
 				else
-					lidbg("%s: r_rec_path access wrong! %d", __func__ ,EFAULT);//not happend
+					lidbg(TAG"%s: r_rec_path access wrong! %d", __func__ ,EFAULT);//not happend
 				if(ret_st > 0) ret = RET_FAIL;
 #endif				
 		        break;
 			case NR_TIME:
-				lidbg("%s:Rear NR_REC_TIME = [%ld]\n",__func__,arg);
+				lidbg(TAG"%s:Rear NR_REC_TIME = [%ld]\n",__func__,arg);
 				r_rec_time = arg;
 		        break;
 			case NR_FILENUM:
-				lidbg("%s:Rear NR_REC_FILENUM = [%ld]\n",__func__,arg);
+				lidbg(TAG"%s:Rear NR_REC_FILENUM = [%ld]\n",__func__,arg);
 				r_rec_filenum = arg;
 		        break;
 			case NR_TOTALSIZE:
-				lidbg("%s:Rear NR_REC_TOTALSIZE = [%ld]\n",__func__,arg);
+				lidbg(TAG"%s:Rear NR_REC_TOTALSIZE = [%ld]\n",__func__,arg);
 				r_rec_totalsize= arg;
 		        break;
 			case NR_ISVIDEOLOOP:
-				lidbg("%s:Rear NR_ISVIDEOLOOP %ld\n",__func__,arg);
+				lidbg(TAG"%s:Rear NR_ISVIDEOLOOP %ld\n",__func__,arg);
 				isRearVideoLoop= arg;
 				break;
 			case NR_CVBSMODE:
-				lidbg("%s:REAR NR_CVBSMODE %ld\n",__func__,arg);
+				lidbg(TAG"%s:REAR NR_CVBSMODE %ld\n",__func__,arg);
 				CVBSMode = arg;
 				break;
 			case NR_START_REC:
-		        lidbg("%s:Rear NR_START_REC\n",__func__);
+		        lidbg(TAG"%s:Rear NR_START_REC\n",__func__);
 				setDVRProp(REARVIEW_ID);
 				ret_st = checkSDCardStatus(f_rec_path);
 				if(ret_st == 2 || ret_st == 1) return RET_FAIL;
 				if(isRearRec)
 				{
-					lidbg("%s:====Rear start cmd repeatedly====\n",__func__);
+					lidbg(TAG"%s:====Rear start cmd repeatedly====\n",__func__);
 					ret = RET_REPEATREQ;
 				}
 				else 
 				{
-					lidbg("%s:====Rear start rec====\n",__func__);
+					lidbg(TAG"%s:====Rear start rec====\n",__func__);
 					isRearRec = 1;
 					if(start_rec(REARVIEW_ID,1)) goto rearfailproc;
 				}
 		        break;
 			case NR_STOP_REC:
-		        lidbg("%s:Rear NR_STOP_REC\n",__func__);
+		        lidbg(TAG"%s:Rear NR_STOP_REC\n",__func__);
 				if(isRearRec)
 				{
-					lidbg("%s:====Rear stop rec====\n",__func__);
+					lidbg(TAG"%s:====Rear stop rec====\n",__func__);
 					if(stop_rec(REARVIEW_ID,1)) goto rearfailproc;
 					isRearRec = 0;
 				}
 				else
 				{
-					lidbg("%s:====Rear stop cmd repeatedly====\n",__func__);
+					lidbg(TAG"%s:====Rear stop cmd repeatedly====\n",__func__);
 					ret = RET_REPEATREQ;
 				}
 		        break;
 			case NR_SET_PAR:
-				lidbg("%s:Rear NR_SET_PAR\n",__func__);
+				lidbg(TAG"%s:Rear NR_SET_PAR\n",__func__);
 				if(isRearRec)
 				{
 					if(stop_rec(REARVIEW_ID,1)) goto rearfailproc;
@@ -771,33 +772,33 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				}
 		        break;
 			case NR_GET_RES:
-				lidbg("%s:Rear NR_GET_RES\n",__func__);
+				lidbg(TAG"%s:Rear NR_GET_RES\n",__func__);
 				//invoke_AP_ID_Mode(REAR_GET_RES_ID_MODE);
 				if(!wait_for_completion_timeout(&DVR_res_get_wait , 3*HZ)) ret = RET_FAIL;
 				strcpy((char*)arg,camera_rear_res);
-				lidbg("%s:Rear NR_GET_RES => %s\n",__func__,(char*)arg);
+				lidbg(TAG"%s:Rear NR_GET_RES => %s\n",__func__,(char*)arg);
 		        break;
 			case NR_SATURATION:
-				lidbg("%s:Rear NR_SATURATION\n",__func__);
-				lidbg("saturationVal = %ld\n",arg);
+				lidbg(TAG"%s:Rear NR_SATURATION\n",__func__);
+				lidbg(TAG"saturationVal = %ld\n",arg);
 				sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 0 --ef-set saturation=%ld ", arg);
 				lidbg_shell_cmd(temp_cmd);
 		        break;
 			case NR_TONE:
-				lidbg("%s:Rear NR_TONE\n",__func__);
-				lidbg("hueVal = %ld\n",arg);
+				lidbg(TAG"%s:Rear NR_TONE\n",__func__);
+				lidbg(TAG"hueVal = %ld\n",arg);
 				sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 0 --ef-set hue=%ld ", arg);
 				lidbg_shell_cmd(temp_cmd);
 		        break;
 			case NR_BRIGHT:
-				lidbg("%s:Rear NR_BRIGHT\n",__func__);
-				lidbg("brightVal = %ld\n",arg);
+				lidbg(TAG"%s:Rear NR_BRIGHT\n",__func__);
+				lidbg(TAG"brightVal = %ld\n",arg);
 				sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 0 --ef-set bright=%ld ", arg);
 				lidbg_shell_cmd(temp_cmd);
 		        break;
 			case NR_CONTRAST:
-				lidbg("%s:Rear NR_CONTRAST\n",__func__);
-				lidbg("contrastVal = %ld\n",arg);
+				lidbg(TAG"%s:Rear NR_CONTRAST\n",__func__);
+				lidbg(TAG"contrastVal = %ld\n",arg);
 				sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 0 --ef-set contrast=%ld ", arg);
 				lidbg_shell_cmd(temp_cmd);
 		        break;
@@ -811,7 +812,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		switch(_IOC_NR(cmd))
 		{
 			case NR_STATUS:
-		        lidbg("%s:NR_STATUS\n",__func__);
+		        lidbg(TAG"%s:NR_STATUS\n",__func__);
 				/*Check Update proc*/
 				if(arg == RET_DVR_UD_SUCCESS || arg == RET_DVR_UD_FAIL ||arg == RET_DVR_FW_ACCESS_FAIL ||
 					arg == RET_REAR_UD_SUCCESS ||arg == RET_REAR_UD_FAIL ||arg == RET_REAR_FW_ACCESS_FAIL )
@@ -819,51 +820,51 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				status_fifo_in(arg);
 		        break;
 			case NR_ACCON_CAM_READY:/*R/W:	R[0-OK;1-Timout]	W[0-Rear;1-DVR] -> Wait for 10s*/
-		        lidbg("%s:NR_ACCON_CAM_READY  E cam_id=> %ld\n",__func__,arg);
+		        lidbg(TAG"%s:NR_ACCON_CAM_READY  E cam_id=> %ld\n",__func__,arg);
 				if(arg == DVR_ID)
 				{
-					lidbg("DVR_ready_wait waiting\n");
+					lidbg(TAG"DVR_ready_wait waiting\n");
 					if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX))
 					{
 						//if(!wait_for_completion_timeout(&DVR_ready_wait , 10*HZ)) ret = 1;
 						if(!wait_event_interruptible_timeout(pfly_UsbCamInfo->DVR_ready_wait_queue, (isDVRReady == 1), 10*HZ))
 							ret = 1;
 					}
-					else lidbg("DVR Camera already ready.\n");
+					else lidbg(TAG"DVR Camera already ready.\n");
 				}
 				else if(arg == REARVIEW_ID)
 				{
-					lidbg("Rear_ready_wait waiting\n");
+					lidbg(TAG"Rear_ready_wait waiting\n");
 					if(!((pfly_UsbCamInfo->camStatus>>4) & FLY_CAM_ISSONIX))
 					{
 						if(!wait_event_interruptible_timeout(pfly_UsbCamInfo->Rear_ready_wait_queue, (isRearReady == 1), 10*HZ))
 							ret = 1;
 					}
-					else lidbg("Rear Camera already ready.\n");
+					else lidbg(TAG"Rear Camera already ready.\n");
 				}
-				 lidbg("%s:NR_ACCON_CAM_READY  X \n",__func__);
+				 lidbg(TAG"%s:NR_ACCON_CAM_READY  X \n",__func__);
 		        break;
 			case NR_DVR_FW_VERSION:
-		        lidbg("%s:NR_DVR_FW_VERSION\n",__func__);
+		        lidbg(TAG"%s:NR_DVR_FW_VERSION\n",__func__);
 				strcpy(camera_DVR_fw_version,(char*)arg);
 				sprintf(temp_cmd, "am broadcast -a com.lidbg.flybootserver.action --es toast DVR_%s&",camera_DVR_fw_version );
 				lidbg_shell_cmd(temp_cmd);
 				complete(&DVR_fw_get_wait);/*HAL get version*/
 		        break;
 			case NR_REAR_FW_VERSION:
-		        lidbg("%s:NR_REAR_FW_VERSION\n",__func__);
+		        lidbg(TAG"%s:NR_REAR_FW_VERSION\n",__func__);
 				strcpy(camera_rear_fw_version,(char*)arg);
 				sprintf(temp_cmd, "am broadcast -a com.lidbg.flybootserver.action --es toast REAR_%s&",camera_rear_fw_version );
 				lidbg_shell_cmd(temp_cmd);
 				complete(&Rear_fw_get_wait);/*HAL get version*/
 		        break;
 			case NR_DVR_RES:
-		        lidbg("%s:NR_DVR_RES\n",__func__);
+		        lidbg(TAG"%s:NR_DVR_RES\n",__func__);
 				strcpy(camera_DVR_res,(char*)arg);
 				complete(&DVR_res_get_wait);/*HAL get version*/
 		        break;
 			case NR_REAR_RES:
-		        lidbg("%s:NR_REAR_RES\n",__func__);
+		        lidbg(TAG"%s:NR_REAR_RES\n",__func__);
 				strcpy(camera_rear_res,(char*)arg);
 				complete(&Rear_res_get_wait);/*HAL get version*/
 		        break;
@@ -871,12 +872,12 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				//wait_event_interruptible(pfly_UsbCamInfo->onlineNotify_wait_queue, isOnlineNotifyReady == 1);
 				 if(wait_event_interruptible(pfly_UsbCamInfo->onlineNotify_wait_queue, isOnlineNotifyReady == 1))
 	        		return -ERESTARTSYS;
-				lidbg("%s:NR_ONLINE_NOTIFY ,isOnlineNotifyReady: %d\n",__func__,isOnlineNotifyReady);
+				lidbg(TAG"%s:NR_ONLINE_NOTIFY ,isOnlineNotifyReady: %d\n",__func__,isOnlineNotifyReady);
 				isOnlineNotifyReady = 0;
 				return pfly_UsbCamInfo->onlineNotify_status;
 		        break;
 			case NR_ONLINE_INVOKE_NOTIFY:
-		        lidbg("%s:NR_ONLINE_INVOKE_NOTIFY arg = %ld\n",__func__,arg);
+		        lidbg(TAG"%s:NR_ONLINE_INVOKE_NOTIFY arg = %ld\n",__func__,arg);
 				if(arg == RET_EM_ISREC_OFF) del_timer(&stop_thinkware_em_timer);
 				notify_online(arg);
 		        break;
@@ -893,29 +894,29 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				 if(wait_event_interruptible(pfly_UsbCamInfo->newdvr_wait_queue, isNewDvrNotifyReady == 1))
 	        		return -ERESTARTSYS;
 	        	*/
-				lidbg("%s:NR_NEW_DVR_NOTIFY ,%d, isNewDvrNotifyReady: %d\n",__func__,notify_data_buf, isNewDvrNotifyReady);
+				lidbg(TAG"%s:NR_NEW_DVR_NOTIFY ,%d, isNewDvrNotifyReady: %d\n",__func__,notify_data_buf, isNewDvrNotifyReady);
 
 				if(copy_to_user((char*)arg, (char*)&s_info, sizeof(struct status_info)))
 			     {
-			         lidbg("%s:copy_to_user ERR\n",__func__);
+			         lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 			     }
 				
 				isNewDvrNotifyReady = 0;
 				return notify_data_buf;
 		        break;
 			case NR_NEW_DVR_IO:
-				lidbg("%s:NR_NEW_DVR_IO  \n",__func__ );
+				lidbg(TAG"%s:NR_NEW_DVR_IO  \n",__func__ );
 				s_info.emergencySaveDays = ((struct status_info*)arg)->emergencySaveDays;
 				s_info.emergencySwitch= ((struct status_info*)arg)->emergencySwitch;
 				s_info.recordMode= ((struct status_info*)arg)->recordMode;
 				s_info.recordSwitch= ((struct status_info*)arg)->recordSwitch;
 				s_info.singleFileRecordTime= ((struct status_info*)arg)->singleFileRecordTime;
 				s_info.sensitivityLevel= ((struct status_info*)arg)->sensitivityLevel;
-				lidbg("%s:NR_NEW_DVR_IO %d  \n",__func__, s_info.recordSwitch);
+				lidbg(TAG"%s:NR_NEW_DVR_IO %d  \n",__func__, s_info.recordSwitch);
 				return 0;
 		        break;		
 			case NR_NEW_DVR_ASYN_NOTIFY:
-				lidbg("%s:NR_NEW_DVR_ASYN_NOTIFY  \n",__func__ );
+				lidbg(TAG"%s:NR_NEW_DVR_ASYN_NOTIFY  \n",__func__ );
 				if(arg == RET_DVR_SONIX)
 				{
 					s_info.isFrontCamReady = true;
@@ -944,49 +945,49 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				return 0;
 		        break;
 			case NR_ENABLE_CAM_POWER:
-				//lidbg("%s:NR_ENABLE_CAM_POWER  \n",__func__ );
+				//lidbg(TAG"%s:NR_ENABLE_CAM_POWER  \n",__func__ );
 				//USB_FRONT_WORK_ENABLE;
 				//USB_BACK_WORK_ENABLE;
 				return 0;
 		        break;
 			case NR_DISABLE_CAM_POWER:
-				lidbg("%s:NR_DISABLE_CAM_POWER  \n",__func__ );
+				lidbg(TAG"%s:NR_DISABLE_CAM_POWER  \n",__func__ );
 				USB_POWER_FRONT_DISABLE;
 				USB_POWER_BACK_DISABLE;
 				return 0;
 		        break;
 			case NR_ENABLE_FRONT_CAM_POWER:
-				lidbg("%s:NR_ENABLE_FRONT_CAM_POWER  \n",__func__ );
+				lidbg(TAG"%s:NR_ENABLE_FRONT_CAM_POWER  \n",__func__ );
 				USB_FRONT_WORK_ENABLE;
 				return 0;
 		        break;
 			case NR_DISABLE_FRONT_CAM_POWER:
-				lidbg("%s:NR_DISABLE_FRONT_CAM_POWER  \n",__func__ );
+				lidbg(TAG"%s:NR_DISABLE_FRONT_CAM_POWER  \n",__func__ );
 				USB_POWER_FRONT_DISABLE;
 				return 0;
 		        break;
 			case NR_ENABLE_REAR_CAM_POWER:
-				lidbg("%s:NR_ENABLE_REAR_CAM_POWER  \n",__func__ );
+				lidbg(TAG"%s:NR_ENABLE_REAR_CAM_POWER  \n",__func__ );
 				USB_BACK_WORK_ENABLE;
 				return 0;
 		        break;
 			case NR_DISABLE_REAR_CAM_POWER:
-				lidbg("%s:NR_DISABLE_REAR_CAM_POWER  \n",__func__ );
+				lidbg(TAG"%s:NR_DISABLE_REAR_CAM_POWER  \n",__func__ );
 				USB_POWER_BACK_DISABLE;
 				return 0;
 		        break;
 			case NR_CONN_SDCARD:
-				lidbg("%s:NR_CONN_SDCARD  \n",__func__ );
+				lidbg(TAG"%s:NR_CONN_SDCARD  \n",__func__ );
 				s_info.isSDCardReady = true;
 				return 0;
 		        break;
 			case NR_DISCONN_SDCARD:
-				lidbg("%s:NR_DISCONN_SDCARD  \n",__func__ );
+				lidbg(TAG"%s:NR_DISCONN_SDCARD  \n",__func__ );
 				s_info.isSDCardReady = false;
 				return 0;
 		        break;
 			case NR_VOLD_DISCONN_SDCARD:
-				lidbg("%s:NR_VOLD_DISCONN_SDCARD  \n",__func__ );		
+				lidbg(TAG"%s:NR_VOLD_DISCONN_SDCARD  \n",__func__ );		
 				notify_newDVR(MSG_VOLD_SD_REMOVE);
 				return 0;
 		        break;
@@ -999,7 +1000,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		switch(_IOC_NR(cmd))
 		{
 			case NR_VERSION:
-		        lidbg("%s:NR_VERSION cam_id = [%d]\n",__func__,((char*)arg)[0]);
+		        lidbg(TAG"%s:NR_VERSION cam_id = [%d]\n",__func__,((char*)arg)[0]);
 				strcpy((char*)arg + 1,"123456");
 				if(((char*)arg)[0] == DVR_ID)
 					strcpy((char*)arg + 1,camera_DVR_fw_version);
@@ -1010,7 +1011,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				if(!strncmp((char*)arg + 1, "NONE", 4))
 					ret = RET_FAIL;
 
-				lidbg("%s:NR_VERSION FwVer:[%s]\n",__func__,(char*)arg + 1);
+				lidbg(TAG"%s:NR_VERSION FwVer:[%s]\n",__func__,(char*)arg + 1);
 
 #if 0
 				if(arg == 0)
@@ -1036,10 +1037,10 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #endif
 		        break;
 			case NR_UPDATE:
-		        lidbg("%s:NR_UPDATE\n",__func__);
+		        lidbg(TAG"%s:NR_UPDATE\n",__func__);
 				if(isUpdating) 
 				{
-					lidbg("%s:Camera it's updating!Rejective.\n",__func__);
+					lidbg(TAG"%s:Camera it's updating!Rejective.\n",__func__);
 					return RET_IGNORE;
 				}
 				isUpdating = 1;
@@ -1071,18 +1072,18 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		switch(_IOC_NR(cmd))
 		{
 			case NR_CMD:
-		        lidbg("%s:NR_CMD__cmd=>[0x%x]__camID=>[0x%x]\n",__func__,((char*)arg)[0],((char*)arg)[1]);
+		        lidbg(TAG"%s:NR_CMD__cmd=>[0x%x]__camID=>[0x%x]\n",__func__,((char*)arg)[0],((char*)arg)[1]);
 				//msleep(100);
 				/*check dvr camera status before doing ioctl*/
 #if 0				
 				if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISVALID))
 				{
-					lidbg("%s:DVR not found,ioctl fail!\n",__func__);
+					lidbg(TAG"%s:DVR not found,ioctl fail!\n",__func__);
 					//dvrRespond[2] = RET_NOTVALID;
 				}
 				else if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX))
 				{
-					lidbg("%s:Is not SonixCam ,ioctl fail!\n",__func__);
+					lidbg(TAG"%s:Is not SonixCam ,ioctl fail!\n",__func__);
 					//dvrRespond[2] = RET_NOTSONIX;
 				}
 
@@ -1090,24 +1091,24 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				/*check rear camera status before doing ioctl*/
 				if(!((pfly_UsbCamInfo->camStatus >> 4) & FLY_CAM_ISVALID))
 				{
-					lidbg("%s:Rear not found,ioctl fail!\n",__func__);
+					lidbg(TAG"%s:Rear not found,ioctl fail!\n",__func__);
 					//rearRespond[2] = RET_NOTVALID;
 				}
 				else if(!((pfly_UsbCamInfo->camStatus >> 4)  & FLY_CAM_ISSONIX))
 				{
-					lidbg("%s:Rear Is not SonixCam ,ioctl fail!\n",__func__);
+					lidbg(TAG"%s:Rear Is not SonixCam ,ioctl fail!\n",__func__);
 					//rearRespond[2] = RET_NOTSONIX;
 				}
 #endif
 				if(s_info.isFrontCamReady == false)
 				{
-					lidbg("%s:DVR not found,ioctl fail!\n",__func__);
+					lidbg(TAG"%s:DVR not found,ioctl fail!\n",__func__);
 					dvrRespond[2] = RET_NOTVALID;
 				}
 
 				if(s_info.isRearCamReady == false)
 				{
-					lidbg("%s:Rear not found,ioctl fail!\n",__func__);
+					lidbg(TAG"%s:Rear not found,ioctl fail!\n",__func__);
 					rearRespond[2] = RET_NOTVALID;
 				}
 
@@ -1148,28 +1149,28 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						length += 4;
 						if(copy_to_user((char*)arg,returnRespond,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 
 					case CMD_CAPTURE:
-						lidbg("%s:====CMD_CAPTURE====\n",__func__);
+						lidbg(TAG"%s:====CMD_CAPTURE====\n",__func__);
 						length += 2;
 						break;
 
 					case CMD_SET_RESOLUTION:
-						lidbg("%s:CMD_SET_RESOLUTION  = [%s]\n",__func__,(char*)arg + 1);
+						lidbg(TAG"%s:CMD_SET_RESOLUTION  = [%s]\n",__func__,(char*)arg + 1);
 						strcpy(f_rec_res,(char*)arg + 1);
 						length += 100;
 						memcpy(dvrRespond + 3,(char*)arg + 1,length);
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 
 					case CMD_TIME_SEC:
-						lidbg("%s:CMD_TIME_SEC = [%d]\n",__func__,(((char*)arg)[1] << 8) + ((char*)arg)[2]);
+						lidbg(TAG"%s:CMD_TIME_SEC = [%d]\n",__func__,(((char*)arg)[1] << 8) + ((char*)arg)[2]);
 						f_rec_time = (((char*)arg)[1] << 8) + ((char*)arg)[2];
 						
 						s_info.singleFileRecordTime = f_rec_time/60;
@@ -1179,39 +1180,39 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						length += 5;
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 
 					case CMD_FW_VER:
-						lidbg("%s:CMD_FW_VER dvr_Fw=> %s\n",__func__,camera_DVR_fw_version);
+						lidbg(TAG"%s:CMD_FW_VER dvr_Fw=> %s\n",__func__,camera_DVR_fw_version);
 						strcpy(dvrRespond + 3,camera_DVR_fw_version);
 						length += 100;
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 
 					case CMD_TOTALSIZE:
-						lidbg("%s:CMD_TOTALSIZE\n",__func__);
+						lidbg(TAG"%s:CMD_TOTALSIZE\n",__func__);
 						f_rec_totalsize= ((((char*)arg)[1] << 24) + (((char*)arg)[2] << 16) + (((char*)arg)[3] << 8) + ((char*)arg)[4]);
-						lidbg("%s:CMD_TOTALSIZE => %dMB\n",__func__,f_rec_totalsize);
+						lidbg(TAG"%s:CMD_TOTALSIZE => %dMB\n",__func__,f_rec_totalsize);
 						memcpy(dvrRespond + 3,(char*)arg + 1,4);
 						length += 7;
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 
 					case CMD_PATH:
-						lidbg("%s:CMD_PATH\n",__func__);
+						lidbg(TAG"%s:CMD_PATH\n",__func__);
 						ret_st = checkSDCardStatus(EMMC_MOUNT_POINT1"/camera_rec/");
 						if(ret_st != 1) 
 							strcpy(f_rec_path,EMMC_MOUNT_POINT1"/camera_rec/");
 						else
-							lidbg("%s: f_rec_path access wrong! %d", __func__ ,EFAULT);//not happend
+							lidbg(TAG"%s: f_rec_path access wrong! %d", __func__ ,EFAULT);//not happend
 						if(ret_st > 0) dvrRespond[2] = RET_FAIL;
 
 						/*EM path*/
@@ -1224,12 +1225,12 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						file_path = filp_open(tmp_path, O_RDONLY | O_DIRECTORY, 0);
 						if(IS_ERR(file_path))
 						{
-							lidbg("%s:EM_PATH ERR!!\n",__func__);
+							lidbg(TAG"%s:EM_PATH ERR!!\n",__func__);
 							lidbg_shell_cmd("setprop persist.uvccam.empath "EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
 						}
 						else
 						{
-							lidbg("%s:EMPATH OK!!\n",__func__);
+							lidbg(TAG"%s:EMPATH OK!!\n",__func__);
 							strcpy(em_path,tmp_path);
 							sprintf(temp_cmd, "setprop persist.uvccam.empath %s", em_path);
 							lidbg_shell_cmd(temp_cmd);
@@ -1240,12 +1241,12 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						length += 100;
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 
 					case CMD_SET_PAR:
-						lidbg("%s:CMD_SET_PAR\n",__func__);						
+						lidbg(TAG"%s:CMD_SET_PAR\n",__func__);						
 						initMsg[length] = 0xB0;
 						length++;
 						dvrRespond[0] = CMD_RECORD;
@@ -1335,36 +1336,36 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						initMsg[length] = ';';
 						length++;
 						
-						lidbg("%s:CMD_SET_PAR ;1:0x%x,2:0x%x,3:0x%x,4:0x%x,5:0x%x,6:0x%x,7:0x%x,\n",__func__,initMsg[0],initMsg[1],initMsg[2],initMsg[3],initMsg[4],initMsg[5],initMsg[6]);
-						lidbg("%s:length = %d\n",__func__,length);
+						lidbg(TAG"%s:CMD_SET_PAR ;1:0x%x,2:0x%x,3:0x%x,4:0x%x,5:0x%x,6:0x%x,7:0x%x,\n",__func__,initMsg[0],initMsg[1],initMsg[2],initMsg[3],initMsg[4],initMsg[5],initMsg[6]);
+						lidbg(TAG"%s:length = %d\n",__func__,length);
 						if(copy_to_user((char*)arg,initMsg,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						//mod_timer(&set_par_timer,SET_PAR_WAIT_TIME);
 						break;
 
 					case CMD_GET_RES:
-						lidbg("%s:CMD_GET_RES\n",__func__);
+						lidbg(TAG"%s:CMD_GET_RES\n",__func__);
 						//invoke_AP_ID_Mode(DVR_GET_RES_ID_MODE);
 						if(!wait_for_completion_timeout(&DVR_res_get_wait , 3*HZ)) dvrRespond[2] = RET_FAIL;
 						strcpy(dvrRespond + 3,camera_DVR_res);
-						lidbg("%s:DVR NR_GET_RES => %s\n",__func__,dvrRespond + 3);
+						lidbg(TAG"%s:DVR NR_GET_RES => %s\n",__func__,dvrRespond + 3);
 						
 						length += 100;
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 
 					case CMD_SET_EFFECT:
-						lidbg("%s:CMD_SET_EFFECT\n",__func__);
+						lidbg(TAG"%s:CMD_SET_EFFECT\n",__func__);
 						length += 2;
 						break;
 
 					case CMD_DUAL_CAM:
-						lidbg("%s:CMD_DUAL_CAM\n",__func__);
+						lidbg(TAG"%s:CMD_DUAL_CAM\n",__func__);
 						if(((char*)arg)[1] == 1) isDualCam = 1;
 						else isDualCam = 0;
 
@@ -1374,40 +1375,40 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						length += 2;
 						break;
 					case CMD_FORMAT_SDCARD:
-						lidbg("%s:CMD_FORMAT_SDCARD\n",__func__);
+						lidbg(TAG"%s:CMD_FORMAT_SDCARD\n",__func__);
 
 						notify_newDVR(MSG_START_FORMAT_NOTIFY);
 
 						if(((char*)arg)[1] == 1) 
 						{
-							lidbg("%s:Begin format sdcard!\n",__func__);
+							lidbg(TAG"%s:Begin format sdcard!\n",__func__);
 							//lidbg_shell_cmd("echo appcmd *158#097 > /dev/lidbg_drivers_dbg0");
 							schedule_delayed_work(&work_t_format_done, 3*HZ);
 							dvrRespond[1] = 1;
 						}
 						else
 						{
-							lidbg("%s:Stop format sdcard!\n",__func__);
+							lidbg(TAG"%s:Stop format sdcard!\n",__func__);
 							dvrRespond[1] = 0;
 						}
 						
 						length += 2;
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 					case CMD_EM_EVENT_SWITCH:
-						lidbg("%s:CMD_EM_EVENT_SWITCH\n",__func__);
+						lidbg(TAG"%s:CMD_EM_EVENT_SWITCH\n",__func__);
 						if(((char*)arg)[1] == 0) 
 						{
-							lidbg("%s:Emergency event permitted!\n",__func__);
+							lidbg(TAG"%s:Emergency event permitted!\n",__func__);
 							isEmRecPermitted = 1;
 							dvrRespond[1] = !isEmRecPermitted;
 						}
 						else
 						{
-							lidbg("%s:Emergency event rejected!\n",__func__);
+							lidbg(TAG"%s:Emergency event rejected!\n",__func__);
 							isEmRecPermitted = 0;
 							dvrRespond[1] = !isEmRecPermitted;
 						}
@@ -1418,11 +1419,11 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						length += 2;
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 					case CMD_EM_SAVE_DAYS:
-						lidbg("%s:CMD_EM_SAVE_DAYS [%d]\n",__func__,((char*)arg)[1]);
+						lidbg(TAG"%s:CMD_EM_SAVE_DAYS [%d]\n",__func__,((char*)arg)[1]);
 						if(((char*)arg)[1] > 0)  delDays= ((char*)arg)[1];
 
 						s_info.emergencySaveDays= delDays;
@@ -1432,20 +1433,20 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						length += 2;
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 					case CMD_CVBS_MODE:
-						lidbg("%s:CMD_CVBS_MODE [%d]\n",__func__,((char*)arg)[1]);
+						lidbg(TAG"%s:CMD_CVBS_MODE [%d]\n",__func__,((char*)arg)[1]);
 
 						if(((char*)arg)[1] == 1) 
 						{
-							lidbg("%s:CVBS Mode!\n",__func__);
+							lidbg(TAG"%s:CVBS Mode!\n",__func__);
 							CVBSMode = 1;
 						}
 						else
 						{
-							lidbg("%s:USB Cam Mode!\n",__func__);
+							lidbg(TAG"%s:USB Cam Mode!\n",__func__);
 							CVBSMode = 0;
 						}
 						
@@ -1456,11 +1457,11 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						length += 2;
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 					case CMD_GSENSOR_SENSITIVITY:
-						lidbg("%s:CMD_GSENSOR_SENSITIVITY [%d]\n",__func__,((char*)arg)[1]);
+						lidbg(TAG"%s:CMD_GSENSOR_SENSITIVITY [%d]\n",__func__,((char*)arg)[1]);
 						
 						if(((char*)arg)[1] == 0) 
 						{
@@ -1477,7 +1478,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 							sensitivity_level = 2;
 							s_info.sensitivityLevel = 2;
 						}
-						else lidbg("%s:INVALID SENSITIVITY!! [%d]\n",__func__,((char*)arg)[1]);
+						else lidbg(TAG"%s:INVALID SENSITIVITY!! [%d]\n",__func__,((char*)arg)[1]);
 
 						notify_newDVR(MSG_GSENSOR_SENSITIVITY);
 						
@@ -1485,11 +1486,11 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						length += 2;
 						if(copy_to_user((char*)arg,dvrRespond,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 					case CMD_VR_LOCK:
-						lidbg("%s:CMD_VR_LOCK [%d]\n",__func__,((char*)arg)[1]);
+						lidbg(TAG"%s:CMD_VR_LOCK [%d]\n",__func__,((char*)arg)[1]);
 						
 						if(((char*)arg)[1] == 0) 
 						{
@@ -1501,24 +1502,24 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 							isVRLocked = 1;
 							s_info.isVRLocked = true;
 						}
-						else lidbg("%s:INVALID CMD_VR_LOCK!! [%d]\n",__func__,((char*)arg)[1]);
+						else lidbg(TAG"%s:INVALID CMD_VR_LOCK!! [%d]\n",__func__,((char*)arg)[1]);
 						notify_newDVR(MSG_VR_LOCK);
 						break;
 					case CMD_AUTO_DETECT:
-						lidbg("%s:CMD_AUTO_DETECT\n",__func__);
+						lidbg(TAG"%s:CMD_AUTO_DETECT\n",__func__);
 
 						ssleep(4);
 
 						if(s_info.isFrontCamReady == false)
 						{
-							lidbg("%s:DVR not found,ioctl fail!\n",__func__);
+							lidbg(TAG"%s:DVR not found,ioctl fail!\n",__func__);
 							dvrRespond[2] = RET_NOTVALID;
 						}
 						else dvrRespond[2] = RET_SUCCESS;
 
 						if(s_info.isRearCamReady == false)
 						{
-							lidbg("%s:Rear not found,ioctl fail!\n",__func__);
+							lidbg(TAG"%s:Rear not found,ioctl fail!\n",__func__);
 							rearRespond[2] = RET_NOTVALID;
 						}
 						else rearRespond[2] = RET_SUCCESS;
@@ -1690,11 +1691,11 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 						initMsg[length] = ';';
 						length++;
 #endif
-						lidbg("%s:CMD_AUTO_DETECT ;1:0x%x,2:0x%x,3:0x%x,4:0x%x,5:0x%x,6:0x%x,7:0x%x,\n",__func__,initMsg[0],initMsg[1],initMsg[2],initMsg[3],initMsg[4],initMsg[5],initMsg[6]);
-						lidbg("%s:length = %d\n",__func__,length);
+						lidbg(TAG"%s:CMD_AUTO_DETECT ;1:0x%x,2:0x%x,3:0x%x,4:0x%x,5:0x%x,6:0x%x,7:0x%x,\n",__func__,initMsg[0],initMsg[1],initMsg[2],initMsg[3],initMsg[4],initMsg[5],initMsg[6]);
+						lidbg(TAG"%s:length = %d\n",__func__,length);
 						if(copy_to_user((char*)arg,initMsg,length))
 						{
-							lidbg("%s:copy_to_user ERR\n",__func__);
+							lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 						}
 						break;
 				}
@@ -1715,28 +1716,28 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		dvrRespond[0] = DVR_ID;
 		rearRespond[0] = REARVIEW_ID;		
 
-		//lidbg("%s:FLYCAM_EM_MAGIC\n",__func__);
+		//lidbg(TAG"%s:FLYCAM_EM_MAGIC\n",__func__);
 		/*check dvr camera status before doing ioctl*/
 		if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISVALID))
 		{
-			//lidbg("%s:DVR not found,ioctl fail!\n",__func__);
+			//lidbg(TAG"%s:DVR not found,ioctl fail!\n",__func__);
 			dvrRespond[1] = RET_NOTVALID;
 		}
 		else if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX))
 		{
-			lidbg("%s:Is not SonixCam ,ioctl fail!\n",__func__);
+			lidbg(TAG"%s:Is not SonixCam ,ioctl fail!\n",__func__);
 			dvrRespond[1] = RET_NOTSONIX;
 		}
 
 		/*check rear camera status before doing ioctl*/
 		if(!((pfly_UsbCamInfo->camStatus >> 4) & FLY_CAM_ISVALID))
 		{
-			//lidbg("%s:Rear not found,ioctl fail!\n",__func__);
+			//lidbg(TAG"%s:Rear not found,ioctl fail!\n",__func__);
 			rearRespond[1] = RET_NOTVALID;
 		}
 		else if(!((pfly_UsbCamInfo->camStatus >> 4)  & FLY_CAM_ISSONIX))
 		{
-			lidbg("%s:Rear Is not SonixCam ,ioctl fail!\n",__func__);
+			lidbg(TAG"%s:Rear Is not SonixCam ,ioctl fail!\n",__func__);
 			rearRespond[1] = RET_NOTSONIX;
 		}
 		
@@ -1744,7 +1745,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		switch(_IOC_NR(cmd))
 		{
 			case NR_EM_PATH:
-				lidbg("%s:NR_EM_PATH  = [%s]\n",__func__,(char*)arg);
+				lidbg(TAG"%s:NR_EM_PATH  = [%s]\n",__func__,(char*)arg);
 #if 0
 				ret_st = checkSDCardStatus((char*)arg);
 				if((ret_st != 1) || (ret_st != 2)) 
@@ -1754,7 +1755,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					lidbg_shell_cmd(temp_cmd);
 				}
 				else
-					lidbg("%s: em_path access wrong! %d", __func__ ,EFAULT);//not happend
+					lidbg(TAG"%s: em_path access wrong! %d", __func__ ,EFAULT);//not happend
 				if(ret_st > 0) dvrRespond[1] = RET_FAIL;
 #endif
 				sprintf(temp_cmd, "mkdir -p %s", (char*)arg);
@@ -1767,13 +1768,13 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				file_path = filp_open((char*)arg, O_RDONLY | O_DIRECTORY, 0);
 				if(IS_ERR(file_path))
 				{
-					lidbg("%s:EM_PATH ERR!!\n",__func__);
+					lidbg(TAG"%s:EM_PATH ERR!!\n",__func__);
 					lidbg_shell_cmd("setprop persist.uvccam.empath "EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
 					strcpy(dvrRespond + 2,EMMC_MOUNT_POINT1"/camera_rec/BlackBox/");
 				}
 				else
 				{
-					lidbg("%s:EMPATH OK!!\n",__func__);
+					lidbg(TAG"%s:EMPATH OK!!\n",__func__);
 					strcpy(em_path,(char*)arg);
 					sprintf(temp_cmd, "setprop persist.uvccam.empath %s", em_path);
 					lidbg_shell_cmd(temp_cmd);
@@ -1784,12 +1785,12 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				length += 100;
 				if(copy_to_user((char*)arg,dvrRespond,length))
 				{
-					lidbg("%s:copy_to_user ERR\n",__func__);
+					lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 				}
 		        break;
 #if 0
 			case NR_EM_START:
-		        lidbg("%s:NR_EM_START\n",__func__);
+		        lidbg(TAG"%s:NR_EM_START\n",__func__);
 				isUIStartRec = ((char*)arg)[0];
 				if(((pfly_UsbCamInfo->camStatus)  & FLY_CAM_ISSONIX) 
 				 && ((pfly_UsbCamInfo->camStatus >> 4)  & FLY_CAM_ISSONIX))
@@ -1819,7 +1820,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				length += 3;
 				if(copy_to_user((char*)arg,returnRespond,length))
 				{
-					lidbg("%s:copy_to_user ERR\n",__func__);
+					lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 				}
 				mod_timer(&ui_start_rec_timer,UI_REC_WAIT_TIME);
 		        break;
@@ -1827,7 +1828,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			case NR_EM_START:
 				if(DVR_ID == ((char*)arg)[0])
 				{
-			        lidbg("%s:NR_EM_DVR_START\n",__func__);
+			        lidbg(TAG"%s:NR_EM_DVR_START\n",__func__);
 					isEMDVRStartRec = ((char*)arg)[1];
 					if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID) dvrRespond[2] = 1;
 						else dvrRespond[2] = 0;
@@ -1835,13 +1836,13 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					length += 3;
 					if(copy_to_user((char*)arg,returnRespond,length))
 					{
-						lidbg("%s:copy_to_user ERR\n",__func__);
+						lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 					}
 					mod_timer(&em_start_dvr_rec_timer,UI_REC_WAIT_TIME);
 				}
 				else if(REARVIEW_ID == ((char*)arg)[0])
 				{
-			        lidbg("%s:NR_EM_REAR_START\n",__func__);
+			        lidbg(TAG"%s:NR_EM_REAR_START\n",__func__);
 					isEMRearStartRec = ((char*)arg)[1];
 					if((pfly_UsbCamInfo->camStatus >> 4) & FLY_CAM_ISVALID) rearRespond[2] = 1;
 						else rearRespond[2] = 0;
@@ -1849,14 +1850,14 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					length += 3;
 					if(copy_to_user((char*)arg,returnRespond,length))
 					{
-						lidbg("%s:copy_to_user ERR\n",__func__);
+						lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 					}
 					mod_timer(&em_start_rear_rec_timer,UI_REC_WAIT_TIME);
 				}
 				break;
 			
 			case NR_EM_STATUS:
-		        //lidbg("%s:NR_EM_STATUS\n",__func__);
+		        //lidbg(TAG"%s:NR_EM_STATUS\n",__func__);
 				//ret = isDVRRec;
 				dvrRespond[2] = isDVRRec;
 				rearRespond[2] = isRearRec;
@@ -1866,14 +1867,14 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				length += 3;
 				if(copy_to_user((char*)arg,returnRespond,length))
 				{
-					lidbg("%s:copy_to_user ERR\n",__func__);
+					lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 				}
 		        break;
 			
 			case NR_EM_TIME:
 				if(1 == ((char*)arg)[0])
 				{
-					lidbg("%s:NR_EM_TOP_TIME = [%d]\n",__func__,((char*)arg)[1]);
+					lidbg(TAG"%s:NR_EM_TOP_TIME = [%d]\n",__func__,((char*)arg)[1]);
 					if(((char*)arg)[1] <= 20)
 						top_em_time = ((char*)arg)[1];
 					else top_em_time = 10;
@@ -1887,12 +1888,12 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					length += 3;
 					if(copy_to_user((char*)arg,returnRespond,length))
 					{
-						lidbg("%s:copy_to_user ERR\n",__func__);
+						lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 					}
 				}
 				else if(0 == ((char*)arg)[0])
 				{
-					lidbg("%s:NR_EM_BOTTOM_TIME = [%d]\n",__func__,((char*)arg)[1]);
+					lidbg(TAG"%s:NR_EM_BOTTOM_TIME = [%d]\n",__func__,((char*)arg)[1]);
 					if(((char*)arg)[1] <= 20)
 						bottom_em_time = ((char*)arg)[1];
 					else bottom_em_time = 10;
@@ -1906,13 +1907,13 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					length += 3;
 					if(copy_to_user((char*)arg,returnRespond,length))
 					{
-						lidbg("%s:copy_to_user ERR\n",__func__);
+						lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 					}
 				}
 		        break;
 #if 0
 			case NR_EM_TIME:
-				lidbg("%s:NR_EM_TIME = [%d]\n",__func__,((char*)arg)[0]);
+				lidbg(TAG"%s:NR_EM_TIME = [%d]\n",__func__,((char*)arg)[0]);
 				em_time = ((char*)arg)[0];
 				dvrRespond[2] = em_time;
 				rearRespond[2] = em_time;
@@ -1922,12 +1923,12 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				length += 3;
 				if(copy_to_user((char*)arg,returnRespond,length))
 				{
-					lidbg("%s:copy_to_user ERR\n",__func__);
+					lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 				}
 		        break;
 #endif
 			case NR_EM_MANUAL:
-				lidbg("%s:NR_EM_MANUAL\n",__func__);
+				lidbg(TAG"%s:NR_EM_MANUAL\n",__func__);
 				if(isEmRecPermitted)
 				{
 					if(isDVRRec) 
@@ -1945,7 +1946,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				}
 		        break;
 			case NR_CAM_STATUS:
-				lidbg("%s:NR_CAM_STATUS\n",__func__);
+				lidbg(TAG"%s:NR_CAM_STATUS\n",__func__);
 				if(DVR_ID == ((char*)arg)[0])
 				{
 					if((pfly_UsbCamInfo->camStatus) & FLY_CAM_ISVALID) dvrRespond[2] = RET_SUCCESS;
@@ -1954,7 +1955,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					length += 3;
 					if(copy_to_user((char*)arg,returnRespond,length))
 					{
-						lidbg("%s:copy_to_user ERR\n",__func__);
+						lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 					}
 				}
 				else if(REARVIEW_ID == ((char*)arg)[0])
@@ -1965,7 +1966,7 @@ static long flycam_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 					length += 3;
 					if(copy_to_user((char*)arg,returnRespond,length))
 					{
-						lidbg("%s:copy_to_user ERR\n",__func__);
+						lidbg(TAG"%s:copy_to_user ERR\n",__func__);
 					}
 				}
 		        break;
@@ -2025,7 +2026,7 @@ ssize_t  flycam_read(struct file *filp, char __user *buffer, size_t size, loff_t
 	
 	if (copy_to_user(buffer, &isBack,  1))
 	{
-		lidbg("copy_to_user ERR\n");
+		lidbg(TAG"copy_to_user ERR\n");
 	}
 	isBackChange = 0;
 	return size;
@@ -2038,10 +2039,10 @@ ssize_t  flycam_read(struct file *filp, char __user *buffer, size_t size, loff_t
 	down(&pfly_UsbCamInfo->sem);
 	ret = kfifo_out(&camStatus_data_fifo, camStatus_data_for_hal, 1);
 	up(&pfly_UsbCamInfo->sem);
-	lidbg("%s:====HAL read_status => 0x%x=====\n",__func__,camStatus_data_for_hal[0]);
+	lidbg(TAG"%s:====HAL read_status => 0x%x=====\n",__func__,camStatus_data_for_hal[0]);
 	if(copy_to_user(buffer, camStatus_data_for_hal, 1))
     {
-    	lidbg("%s:====copy_to_user fail=> 0x%x=====\n",__func__,camStatus_data_for_hal[0]);
+    	lidbg(TAG"%s:====copy_to_user fail=> 0x%x=====\n",__func__,camStatus_data_for_hal[0]);
         return -1;
     }
 	return 1;
@@ -2076,13 +2077,13 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
     memset(cmd_buf, '\0', 256);
     if(copy_from_user(cmd_buf, buf, size))
     {
-        lidbg("copy_from_user ERR\n");
+        lidbg(TAG"copy_from_user ERR\n");
     }
     if(cmd_buf[size - 1] == '\n')
 		cmd_buf[size - 1] = '\0';
     cmd_num = lidbg_token_string(cmd_buf, " ", cmd) ;
-	lidbg("-----cmd_buf------------------[%s]---\n", cmd_buf);
-	lidbg("-----cmd_num------------[%d]---\n", cmd_num);
+	lidbg(TAG"-----cmd_buf------------------[%s]---\n", cmd_buf);
+	lidbg(TAG"-----cmd_num------------[%d]---\n", cmd_num);
 
 	/*Do not check camera status in ACCOFF*/
 #if 0	
@@ -2091,12 +2092,12 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 		/*check camera status before doing ioctl*/
 		if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISVALID))
 		{
-			lidbg("%s:DVR[online] not found,ioctl fail!\n",__func__);
+			lidbg(TAG"%s:DVR[online] not found,ioctl fail!\n",__func__);
 			return size;
 		}
 		if(!(pfly_UsbCamInfo->camStatus & FLY_CAM_ISSONIX) && !isDVRAfterFix)
 		{
-			lidbg("%s:is not SonixCam ,ioctl fail!\n",__func__);
+			lidbg(TAG"%s:is not SonixCam ,ioctl fail!\n",__func__);
 			return size;
 		}
 	}
@@ -2109,7 +2110,7 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 		{
 			if(!strncmp(keyval[1], "1", 1))//start
 			{
-				lidbg("-------uvccam capture-----");
+				lidbg(TAG"-------uvccam capture-----");
 				if(g_var.is_fly) lidbg_shell_cmd("./flysystem/lib/out/lidbg_testuvccam /dev/video1 -c -f mjpg -S &");
 				else lidbg_shell_cmd("./system/lib/modules/out/lidbg_testuvccam /dev/video1 -c -f mjpg -S &");
 			}
@@ -2121,10 +2122,10 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			gainVal = simple_strtoul(keyval[1], 0, 0);
 			if(gainVal > 100)
 			{
-		        lidbg("gain args error![0-100]");
+		        lidbg(TAG"gain args error![0-100]");
 		        return size;
 		    }
-			lidbg("gainVal = %d",gainVal);
+			lidbg(TAG"gainVal = %d",gainVal);
 			sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 --ef-set gain=%d ", gainVal);
 			lidbg_shell_cmd(temp_cmd);
 		}
@@ -2136,10 +2137,10 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			sharpVal = simple_strtoul(keyval[1], 0, 0);
 			if(sharpVal > 6)
 			{
-		        lidbg("sharp args error![0-6]");
+		        lidbg(TAG"sharp args error![0-6]");
 		        return size;
 		    }
-			lidbg("sharpVal = %d",sharpVal);
+			lidbg(TAG"sharpVal = %d",sharpVal);
 			sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 --ef-set sharp=%d ", sharpVal);
 			lidbg_shell_cmd(temp_cmd);
 		}
@@ -2151,10 +2152,10 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			gammaVal = simple_strtoul(keyval[1], 0, 0);
 			if(gammaVal > 500)
 			{
-		        lidbg("gamma args error![0-500]");
+		        lidbg(TAG"gamma args error![0-500]");
 		        return size;
 		    }
-			lidbg("gammaVal = %d",gammaVal);
+			lidbg(TAG"gammaVal = %d",gammaVal);
 			sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 --ef-set gamma=%d ", gammaVal);
 			lidbg_shell_cmd(temp_cmd);
 		}
@@ -2166,10 +2167,10 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			brightVal = simple_strtoul(keyval[1], 0, 0);
 			if(brightVal > 128)
 			{
-		        lidbg("bright args error![0-128]");
+		        lidbg(TAG"bright args error![0-128]");
 		        return size;
 		    }
-			lidbg("brightVal = %d",brightVal);
+			lidbg(TAG"brightVal = %d",brightVal);
 			sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 --ef-set bright=%d ", brightVal);
 			lidbg_shell_cmd(temp_cmd);
 		}
@@ -2181,10 +2182,10 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			vmirrorVal = simple_strtoul(keyval[1], 0, 0);
 			if(vmirrorVal > 1)
 			{
-		        lidbg("vmirror args error![0|1]");
+		        lidbg(TAG"vmirror args error![0|1]");
 		        return size;
 		    }
-			lidbg("vmirrorVal = %d",vmirrorVal);
+			lidbg(TAG"vmirrorVal = %d",vmirrorVal);
 			sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 --ef-set vmirror=%d ", vmirrorVal);
 			lidbg_shell_cmd(temp_cmd);
 		}
@@ -2194,7 +2195,7 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			int autogainVal;
 			char temp_cmd[256];
 			autogainVal = simple_strtoul(keyval[1], 0, 0);
-			lidbg("autogainVal = %d",autogainVal);
+			lidbg(TAG"autogainVal = %d",autogainVal);
 			sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 --ef-set autogain=%d ", autogainVal);
 			//lidbg_shell_cmd(temp_cmd);
 		}
@@ -2204,7 +2205,7 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			int exposureVal;
 			char temp_cmd[256];
 			exposureVal = simple_strtoul(keyval[1], 0, 0);
-			lidbg("exposureVal = %d",exposureVal);
+			lidbg(TAG"exposureVal = %d",exposureVal);
 			sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 --ef-set exposure=%d ", exposureVal);
 			//lidbg_shell_cmd(temp_cmd);
 		}
@@ -2214,7 +2215,7 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			int contrastVal;
 			char temp_cmd[256];
 			contrastVal = simple_strtoul(keyval[1], 0, 0);
-			lidbg("autogainVal = %d",contrastVal);
+			lidbg(TAG"autogainVal = %d",contrastVal);
 			sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 --ef-set contrast=%d ", contrastVal);
 			lidbg_shell_cmd(temp_cmd);
 		}
@@ -2224,7 +2225,7 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			int saturationVal;
 			char temp_cmd[256];
 			saturationVal = simple_strtoul(keyval[1], 0, 0);
-			lidbg("exposureVal = %d",saturationVal);
+			lidbg(TAG"exposureVal = %d",saturationVal);
 			sprintf(temp_cmd, "./flysystem/lib/out/lidbg_testuvccam /dev/video1 --ef-set saturation=%d ", saturationVal);
 			lidbg_shell_cmd(temp_cmd);
 		}
@@ -2245,7 +2246,7 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			}
 			else
 			{
-				lidbg("-------res wrong arg:%s-----",keyval[1]);
+				lidbg(TAG"-------res wrong arg:%s-----",keyval[1]);
 			}
 #endif
 			if(!strncmp(keyval[1], "640x360", 7))
@@ -2254,21 +2255,21 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 			}
 			else
 			{
-				lidbg("-------res wrong arg:%s-----",keyval[1]);
+				lidbg(TAG"-------res wrong arg:%s-----",keyval[1]);
 			}
 		}
 		else if(!strcmp(keyval[0], "rectime") )
 		{
 			int rectimeVal;
 			rectimeVal = simple_strtoul(keyval[1], 0, 0);
-			lidbg("rectimeVal = %d",rectimeVal);
+			lidbg(TAG"rectimeVal = %d",rectimeVal);
 			f_online_time = rectimeVal;
 		}
 		else if(!strcmp(keyval[0], "recbitrate") )
 		{
 			int recbitrateVal;
 			recbitrateVal = simple_strtoul(keyval[1], 0, 0);
-			lidbg("recbitrateVal = %d",recbitrateVal);
+			lidbg(TAG"recbitrateVal = %d",recbitrateVal);
 			f_online_bitrate = recbitrateVal;
 		}
 		#if 1
@@ -2276,33 +2277,33 @@ ssize_t flycam_write (struct file *filp, const char __user *buf, size_t size, lo
 		{
 			int recnumVal;
 			recnumVal = simple_strtoul(keyval[1], 0, 0);
-			lidbg("recnumVal = %d",recnumVal);
+			lidbg(TAG"recnumVal = %d",recnumVal);
 			f_online_filenum = recnumVal;
 		}
 		#endif
 		else if(!strcmp(keyval[0], "recpath") )
 		{
 			char ret_st;
-			lidbg("recpathVal = %s",keyval[1]);
+			lidbg(TAG"recpathVal = %s",keyval[1]);
 			ret_st = checkSDCardStatus(keyval[1]);
 			if(ret_st != 1) 
 				strcpy(f_online_path,keyval[1]);
 			else
-				lidbg("%s: f_online_path access wrong! %d", __func__ ,EFAULT);//not happend
+				lidbg(TAG"%s: f_online_path access wrong! %d", __func__ ,EFAULT);//not happend
 			if(ret_st > 0) ret = RET_FAIL;
 		}
 		else if(!strcmp(keyval[0], "recfilesize") )
 		{
 			int recfilesizeVal;
 			recfilesizeVal = simple_strtoul(keyval[1], 0, 0);
-			lidbg("recfilesizeVal = %d",recfilesizeVal);
+			lidbg(TAG"recfilesizeVal = %d",recfilesizeVal);
 			f_online_totalsize = recfilesizeVal;
 		}
 		else if(!strcmp(keyval[0], "formatcomplete") )
 		{
 			int formatVal;
 			formatVal = simple_strtoul(keyval[1], 0, 0);
-			lidbg("formatcomplete = %d\n",formatVal);
+			lidbg(TAG"formatcomplete = %d\n",formatVal);
 			ssleep(5);
 			notify_newDVR(MSG_STOP_FORMAT_NOTIFY);
 			ssleep(2);
@@ -2326,7 +2327,7 @@ static  struct file_operations flycam_nod_fops =
 
 static int flycam_ops_suspend(struct device *dev)
 {
-    lidbg("-----------flycam_ops_suspend------------\n");
+    lidbg(TAG"-----------flycam_ops_suspend------------\n");
     DUMP_FUN;
 	isKSuspend = 1;
     return 0;
@@ -2335,9 +2336,9 @@ static int flycam_ops_suspend(struct device *dev)
 static int flycam_ops_resume(struct device *dev)
 {
 
-    lidbg("-----------flycam_ops_resume------------\n");
+    lidbg(TAG"-----------flycam_ops_resume------------\n");
     DUMP_FUN;
-	//lidbg("g_var.acc_flag => %d",g_var.acc_flag);
+	//lidbg(TAG"g_var.acc_flag => %d",g_var.acc_flag);
 #if 0
 	if(g_var.acc_flag == FLY_ACC_ON)
 	{
@@ -2384,7 +2385,7 @@ static void suspend_stoprec_isr(unsigned long data)
 {
 	if(s_info.isACCOFF == true)
 	{
-		lidbg("%s:------------Force unrequest!------------\n",__func__);
+		lidbg(TAG"%s:------------Force unrequest!------------\n",__func__);
 		lidbg_shell_cmd("echo 'udisk_unrequest' > /dev/flydev0");
 		isOnlineRunning = false;
 	}
@@ -2394,16 +2395,16 @@ static void suspend_stoprec_isr(unsigned long data)
 int thread_flycam_init(void *data)
 {
 #ifndef	FLY_USB_CAMERA_SUPPORT
-	lidbg("%s:FLY_USB_CAMERA_SUPPORT not define,exit\n",__func__);
+	lidbg(TAG"%s:FLY_USB_CAMERA_SUPPORT not define,exit\n",__func__);
   	return 0;
 #endif
-	lidbg("%s:------------start------------\n",__func__);
+	lidbg(TAG"%s:------------start------------\n",__func__);
 
 	/*init pfly_UsbCamInfo*/
 	pfly_UsbCamInfo = (struct fly_UsbCamInfo *)kmalloc( sizeof(struct fly_UsbCamInfo), GFP_KERNEL);
     if (pfly_UsbCamInfo == NULL)
     {
-        lidbg("[cam]:kmalloc err\n");
+        lidbg(TAG"[cam]:kmalloc err\n");
         return -ENOMEM;
     }
 	
@@ -2454,7 +2455,7 @@ static __init int lidbg_flycam_init(void)
     DUMP_BUILD_TIME;
 
 #ifndef FLY_USB_CAMERA_SUPPORT
-	lidbg("%s return\n",__func__);
+	lidbg(TAG"%s return\n",__func__);
        return 0;
 #endif
     LIDBG_GET;
