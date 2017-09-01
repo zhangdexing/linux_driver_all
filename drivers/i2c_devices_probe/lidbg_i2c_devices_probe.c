@@ -107,28 +107,43 @@ struct probe_device i2c_probe_dev[] =
 	{DEV_RADIO, saf7741_i2c_bus, 0x1c, 0x00, "saf7741.ko", radio_reset_lpc, NULL ,1},
 	{DEV_RADIO, tef6638_i2c_bus, 0x63, 0x00, "tef6638.ko", radio_reset_lpc, NULL ,1},
 #endif
-	{DEV_CARPLAY, fm1388_i2c_bus, 0x2c, 0x00, "lidbg_spi_fm1388.ko", NULL, NULL ,1},
+	//{DEV_CARPLAY, fm1388_i2c_bus, 0x2c, 0x00, "lidbg_spi_fm1388.ko,lidbg_i2c_fm1388.ko", NULL, fm1388_thread_delay_insmod ,0},
 };
 
 void parse_ts_info(struct probe_device *i2cdev_info)
 {
     char path[100];
-
+    char *pPath;
     if(gboot_mode == MD_FLYSYSTEM)
     {
-        sprintf(path, "/flysystem/lib/out/%s", i2cdev_info->name);
-        lidbg_insmod( path );
-
+	pPath="/flysystem/lib/out";
     }
     else if(gboot_mode == MD_DEBUG)
     {
-        sprintf(path, "/data/out/%s", i2cdev_info->name);
-        lidbg_insmod( path );
+        pPath="/data/out";
+    }
+    else 
+    {
+        pPath="/system/lib/modules/out";
+    }
+
+    if(strstr(i2cdev_info->name,","))
+    {
+	int i = 0;
+	int argc = 0;
+	char *argv[32] = {NULL};
+	argc = lidbg_token_string(i2cdev_info->name, ",", argv);
+	while(i<argc)
+	{
+	    sprintf(path, "%s/%s", pPath, argv[i]);
+	    lidbg_insmod( path );
+	    i++;
+	}
     }
     else
     {
-        sprintf(path, "/system/lib/modules/out/%s", i2cdev_info->name);
-        lidbg_insmod( path );
+	sprintf(path, "%s/%s", pPath,i2cdev_info->name);
+	lidbg_insmod( path );
     }
 }
 
@@ -217,4 +232,5 @@ module_exit(i2c_devices_probe_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("lwy.");
+
 
