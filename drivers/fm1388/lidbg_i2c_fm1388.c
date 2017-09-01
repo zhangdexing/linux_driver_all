@@ -49,7 +49,10 @@ LIDBG_DEFINE;
 #define FM1388_VR_MODE                 _IOW(FM1388_IOC_MAGIC,2,int)
 #define FM1388_SIRI_MODE               _IOW(FM1388_IOC_MAGIC,3,int)
 #define FM1388_FACETIME_MODE           _IOW(FM1388_IOC_MAGIC,4,int)
-#define FM1388_MEDIAPLAY_MODE          _IOW(FM1388_IOC_MAGIC,5,int)
+#define FM1388_MEDIAPLAY48K_MODE       _IOW(FM1388_IOC_MAGIC,5,int)
+#define FM1388_MEDIAPLAY44K1_MODE      _IOW(FM1388_IOC_MAGIC,8,int)
+#define FM1388_BLUETOOTH_MODE          _IOW(FM1388_IOC_MAGIC,9,int)
+#define FM1388_BARGEIN_MODE            _IOW(FM1388_IOC_MAGIC,10,int)
 #define FM1388_GET_MODE                _IOR(FM1388_IOC_MAGIC,6,int)
 #define FM1388_GET_STATUS              _IOR(FM1388_IOC_MAGIC,7,int)
 
@@ -1077,7 +1080,7 @@ static int fm1388_fw_loaded(void *data)
 	//   user may change preferred default mode here
     load_fm1388_vec(combine_path_name(filepath_name, "FM1388_run.vec"));
     msleep(10);
-	fm1388_dsp_mode_change(5);	// set default mode, parse from .cfg
+	fm1388_dsp_mode_change(8);	// set default mode, parse from .cfg
 #ifdef SHOW_DL_TIME
 		do_gettimeofday(&(txc.time));
 		rtc_time_to_tm(txc.time.tv_sec,&tm);
@@ -1596,8 +1599,17 @@ static long fm1388_device_ioctl(struct file *filp, unsigned int cmd, unsigned lo
 	case FM1388_FACETIME_MODE:
 		fm1388_dsp_mode_change(4);
 		break;
-	case FM1388_MEDIAPLAY_MODE:
+	case FM1388_MEDIAPLAY48K_MODE:
 		fm1388_dsp_mode_change(5);
+		break;
+	case FM1388_MEDIAPLAY44K1_MODE:
+		fm1388_dsp_mode_change(6);
+		break;
+	case FM1388_BLUETOOTH_MODE:
+		fm1388_dsp_mode_change(7);
+		break;
+	case FM1388_BARGEIN_MODE:
+		fm1388_dsp_mode_change(8);
 		break;
 	case FM1388_GET_MODE:
 		 //__put_user(fm1388_dsp_mode,(int __user *)arg);
