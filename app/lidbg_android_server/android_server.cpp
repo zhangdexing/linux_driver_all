@@ -20,7 +20,7 @@
 using namespace android;
 
 bool dbg_music = false;
-bool dbg_volume = true;
+bool dbg_volume = false;
 int loop_count = 0;
 int mypid = -1;
 bool playing = false;

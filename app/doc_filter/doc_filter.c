@@ -351,7 +351,7 @@ static void usage(const char *pname)
              , pname
             );
 }
-//doc_filter -s /sdcard/kmsg_test.txt -d /sdcard/kmsg_b.txt -w /sdcard/kmsg_w.txt -t /sdcard/kmsg_wl.txt -y /sdcard/kmsg_wb.txt -c /sdcard/kmsg_e.txt -m 1 -p 0 -l 15728640 -b 0
+//doc_filter -s /sdcard/kmsg_test.txt -d /sdcard/kmsg_b.txt -w /sdcard/kmsg_w.txt -t /sdcard/kmsg_wl.txt -y /sdcard/kmsg_wb.txt -c /sdcard/kmsg_e.txt -m 1 -p 0 -l 26214400 -b 0
 int main(int argc, char **argv)
 {
     char *spath = NULL, *blackdpath = NULL, *whitedpath = NULL, *whitelistpath = NULL, *blacklistpath = NULL, *cut_file = NULL;
@@ -500,7 +500,7 @@ out:
                 DEBUGMSG(TAG"use:%s\n", spath);
                 blackdpath = spath;
             }
-            sprintf(s, "/flysystem/lib/out/doc_split -e 1 -l 15728640 -s %s -d %s -b %d", blackdpath, cut_file, debugMode);// -p %dseek,
+            sprintf(s, "/flysystem/lib/out/doc_split -e 1 -l 26214400 -s %s -d %s -b %d", blackdpath, cut_file, debugMode);// -p %dseek,
         }
         else  if(strstr(cut_file, "logcat"))
         {
@@ -511,7 +511,7 @@ out:
                 DEBUGMSG(TAG"use:%s\n", spath);
                 blackdpath = spath;
             }
-            sprintf(s, "/flysystem/lib/out/doc_split -s %s -d %s -p %d -l 15728640 -b %d", blackdpath, cut_file, seek, debugMode);
+            sprintf(s, "/flysystem/lib/out/doc_split -s %s -d %s -p %d -l 26214400 -b %d", blackdpath, cut_file, seek, debugMode);
         }
         DEBUGMSG(TAG"start:[%s]\n", s);
         system(s);
