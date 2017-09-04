@@ -41,6 +41,16 @@ static inline int lidbg_get_hub_uvc_device(int mode,char *devname,int cam_id,int
 	int fcnt = 0  ;  
 	//char camID[PROPERTY_VALUE_MAX];
 
+	char devopen[PROPERTY_VALUE_MAX];
+	property_get("lidbg.uvccam.devopen", devopen, "0");
+	if((!strncmp(devopen, "/", 1)))
+	{
+		strcpy(devname, devopen);
+		lidbg("%s: futengfei.use node below.=======[%s],return\n", __func__, devname);
+		return 0;
+	}
+
+
 #if 0
 	if(mode == RECORD_MODE)  cam_id = 1;  //capture or recording force to camid 1
 	else
