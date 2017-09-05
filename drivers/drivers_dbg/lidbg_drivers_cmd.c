@@ -492,6 +492,12 @@ int thread_monkey_test(void *data)
     lidbg("thread_monkey_test end\n");
     return 0;
 }
+int thread_API_unmount_mount_udisk(void *data)
+{
+    lidbg_shell_cmd("echo appcmd *158#138 > /dev/lidbg_drivers_dbg0");
+    ssleep(5);
+    lidbg_shell_cmd("echo appcmd *158#137 > /dev/lidbg_drivers_dbg0");
+}
 
 irqreturn_t TEST_isr(int irq, void *dev_id)
 {
@@ -659,6 +665,9 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#134--force music start event \n");
             fs_mem_log("*158#135--usb id reset \n");
             fs_mem_log("*158#136--install TC \n");
+            fs_mem_log("*158#137--ANDROID.API:mount udisK \n");
+            fs_mem_log("*158#138--ANDROID.API:UNmount udisK \n");
+            fs_mem_log("*158#139--ANDROID.API:UNmount udisK && mount  udisK\n");
             fs_mem_log("*158#140--pr_debug lpc_debug \n");
             fs_mem_log("*158#141--add flycam kmsg whitelist \n");
 
@@ -1672,6 +1681,21 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("setenforce 0");
             lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "TC.ko")));
             lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#137"))
+        {
+           	 lidbg("*158#137--ANDROID.API:mount udisK \n");
+           	 lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 1 &");
+        }
+        else if (!strcmp(argv[1], "*158#138"))
+        {
+           	 lidbg("*158#138--ANDROID.API:UNmount udisK \n");
+           	 lidbg_shell_cmd("am broadcast -a com.fly.lidbg.LidbgCommenLogic --ei action 2 &");
+        }
+        else if (!strcmp(argv[1], "*158#139"))
+        {
+           	 lidbg("*158#139--ANDROID.API:UNmount udisK && mount  udisK\n");
+           	 CREATE_KTHREAD(thread_API_unmount_mount_udisk, NULL);
         }
         else if (!strcmp(argv[1], "*158#140"))
         {
