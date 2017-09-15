@@ -13,6 +13,8 @@ char flyrecord[flyblk_a][flyblk_b];
 int   scriptcnt;
 static int printf_list = 29;
 static int printf_length = 40;
+extern int fly_screen_w;
+extern int fly_screen_h;
 
 typedef struct
 {
@@ -103,12 +105,10 @@ void display_logo_on_screen(sLogo *plogoparameter)
         }
     }
 	else if(bytes_per_bpp == 4){
-		if(FLY_SCREEN_SIZE_1024){
-			for(i = 0; i < image_base_hdpi; i++){
-				memcpy((fb_base_get() + (((1024 - image_base_wdpi) / 2 +((i + (600 - image_base_hdpi) / 2) * 1024)) * bytes_per_bpp)),
-					pImageBuffer + (i * image_base_wdpi * bytes_per_bpp),
-					image_base_wdpi * bytes_per_bpp);
-			}
+		for(i = 0; i < image_base_hdpi; i++){
+			memcpy((fb_base_get() + (((fly_screen_w - image_base_wdpi) / 2 +((i + (fly_screen_h - image_base_hdpi) / 2) * fly_screen_w)) * bytes_per_bpp)),
+				pImageBuffer + (i * image_base_wdpi * bytes_per_bpp),
+				image_base_wdpi * bytes_per_bpp);
 		}
 	}
 #else
@@ -142,10 +142,10 @@ void display_logo_on_screen(sLogo *plogoparameter)
     }
 #endif
 #ifdef BOOTLOADER_MT3561
-	flush_memery
+	flush_memery(fly_screen_w, fly_screen_h);
 #endif
 #ifdef BOOTLOADER_TYPE_LK
-    arch_clean_invalidate_cache_range((unsigned long)fb_base_get(), FBCON_WIDTH * FBCON_HEIGHT * 3);
+    arch_clean_invalidate_cache_range((unsigned long)fb_base_get(), fly_screen_w * fly_screen_h * 3);
 #endif
 
     //fbcon_flush();
@@ -161,14 +161,14 @@ void fly_fbcon_clear(void)
 {
     unsigned count = 0;
 
-    count = FBCON_WIDTH * FBCON_HEIGHT;
-    dprintf(INFO, "Fbcon clear, width[%d] height[%d] base[0x%x]\n", FBCON_WIDTH, FBCON_HEIGHT, fb_base_get());
+    count = fly_screen_w * fly_screen_h;
+    dprintf(INFO, "Fbcon clear, width[%d] height[%d] base[0x%x]\n", fly_screen_w, fly_screen_h, fb_base_get());
     memset(fb_base_get(), 0x00, count * (FBCON_BPP / 8));
 #ifdef BOOTLOADER_IMX6Q
 	flush_memery
 #endif
 #ifdef BOOTLOADER_MT3561
-	flush_memery
+	flush_memery(fly_screen_w, fly_screen_h);
 #endif
 }
 
@@ -223,11 +223,11 @@ void fly_setBcol(unsigned long int backcolor)
                 FBCON_WIDTH * 3);
     }
 #ifdef BOOTLOADER_TYPE_LK
-	arch_clean_invalidate_cache_range((unsigned long)fb_base_get(), FBCON_WIDTH * FBCON_HEIGHT * 3);
+	arch_clean_invalidate_cache_range((unsigned long)fb_base_get(), fly_screen_w * fly_screen_h * 3);
 #endif
     free(tem);
 #elif(LOGO_FORMAT == ARGB8888)
-    unsigned char *tem = malloc(1024 * 4);
+    unsigned char *tem = malloc(fly_screen_w * 4);
     int i = 0, m = 0;
     unsigned char A;
     unsigned char R;
@@ -238,7 +238,7 @@ void fly_setBcol(unsigned long int backcolor)
     G = backcolor >> 8 & 0xff;
     B = backcolor & 0xff;
 
-    for(i = 0; i < 1024; i++)
+    for(i = 0; i < fly_screen_w; i++)
     {
 
         tem[m++] = B;
@@ -246,11 +246,11 @@ void fly_setBcol(unsigned long int backcolor)
         tem[m++] = R;
         tem[m++] = A;
     }
-    for (i = 0; i < 600; i++)
+    for (i = 0; i < fly_screen_h; i++)
     {
-        memcpy (fb_base_get() + ((0 + (i * FBCON_WIDTH)) * 4),
+        memcpy (fb_base_get() + ((0 + (i * fly_screen_w)) * 4),
                 tem,
-                1024 * 4);
+                fly_screen_w * 4);
     }
 
     free(tem);
@@ -270,7 +270,7 @@ void fly_setBcol(unsigned long int backcolor)
 #endif
 #endif
 #ifdef BOOTLOADER_MT3561
-	flush_memery
+	flush_memery(fly_screen_w, fly_screen_h);
 #endif
 }
 
@@ -338,7 +338,7 @@ void fly_putpext(int x, int y, unsigned long  color)
     //set RGB888 DATA TO SREEN
     memcpy (fb_base_get() + ((x + (y * FBCON_WIDTH)) * 3), tem, 1 * 3);
 #ifdef BOOTLOADER_TYPE_LK
-    arch_clean_invalidate_cache_range((unsigned long)fb_base_get() + ((x + (y * FBCON_WIDTH)) * 3), 1 * 3);
+    arch_clean_invalidate_cache_range((unsigned long)fb_base_get() + ((x + (y * fly_screen_w)) * 3), 1 * 3);
 #endif
     free(tem);
 #elif(LOGO_FORMAT == ARGB8888)
@@ -350,7 +350,7 @@ void fly_putpext(int x, int y, unsigned long  color)
 	 tem[m++] = 0xff;
     }
     //set RGB888 DATA TO SREEN
-    memcpy (fb_base_get() + ((x + (y * FBCON_WIDTH)) * 4), tem, 1 * 4);
+    memcpy (fb_base_get() + ((x + (y * fly_screen_w)) * 4), tem, 1 * 4);
     free(tem);
 #else
     for(i = 0, m = 0; i < 1; i++)

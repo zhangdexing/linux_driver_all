@@ -53,7 +53,7 @@
 #define TRUE 1
 #define FALSE 0
 #endif
-#define flush_memery mt_disp_update(0, 0, FBCON_WIDTH, FBCON_HEIGHT);
+#define flush_memery(x, y) mt_disp_update(0, 0, x, y);
 extern int mboot_android_load_recoveryimg_hdr(char *part_name, unsigned long addr);
 extern int mboot_android_load_recoveryimg(char *part_name, unsigned long addr);
 extern void *mt_get_fb_addr(void);

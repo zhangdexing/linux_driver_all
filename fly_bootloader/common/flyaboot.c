@@ -28,6 +28,10 @@ static fly_bare_data *g_bare_data=NULL;
 
 #define RECOVER_MANUUAL_HIGH_LEVEL
 
+#ifdef BOOTLOADER_MT3561
+int ctb_id = 43;
+#endif
+
 #if FLY_SCREEN_SIZE_1024
 int fly_screen_w = 1024;
 int fly_screen_h = 600;
@@ -146,25 +150,25 @@ void display_colour(int model)
     {
         count = fontsize * (sizeof(" Recovery: ") + len);
 
-        fly_version(1024 - 30 - count, fly_screen_h - 10, "%s Recovery: ", BLACK_COL, model_message);
+        fly_version(fly_screen_w - 30 - count, fly_screen_h - 10, "%s Recovery: ", BLACK_COL, model_message);
         break;
     }
     case FastbootModel:
     {
         count = fontsize * (sizeof(" Fastboot: ") + len);
-        fly_version(1024 - 30 - count, fly_screen_h - 10, "%s Fastboot: ", BLACK_COL, model_message);
+        fly_version(fly_screen_w - 30 - count, fly_screen_h - 10, "%s Fastboot: ", BLACK_COL, model_message);
         break;
     }
     case FlyRecoveryModel:
     {
         count = fontsize * (sizeof(" FlyRecovery: ") + len);
-        fly_version(1024 - 30 - count, fly_screen_h - 10, "%s FlyRecovery: ", BLACK_COL, model_message);
+        fly_version(fly_screen_w - 30 - count, fly_screen_h - 10, "%s FlyRecovery: ", BLACK_COL, model_message);
         break;
     }
     case PreRecoveryModel:
     {
         count = fontsize * (sizeof(" Recovery: ") + len);
-        fly_version(1024 - 30 - count, fly_screen_h - 10, "%s Recovery: ", RED_COL, model_message);
+        fly_version(fly_screen_w - 30 - count, fly_screen_h - 10, "%s Recovery: ", RED_COL, model_message);
         break;
     }
     default:
@@ -173,21 +177,21 @@ void display_colour(int model)
 
     //		dprintf(INFO,"[FLYADIO]dcz ====>> len = %d count = %d \n",len,count);
 #ifdef BOOTLOADER_MT3561
-	flush_memery
+	flush_memery(fly_screen_w, fly_screen_h);
 #endif
     return ;
 }
 void display_enter_recovery_count(int count)
 {
-    drawRect(1024 - 30, fly_screen_h - 30, 40, 30, BG_COL, BG_COL);
+    drawRect(fly_screen_w - 30, fly_screen_h - 30, 40, 30, BG_COL, BG_COL);
 #if (LOGO_FORMAT== RGB888)
-    fly_version(1024 - 30, fly_screen_h - 10, "%d", 0X818181, count);
+    fly_version(fly_screen_w - 30, fly_screen_h - 10, "%d", 0X818181, count);
 #else
-    fly_version(1024 - 30, fly_screen_h - 10, "%d", 0Xffffff, count);
+    fly_version(fly_screen_w - 30, fly_screen_h - 10, "%d", 0Xffffff, count);
 #endif
 
 #ifdef BOOTLOADER_MT3561
-	flush_memery
+	flush_memery(fly_screen_w, fly_screen_h);
 #endif
     return ;
 }
@@ -197,29 +201,29 @@ static void display_count(int model, int count)
     {
     case RecoveryModel:
     {
-        drawRect(1024 - 30, fly_screen_h - 30, 40, 30, GREEN_COL, GREEN_COL);
-        fly_version(1024 - 30, fly_screen_h - 10, "%d", BLACK_COL, count);
+        drawRect(fly_screen_w - 30, fly_screen_h - 30, 40, 30, GREEN_COL, GREEN_COL);
+        fly_version(fly_screen_w - 30, fly_screen_h - 10, "%d", BLACK_COL, count);
         //dprintf(INFO,"[dczhou]====>>>recovery number ....");
         break;
     }
     case FastbootModel:
     {
-        drawRect(1024 - 30, fly_screen_h - 30, 40, 30, BLUE_COL, BLUE_COL);
-        fly_version(1024 - 30, fly_screen_h - 10, "%d", BLACK_COL, count);
+        drawRect(fly_screen_w - 30, fly_screen_h - 30, 40, 30, BLUE_COL, BLUE_COL);
+        fly_version(fly_screen_w - 30, fly_screen_h - 10, "%d", BLACK_COL, count);
         //dprintf(INFO,"[dczhou]====>>>fastboot  number ....");
         break;
     }
     case FlyRecoveryModel:
     {
-        drawRect(1024 - 30, fly_screen_h - 30, 40, 30, RED_COL, RED_COL);
-        fly_version(1024 - 30, fly_screen_h - 10, "%d", BLACK_COL, count);
+        drawRect(fly_screen_w - 30, fly_screen_h - 30, 40, 30, RED_COL, RED_COL);
+        fly_version(fly_screen_w - 30, fly_screen_h - 10, "%d", BLACK_COL, count);
         break;
     }
     default:
         break;
     }
 #ifdef BOOTLOADER_MT3561
-	flush_memery
+	flush_memery(fly_screen_w, fly_screen_h);
 #endif
     return ;
 }
@@ -321,6 +325,17 @@ char *dbg_msg_set(const char *system_cmd)
 
 void  choose_lcd(int lcd_resolution)
 {
+#ifdef BOOTLOADER_MT3561
+	if(ctb_id == 43){
+		fly_screen_w = 960;
+		fly_screen_h = 1280;
+		return ;
+	}else if(ctb_id < 43){
+		fly_screen_w = 1024;
+		fly_screen_h = 600;
+		return ;
+	}
+#endif
     if(lcd_resolution==lcd_1024_600)
     {
 	fly_screen_w  = 1024;
@@ -358,6 +373,28 @@ void  choose_lcd(int lcd_resolution)
 	dsi83_conf_num= 0;
     }
 }
+#ifdef BOOTLOADER_MT3561
+bool Fly_Get_Resolution(int *x, int *y)
+{
+	if(ptn_read("flyparameter", 0, sizeof(RecoveryMeg), &RecoveryMeg))
+	{   
+	    dprintf(INFO, "flyaboot init autoUp.val = %d  upName.val = %d\n", RecoveryMeg.bootParam.autoUp.val, RecoveryMeg.bootParam.upName.val);
+	}
+	/****************************************************************/
+	dprintf(INFO, "HDJ: flyparameter hwInfo.info[0] = %d hwInfo.info[1] = %d\n", (RecoveryMeg.hwInfo.info[0] - '0'), (RecoveryMeg.hwInfo.info[1] - '0'));
+	ctb_id = (RecoveryMeg.hwInfo.info[0] - '0')*10+(RecoveryMeg.hwInfo.info[1] - '0');
+	if(ctb_id == 43){
+	        *x = 960;
+	        *y = 1280;
+	        return true;
+	}else if(ctb_id < 43){
+	        *x = 1024;
+	        *y = 600;
+	        return true;
+	}else
+		return false;
+}
+#endif
 
 void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
 {
@@ -554,7 +591,7 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
     if(*boot_into_fastboot == true)
         display_fastboot_meg();
 #ifdef BOOTLOADER_MT3561
-	flush_memery
+	flush_memery(fly_screen_w, fly_screen_h);
 #endif
 	bootloader_exit_func();
     return;
