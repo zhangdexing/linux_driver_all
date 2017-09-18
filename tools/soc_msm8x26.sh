@@ -51,6 +51,7 @@ function soc_build_recoveryimage()
         rm -rf $DBG_OUT_PATH/mount.exfat $DBG_OUT_PATH/fsck.ntfs $DBG_OUT_PATH/lidbg_umount
 	cd $DBG_SYSTEM_DIR
 	git checkout $RECOVERY_BUILD_BRANCH
+	rm -rf $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/test_mode #disable this special OPS.
 	if [ ! -d "$DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/.git/" ]; then
 	  echo flyrecovery_file_no_found  start_clone
 	  rm -rf $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery

@@ -46,6 +46,7 @@ function soc_build_recoveryimage()
 	rm -rf $DBG_OUT_PATH/*.apk $DBG_OUT_PATH/ES.ko $DBG_OUT_PATH/ST.ko $DBG_OUT_PATH/mkfs.exfat $DBG_OUT_PATH/GPS.ko $DBG_OUT_PATH/*.so $DBG_OUT_PATH/FlyBootService
         rm -rf $DBG_OUT_PATH/LidbgPmService $DBG_OUT_PATH/SleepTest $DBG_OUT_PATH/build_time.conf $DBG_OUT_PATH/bma2x2.ko $DBG_OUT_PATH/lidbg_rgb_led.ko
 	cd $DBG_SYSTEM_DIR
+	rm -rf $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/test_mode #disable this special OPS.
 	if [ ! -d "$DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/.git/" ]; then
 	  echo flyrecovery_file_no_found  start_clone
 	  rm -rf $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery

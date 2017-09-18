@@ -28,6 +28,7 @@ function soc_build_recoveryimage()
 {
 	echo $FUNCNAME
 	cd $DBG_SYSTEM_DIR
+	rm -rf $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/test_mode #disable this special OPS.
 	rm -rf $DBG_OUT_PATH/*.apk $DBG_OUT_PATH/ES.ko $DBG_OUT_PATH/ST.ko $DBG_OUT_PATH/mkfs.exfat $DBG_OUT_PATH/GPS.ko $DBG_OUT_PATH/*.so $DBG_OUT_PATH/FlyBootService
 	if [ ! -d "$DBG_SYSTEM_DIR/bootable/recovery/flyRecovery" ]; then
 	  echo flyrecovery_file_no_found  start_clone

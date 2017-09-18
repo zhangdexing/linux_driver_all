@@ -55,6 +55,7 @@ function soc_build_recoveryimage()
 	cp -rf $DBG_SOC_PATH/$DBG_SOC/misc/Android.mk.recovery $DBG_SYSTEM_DIR/bootable/recovery/Android.mk
 
 	cd $DBG_SYSTEM_DIR
+	rm -rf $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/test_mode #disable this special OPS.
 	if [ ! -d "$DBG_SYSTEM_DIR/bootable/recovery/flyRecovery/.git/" ]; then
 	  echo flyrecovery_file_no_found  start_clone
 	  rm -rf $DBG_SYSTEM_DIR/bootable/recovery/flyRecovery
