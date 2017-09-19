@@ -497,6 +497,7 @@ int thread_API_unmount_mount_udisk(void *data)
     lidbg_shell_cmd("echo appcmd *158#138 > /dev/lidbg_drivers_dbg0");
     ssleep(5);
     lidbg_shell_cmd("echo appcmd *158#137 > /dev/lidbg_drivers_dbg0");
+    return 0;
 }
 
 irqreturn_t TEST_isr(int irq, void *dev_id)
@@ -1779,6 +1780,15 @@ void parse_cmd(char *pt)
         if(flyparameter_info_save(g_recovery_meg))
         {
             lidbg_domineering_ack();
+        }
+    }
+    else if(!strcmp(argv[0], "cartype") )
+    {
+        lidbg("flyparameter-cartype.old:[%s],now[%s]", g_recovery_meg->bootParam.upName.flags,argv[1]);
+        strncpy(g_recovery_meg->bootParam.upName.flags, argv[1], 16);
+        if(flyparameter_info_save(g_recovery_meg))
+        {
+            lidbg_shell_cmd("reboot");
         }
     }
     else if(!strcmp(argv[0], "download") )
