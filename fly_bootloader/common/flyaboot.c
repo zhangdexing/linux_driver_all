@@ -29,7 +29,7 @@ static fly_bare_data *g_bare_data=NULL;
 #define RECOVER_MANUUAL_HIGH_LEVEL
 
 #ifdef BOOTLOADER_MT3561
-int ctb_id = 43;
+int fly_display = 0;
 #endif
 
 #if FLY_SCREEN_SIZE_1024
@@ -326,11 +326,11 @@ char *dbg_msg_set(const char *system_cmd)
 void  choose_lcd(int lcd_resolution)
 {
 #ifdef BOOTLOADER_MT3561
-	if(ctb_id == 43){
+	if(fly_display == 1){
 		fly_screen_w = 960;
 		fly_screen_h = 1280;
 		return ;
-	}else if(ctb_id < 43){
+	}else if(fly_display < 1){
 		fly_screen_w = 1024;
 		fly_screen_h = 600;
 		return ;
@@ -381,13 +381,13 @@ bool Fly_Get_Resolution(int *x, int *y)
 	    dprintf(INFO, "flyaboot init autoUp.val = %d  upName.val = %d\n", RecoveryMeg.bootParam.autoUp.val, RecoveryMeg.bootParam.upName.val);
 	}
 	/****************************************************************/
-	dprintf(INFO, "HDJ: flyparameter hwInfo.info[0] = %d hwInfo.info[1] = %d\n", (RecoveryMeg.hwInfo.info[0] - '0'), (RecoveryMeg.hwInfo.info[1] - '0'));
-	ctb_id = (RecoveryMeg.hwInfo.info[0] - '0')*10+(RecoveryMeg.hwInfo.info[1] - '0');
-	if(ctb_id == 43){
+	dprintf(INFO, "HDJ: flyparameter hwInfo.info[11] = %d\n", (RecoveryMeg.hwInfo.info[11] - '0'));
+	fly_display = (RecoveryMeg.hwInfo.info[11] - '0');
+	if(fly_display == 1){
 	        *x = 960;
 	        *y = 1280;
 	        return true;
-	}else if(ctb_id < 43){
+	}else if(fly_display < 1){
 	        *x = 1024;
 	        *y = 600;
 	        return true;
