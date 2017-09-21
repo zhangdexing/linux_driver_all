@@ -50,6 +50,7 @@ u8 cfg_info_group40[] = CTP927_CFG_GROUP15;
 u8 cfg_info_group41[] = CTP911_CFG_GROUP16;
 u8 cfg_info_group42[] = CTP_CFG_GROUP24;
 u8 cfg_info_group43[] = CTP927_CFG_GROUP16;
+u8 cfg_info_group44[] = CTP928_CFG_GROUP16;
 
 u8 *send_cfg_buf[] = {cfg_info_group1, cfg_info_group2,
                   cfg_info_group3, cfg_info_group4, cfg_info_group5, cfg_info_group6,
@@ -60,7 +61,7 @@ u8 *send_cfg_buf[] = {cfg_info_group1, cfg_info_group2,
                   cfg_info_group28, cfg_info_group29,cfg_info_group30,
 		  cfg_info_group31, cfg_info_group32,cfg_info_group33,cfg_info_group34,cfg_info_group35,cfg_info_group36,
 		  cfg_info_group37, cfg_info_group38,cfg_info_group39,cfg_info_group40,cfg_info_group41,cfg_info_group42,
-			cfg_info_group43
+			cfg_info_group43, cfg_info_group44
                  };
 EXPORT_SYMBOL(send_cfg_buf);
 
@@ -107,6 +108,7 @@ u8 cfg_info_len[] = {CFG_GROUP_LEN(cfg_info_group1),
 		 CFG_GROUP_LEN(cfg_info_group41),
 		 CFG_GROUP_LEN(cfg_info_group42),
 		 CFG_GROUP_LEN(cfg_info_group43),
+		 CFG_GROUP_LEN(cfg_info_group44),
 
                 };
 

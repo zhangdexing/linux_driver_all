@@ -26,6 +26,9 @@ struct ts_devices g_ts_devices;
          x = max_x-x;\
          y = max_y-y;\
        }while (0)
+#define GTP_REVERT_Y(y)     do{\
+         y = max_y-y;\
+       }while (0)
 
 static int ts_scan_delayms;
 
@@ -332,6 +335,11 @@ void ts_probe_prepare(void)
         LIDBG_WARN("<hwInfo.info[7]=1,ts_should_revert=1,[%d]>\n",ts_should_revert);
         ts_should_revert=1;
     }
+    if(g_recovery_meg->hwInfo.info[7]=='2')
+     {
+         LIDBG_WARN("<hwInfo.info[7]=2,ts_should_revert=2,[%d]>\n",ts_should_revert);
+         ts_should_revert=2;
+     }
     if(ts_should_revert > 0)
         LIDBG_WARN("<TS.XY will revert>\n");
     else
@@ -353,6 +361,8 @@ void ts_data_report(touch_type t, int id, int x, int y, int w)
     GTP_SWAP(x, y);
     if (1 == ts_should_revert)
         GTP_REVERT(x, y);
+    if (2 == ts_should_revert)
+        GTP_REVERT_Y(y);
     pr_debug("%s:%d,%d[%d,%d,%d]\n", __FUNCTION__, t, id, x, y, w);
     if(g_var.hw_info.virtual_key > 0)
     {
