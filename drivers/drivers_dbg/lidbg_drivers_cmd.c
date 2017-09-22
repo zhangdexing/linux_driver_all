@@ -712,7 +712,25 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#002"))
         {
-            lidbg_shell_cmd("chmod 777 /data");
+
+	    if(g_var.is_fly)
+	    {
+		 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE &");
+		 msleep(500);
+           	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal KILL &");
+	    }
+           else
+           {
+               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
+		 msleep(500);
+               lidbg_shell_cmd("/system/lib/modules/out/sendsignal KILL &");
+           }
+	    msleep(500);
+	    if(g_var.is_fly)
+           	 lidbg_shell_cmd("/flysystem/lib/out/record_klogctl 1 &");
+           else
+               lidbg_shell_cmd("/system/lib/modules/out/record_klogctl 1 &");
+
             lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#073"))
