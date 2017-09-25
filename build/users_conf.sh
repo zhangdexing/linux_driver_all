@@ -80,6 +80,7 @@ case "$USERS_ID" in
 	export DBG_PLATFORM_PATH=/home/wqrftf99/futengfei/work1_qucom
 	export PATHJAVA1P6=/usr/local/jdk1.6.0_45
 	export PATHJAVA1P7=/usr/local/java-7-openjdk-amd64
+	export PATHJAVA1P8=/usr/local/java-8-openjdk-amd64
 	case "$DBG_PLATFORM_ID" in
 	   	0)
 		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/R8625SSNSKQLYA10145451;;
@@ -119,6 +120,8 @@ case "$USERS_ID" in
 		export BP_SOURCE_PATH=$DBG_PLATFORM_PATH/8228_bp_v103
 		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/msm8226
 		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8x26-release;;
+                19)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/mt3561;;
 	esac;;
 
 	2)
