@@ -133,6 +133,16 @@
 		u8 buff[] = {0x02, 0x0c, 0x01};\
         SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
 				}while(0)
+#define LPC_CMD_CVBS_POWER_ON  do{\
+		u8 buff[] = {0x02, 0x12, 0x01};\
+        SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
+        lidbg("LPC_CMD_CVBS_POWER_ON\n");\
+				}while(0)
+#define LPC_CMD_CVBS_POWER_OFF  do{\
+		u8 buff[] = {0x02, 0x12, 0x00};\
+        SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
+        lidbg("LPC_CMD_CVBS_POWER_OFF\n");\
+				}while(0)
 				
 #define LPC_CMD_RADIO_SET  do{\
 		u8 buff0[] = {0x10, 0x10, 0x20, 0x08};\

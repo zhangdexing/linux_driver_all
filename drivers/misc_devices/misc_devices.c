@@ -572,6 +572,22 @@ static void parse_cmd(char *pt)
 		}
 		else lidbg("Rear Mirror ERROR CMD!\n");
 	}
+	else if (!strncmp(argv[0], "cvbs_front", 10))
+	{
+		lidbg_shell_cmd("echo front > /proc/lidbg_cvbs");
+	}
+	else if (!strncmp(argv[0], "cvbs_back", 9))
+	{
+		lidbg_shell_cmd("echo back > /proc/lidbg_cvbs");
+	}
+	else if (!strncmp(argv[0], "cvbs_off", 8))
+	{
+		LPC_CMD_CVBS_POWER_OFF;
+	}
+	else if (!strncmp(argv[0], "cvbs_on", 7))
+	{
+		LPC_CMD_CVBS_POWER_ON;
+	}
 }
 
 
