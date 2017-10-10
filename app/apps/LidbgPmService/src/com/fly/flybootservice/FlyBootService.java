@@ -1228,10 +1228,9 @@ public static void releaseBrightWakeLock()
 	{
 	    List<PackageInfo> packinfos = mPackageManager.getInstalledPackages(0);
 	    int i = 0,j=0;
-	    boolean isNotUseDisableApp = SystemProperties.get("persist.lidbg.isUseDisableApp", "0").equals("0");
 	for (PackageInfo info : packinfos)
 	    {
-	    	if ((info.applicationInfo.packageName.contains("flyaudio")) || (isNotUseDisableApp && ((info.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) <= 0)))
+	    	if ((info.applicationInfo.packageName.contains("flyaudio")))
 	                {
 	                    int uid = info.applicationInfo.uid;
 	                    if (isPackageInWhiteList(info.applicationInfo.packageName))
@@ -1611,9 +1610,6 @@ public static void releaseBrightWakeLock()
 
 	private void disablePackage(String packageName)
 	{
-		if(SystemProperties.get("persist.lidbg.isUseDisableApp", "0").equals("0"))
-			return;
-
 		if (mPackageManager.getApplicationEnabledSetting(packageName) != mPackageManager.COMPONENT_ENABLED_STATE_DISABLED)
 		{
 			mPackageManager.setApplicationEnabledSetting(packageName, mPackageManager.COMPONENT_ENABLED_STATE_DISABLED, 0);
@@ -1622,10 +1618,6 @@ public static void releaseBrightWakeLock()
 	}
 
 	private void enableAllPackage() {
-
-		if(SystemProperties.get("persist.lidbg.isUseDisableApp", "0").equals("0"))
-			return;
-
 		List<PackageInfo> packinfos = mPackageManager.getInstalledPackages(0);
 		for (PackageInfo info : packinfos)
 		{
