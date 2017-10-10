@@ -39,7 +39,6 @@ LIDBG_DEFINE;
 #define TAG "dfm1388_i2c:"
 
 #define FM1388_I2C_ADDR 0x2c
-#define FM1388_I2C_BUS	0
 #define FM1388_RESET_PIN 130
 
 #define FM1388_IOC_MAGIC 'k'
@@ -1463,7 +1462,7 @@ static ssize_t fm1388_device_write(struct file *file,
         printk("copy_from_user ERR\n");
     }
 
-    lidbg(TAG"local_dev_cmd->cmd_name = %d, length = %d\n", local_dev_cmd->cmd_name, length);
+    lidbg(TAG"local_dev_cmd->cmd_name = %d, length = %d\n", local_dev_cmd->cmd_name, (int)length);
 	cmd_name = local_dev_cmd->cmd_name;
 
 	switch(cmd_name) {
@@ -1613,11 +1612,17 @@ static long fm1388_device_ioctl(struct file *filp, unsigned int cmd, unsigned lo
 		break;
 	case FM1388_GET_MODE:
 		 //__put_user(fm1388_dsp_mode,(int __user *)arg);
-		copy_to_user((int __user *)arg,&fm1388_dsp_mode,4);
+		if(copy_to_user((int __user *)arg,&fm1388_dsp_mode,4))
+		{
+			lidbg(TAG"copy_to_user ERR\n");
+		}
 		lidbg("get mode %d\n",fm1388_dsp_mode);
 		break;
 	case FM1388_GET_STATUS:
-		copy_to_user((int __user *)arg,&fm1388_config_status,4);
+		if(copy_to_user((int __user *)arg,&fm1388_config_status,4))
+		{
+			lidbg(TAG"copy_to_user ERR\n");
+		}
 		lidbg("fm1388 config status %d\n",fm1388_config_status);
 		break;
 	default:

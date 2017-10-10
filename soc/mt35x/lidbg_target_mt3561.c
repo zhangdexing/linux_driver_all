@@ -145,6 +145,8 @@ struct hw_version_specific g_hw_version_specific[] =
         .i2c_bus_tef6638 = 0,
         .i2c_bus_lpc = 3,
         .i2c_bus_pca9634 = 0,
+        .i2c_bus_fm1388 = 0,
+	    .spi_bus_fm1388 = 0,
         .ad_val_mcu = 87,
         .thermal_ctrl_en = 0,
 	//Mt_thermal.h (z:\home\wqrftf99\futengfei\work1_qucom\mt3561\kernel-3.18\drivers\misc\mediatek\include\mt-plat\mt3561\include\mach)	15834	8/15/2016

@@ -34,7 +34,6 @@
 
 
 LIDBG_DEFINE;
-#define FM1388_SPI_BUS 0
 
 
 
@@ -92,7 +91,7 @@ EXPORT_SYMBOL(fm1388_spi_read);
 
 int fm1388_spi_write(unsigned int addr, unsigned int val, size_t len)
 {
-	struct spi_device *spi = fm1388_spi;
+	//struct spi_device *spi = fm1388_spi;
 	int status;
 	u8 write_buf[10];
 	//lidbg(TAG"%s begin write: addr:%d,val:%d,len:%d\n", __FUNCTION__, addr, val, len);
@@ -138,7 +137,7 @@ int fm1388_spi_burst_read(unsigned int addr, u8 *rxbuf, size_t len)
 	u8 spi_cmd = FM1388_SPI_CMD_BURST_READ;
 	u8 write_buf[512];
 	int status;
-	unsigned int i, end, offset = 0;
+	unsigned int i, offset = 0;
 
 	struct spi_message message;
 	struct spi_transfer x[1];
