@@ -32,10 +32,15 @@ int main(int argc, char **argv)
     system("chmod 777 /dev/log");
     if(is_file_exist("/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/flyparameter"))
         system("cat /dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/flyparameter > /dev/flyparameter");
-	else
+    else
         system("cat /dev/block/bootdevice/by-name/flyparameter > /dev/flyparameter");
+	
     system("chmod 444 /dev/flyparameter");
-
+	
+	system( "mount -o rw,remount rootfs /" );
+	system( "chmod 777 /flyconfig" );
+	system( "/flysystem/bin/decodeFlyconfig &" );
+				
     module_insmod("/system/lib/modules/out/lidbg_immediate.ko");
     module_insmod("/flysystem/lib/out/lidbg_immediate.ko");
 #if 0
