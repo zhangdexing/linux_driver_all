@@ -247,7 +247,6 @@ public class FlyBootService extends Service {
         new Thread() {
             @Override
             public void run() {
-					enableAllPackage();
 					while(true){
 						pmState = readFromFile(pmFile);
 						if(pmState < 0)
@@ -352,10 +351,7 @@ public class FlyBootService extends Service {
 								LIDBG_PRINT(" get pm state: FBS_SCREEN_ON\n");
 								acquireWakeLock();
 								SendBroadcastToService(KeyBootState, keyScreenOn);
-								LIDBG_PRINT("[KILL begin enable]\n");
-								enableAllPackage();
-								LIDBG_PRINT("[KILL over enable]\n");
-
+								
 							}else if(pmState == FBS_SLEEP_TIMEOUT){
 								LIDBG_PRINT(" get pm state: FBS_SLEEP_TIMEOUT\n");
 								if(blSuspendUnairplaneFlag)
@@ -554,15 +550,6 @@ public class FlyBootService extends Service {
 			fbPm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 			msgTokenal("flyaudio gotosleep TEST");
 			fbPm.goToSleep(SystemClock.uptimeMillis());
-			break;
-			case 28:
-				LIDBG_PRINT("packagemanager disable \n");
-				KillProcess(false);
-
-			break;
-			case 29:
-				LIDBG_PRINT("packagemanager enable \n");
-				enableAllPackage();
 			break;
 			default:
 			LIDBG_PRINT("BroadcastReceiver.action:unkown"+action+"\n");
@@ -869,22 +856,6 @@ public static void releaseBrightWakeLock()
         sendBroadcast(new Intent(AudioManager.ACTION_AUDIO_BECOMING_NOISY));
     }
 
-    private boolean isSystemAPP(String packageName){
-	PackageInfo info;
-	try{
-		info = mPackageManager.getPackageInfo(packageName, 0);
-	}catch(PackageManager.NameNotFoundException e)
-	{
-		LIDBG_PRINT("error! can't find packageInfo for the packageName.\n");
-		return true;
-	}
-	
-	if (((info.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) <= 0))
-		return false;
-	else
-		return true;
-    }
-
     private void KillProcess(boolean mWhiteListKillEn) {
 	if(!mKillProcessEn)
 	{
@@ -900,12 +871,7 @@ public static void releaseBrightWakeLock()
         for (ActivityManager.RunningAppProcessInfo appProcessInfo : appProcessList) {
             int pid = appProcessInfo.pid;
             int uid = appProcessInfo.uid;
-	    String processNameArray[] = mPackageManager.getPackagesForUid(uid);
-	    String processName;
-	    if(processNameArray != null)
-		processName = processNameArray[0];
-	    else 
-		continue;
+            String processName = mPackageManager.getNameForUid(uid);
             if (processName.startsWith("android.uid"))
 		continue;
             if(blSuspendUnairplaneFlag){
@@ -916,14 +882,8 @@ public static void releaseBrightWakeLock()
 	            }
             }
             if (isKillableProcess(processName)) {
-                if(isSystemAPP(processName)) {
-			mActivityManager.forceStopPackage(processName);
-			LIDBG_PRINT("[KILL]"+processName +"."+pid +" is killed!\n");
-		}
-		else {
-			disablePackage(processName);
-			LIDBG_PRINT("[KILL]"+processName +"."+pid +" is disabled!\n");
-		}
+                LIDBG_PRINT(processName +"."+pid +" will be killed\n");
+                mActivityManager.forceStopPackage(processName);
             }
 	else if (mWhiteListKillEn&&processName.contains("flyaudio")) 
 		{
@@ -942,12 +902,7 @@ public static void releaseBrightWakeLock()
         for (ActivityManager.RunningAppProcessInfo appProcessInfo : appProcessList) {
             int pid = appProcessInfo.pid;
             int uid = appProcessInfo.uid;
-            String processNameArray[] = mPackageManager.getPackagesForUid(uid);
-	    String processName;
-	    if(processNameArray != null)
-		processName = processNameArray[0];
-	    else 
-		continue;
+            String processName = mPackageManager.getNameForUid(uid);
             if (processName.startsWith("android.uid"))
 		continue;
             if(blSuspendUnairplaneFlag){
@@ -958,14 +913,8 @@ public static void releaseBrightWakeLock()
 	            }
             }
             if (isKillableProcess(processName)) {
-                if(isSystemAPP(processName)) {
-			mActivityManager.forceStopPackage(processName);
-			LIDBG_PRINT("[KILL]"+processName +"."+pid +" is killed!\n");
-		}
-		else {
-			disablePackage(processName);
-			LIDBG_PRINT("[KILL]"+processName +"."+pid +" is disabled!\n");
-		}
+                LIDBG_PRINT(processName +"."+pid +" will be killed\n");
+                mActivityManager.forceStopPackage(processName);
             }
         }
     releaseWakeLock();
@@ -1230,7 +1179,7 @@ public static void releaseBrightWakeLock()
 	    int i = 0,j=0;
 	for (PackageInfo info : packinfos)
 	    {
-	    	if ((info.applicationInfo.packageName.contains("flyaudio")))
+	    	if ((info.applicationInfo.packageName.contains("flyaudio"))||((info.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) <= 0))
 	                {
 	                    int uid = info.applicationInfo.uid;
 	                    if (isPackageInWhiteList(info.applicationInfo.packageName))
@@ -1606,27 +1555,6 @@ public static void releaseBrightWakeLock()
 				+ "\ncurDate.getHours():" + curDate.getHours()+"\n";
 		LIDBG_PRINT(logString);
 		return intervalTime;
-	}
-
-	private void disablePackage(String packageName)
-	{
-		if (mPackageManager.getApplicationEnabledSetting(packageName) != mPackageManager.COMPONENT_ENABLED_STATE_DISABLED)
-		{
-			mPackageManager.setApplicationEnabledSetting(packageName, mPackageManager.COMPONENT_ENABLED_STATE_DISABLED, 0);
-			LIDBG_PRINT("[KILL]"+packageName+" By Disable\n");
-		}
-	}
-
-	private void enableAllPackage() {
-		List<PackageInfo> packinfos = mPackageManager.getInstalledPackages(0);
-		for (PackageInfo info : packinfos)
-		{
-			if (mPackageManager.getApplicationEnabledSetting(info.applicationInfo.packageName) == mPackageManager.COMPONENT_ENABLED_STATE_DISABLED)
-			{
-				mPackageManager.setApplicationEnabledSetting(info.applicationInfo.packageName, mPackageManager.COMPONENT_ENABLED_STATE_ENABLED, 0);
-				LIDBG_PRINT("[KILL]"+info.applicationInfo.packageName+" By Enable\n");
-			}
-		}
 	}
 }
 
