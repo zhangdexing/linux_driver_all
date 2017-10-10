@@ -247,8 +247,7 @@ public class FlyBootService extends Service {
         new Thread() {
             @Override
             public void run() {
-					if(!SystemProperties.get("persist.lidbg.isUseDisableApp", "0").equals("0"))
-						enableAllPackage();
+					enableAllPackage();
 					while(true){
 						pmState = readFromFile(pmFile);
 						if(pmState < 0)
@@ -354,8 +353,7 @@ public class FlyBootService extends Service {
 								acquireWakeLock();
 								SendBroadcastToService(KeyBootState, keyScreenOn);
 								LIDBG_PRINT("[KILL begin enable]\n");
-								if(!SystemProperties.get("persist.lidbg.isUseDisableApp", "0").equals("0"))
-									enableAllPackage();
+								enableAllPackage();
 								LIDBG_PRINT("[KILL over enable]\n");
 
 							}else if(pmState == FBS_SLEEP_TIMEOUT){
@@ -918,7 +916,7 @@ public static void releaseBrightWakeLock()
 	            }
             }
             if (isKillableProcess(processName)) {
-                if( (SystemProperties.get("persist.lidbg.isUseDisableApp", "0").equals("0")) || (isSystemAPP(processName)) ) {
+                if(isSystemAPP(processName)) {
 			mActivityManager.forceStopPackage(processName);
 			LIDBG_PRINT("[KILL]"+processName +"."+pid +" is killed!\n");
 		}
@@ -960,7 +958,7 @@ public static void releaseBrightWakeLock()
 	            }
             }
             if (isKillableProcess(processName)) {
-                if( (SystemProperties.get("persist.lidbg.isUseDisableApp", "0").equals("0")) || (isSystemAPP(processName)) ) {
+                if(isSystemAPP(processName)) {
 			mActivityManager.forceStopPackage(processName);
 			LIDBG_PRINT("[KILL]"+processName +"."+pid +" is killed!\n");
 		}
@@ -1613,6 +1611,9 @@ public static void releaseBrightWakeLock()
 
 	private void disablePackage(String packageName)
 	{
+		if(SystemProperties.get("persist.lidbg.isUseDisableApp", "0").equals("0"))
+			return;
+
 		if (mPackageManager.getApplicationEnabledSetting(packageName) != mPackageManager.COMPONENT_ENABLED_STATE_DISABLED)
 		{
 			mPackageManager.setApplicationEnabledSetting(packageName, mPackageManager.COMPONENT_ENABLED_STATE_DISABLED, 0);
@@ -1621,6 +1622,9 @@ public static void releaseBrightWakeLock()
 	}
 
 	private void enableAllPackage() {
+
+		if(SystemProperties.get("persist.lidbg.isUseDisableApp", "0").equals("0"))
+			return;
 
 		List<PackageInfo> packinfos = mPackageManager.getInstalledPackages(0);
 		for (PackageInfo info : packinfos)
