@@ -61,12 +61,16 @@ void filesize_ctrl()
 	if(stat(newfile, &statbuff) < 0)
 	{  
 		lidbg("record_klogctl:get file size err\n");
+        lidbg ("record_klogctl: %s Error?%s\n", newfile, strerror (errno));
 	}
 
 	if(statbuff.st_size > MAXINUM)
 	{
 		if(lseek(openfd, 0, SEEK_CUR) >= MAXINUM)
+		{
 			lseek(openfd,0,SEEK_SET);
+			lidbg ("record_klogctl: do lseek\n");
+		}
 	}
 }
 
@@ -131,11 +135,14 @@ int main(int argc , char **argv)
 
 	openfd = open(newfile,O_RDWR | O_CREAT,0777);
 	seekfd = open(file_seek,O_RDWR | O_CREAT,0777);
-	sprintf(newfile,"chmod 777 %s",PATH);
-	system(newfile);
-	sprintf(newfile,"chmod 777 %s/*",PATH);
-	system(newfile);
-	system("chmod 777 /sdcard/kmsg/* ");
+
+    {
+    char temp[128];
+	sprintf(temp,"chmod 777 %s",PATH);
+	system(temp);
+	sprintf(temp,"chmod 777 %s/*",PATH);
+	system(temp);
+    }
 
 	signal(SIGUSR1,sigfunc);
 	signal(SIGUSR2,sigfunc);
