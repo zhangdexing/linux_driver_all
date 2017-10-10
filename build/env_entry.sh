@@ -653,7 +653,7 @@ case "$DBG_PLATFORM_ID" in
 
     19)
         export DBG_PLATFORM=evb3561sv_w_65_m0
-	export SOC_ARCH=arm64
+	    export SOC_ARCH=arm64
         export BOARD_VERSION=V2
         export ANDROID_VERSION=601
         export DBG_CROSS_COMPILE=$DBG_SYSTEM_DIR/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-
@@ -663,7 +663,7 @@ case "$DBG_PLATFORM_ID" in
         export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH
         export SYSTEM_BUILD_TYPE=userdebug
         export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/vendor/mediatek/proprietary/bootable/bootloader/lk
-	export DBG_BOOTLOADER_TYPE=LK
+	    export DBG_BOOTLOADER_TYPE=LK
         export DBG_BOOTLOADER_IMG=lk.bin
         export DBG_BOOTLOADER_PARTITION_NAME=lk
         export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel-3.18
@@ -678,7 +678,7 @@ case "$DBG_PLATFORM_ID" in
         export DBG_SOC=mt35x
         export TEST_PACKAGE_PATH=//172.168.1.240/3561/升级包发布/专项测试包
         export REPOSITORY_WORK_BRANCH=mt3561s_release
-        export SYSTEM_WORK_BRANCH=mt3561s_release
+        export SYSTEM_WORK_BRANCH=mt3561s_master
         export MAKE_PAKG_NUM=19
         export NON_HLOS_FILE_PATH=$BP_SOURCE_PATH/common/build/bin/asic
         export RPM_FILE_PATH=$RPM_PATH/ms/bin/AAAAANAAR
