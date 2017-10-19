@@ -172,6 +172,8 @@ int main(int argc, char **argv)
         //system("/sbin/recovery &");
     }
 
+//disk space full reboot
+#if 0
     sleep(300);// give more time to deal the situation
     while(1)
     {
@@ -187,7 +189,7 @@ int main(int argc, char **argv)
     while(1)
     {
         int size = getPathFreeSpace("/data");
-        if( size  < 100)
+        if(( size  < 100) && (size  != 0))
         {
             lidbg("lidbg_iserver: getPathFreeSpace:%d\n", size);
             //system("echo ws toast data_size_low 1 > /dev/lidbg_pm0");
@@ -196,5 +198,6 @@ int main(int argc, char **argv)
         }
         sleep(2);
     }
+#endif
     return 0;
 }
