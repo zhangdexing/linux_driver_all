@@ -8,6 +8,7 @@ void dump_sysinfo(bool copy2udisk)
     doc_filterloop = 0;	
     if(copy2udisk)
     {
+        lidbg_shell_cmd("echo ws toast copy.to.udisk.start 1 > /dev/lidbg_pm0");
         lidbg_shell_cmd(format_string(true, "rm -rf  %s/FlyLog", get_udisk_file_path(NULL, NULL)));
     }
     lidbg_shell_cmd("chmod 777  /sdcard/FlyLog/DriBugReport");
@@ -73,9 +74,10 @@ void dump_sysinfo(bool copy2udisk)
     //udisk check
     if(copy2udisk)
     {
-        lidbg_shell_cmd("cp -rf /data/reckmsg /sdcard/FlyLog/");
+        //lidbg_shell_cmd("cp -rf /data/reckmsg /sdcard/FlyLog/");
         lidbg_shell_cmd("cp -rf /sdcard/*.txt /sdcard/FlyLog/");
         lidbg_shell_cmd(format_string(true, "cp -rf /sdcard/FlyLog %s ", get_udisk_file_path(NULL, NULL)));
+
         lidbg_shell_cmd("sleep 3");
         lidbg_shell_cmd("echo ws toast copy.to.udisk.complete 1 > /dev/lidbg_pm0");
     }
@@ -704,7 +706,7 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "MobileRateFlow.apk")));
             lidbg_domineering_ack();
         }
-        else if (!strcmp(argv[1], "*158#001"))
+        else if (!strcmp(argv[1], "*158#001"))   
         {
             lidbg_shell_cmd("chmod 777 /sdcard");
             CREATE_KTHREAD(thread_enable_logcat2, NULL);
@@ -712,25 +714,14 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#002"))
         {
-
 	    if(g_var.is_fly)
 	    {
-		 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE &");
-		 msleep(500);
-           	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal KILL &");
+		 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE_IN_TIME &");
 	    }
            else
            {
-               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
-		 msleep(500);
-               lidbg_shell_cmd("/system/lib/modules/out/sendsignal KILL &");
+               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE_IN_TIME &");
            }
-	    msleep(500);
-	    if(g_var.is_fly)
-           	 lidbg_shell_cmd("/flysystem/lib/out/record_klogctl 1 &");
-           else
-               lidbg_shell_cmd("/system/lib/modules/out/record_klogctl 1 &");
-
             lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#073"))

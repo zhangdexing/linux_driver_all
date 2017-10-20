@@ -32,7 +32,7 @@ void write_log()
 	lseek(seekfd,0,SEEK_SET);
 	read(seekfd,&seek,sizeof(seek));
         lseek(openfd,seek,SEEK_SET);
-
+  
 	write(openfd,timebuf,strlen(timebuf));
 
 	while(1)
@@ -91,7 +91,6 @@ void sigfunc(int sig)
 	else if (sig == SIGUSR2)
 	{
 		lidbg("record_klogctl:sigfunc change in time mode\n");
-		MAXINUM = (1024*1024*500);
 		poll_time = 1;
 		save_in_time_mode = 1;
 	}
@@ -109,15 +108,6 @@ int main(int argc , char **argv)
 {
 	time_t ctime;
 	struct tm *tm;
-	if(argc > 1)
-		save_in_time_mode = strtoul(argv[1], 0, 0);
-	if(save_in_time_mode == 1)
-	{
-		lidbg("record_klogctl:in time mode\n");
-		MAXINUM = (1024*1024*500);
-		poll_time = 1;
-		PATH = "/sdcard/kmsg";
-	}
 	
 	umask(0);//屏蔽创建文件权限
 	int fd = mkdir(PATH,777);	
