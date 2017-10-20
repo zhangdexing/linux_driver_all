@@ -264,9 +264,7 @@ static int misc_dev_dev_event(struct notifier_block *this,
         //if(!g_var.is_fly)
     {
         LCD_OFF;
-#ifdef SOC_mt35x
-	disable_irq(GPIO_TO_INT(6));
-#endif
+
 	 if(g_var.is_fly == 0)
 	      CREATE_KTHREAD(thread_usb_disk_disable_delay, NULL);
         //lidbg_notifier_call_chain(NOTIFIER_VALUE(NOTIFIER_MAJOR_BL_LCD_STATUS_CHANGE, NOTIFIER_MINOR_BL_APP_OFF));
@@ -340,9 +338,7 @@ static int misc_dev_dev_event(struct notifier_block *this,
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_SCREEN_ON):
 	del_timer(&usb_release_timer);
-#ifdef SOC_mt35x
-	enable_irq(GPIO_TO_INT(6));
-#endif
+
 	if(g_var.keep_lcd_on) LCD_ON;
         //if(!g_var.is_fly)
     {
