@@ -486,7 +486,6 @@ static int  lpc_remove(struct platform_device *pdev)
 static int lpc_suspend(struct device *dev)
 {
     DUMP_FUN;
-    schedule_work(&pGlobalHardwareInfo->FlyIICInfo.iic_work);
     SOC_IO_ISR_Disable(MCU_IIC_REQ_GPIO);
 #ifdef CHECK_MCU_BUSY
     SOC_IO_ISR_Disable(MCU_READ_BUSY_GPIO);
