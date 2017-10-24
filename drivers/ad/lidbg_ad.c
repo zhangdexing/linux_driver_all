@@ -15,6 +15,8 @@ u32 *fifo_buffer;
 #define DATA_SIZE (512)
 u32 *ad_data_for_app;
 
+#define ONE_CMD_SIZE 4
+
 struct ad_device *dev;
 struct completion ad_val;
 
@@ -41,6 +43,7 @@ int find_ad_key(struct ad_key_remap *p)
     val_buf[count++] = val;
     if(count < 4)
         return  1;
+
 
     count = 0;
     for(i = 0; i < 4; i++)
@@ -139,12 +142,17 @@ ssize_t  ad_read(struct file *filp, char __user *buffer, size_t size, loff_t *of
         read_len = fifo_len;
     else
         read_len = size;
-    bytes = kfifo_out(&ad_data_fifo, ad_data_for_app, read_len);
+	
+	if(read_len>ONE_CMD_SIZE)
+		read_len = ONE_CMD_SIZE;
+
+    bytes = kfifo_out(&ad_data_fifo, ad_data_for_app, 16);
     up(&dev->sem);
     if (copy_to_user(buffer, ad_data_for_app, read_len))
     {
         lidbg("copy_to_user ERR\n");
     }
+
     if(fifo_len > bytes)
     {
         wake_up_interruptible(&dev->queue);
@@ -154,6 +162,53 @@ ssize_t  ad_read(struct file *filp, char __user *buffer, size_t size, loff_t *of
 
 ssize_t  ad_write (struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
+	
+	char *tok_buf_array[32];
+	int tok_buf_num;
+	char tok_buf_value_array[32]={0};
+	char *write_buf = NULL;
+	int i;
+	int fifo_len;
+
+	if(size <= 0)
+		return size;
+
+	write_buf = (char *)kmalloc(size,GFP_KERNEL);
+	if(write_buf==NULL)
+		return -1;
+
+	if (copy_from_user(write_buf, buf, size))
+    {
+        lidbg("copy_from_user ERR\n");
+		kfree(write_buf);
+		return -1;
+    }
+
+	tok_buf_num = lidbg_token_string(write_buf, " ",tok_buf_array);
+
+
+	if(kfifo_is_full(&ad_data_fifo))
+    {
+        lidbg("=======kfifo_reset======\n");
+        kfifo_reset(&ad_data_fifo);
+    }
+
+	for(i=0; i<tok_buf_num; i++)
+	{
+		tok_buf_value_array[i] = simple_strtoul(tok_buf_array[i], 0, 0);
+	}
+
+	fifo_len = kfifo_len(&ad_data_fifo);
+	lidbg("=======echo value:0x%x,0x%x,0x%x,value:0x%x,wtite before fifo_len:%d======\n",tok_buf_value_array[0],tok_buf_value_array[1],tok_buf_value_array[2],tok_buf_value_array[3],fifo_len);
+
+	down(&dev->sem);
+	kfifo_in(&ad_data_fifo, tok_buf_value_array, 16);
+	up(&dev->sem);
+	wake_up_interruptible(&dev->queue);
+	complete(&ad_val);
+	
+	kfree(write_buf);	
+
     return size;
 }
 
