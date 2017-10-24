@@ -2,7 +2,7 @@
 #include "lidbg_servicer.h"
 
 int BUFSIZE;
-int MAXINUM = (1024*1024*200);
+int MAXINUM = (1024*1024*100);
 int poll_time = 5;
 bool save_in_time_mode = 0;
 char * PATH =  "/data/reckmsg";

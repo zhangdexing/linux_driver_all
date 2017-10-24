@@ -287,7 +287,7 @@ void lidbg_enable_logcat2(void)
     while(1)
     {
         size = fs_get_file_size("/sdcard/logcat.txt") ;
-        if(size >= MEM_SIZE_1_MB * 200)
+        if(size >= MEM_SIZE_1_MB * 100)
         {
             lidbg("logcat file_len over\n");
             lidbg_shell_cmd("rm /sdcard/logcat_old.txt");
