@@ -146,9 +146,10 @@
 			 USB_ID_LOW_HOST;\
 			 USB_POWER_ENABLE;\
 			 USB_POWER_BACK_ENABLE;\
-			 USB_POWER_FRONT_ENABLE;\
-			 msleep(1000);\
+			 msleep(3000);\
 			 USB_POWER_UDISK_ENABLE;\
+			 msleep(3000);\
+			 USB_POWER_FRONT_ENABLE;\
 			}while(0)
 
 #define USB_WORK_DISENABLE  do{\
