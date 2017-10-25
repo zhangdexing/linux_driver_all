@@ -1124,7 +1124,7 @@ static int gtp_init_panel(struct goodix_ts_data *ts, char *ic_type)
 
     if (ret == SUCCESS)
     {
-        if (opr_buf[0] < 90)
+        if (opr_buf[0] <= 90)
         {
             /* backup group config version */
             grp_cfg_version = send_cfg_buf[sensor_id][0];
