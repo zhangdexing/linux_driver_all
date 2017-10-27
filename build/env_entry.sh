@@ -391,7 +391,7 @@ case "$DBG_PLATFORM_ID" in
 	export OTA_PACKAGE_NAME=msm8909-ota-eng.*.zip
 	export DBG_SOC=msm8x26
 	export TEST_PACKAGE_PATH=//172.168.1.240/share/8909/升级包/测试升级包
-	export REPOSITORY_WORK_BRANCH=master
+	export REPOSITORY_WORK_BRANCH=G8II_release_1111_3
 	export SYSTEM_WORK_BRANCH=msm8909-master
 	export RECOVERY_BUILD_BRANCH=msm8909-ota-recovery
         export MAKE_PAKG_NUM=21
