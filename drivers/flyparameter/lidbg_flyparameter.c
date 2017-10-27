@@ -139,9 +139,9 @@ bool flyparameter_info_get(void)
                 lidbg(PATA_TAG"fail to cpy parameter\n");
             }
             lidbg_shell_cmd( parameter );
-            fs_clear_file("/data/commenPersist/hwinfo.txt");
-            fs_file_write2("/data/commenPersist/hwinfo.txt", g_recovery_meg->hwInfo.info);
-            lidbg_shell_cmd("chmod 777 /data/commenPersist/hwinfo.txt");
+            fs_clear_file("/data/hwinfo.txt");
+            fs_file_write2("/data/hwinfo.txt", g_recovery_meg->hwInfo.info);
+            lidbg_shell_cmd("chmod 777 /data/hwinfo.txt");
             lidbg(PATA_TAG"flyparameter=[%s] len:%d\n", g_recovery_meg->hwInfo.info, len);
             fs_mem_log("flyparameter=[%s] len:%d\n", g_recovery_meg->hwInfo.info, len);
 
