@@ -12,6 +12,7 @@
 #include <sys/stat.h>  
 #include <sys/types.h> 
 #include "../inc/lidbg_flycam_app.h"
+#include "yuvtool.h"
 
 //eho
 #define	NIGHT_GAINVAL					18
@@ -52,6 +53,7 @@ extern "C" {
 #ifdef PLATFORM_msm8909
 //#undef USE_ION
 #endif
+#undef USE_ION
 
 camera_device_ops_t usbcam_camera_ops =
 {
@@ -120,6 +122,7 @@ dump:
 
 namespace android
 {
+
     static int ioctlLoop(int fd, int ioctlCmd, void *args);
 
     extern "C" int usbcam_get_number_of_cameras()
@@ -244,12 +247,12 @@ static int get_uvc_device(const char *id,char *devname)
         cam_id = atoi(id);
 
 
-    ALOGD("%s: E,======[%d]", __func__, cam_id);
+    ALOGE("%s: E,======[%d]", __func__, cam_id);
     *devname = '\0';
     while(1)
     {
         sprintf(temp_devname, "/dev/video%d", i);
-        //ALOGI("%s: trying open ==%d==[%s]", __func__, i, temp_devname);        
+        //ALOGE("%s: trying open ==%d==[%s]", __func__, i, temp_devname);        
         fd = open(temp_devname, O_RDWR  | O_NONBLOCK, 0);
 		i++;
         if(-1 != fd)
@@ -290,7 +293,7 @@ static int get_uvc_device(const char *id,char *devname)
                 ALOGE("%s: Found UVC node: ======%s,[%d,%d]\n", __func__, temp_devname, cam_id, uvc_count);
                 if(cam_id != -1 && cam_id != uvc_count)
                 {
-                    ALOGE("%s: need to find another======", __func__);
+                    ALOGE("%s: need to find another======\n", __func__);
                     close(fd);
                     continue;
                 }
@@ -310,12 +313,12 @@ static int get_uvc_device(const char *id,char *devname)
             //*devname = '\0';
             ALOGE("%s.%d: Probing fail:%s \n", __func__, i, devname);
             //break;
-            ALOGD("%s: X,%s", __func__, devname);
+            ALOGE("%s: X,%s", __func__, devname);
 			return -1;
         }
     }
 
-    ALOGD("%s: X,%s", __func__, devname);
+    ALOGE("%s: X,%s", __func__, devname);
     return 0;
 }
 
@@ -334,7 +337,7 @@ static int get_hub_uvc_device(const char *id,char *devname)
 
 	property_set("fly.uvccam.camid", id);
 
-    ALOGD("%s: E,=======[%d]", __func__, cam_id);
+    ALOGE("%s: E,=======[%d]", __func__, cam_id);
     *devname = '\0';
 
 	memset(hub_path,0,sizeof(hub_path));  
@@ -416,7 +419,7 @@ static int get_hub_uvc_device(const char *id,char *devname)
 	}
 	
 openDev:
-	  ALOGI("%s: trying open ====[%s]", __func__, temp_devname);
+	  ALOGE("%s: trying open ====[%s]", __func__, temp_devname);
       fd = open(temp_devname, O_RDWR  | O_NONBLOCK, 0);
       if(-1 != fd)
       {
@@ -457,7 +460,7 @@ openDev:
                   if(isH264sup == 1)
                   {
 						close(fd);
-						ALOGI("%s: V4L2_PIX_FMT_H264 is supported,find next node", __func__ );
+						ALOGE("%s: V4L2_PIX_FMT_H264 is supported,find next node", __func__ );
 						//sprintf(temp_devname,temp_devname2); 
 						strncpy(temp_devname, temp_devname2, FILENAME_LENGTH);
 						fcnt--;
@@ -521,16 +524,20 @@ getuvcdevice:
         dev_name = camHal->dev_name;
         //rc = get_hub_uvc_device(mid,dev_name);
         cam_id = atoi(mid);
+
         rc = lidbg_get_hub_uvc_device(PREVIEW_MODE,dev_name,cam_id,0);
         if((rc == -1) || (*dev_name == '\0'))
         {
             ALOGE("%s: No UVC node found \n", __func__);
-			wdbg("%s: Camera [%d] No UVC node found\n",__func__, cam_id);
+			//wdbg("%s: Camera [%d] No UVC node found\n",__func__, cam_id);
             //goto try_open_again;
-            goto out_err;
+            //goto out_err;
+			strcpy(dev_name,"/dev/video0");
+			ALOGE("%s:force open[%s] \n\n", __func__,dev_name);
         }
+
 openfd:
-        camHal->fd = open(dev_name, O_RDWR | O_NONBLOCK, 0);
+        camHal->fd = open(dev_name, O_RDWR, 0);
         if (camHal->fd <  0)
         {
             ALOGE("%s: Cannot open '%s'", __func__, dev_name);
@@ -573,7 +580,7 @@ try_open_again:
 
     extern "C"  int usbcam_close_camera_device( hw_device_t *hw_dev)
     {
-        ALOGI("%s: device =%p E", __func__, hw_dev);
+        ALOGE("%s: device =%p E", __func__, hw_dev);
         int rc =  -1;
         camera_device_t *device     = (camera_device_t *)hw_dev;
 
@@ -596,7 +603,7 @@ try_open_again:
             }
         }
 		//system("echo 'udisk_unrequest' > /dev/flydev0");	
-        ALOGI("%s: X device =%p, rc = %d", __func__, hw_dev, rc);
+        ALOGE("%s: X device =%p, rc = %d", __func__, hw_dev, rc);
         return rc;
     }
 
@@ -670,7 +677,7 @@ try_open_again:
         else
             ALOGE("%s: set_buffers_geometry is NULL pointer", __func__);
 
-        gralloc_usage = GRALLOC_USAGE_HW_CAMERA_WRITE | GRALLOC_USAGE_PRIVATE_IOMMU_HEAP;
+        gralloc_usage = ( GRALLOC_USAGE_SW_READ_RARELY   | GRALLOC_USAGE_SW_WRITE_OFTEN   | GRALLOC_USAGE_HW_TEXTURE );
 
         if(mPreviewWindow->set_usage)
         {
@@ -860,7 +867,7 @@ try_open_again:
                 ALOGE("%s: initDisplayBuffers returned error", __func__);
             }
         }
-        ALOGI("%s: X. rc = %d", __func__, rc);
+        ALOGE("%s: X. rc = %d", __func__, rc);
         return rc;
     }
 
@@ -871,7 +878,7 @@ try_open_again:
                               camera_request_memory get_memory,
                               void *user)
     {
-        ALOGI("%s: E", __func__);
+        ALOGE("%s: E", __func__);
         camera_hardware_t *camHal;
 
         if(device && device->priv)
@@ -890,13 +897,13 @@ try_open_again:
         camHal->data_cb_timestamp   = data_cb_timestamp;
         camHal->get_memory          = get_memory;
         camHal->cb_ctxt             = user;
-        ALOGI("%s: X", __func__);
+        ALOGE("%s: X", __func__);
     }
 
     void usbcam_enable_msg_type(struct camera_device *device, int32_t msg_type)
     {
         if(is_debug)
-            ALOGI("%s: msg_type: %d", __func__, msg_type);
+            ALOGE("%s: msg_type: %d", __func__, msg_type);
 
         camera_hardware_t *camHal;
 
@@ -913,13 +920,13 @@ try_open_again:
         Mutex::Autolock autoLock(camHal->lock);
         camHal->msgEnabledFlag |= msg_type;
         if(is_debug)
-            ALOGI("%s: X", __func__);
+            ALOGE("%s: X", __func__);
     }
 
     void usbcam_disable_msg_type(struct camera_device *device, int32_t msg_type)
     {
         if(is_debug)
-            ALOGI("%s: msg_type: %d", __func__, msg_type);
+            ALOGE("%s: msg_type: %d", __func__, msg_type);
 
         camera_hardware_t *camHal;
         if(device && device->priv)
@@ -935,13 +942,13 @@ try_open_again:
         Mutex::Autolock autoLock(camHal->lock);
         camHal->msgEnabledFlag &= ~msg_type;
         if(is_debug)
-            ALOGI("%s: X", __func__);
+            ALOGE("%s: X", __func__);
     }
 
     int usbcam_msg_type_enabled(struct camera_device *device, int32_t msg_type)
     {
         if(is_debug)
-            ALOGI("%s: E", __func__);
+            ALOGE("%s: E", __func__);
 
         camera_hardware_t *camHal;
         if(device && device->priv)
@@ -956,7 +963,7 @@ try_open_again:
 
         Mutex::Autolock autoLock(camHal->lock);
         if(is_debug)
-            ALOGI("%s: X", __func__);
+            ALOGE("%s: X", __func__);
         return (camHal->msgEnabledFlag & msg_type);
     }
 
@@ -1021,7 +1028,7 @@ try_open_again:
                 else
                 {
                     ALOGE("%s: VIDIOC_ENUM_FMT failed", __func__);
-		      system("echo 'back_cam_reset' > /dev/flydev0");
+		      //system("echo 'back_cam_reset' > /dev/flydev0");
                 }
             }
             if(V4L2_PIX_FMT_MJPEG == fmtdesc.pixelformat)
@@ -1046,7 +1053,7 @@ try_open_again:
             else if(1 == h264Supported)
                 camHal->captureFormat = V4L2_PIX_FMT_H264;
         }
-        ALOGI("%s: Capture format chosen: 0x%x. 0x%x:YUYV. 0x%x:MJPEG. 0x%x: H264",
+        ALOGE("%s: Capture format chosen: 0x%x. 0x%x:YUYV. 0x%x:MJPEG. 0x%x: H264",
               __func__, camHal->captureFormat, V4L2_PIX_FMT_YUYV,
               V4L2_PIX_FMT_MJPEG, V4L2_PIX_FMT_H264);
 #if 0
@@ -1191,7 +1198,7 @@ try_open_again:
 		char isDisableOSD_str[PROPERTY_VALUE_MAX];
 		int isDisableOSD = 0;
 	
-        ALOGI("%s: E", __func__);
+        ALOGE("%s: E", __func__);
 
         if (-1 == ioctlLoop(camHal->fd, VIDIOC_QUERYCAP, &cap))
         {
@@ -1263,7 +1270,7 @@ try_open_again:
                 ALOGD("%s: VIDIOC_G_PARM success,%d,%d,%d,%d", __func__, Stream_Parm.parm.capture.capability, Stream_Parm.parm.capture.capturemode,
                       Stream_Parm.parm.capture.timeperframe.denominator, Stream_Parm.parm.capture.timeperframe.numerator);
                 Stream_Parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-                Stream_Parm.parm.capture.timeperframe.denominator = 120;;
+                Stream_Parm.parm.capture.timeperframe.denominator = 15;
                 Stream_Parm.parm.capture.timeperframe.numerator = 1;
                 if (-1 == ioctlLoop(camHal->fd, VIDIOC_S_PARM, &Stream_Parm))
                 {
@@ -1311,7 +1318,7 @@ try_open_again:
 		system("./flysystem/lib/out/lidbg_testuvccam /dev/video0 --xuset-flip 0 ");
 #endif
 	//car record enable time osd
-#if 1
+#if 0
 	lidbg("*****preview cam_id => %d*******",cam_id);
 	if(cam_id == 1)
 	{
@@ -1337,7 +1344,7 @@ try_open_again:
 		system("./flysystem/lib/out/lidbg_testuvccam /dev/video1 -b 0 --xuset-oe 0 0 ");
 	}
 #else
-	system("./flysystem/lib/out/lidbg_testuvccam /dev/video1 --xuset-oe 0 0 ");
+	//system("./flysystem/lib/out/lidbg_testuvccam /dev/video1 --xuset-oe 0 0 ");
 #endif
 		
 		//system("./flysystem/lib/out/lidbg_testuvccam /dev/video1 --ef-set nightthread=1 &");
@@ -1396,16 +1403,25 @@ try_open_again:
             {
                 ALOGE("%s: VIDIOC_S_FMT failed", __func__);
 				wdbg("%s: Camera [%d] VIDIOC_S_FMT failed\n",__func__, cam_id);
-		  system("echo 'back_cam_reset' > /dev/flydev0");
-                return -1;
+		  //system("echo 'back_cam_reset' > /dev/flydev0");
             }
+
+			memset(&v4l2format, 0, sizeof(v4l2format));
+			v4l2format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+			if (-1 == ioctlLoop(camHal->fd, VIDIOC_G_FMT, &v4l2format))
+			{
+			    ALOGE("%s: VIDIOC_G_FMT failed\n", __func__);
+			}
+
+			camHal->prevWidth   = v4l2format.fmt.pix.width;
+		    camHal->prevHeight  = v4l2format.fmt.pix.height;
 						
 			ALOGE("%s: 2--VIDIOC_S_FMT success,width=%d,height=%d,pixelformat=0x%x,buffer size: %u", __func__,
 				v4l2format.fmt.pix.width,v4l2format.fmt.pix.height,v4l2format.fmt.pix.pixelformat ,v4l2format.fmt.pix.sizeimage);
         }
 				
         rc = initV4L2mmap(camHal);
-        ALOGI("%s: X", __func__);
+        ALOGE("%s: X", __func__);
         return rc;
     }
 
@@ -1440,7 +1456,7 @@ try_open_again:
         if (-1 == ioctlLoop(camHal->fd, VIDIOC_STREAMON, &v4l2BufType))
         {
             ALOGE("%s: VIDIOC_STREAMON failed", __func__);
-	     system("echo 'back_cam_reset' > /dev/flydev0");
+	    // system("echo 'back_cam_reset' > /dev/flydev0");
         }
         else
         {
@@ -1513,7 +1529,8 @@ try_open_again:
         }
         else
         {
-            ALOGE("%s: dequeue buf failed \n", __func__);
+			mPreviewWindow->cancel_buffer(mPreviewWindow, buffer_handle);
+            ALOGE("%s: dequeue buf failed \n\n", __func__);
 			wdbg("%s: Camera [%d] dequeue buf failed\n",__func__, cam_id);
         }
         if(is_debug)
@@ -1540,7 +1557,7 @@ try_open_again:
                 case EAGAIN:
                     ALOGE("%s: EAGAIN error", __func__);
 					wdbg("%s: Camera [%d] EAGAIN error\n",__func__, cam_id);
-			system("echo 'back_cam_reset' > /dev/flydev0");
+			//system("echo 'back_cam_reset' > /dev/flydev0");
                     return 1;
                 case EIO:
                     /* Could ignore EIO, see spec. */
@@ -1632,38 +1649,89 @@ try_open_again:
         }
         if(is_debug)
             ALOGD("%s: E", __func__);
+		
+		int (*convert_fun)(char *in,char *out,int w, int h)=NULL;		
 
-        if(HAL_PIXEL_FORMAT_YCrCb_420_SP == camHal->dispFormat)
-        {
-			if(V4L2_PIX_FMT_YUYV == camHal->captureFormat)
-			{
-				if(is_debug)
-					ALOGD("%s: E.convert_YUYV_to_420_NV12", __func__);
-				convert_YUYV_to_420_NV12(
-					(char *)camHal->buffers[camHal->curCaptureBuf.index].data,
-					(char *)camHal->previewMem.camera_memory[buffer_id]->data,
-					camHal->prevWidth,
-					camHal->prevHeight);
+		if(HAL_PIXEL_FORMAT_YCrCb_420_SP == camHal->dispFormat)
+			convert_fun = convert_YUYV_to_420_NV12;
+		else if(HAL_PIXEL_FORMAT_YV12 == camHal->dispFormat)
+			convert_fun = YUV422To420;
+		else
+			return rc;
+        
+		if(V4L2_PIX_FMT_YUYV == camHal->captureFormat)
+		{
+			if(is_debug)
+				ALOGE("%s: E.convert_YUYV_to_420\n", __func__);
+			(*convert_fun)(
+				(char *)camHal->buffers[camHal->curCaptureBuf.index].data,
+				(char *)camHal->previewMem.camera_memory[buffer_id]->data,
+				camHal->prevWidth,
+				camHal->prevHeight);
+		}
+		else if(V4L2_PIX_FMT_MJPEG == camHal->captureFormat)
+		{
+			if(is_debug)
+				ALOGE("%s: E.convert_JPEG_to_420\n", __func__);
+			char *ptmp = (char *)calloc(camHal->buffers[camHal->curCaptureBuf.index].len, sizeof(char));
+			char *ptmp1 = (char *)calloc(camHal->buffers[camHal->curCaptureBuf.index].len, sizeof(char));
 
-			}
-			if(V4L2_PIX_FMT_MJPEG == camHal->captureFormat)
+			jpeg_init_decoder(camHal->prevWidth,camHal->prevHeight);
+			rc = jpeg_decode(
+				(uint8_t *)camHal->buffers[camHal->curCaptureBuf.index].data,
+				(uint8_t *)ptmp,
+				camHal->curCaptureBuf.bytesused);
+
+			if(0)//rc != 0)
+            	ALOGE("%s: jpeg_decode error!!!\n", __func__);
+
+			(*convert_fun)(
+				(char *)ptmp,
+				(char *)ptmp1,
+				camHal->prevWidth,
+				camHal->prevHeight);
+
+			if((camHal->prevWidth != camHal->dispWidth) || (camHal->prevHeight != camHal->dispHeight))//need scale
 			{
-				if(is_debug)
-					ALOGD("%s: E.convert_JPEG_to_420_NV12", __func__);
-				char *ptmp = (char *)calloc(camHal->buffers[camHal->curCaptureBuf.index].len, sizeof(char));
-				memcpy(ptmp, camHal->buffers[camHal->curCaptureBuf.index].data, camHal->buffers[camHal->curCaptureBuf.index].len);
-				jpeg_init_decoder(camHal->prevWidth, camHal->prevHeight);
-				jpeg_decode(
-					(uint8_t *)camHal->buffers[camHal->curCaptureBuf.index].data,
-					(uint8_t *)ptmp,
-					camHal->curCaptureBuf.bytesused);
-				convert_YUYV_to_420_NV12(
-					(char *)ptmp,
-					(char *)camHal->previewMem.camera_memory[buffer_id]->data,
-					camHal->prevWidth,
-					camHal->prevHeight);
-					free(ptmp);
+				resample_yv12(ptmp,
+							 camHal->dispWidth,
+							 camHal->dispHeight, 
+							 (char *)ptmp1,
+					 		 camHal->prevWidth, camHal->prevHeight,
+							 1);
+
+				if(camHal->dispData==NULL)
+					camHal->dispData = (char *)calloc(camHal->buffers[camHal->curCaptureBuf.index].len, sizeof(char));
+				memcpy(camHal->dispData,ptmp,camHal->previewMem.camera_memory[buffer_id]->size);
+
+				if(camHal->dispWidth == 720)//need add padding
+				{
+					YV12AddPadding(ptmp,
+									ptmp1,
+									camHal->dispWidth,
+									camHal->dispHeight,
+									8);
+					memcpy(camHal->previewMem.camera_memory[buffer_id]->data,ptmp1,
+						camHal->previewMem.camera_memory[buffer_id]->size);
+				}else//needn't add padding
+				{
+					memcpy(camHal->previewMem.camera_memory[buffer_id]->data,ptmp,
+						camHal->previewMem.camera_memory[buffer_id]->size);
+				}
+				
+			}else//needn't scale
+			{
+				memcpy(camHal->previewMem.camera_memory[buffer_id]->data,ptmp1,
+						camHal->previewMem.camera_memory[buffer_id]->size);
+
+				if(camHal->dispData==NULL)
+					camHal->dispData = (char *)calloc(camHal->buffers[camHal->curCaptureBuf.index].len, sizeof(char));
+				memcpy(camHal->dispData,ptmp1,camHal->previewMem.camera_memory[buffer_id]->size);
 			}
+
+			free(ptmp);
+			free(ptmp1);
+
 			if(is_debug)
 				ALOGD("%s: Copied %d bytes from camera buffer %d to display buffer: %d",
 					__func__, camHal->curCaptureBuf.bytesused,
@@ -1860,7 +1928,7 @@ try_open_again:
                 if(USB_CAM_PREVIEW_EXIT == camHal->prvwCmd)
                 {
                     camHal->lock.unlock();
-                    ALOGI("%s: Exiting coz USB_CAM_PREVIEW_EXIT", __func__);
+                    ALOGE("%s: Exiting coz USB_CAM_PREVIEW_EXIT", __func__);
                     return (void *)0;
                 }
                 else if(USB_CAM_PREVIEW_TAKEPIC == camHal->prvwCmd)
@@ -1907,7 +1975,7 @@ try_open_again:
 			    camHal->notify_cb(CAMERA_MSG_ERROR, 0, 0, camHal->cb_ctxt);
 			    camHal->lock.lock();
 				ALOGE("%s: get_buf_from_cam error", __func__);
-				system("echo 'back_cam_reset' > /dev/flydev0");
+				//system("echo 'back_cam_reset' > /dev/flydev0");
 				return (void *)0;
 			}              
 
@@ -1939,14 +2007,26 @@ try_open_again:
 			}
 
             /* TBD: change the 1.5 hardcoding to Bytes Per Pixel */
-            int previewBufSize = camHal->prevWidth * camHal->prevHeight * 1.5;
+
+			//use different buffer
+			int new_buffer_id = buffer_id;
+ 			for(int cnt = 0; cnt < camHal->previewMem.buffer_count + 2; cnt++)
+            {
+                if(camHal->previewMem.private_buffer_handle[buffer_id]->fd !=
+                        camHal->previewMem.private_buffer_handle[cnt]->fd)
+                {
+                    new_buffer_id = cnt;
+                    break;
+                }
+            }
+
+            int previewBufSize = camHal->dispWidth * camHal->dispHeight * 1.5;
             msgType |=  CAMERA_MSG_PREVIEW_FRAME;
-            if(previewBufSize !=
-                    camHal->previewMem.private_buffer_handle[buffer_id]->size)
+            if(1)
             {
 
                 previewMem = camHal->get_memory(
-                                 camHal->previewMem.private_buffer_handle[buffer_id]->fd,
+                                 camHal->previewMem.private_buffer_handle[new_buffer_id]->fd,
                                  previewBufSize,
                                  1,
                                  camHal->cb_ctxt);
@@ -1964,7 +2044,7 @@ try_open_again:
                     if(is_debug)
                         ALOGD("%s: previewBufSize = %d, priv_buf_size: %d",
                               __func__, previewBufSize,
-                              camHal->previewMem.private_buffer_handle[buffer_id]->size);
+                              camHal->previewMem.private_buffer_handle[new_buffer_id]->size);
                 }
             }
             else
@@ -1981,11 +2061,21 @@ try_open_again:
                     camHal->data_cb)
             {
                 if(is_debug)
-                    ALOGD("%s: before data callback", __func__);
-                camHal->data_cb(msgType, data, 0, metadata, camHal->cb_ctxt);
+                    ALOGE("%s: before data callback\n", __func__);
+
+				char *ptmp = (char *)calloc(previewBufSize,1);
+
+				swapYV12toNV12((char *)camHal->dispData, ptmp,camHal->dispWidth,camHal->dispHeight);
+
+				memcpy(data->data,ptmp,previewBufSize);
+				camHal->data_cb(msgType, data, 0, metadata, camHal->cb_ctxt);
+
+				free(ptmp);
+
                 if(is_debug)
-                    ALOGD("%s: after data callback: %p", __func__, camHal->data_cb);
+                    ALOGE("%s: after data callback: %p", __func__, camHal->data_cb);
             }
+ 
             camHal->lock.lock();
             if (previewMem)
                 previewMem->release(previewMem);
@@ -2017,24 +2107,25 @@ try_open_again:
     }
     int usbcam_start_preview(struct camera_device *device)
     {
-        ALOGI("%s: E", __func__);
+        ALOGE("%s: E", __func__);
 
         int rc = -1;
         camera_hardware_t *camHal = NULL;
         VALIDATE_DEVICE_HDL(camHal, device, -1);
         Mutex::Autolock autoLock(camHal->lock);
+		camHal->dispData = NULL;
 
         //return while there is not exsit a uvc camera.
         if(camHal->fd < 0)
         {
-            ALOGI("%s: no uvc device:return", __func__);
+            ALOGE("%s: no uvc device:return", __func__);
             return -1;
         }
 
         /* If preivew is already running, nothing to be done */
         if(camHal->previewEnabledFlag)
         {
-            ALOGI("%s: Preview is already running", __func__);
+            ALOGE("%s: Preview is already running", __func__);
             return -1;
         }
 
@@ -2050,7 +2141,7 @@ try_open_again:
             if(rc < 0)
             {
                 ALOGE("%s: Failed to startUsbCamCapture", __func__);
-		  system("echo 'back_cam_reset' > /dev/flydev0");
+		  //system("echo 'back_cam_reset' > /dev/flydev0");
             }
             else
             {
@@ -2078,6 +2169,12 @@ try_open_again:
         unsigned    int i;
         enum        v4l2_buf_type   v4l2BufType;
         ALOGD("%s: E", __func__);
+		
+		if(camHal->dispData)
+		{
+			free(camHal->dispData);
+			camHal->dispData = NULL;
+		}
 
         if(!camHal->fd)
         {
@@ -2119,6 +2216,12 @@ try_open_again:
     {
         int rc = 0;
         ALOGD("%s: E", __func__);
+
+		if(camHal->dispData)
+		{
+			free(camHal->dispData);
+			camHal->dispData = NULL;
+		}
 
         if(camHal->previewEnabledFlag)
         {
@@ -2172,12 +2275,12 @@ try_open_again:
         if(rc)
             ALOGE("%s: stopPreviewInternal returned error", __func__);
 
-        ALOGI("%s: X", __func__);
+        ALOGE("%s: X", __func__);
         return;
     }
     int usbcam_preview_enabled(struct camera_device *device)
     {
-        ALOGI("%s: E", __func__);
+        ALOGE("%s: E", __func__);
         camera_hardware_t *camHal;
 
         if(device && device->priv)
@@ -2191,7 +2294,7 @@ try_open_again:
         }
         Mutex::Autolock autoLock(camHal->lock);
 
-        ALOGI("%s: X", __func__);
+        ALOGE("%s: X", __func__);
         return camHal->previewEnabledFlag;
     }
 
@@ -2215,7 +2318,7 @@ try_open_again:
         property_get("lidbg.uvccam.dvr.recording", startRecording, "0");
         if(!strncmp(startRecording, "1", 1))
         {
-            ALOGI("-------uvccam recording -----");
+            ALOGE("-------uvccam recording -----");
             system("./flysystem/lib/out/lidbg_testuvccam /dev/video2 -b 1 -c -f H264 -r &");
             property_set("lidbg.uvccam.dvr.recording", "1");
         }
@@ -2227,7 +2330,7 @@ try_open_again:
     {
         struct camera_device *mdevice = device;
         ALOGD("%s: E", __func__);
-        ALOGI("-------uvccam stop_recording -----");
+        ALOGE("-------uvccam stop_recording -----");
         property_set("lidbg.uvccam.dvr.recording", "0");
         ALOGD("%s: X", __func__);
     }
@@ -2294,11 +2397,10 @@ try_open_again:
         alloc.len = (alloc.len + 4095) & (~4095);
         alloc.align = 4096;
         alloc.flags = ION_FLAG_CACHED;
+/*
 #if (defined PLATFORM_msm8909) || (defined PLATFORM_msm8996)
         alloc.heap_id_mask = ion_type;
-#else
-	alloc.heap_mask = ion_type;
-#endif
+*/
         rc = ioctl(main_ion_fd, ION_IOC_ALLOC, &alloc);
         if (rc < 0)
         {
@@ -2365,7 +2467,7 @@ ION_OPEN_FAILED:
         camera_memory_t    *jpegInMem;
         uint32_t            jobId;
 
-        ALOGI("%s: E", __func__);
+        ALOGE("%s: E", __func__);
 
         /************************************************************************/
         /* - Allocate Jpeg input buffer from ION memory                         */
@@ -2470,7 +2572,7 @@ ION_OPEN_FAILED:
         if(rc)
             ALOGE("%s: ION memory de-allocation failed", __func__);
 #endif
-        ALOGI("%s: X rc = %d", __func__, rc);
+        ALOGE("%s: X rc = %d", __func__, rc);
         return rc;
     }
     static void *takePictureThread(void *hcamHal)
@@ -2484,7 +2586,7 @@ ION_OPEN_FAILED:
         QCameraHalMemInfo_t *mem_info   = NULL;
 
         camHal = (camera_hardware_t *)hcamHal;
-        ALOGI("%s: E", __func__);
+        ALOGE("%s: E", __func__);
 
         if(!camHal)
         {
@@ -2599,7 +2701,7 @@ ION_OPEN_FAILED:
         ERROR_CHECK_EXIT_THREAD(rc, "jpeg_encode");
 
         if(jpegLength <= 0)
-            ALOGI("%s: jpegLength : %d", __func__, jpegLength);
+            ALOGE("%s: jpegLength : %d", __func__, jpegLength);
 
         ALOGD("%s: jpegLength : %d", __func__, jpegLength);
         /************************************************************************/
@@ -2669,7 +2771,7 @@ ION_OPEN_FAILED:
         /* take picture activity is done */
         camHal->takePictInProgress = 0;
 
-        ALOGI("%s: X", __func__);
+        ALOGE("%s: X", __func__);
         return (void *)0;
     }
     static int launchTakePictureThread(camera_hardware_t *camHal)
@@ -2695,12 +2797,12 @@ ION_OPEN_FAILED:
     }
     int usbcam_take_picture(struct camera_device *device)
     {
-        ALOGI("%s: E", __func__);
+        ALOGE("%s: E", __func__);
         int rc = 0;
         camera_hardware_t *camHal;
 	char startRecording[PROPERTY_VALUE_MAX];
 	
-        ALOGI("-------uvccam capture -----");
+        ALOGE("-------uvccam capture -----");
         system("echo 'captureenable' > /dev/lidbg_drivers_dbg0");
 	
         return -1;
@@ -2711,7 +2813,7 @@ ION_OPEN_FAILED:
         /* If take picture is already in progress, nothing t be done */
         if(camHal->takePictInProgress)
         {
-            ALOGI("%s: Take picture already in progress", __func__);
+            ALOGE("%s: Take picture already in progress", __func__);
             return 0;
         }
 
@@ -2770,8 +2872,8 @@ ION_OPEN_FAILED:
         Mutex::Autolock autoLock(camHal->lock);
 				
         int rc = 0;
-		if(params)
-   		     PRINT_PARAM_STR(params);
+		//if(params)
+   		//     PRINT_PARAM_STR(params);
 		lParam.unflatten(str);
 		lParam.getPreviewSize(&width, &height);
 		ALOGE("%s: width -> %d,height -> %d", __func__,width,height);
@@ -2830,7 +2932,7 @@ ION_OPEN_FAILED:
     char *usbcam_get_parameters(struct camera_device *device)
     {
         char *parms;
-        ALOGI("%s: E", __func__);
+        ALOGE("%s: E", __func__);
 
         camera_hardware_t *camHal;
         VALIDATE_DEVICE_HDL(camHal, device, NULL);
@@ -2845,29 +2947,29 @@ ION_OPEN_FAILED:
             String8 params_str8;
             CameraParameters mParams ;
 			
-            mParams.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES,  "1920x1080,1280x720,640x480,320x240,640x360");
+            mParams.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES,  "640x480");
             //mParams.setPictureSize(320, 240);
-            mParams.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, "1920x1080,1280x720,640x480,320x240,640x360");
-            //mParams.setPreviewSize(320, 240);
+            mParams.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, "640x480");
+            mParams.setPreviewSize(640, 480);
             mParams.set(CameraParameters::KEY_PREVIEW_FORMAT, CameraParameters::PIXEL_FORMAT_YUV420SP);
             mParams.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FORMATS, CameraParameters::PIXEL_FORMAT_YUV420SP);
 
 	        mParams.set(CameraParameters::KEY_SUPPORTED_VIDEO_SIZES,  
-	                "320x240");  
+	                "640x480");  
 	       mParams.set(CameraParameters::KEY_PREFERRED_PREVIEW_SIZE_FOR_VIDEO,  
-	                "320x240");  
+	                "640x480");  
 			mParams.set(CameraParameters::KEY_SUPPORTED_SCENE_MODES, "auto");  
 		    mParams.set(CameraParameters::KEY_SUPPORTED_PICTURE_FORMATS, CameraParameters::PIXEL_FORMAT_JPEG);  
 		    mParams.set(CameraParameters::KEY_SUPPORTED_FLASH_MODES, "auto");  
 		    //mParams.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "30");  
-			mParams.set(CameraParameters::KEY_JPEG_THUMBNAIL_WIDTH, "320");  
-			mParams.set(CameraParameters::KEY_JPEG_THUMBNAIL_HEIGHT, "240");  
-		    mParams.set(CameraParameters::KEY_SUPPORTED_JPEG_THUMBNAIL_SIZES, "320x240");  
+			mParams.set(CameraParameters::KEY_JPEG_THUMBNAIL_WIDTH, "640");  
+			mParams.set(CameraParameters::KEY_JPEG_THUMBNAIL_HEIGHT, "480");  
+		    mParams.set(CameraParameters::KEY_SUPPORTED_JPEG_THUMBNAIL_SIZES, "640x480");  
 		    mParams.set(CameraParameters::KEY_SUPPORTED_WHITE_BALANCE, "auto");  
 		    mParams.set(CameraParameters::KEY_SUPPORTED_EFFECTS, "none");  
 		    mParams.set(CameraParameters::KEY_SUPPORTED_FOCUS_MODES, "auto");  
-		    mParams.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(1000,45000)"); //(1000,33000)  
-		    mParams.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "1000,45000"); //"1000,33000"  
+		    mParams.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FPS_RANGE, "(1000,33000)"); //(1000,33000)  
+		    mParams.set(CameraParameters::KEY_PREVIEW_FPS_RANGE, "1000,33000"); //"1000,33000"  
 		    mParams.set(CameraParameters::KEY_HORIZONTAL_VIEW_ANGLE, "51.2");  
 		    mParams.set(CameraParameters::KEY_VERTICAL_VIEW_ANGLE, "39.4");  
 
@@ -2876,7 +2978,7 @@ ION_OPEN_FAILED:
             strcpy(parms, params_str8.string());
         }
 
-        ALOGI("%s: X,%s", __func__, parms);
+        //ALOGE("%s: X,%s", __func__, parms);
         return parms;
     }
 
@@ -2884,8 +2986,8 @@ ION_OPEN_FAILED:
     {
         struct camera_device *mdevice = device;
         char *mparm = parm;
-        //       ALOGE("%s: E", __func__);
-        //      ALOGE("%s: X", __func__);
+               ALOGE("%s: E", __func__);
+              ALOGE("%s: X", __func__);
         return;
     }
 

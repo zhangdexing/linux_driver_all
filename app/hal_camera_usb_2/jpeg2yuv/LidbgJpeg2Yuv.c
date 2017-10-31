@@ -1077,7 +1077,10 @@ static int getbyte(void)
 {
 	return *datap++;
 }
-
+static int getbyte_nomove(void)
+{
+	return *datap;
+}
 /*
  * get word (16 bit) from datap
  */
@@ -1108,7 +1111,10 @@ static int readtables(int till, int *isDHT)
 	{
 		if (getbyte() != 0xff)
 			return -1;
-		
+
+		while(getbyte_nomove() == 0xff)
+			getbyte();
+
 		int m = 0;
 
 		if ((m = getbyte()) == till)

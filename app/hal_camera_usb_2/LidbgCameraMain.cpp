@@ -8,6 +8,8 @@
 #include "LidbgCameraUsb.h"
 #include <cutils/properties.h>
 
+#define CAMERA_HARDWARE_MODULE_ID_2 "camerausb"
+
 extern "C" {
 #include <sys/time.h>
 }
@@ -27,7 +29,7 @@ module_api_version:
 hal_api_version:
     HARDWARE_HAL_API_VERSION,
 id:
-    CAMERA_HARDWARE_MODULE_ID,
+    CAMERA_HARDWARE_MODULE_ID_2,
 name: "futengfei.camera.hal"
     ,
 author: "futengfei"
@@ -39,6 +41,7 @@ dso:
 reserved:
     {0},
 };
+
 camera_module_t HAL_MODULE_INFO_SYM =
 {
 common:
@@ -51,20 +54,15 @@ set_callbacks:
     NULL,
 get_vendor_tag_ops:
     NULL,
-#ifdef ANDROID_AT_LEAST_50
 open_legacy:
     NULL,
-#endif
-#if ANDROID_VERSION>=600
 set_torch_mode:
 	NULL,
 init:
 	NULL,
-#endif
 reserved:
     {0},
 };
-
 
 
 namespace android

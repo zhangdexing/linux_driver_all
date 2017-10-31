@@ -2,7 +2,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 include $(DBG_BUILD_PATH)/build_cfg.mk
 
-LOCAL_SRC_FILES := LidbgCameraMain.cpp LidbgCameraUsb.cpp
+LOCAL_SRC_FILES := LidbgCameraMain.cpp LidbgCameraUsb.cpp yuvtool.cpp
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/../inc \

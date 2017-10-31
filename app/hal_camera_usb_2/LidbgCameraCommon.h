@@ -50,7 +50,7 @@
 
 #include <linux/ion.h>
 #include <hardware/gralloc.h>
-#include <gralloc_priv.h>
+#include "gralloc_priv.h"
 
 #define CAPTURE                 1
 #define USE_ION
@@ -72,7 +72,7 @@ static const int PICTURE_FORMAT_RAW = 2;
 #define DEFAULT_USBCAM_THUMBNAIL_WD    432
 #define DEFAULT_USBCAM_THUMBNAIL_HT    288
 #define DEFAULT_USBCAM_THUMBNAIL_QLTY  85
-#define DEFAULT_USBCAM_PRVW_FMT HAL_PIXEL_FORMAT_YCrCb_420_SP
+#define DEFAULT_USBCAM_PRVW_FMT HAL_PIXEL_FORMAT_YV12//HAL_PIXEL_FORMAT_YCrCb_420_SP //HAL_PIXEL_FORMAT_YV12
 #define MIN_PREV_FPS            5000
 #define MAX_PREV_FPS            121000
 
@@ -189,11 +189,9 @@ namespace android
 
     struct ion_flush_data
     {
-#if (defined PLATFORM_msm8909) || (defined PLATFORM_msm8996)
+
 	ion_user_handle_t handle;
-#else
-        struct ion_handle      *handle;
-#endif
+
         int fd;
         void *vaddr;
         unsigned int offset;
@@ -231,11 +229,9 @@ namespace android
     {
         int                     fd;
         int                     main_ion_fd;
-#if (defined PLATFORM_msm8909) || (defined PLATFORM_msm8996)
+
 	ion_user_handle_t handle;
-#else
-        struct ion_handle      *handle;
-#endif
+
         uint32_t                size;
     } QCameraHalMemInfo_t;
 
@@ -273,6 +269,8 @@ namespace android
         int                                 prevFps;
         int                                 prevWidth;
         int                                 prevHeight;
+
+		char *								dispData;
 
         int                                 captureFormat;
         char                                dev_name[FILENAME_LENGTH];
