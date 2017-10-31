@@ -57,6 +57,10 @@ SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,hal_camera_usb)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,hal_camera_study_v4l2)
 endif
 
+ifeq ($(CONFIG_HAL_USB_CAMERA_PREVIEW_2),y)
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,hal_camera_usb_2)
+endif
+
 ifeq ($(CONFIG_HAL_USB_CAMERA),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,uvccam_test)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,libusb01/android/jni)

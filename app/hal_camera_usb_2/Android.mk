@@ -26,8 +26,8 @@ endif
 
 LOCAL_SHARED_LIBRARIES :=  libutils liblog libcutils  libcamera_client 
 
-LOCAL_MODULE := camera.$(DBG_PLATFORM)
-#LOCAL_MODULE := camera.default
+#LOCAL_MODULE := camerausb.$(DBG_PLATFORM)
+LOCAL_MODULE := camerausb.default
 LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
 LOCAL_MODULE_TAGS := optional
 
