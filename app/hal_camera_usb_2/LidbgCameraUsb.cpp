@@ -1685,6 +1685,11 @@ try_open_again:
 			if(0)//rc != 0)
             	ALOGE("%s: jpeg_decode error!!!\n", __func__);
 
+			if(camHal->jpegData==NULL)
+				camHal->jpegData = (char *)calloc(camHal->buffers[camHal->curCaptureBuf.index].len, sizeof(char));
+			memcpy(camHal->jpegData,camHal->buffers[camHal->curCaptureBuf.index].data,camHal->curCaptureBuf.bytesused);
+			camHal->jpegLen = camHal->curCaptureBuf.bytesused;
+
 			(*convert_fun)(
 				(char *)ptmp,
 				(char *)ptmp1,
@@ -2074,7 +2079,14 @@ try_open_again:
 
                 if(is_debug)
                     ALOGE("%s: after data callback: %p", __func__, camHal->data_cb);
-            }
+            }else if((camHal->msgEnabledFlag & CAMERA_MSG_COMPRESSED_IMAGE) &&
+                    camHal->data_cb)
+			{
+				memcpy(data->data,camHal->jpegData,camHal->jpegLen);
+			    camHal->data_cb(CAMERA_MSG_COMPRESSED_IMAGE,
+			                    data,
+			                    0, NULL, camHal->cb_ctxt);
+			}
  
             camHal->lock.lock();
             if (previewMem)
@@ -2114,6 +2126,7 @@ try_open_again:
         VALIDATE_DEVICE_HDL(camHal, device, -1);
         Mutex::Autolock autoLock(camHal->lock);
 		camHal->dispData = NULL;
+		camHal->jpegData = NULL;
 
         //return while there is not exsit a uvc camera.
         if(camHal->fd < 0)
@@ -2175,6 +2188,11 @@ try_open_again:
 			free(camHal->dispData);
 			camHal->dispData = NULL;
 		}
+		if(camHal->jpegData)
+		{
+			free(camHal->jpegData);
+			camHal->jpegData = NULL;
+		}
 
         if(!camHal->fd)
         {
@@ -2221,6 +2239,11 @@ try_open_again:
 		{
 			free(camHal->dispData);
 			camHal->dispData = NULL;
+		}
+		if(camHal->jpegData)
+		{
+			free(camHal->jpegData);
+			camHal->jpegData = NULL;
 		}
 
         if(camHal->previewEnabledFlag)
@@ -2803,11 +2826,12 @@ ION_OPEN_FAILED:
 	char startRecording[PROPERTY_VALUE_MAX];
 	
         ALOGE("-------uvccam capture -----");
-        system("echo 'captureenable' > /dev/lidbg_drivers_dbg0");
-	
-        return -1;
+        //system("echo 'captureenable' > /dev/lidbg_drivers_dbg0");
         VALIDATE_DEVICE_HDL(camHal, device, -1);
 
+		camHal->prvwCmdPending++;
+		camHal->prvwCmd = USB_CAM_PREVIEW_TAKEPIC;
+        return 0;
         Mutex::Autolock autoLock(camHal->lock);
 
         /* If take picture is already in progress, nothing t be done */
@@ -3000,7 +3024,7 @@ ION_OPEN_FAILED:
         int32_t marg2 = arg2;
 
         int rc = 0;
-        ALOGD("%s: E", __func__);
+        ALOGD("%s: E%d %d %d", __func__,cmd,arg1,arg2);
         ALOGD("%d", cmd);
 
         ALOGD("%s: X", __func__);
@@ -3031,3 +3055,4 @@ ION_OPEN_FAILED:
     }
 
 };
+

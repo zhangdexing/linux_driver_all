@@ -271,6 +271,8 @@ namespace android
         int                                 prevHeight;
 
 		char *								dispData;
+		char *								jpegData;
+		int									jpegLen;
 
         int                                 captureFormat;
         char                                dev_name[FILENAME_LENGTH];
