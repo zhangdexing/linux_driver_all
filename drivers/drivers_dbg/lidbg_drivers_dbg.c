@@ -38,11 +38,6 @@ int thread_drivers_dbg_init(void *data)
 {
     fly_bare_data *mdata = bare_data_get("158019");
     lidbg_new_cdev(&drivers_dbg_nod_fops, "lidbg_drivers_dbg0");
-	if(fs_is_file_exist("/data/coldBootLogcat.txt"))
-	{
-	    lidbg("enable coldBootLogcat\n");
-	    lidbg_shell_cmd("echo appcmd *158#001 > /dev/lidbg_drivers_dbg0");
-	}
 
     if( g_recovery_meg->bootParam.upName.val == 2&&mdata->bare_info.uart_dbg_en ==0)
     {

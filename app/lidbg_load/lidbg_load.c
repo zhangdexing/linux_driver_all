@@ -26,6 +26,20 @@ int main(int argc, char **argv)
 
     system("chmod 777 /dev/dbg_msg");
 
+    if(is_file_exist("/data/coldBootLogcat.txt"))
+    {
+            lidbg("lidbg_iserver: start coldBootLogcat.in./data/coldBootlogcat.txt\n");
+            system("mkdir /data/logcat_pre");
+            system("mv /data/*.txt /data/logcat_pre/");
+            system("logcat -b main -b system -v threadtime -f /data/coldBootlogcat.txt &");
+            system("chmod 777 /data");
+            system("chmod 777 /data/coldBootlogcat.txt");
+            system("chmod 777 /data/logcat_pre");
+            system("chmod 777 /data/logcat_pre/*");
+            lidbg("lidbg_iserver: start coldBootLogcat.out\n");
+    }
+
+
     DUMP_BUILD_TIME_FILE;
     lidbg("Build Time:lidbg_iserver: iserver start\n");
     system("mkdir /dev/log");
