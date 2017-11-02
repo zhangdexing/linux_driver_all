@@ -65,7 +65,6 @@ char *lmk_protect_list[] =
 	"codriver:remote",
 	".baidu.naviauto",
 	"du.che.codriver",
-	"odriverlauncher",
 	"roup.wazehelper",
 	"r4u.cellokeypad",
 	"m.ituran.mbkusb",
