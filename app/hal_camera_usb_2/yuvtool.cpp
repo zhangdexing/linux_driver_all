@@ -123,6 +123,7 @@ static void vs_image_scale_nearest_Y (const VSImage * dest, const VSImage * src,
     int i;
     int j;
     int xacc;
+	char * tmpbuf_bk = tmpbuf;
 
     if (dest->height == 1)
         y_increment = 0;

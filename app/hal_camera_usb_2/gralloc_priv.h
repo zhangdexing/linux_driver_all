@@ -230,7 +230,7 @@ struct private_handle_t : public native_handle {
                     sizeof(int)) - sNumFds;
         }
         static const int sMagic = 'gmsm';
-
+/*
         private_handle_t(int fd, unsigned int size, int flags, int bufferType,
                          int format, int width, int height, int eFd = -1,
                          unsigned int eOffset = 0, uint64_t eBase = 0) :
@@ -288,6 +288,7 @@ struct private_handle_t : public native_handle {
             }
             return NULL;
         }
+*/
 #endif
     };
 

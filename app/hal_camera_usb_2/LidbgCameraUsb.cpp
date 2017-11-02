@@ -1752,10 +1752,13 @@ try_open_again:
 
     int cache_ops1(QCameraHalMemInfo_t *mem_info,  void *buf_ptr, unsigned int cmd)
     {
+		void *buf_ptr_bk = buf_ptr;
+		unsigned int cmd_bk = cmd;
+		QCameraHalMemInfo_t *mem_info_bk = mem_info;
+
         struct ion_flush_data cache_inv_data;
         struct ion_custom_data custom_data;
         int ret = MM_CAMERA_OK;
-
 #ifdef USE_ION
         if (NULL == mem_info)
         {
@@ -2406,6 +2409,7 @@ try_open_again:
         struct ion_allocation_data  alloc;
         struct ion_fd_data          ion_info_fd;
         int                         main_ion_fd = 0;
+		int ion_type_bk = ion_type;
 
         main_ion_fd = open("/dev/ion", O_RDONLY);
         if (main_ion_fd <= 0)
