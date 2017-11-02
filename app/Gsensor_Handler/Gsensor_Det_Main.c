@@ -144,7 +144,7 @@ open_dev:
 		
 		if(i++ % 10 == 0)
 		{
-			property_get(GSENSOR_SENSITIVITY_PROP_NAME, sensitivityLevel_String, "1");
+			property_get(GSENSOR_SENSITIVITY_PROP_NAME, sensitivityLevel_String, "0");
 			sensitivityLevel = atoi(sensitivityLevel_String);
 			if(sensitivityLevel == 0)
 			{
