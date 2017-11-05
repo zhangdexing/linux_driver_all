@@ -1061,7 +1061,7 @@ static int thread_observer(void *data)
 #endif
 #ifdef SUSPEND_TIME_OUT_FORCE_UNLOCK
 			//if( g_var.suspend_timeout_protect  == 0) break;
-                    sprintf(when, "unlock%d,%d:", have_triggerd_sleep_S, g_var.sleep_counter);
+                    sprintf(when, "force unlock %d,%d:", have_triggerd_sleep_S, g_var.sleep_counter);
                     kernel_wakelock_save_wakelock(when, PM_INFO_FILE);
                     kernel_wakelock_force_unlock(when);
                     userspace_wakelock_action(2, PM_INFO_FILE);

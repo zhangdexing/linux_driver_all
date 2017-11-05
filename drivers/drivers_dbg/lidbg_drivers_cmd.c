@@ -39,14 +39,14 @@ void dump_sysinfo(bool copy2udisk)
 
     //power
     lidbg_shell_cmd("cat /sys/kernel/debug/wakeup_sources > /data/lidbg/pm_info/wakeup_sources.txt");
-    lidbg_shell_cmd("cat /proc/wakelocks > /data/lidbg/pm_info/wakeup_sources.txt");
+    lidbg_shell_cmd("cat /proc/wakelocks > /data/lidbg/pm_info/wakeup_sources2.txt");
     lidbg_shell_cmd("date  > /data/lidbg/pm_info/date.txt");
     lidbg_shell_cmd("dumpsys media.player > /data/lidbg/pm_info/dumpsys_media.player.txt");
     lidbg_shell_cmd("dumpsys power > /data/lidbg/pm_info/dumpsys_power.txt");
     lidbg_shell_cmd("dumpsys audio > /data/lidbg/pm_info/dumpsys_audio.txt");
     lidbg_shell_cmd("dumpsys alarm > /data/lidbg/pm_info/dumpsys_alarm.txt");
     lidbg_shell_cmd("dumpsys location > /data/lidbg/pm_info/location.txt");
-    lidbg_shell_cmd("dumpsys meminfo > /data/lidbg/pm_info/meminfo.txt &");
+    lidbg_shell_cmd("dumpsys meminfo > /data/lidbg/pm_info/meminfo.txt");
     lidbg_shell_cmd("iptables -L  > /data/lidbg/pm_info/iptable.txt");
     lidbg_shell_cmd("cat /proc/meminfo > /data/lidbg/pm_info/meminfo2.txt &");
     lidbg_shell_cmd("chmod 777 /data/lidbg/* -R");
@@ -771,9 +771,9 @@ void parse_cmd(char *pt)
             dump_sysinfo(true);
         }
         else if (!strcmp(argv[1], "*158#014"))
-            lidbg_system_switch(true);
+          {}//  lidbg_system_switch(true);
         else if (!strcmp(argv[1], "*158#015"))
-            lidbg_system_switch(false);
+          {}//  lidbg_system_switch(false);
         else if (!strcmp(argv[1], "*158#016"))
         	{
             lidbg_shell_cmd("echo appcmd *158#012 > /dev/lidbg_drivers_dbg0");
