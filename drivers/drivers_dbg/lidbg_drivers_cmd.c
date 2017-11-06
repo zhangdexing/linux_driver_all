@@ -99,25 +99,30 @@ int thread_log_temp(void *data)
 
 int thread_dumpsys_meminfo(void *data)
 {
-    lidbg_shell_cmd("rm /sdcard/meminfo.txt");
-    lidbg_shell_cmd("rm /sdcard/ps.txt");
-	
+	lidbg_shell_cmd("echo 1 >/sdcard/meminfo.txt");
+	lidbg_shell_cmd("echo 1 >/sdcard/ps.txt");
+	lidbg_shell_cmd("echo 1 >/sdcard/top.txt");
     ssleep(10);
     while(1)
     {
-        if((fs_get_file_size("/sdcard/meminfo.txt")+fs_get_file_size("/sdcard/ps.txt")) < 100 * 1024 * 1024 )
+        if((fs_get_file_size("/sdcard/meminfo.txt")+fs_get_file_size("/sdcard/ps.txt") + fs_get_file_size("/sdcard/top.txt")) < 100 * 1024 * 1024 )
         {
-            fs_file_separator("/sdcard/meminfo.txt");
-            lidbg_shell_cmd("dumpsys meminfo >>/sdcard/meminfo.txt &");
+            lidbg_shell_cmd("date  >> /sdcard/meminfo.txt");
+            lidbg_shell_cmd("dumpsys meminfo >>/sdcard/meminfo.txt");
+			
             lidbg_shell_cmd("date  >> /sdcard/ps.txt");
-            lidbg_shell_cmd("ps -t -m 10 >> /sdcard/ps.txt &");
-            lidbg("meminfo size:%d ps:%d\n", fs_get_file_size("/sdcard/meminfo.txt"), fs_get_file_size("/sdcard/ps.txt"));
+	     lidbg_shell_cmd("ps >> /sdcard/ps.txt");
+		 
+	     lidbg_shell_cmd("date  >> /sdcard/top.txt");
+            lidbg_shell_cmd("top -t -m 10 >> /sdcard/top.txt");
+            lidbg("meminfo size:%d ps:%d top:%d\n", fs_get_file_size("/sdcard/meminfo.txt"), fs_get_file_size("/sdcard/ps.txt"),fs_get_file_size("/sdcard/top.txt"));
         }
         else
         {
             lidbg("clear:meminfo size:%d ps:%d\n", fs_get_file_size("/sdcard/meminfo.txt"), fs_get_file_size("/sdcard/ps.txt"));
             lidbg_shell_cmd("echo 1 >/sdcard/meminfo.txt");
             lidbg_shell_cmd("echo 1 >/sdcard/ps.txt");
+	     lidbg_shell_cmd("echo 1 >/sdcard/top.txt");
         }
         ssleep( 5 * 60 );
     }
