@@ -75,7 +75,7 @@ int fm1388_config_status=false;
 #endif
 #define DSP_PARAMETER_READY 0x5ffdffea
 
-char filepath[] = "/flysystem/firmware/";
+char filepath[] = "/flysystem/lib/out/fm1388/";
 
 char filepath_name[255];
 

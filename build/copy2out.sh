@@ -28,6 +28,9 @@ cp -ru ./touchscreen/ts_config $dest_dir/  &> /dev/null
 cp -ru ./touchscreen/cyttsp4/*.ko $dest_dir/  &> /dev/null
 rm $dest_dir/drivers.conf  &> /dev/null
 rm $dest_dir/state.conf    &> /dev/null
+mkdir $dest_dir/fm1388 &> /dev/null
+cp ./fm1388/fm1388_fw_2DMIC/* $dest_dir/fm1388  &> /dev/null
+
 
 for each_dir in `ls -l | grep "^d" | awk '{print $NF}'`
 	do
