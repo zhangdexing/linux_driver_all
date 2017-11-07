@@ -107,7 +107,7 @@ struct probe_device i2c_probe_dev[] =
 	{DEV_RADIO, saf7741_i2c_bus, 0x1c, 0x00, "saf7741.ko", radio_reset_lpc, NULL ,1},
 	{DEV_RADIO, tef6638_i2c_bus, 0x63, 0x00, "tef6638.ko", radio_reset_lpc, NULL ,1},
 #endif
-	//{DEV_CARPLAY, fm1388_i2c_bus, 0x2c, 0x00, "lidbg_spi_fm1388.ko,lidbg_i2c_fm1388.ko", NULL, fm1388_thread_delay_insmod ,0},
+	{DEV_CARPLAY, fm1388_i2c_bus, 0x2c, 0x00, "lidbg_spi_fm1388.ko,lidbg_i2c_fm1388.ko", NULL, NULL ,0},
 };
 
 void parse_ts_info(struct probe_device *i2cdev_info)
