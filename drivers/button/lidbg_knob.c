@@ -635,10 +635,12 @@ irqreturn_t irq_right_knob2(int irq, void *dev_id)
  */
 static int knob_suspend(struct platform_device *pdev, pm_message_t state)
 {
+/*
     SOC_IO_ISR_Disable(BUTTON_LEFT_1);
     SOC_IO_ISR_Disable(BUTTON_LEFT_2);
     SOC_IO_ISR_Disable(BUTTON_RIGHT_1);
     SOC_IO_ISR_Disable(BUTTON_RIGHT_2);
+*/
     return 0;
 }
 
@@ -650,7 +652,7 @@ static int knob_suspend(struct platform_device *pdev, pm_message_t state)
  */
 static int knob_resume(struct platform_device *pdev)
 {
-
+/*
     IO_CONFIG_INPUT(0, BUTTON_LEFT_1);
     IO_CONFIG_INPUT(0, BUTTON_LEFT_2);
     IO_CONFIG_INPUT(0, BUTTON_RIGHT_1);
@@ -660,7 +662,7 @@ static int knob_resume(struct platform_device *pdev)
     SOC_IO_ISR_Enable(BUTTON_LEFT_2);
     SOC_IO_ISR_Enable(BUTTON_RIGHT_1);
     SOC_IO_ISR_Enable(BUTTON_RIGHT_2);
-
+*/
     return 0;
 }
 

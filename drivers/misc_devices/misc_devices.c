@@ -264,6 +264,11 @@ static int misc_dev_dev_event(struct notifier_block *this,
         //if(!g_var.is_fly)
     {
         LCD_OFF;
+		
+	SOC_IO_ISR_Disable(BUTTON_LEFT_1);
+	SOC_IO_ISR_Disable(BUTTON_LEFT_2);
+	SOC_IO_ISR_Disable(BUTTON_RIGHT_1);
+	SOC_IO_ISR_Disable(BUTTON_RIGHT_2);
 
 	 if(g_var.is_fly == 0)
 	      CREATE_KTHREAD(thread_usb_disk_disable_delay, NULL);
@@ -339,6 +344,17 @@ static int misc_dev_dev_event(struct notifier_block *this,
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_SCREEN_ON):
 	del_timer(&usb_release_timer);
 
+	
+    IO_CONFIG_INPUT(0, BUTTON_LEFT_1);
+    IO_CONFIG_INPUT(0, BUTTON_LEFT_2);
+    IO_CONFIG_INPUT(0, BUTTON_RIGHT_1);
+    IO_CONFIG_INPUT(0, BUTTON_RIGHT_2);
+
+    SOC_IO_ISR_Enable(BUTTON_LEFT_1);
+    SOC_IO_ISR_Enable(BUTTON_LEFT_2);
+    SOC_IO_ISR_Enable(BUTTON_RIGHT_1);
+    SOC_IO_ISR_Enable(BUTTON_RIGHT_2);
+	
 	if(g_var.keep_lcd_on) LCD_ON;
         //if(!g_var.is_fly)
     {
