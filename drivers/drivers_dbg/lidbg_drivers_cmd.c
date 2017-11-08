@@ -709,7 +709,8 @@ void parse_cmd(char *pt)
             char buff[50] = {0};
             lidbg_shell_cmd("setenforce 0");
             lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "fileserver.apk")));
-            lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "MobileRateFlow.apk")));
+            lidbg_shell_cmd("pm install -r /flysystem/lib/out/MobileRateFlow.apk ");
+            lidbg_shell_cmd("am start -n com.mypftf.mobile.rateflow/com.mypftf.mobile.rateflowcpu.PackageMainActivity &");
             lidbg_domineering_ack();
         }
         else if (!strcmp(argv[1], "*158#001"))   

@@ -190,6 +190,10 @@ void acc_status_handle(FLY_ACC_STATUS val)
 
 		lidbg(TAG"acc_status_handle: set acc.status to 1\n");
 		lidbg_shell_cmd("setprop persist.lidbg.acc.status 1");
+
+		lidbg(TAG"print pid\n");
+		fs_file_write2("/dev/lidbg_pm0", "ws task fuprintpid123 1 1 0");
+
 		//if(g_var.is_fly == 0)
 		//	USB_WORK_DISENABLE;
 		//LCD_OFF;
