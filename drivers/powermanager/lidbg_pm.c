@@ -835,8 +835,6 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
         }
         else  if(!strcmp(cmd[1], "task"))
         {
-            find_task_by_name_or_kill(true, false, true, "c2739.mainframe");
-
             if(cmd[5])
             {
                 int  enable_filter = simple_strtoul(cmd[3], 0, 0);
