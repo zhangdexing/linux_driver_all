@@ -25,7 +25,7 @@ void dump_sysinfo(bool copy2udisk)
     lidbg_shell_cmd("echo appcmd *158#021 > /dev/lidbg_drivers_dbg0");
     lidbg_shell_cmd("chmod 777 /data/lidbg/*");
     lidbg_shell_cmd("chmod 777 /data/lidbg/machine");
-    lidbg_shell_cmd("top -n 1 -t -d 1 -m 25 >/data/lidbg/machine/top.txt");
+    lidbg_shell_cmd("top -n 1 -t -d 1 -m 25 >/data/lidbg/machine/top.txt &");
     ssleep(2);//wait top
     lidbg_shell_cmd("cat /proc/cmdline > /data/lidbg/machine/machine.txt");
     lidbg_shell_cmd("getprop fly.version.mcu > /data/lidbg/machine/machine.txt");
