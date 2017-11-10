@@ -14,6 +14,7 @@ int getPathFreeSpace(char *path)
     return mbFreedisk;
 }
 
+char value[PROPERTY_VALUE_MAX];
 int main(int argc, char **argv)
 {
     argc = argc;
@@ -187,11 +188,10 @@ int main(int argc, char **argv)
     }
 
 //disk space full reboot
-#if 0
-    sleep(300);// give more time to deal the situation
+#if 1
+    sleep(5*60);// wait for ts load
     while(1)
     {
-        char value[PROPERTY_VALUE_MAX];
         property_get("persist.fly.system.cleanup", value, "0");
         lidbg("persist.fly.system.cleanup = %c\n", value[0]);
         if (value[0] != '1')
@@ -202,7 +202,14 @@ int main(int argc, char **argv)
     }
     while(1)
     {
-        int size = getPathFreeSpace("/data");
+        int size;
+        property_get("lidbg.fly.debugmode", value, "0");
+        if (value[0] == '1')
+        {
+            sleep(10*60);
+            continue;
+        }
+        size = getPathFreeSpace("/data");
         if(( size  < 100) && (size  != 0))
         {
             lidbg("lidbg_iserver: getPathFreeSpace:%d\n", size);
@@ -210,7 +217,7 @@ int main(int argc, char **argv)
             //sleep(2);
             system("reboot data_size_low");
         }
-        sleep(2);
+        sleep(1*60);
     }
 #endif
     return 0;
