@@ -8,6 +8,7 @@ void dump_sysinfo(bool copy2udisk)
     doc_filterloop = 0;	
     if(copy2udisk)
     {
+        lidbg_shell_cmd("screencap -p /data/lidbg/screenshot.png &");
         lidbg_shell_cmd("echo ws toast copy.to.udisk.start 1 > /dev/lidbg_pm0");
         lidbg_shell_cmd(format_string(true, "rm -rf  %s/FlyLog", get_udisk_file_path(NULL, NULL)));
     }
@@ -103,19 +104,21 @@ int thread_dumpsys_meminfo(void *data)
 	lidbg_shell_cmd("echo 1 >/sdcard/ps.txt");
 	lidbg_shell_cmd("echo 1 >/sdcard/top.txt");
     ssleep(10);
-    lidbg_shell_cmd("date  >> /sdcard/top.txt");
-    lidbg_shell_cmd("top -t -m 10 >> /sdcard/top.txt &");
+
     while(1)
 			
     {
         if((fs_get_file_size("/sdcard/meminfo.txt")+fs_get_file_size("/sdcard/ps.txt") + fs_get_file_size("/sdcard/top.txt")) < 100 * 1024 * 1024 )
         {
             lidbg_shell_cmd("date  >> /sdcard/meminfo.txt");
-            lidbg_shell_cmd("dumpsys meminfo >>/sdcard/meminfo.txt");
+            lidbg_shell_cmd("dumpsys meminfo >>/sdcard/meminfo.txt &");
 			
             lidbg_shell_cmd("date  >> /sdcard/ps.txt");
-	     lidbg_shell_cmd("ps >> /sdcard/ps.txt");
-		 
+	     lidbg_shell_cmd("ps >> /sdcard/ps.txt &");
+
+    	     lidbg_shell_cmd("date  >> /sdcard/top.txt");
+    	     lidbg_shell_cmd("top -n 1 -t -m 10 >> /sdcard/top.txt &");
+	
             lidbg("meminfo size:%d ps:%d top:%d\n", fs_get_file_size("/sdcard/meminfo.txt"), fs_get_file_size("/sdcard/ps.txt"),fs_get_file_size("/sdcard/top.txt"));
         }
         else
@@ -542,6 +545,7 @@ void parse_cmd(char *pt)
         lidbg("%s:[%s]\n", argv[0], argv[1]);
         if (!strcmp(argv[1], "*158#000"))
         {
+            lidbg_shell_cmd("setenforce 0");
             //*#*#158999#*#*
             lidbg_shell_cmd("chmod 777 /data");
             lidbg_shell_cmd("chmod 777 /data/lidbg");
@@ -681,8 +685,6 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#140--pr_debug lpc_debug \n");
             fs_mem_log("*158#141--add flycam kmsg whitelist \n");
 
-
-
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
             lidbg_domineering_ack();
@@ -708,7 +710,7 @@ void parse_cmd(char *pt)
         if (!strcmp(argv[1], "*158#999"))
         {
             char buff[50] = {0};
-            lidbg_shell_cmd("setenforce 0");
+            //lidbg_shell_cmd("setenforce 0");
             lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "fileserver.apk")));
             lidbg_shell_cmd("pm install -r /flysystem/lib/out/MobileRateFlow.apk ");
             lidbg_shell_cmd("am start -n com.mypftf.mobile.rateflow/com.mypftf.mobile.rateflowcpu.PackageMainActivity &");
@@ -1696,7 +1698,8 @@ void parse_cmd(char *pt)
         else if (!strcmp(argv[1], "*158#136"))
         {
             char buff[50] = {0};
-            lidbg_shell_cmd("setenforce 0");
+            //lidbg_shell_cmd("setenforce 0");
+	     lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "TC.ko")));
             lidbg_domineering_ack();
         }
