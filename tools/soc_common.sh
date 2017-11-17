@@ -83,7 +83,7 @@ function soc_menu()
 	echo [23] make
 	echo [24] make otapackage
 	echo [25] make release basesystem
-	echo [26] make originsystem image
+	echo [26] make originsystem image [make otapackage -j16]
 	echo [27] make recovery
 	echo [28] make recoveryimage
 	echo [29] make bootloader
@@ -91,6 +91,7 @@ function soc_menu()
 	echo [31] make git commit image
 	echo [32] make origin bootimage
 	echo [33] make kernerconfig
+	echo [34] make originsystem image [make systemimage -j16]
 }
 
 function soc_build_git_commit_image()
@@ -131,6 +132,8 @@ function soc_handle()
 		soc_build_origin_bootimage;;
 	33)
 		soc_make_kernelconfig;;
+	34)
+		soc_build_origin_image "1";;
 	*)
 		echo
 	esac

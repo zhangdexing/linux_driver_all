@@ -179,14 +179,32 @@ function soc_make_otapackage()
 
 	make otapackage -j16
 }
+function soc_make_origin_sytem_image()
+{
+	echo $FUNCNAME
+# cp lk,bp to /device/qcom/msm8226/radio
+	#cp -u $RELEASE_REPOSITORY/lk/emmc_appsboot.mbn  $DBG_SYSTEM_DIR/device/qcom/msm8226/radio/
+	#cp -u $RELEASE_REPOSITORY/radio/* 	        $DBG_SYSTEM_DIR/device/qcom/msm8226/radio/
+	cd $DBG_SYSTEM_DIR
+
+	if [ -d "$DBG_BOOTLOADER_DIR/flyaudio" ]; then
+		rm -rf "$DBG_BOOTLOADER_DIR/flyaudio"
+	fi
+
+	if [[ $TARGET_PRODUCT = "" ]];then
+		source build/envsetup.sh&&choosecombo release full_$DBG_PLATFORM $SYSTEM_BUILD_TYPE
+	fi
+
+	make systemimage -j16
+}
 
 function soc_build_origin_image()
 {
-	echo $FUNCNAME
+	echo $FUNCNAME =====$1=========
 	
 #	soc_build_recoveryimage
 	soc_build_all
-        lidbg_build_all
+	lidbg_build_all
 if [ $ANDROID_VERSION -ge 600 ];then
 	cp $DBG_ROOT_PATH/conf/init.lidbg.new.rc        $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/root/init.lidbg.rc
 else
@@ -213,8 +231,13 @@ fi
 	cp $DBG_OUT_PATH/LidbgCommenLogic.apk  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/LidbgCommenLogic.apk
 	cp -rf $DBG_OUT_PATH/LidbgCommenLogic  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/LidbgCommenLogic
 	echo "build_origin" > $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/etc/build_origin
-	soc_make_otapackage
 
+	case $1 in
+	1)	
+		soc_make_origin_sytem_image;;
+	*)
+		soc_make_otapackage
+	esac
 }
 
 
