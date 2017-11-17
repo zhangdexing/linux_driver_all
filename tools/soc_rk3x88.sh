@@ -139,6 +139,13 @@ function soc_build_origin_image()
 	lidbg_build_all
 	soc_build_all
 
+	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin
+	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app
+	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/lib/modules
+	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/priv-app
+	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app
+	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/etc
+
 	cp $DBG_SOC_PATH/$DBG_SOC/init.lidbg.rc        $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/root/init.lidbg.rc
 	cp $DBG_OUT_PATH/lidbg_load		       $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin/lidbg_load
 	cp $DBG_OUT_PATH/vold		       	       $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin/vold

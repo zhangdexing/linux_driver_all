@@ -192,6 +192,12 @@ if [ $ANDROID_VERSION -ge 600 ];then
 else
 	cp $DBG_ROOT_PATH/conf/init.lidbg.rc        $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/root/init.lidbg.rc
 fi
+	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin
+	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app
+	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/lib/modules
+	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/priv-app
+	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app
+	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/etc
 	cp $DBG_OUT_PATH/lidbg_load		       $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin/lidbg_load
 	cp $DBG_OUT_PATH/vold		       	       $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin/vold
         cp $DBG_ROOT_PATH/app/apk/ESFileExplorer.apk   $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/ESFileExplorer.apk
