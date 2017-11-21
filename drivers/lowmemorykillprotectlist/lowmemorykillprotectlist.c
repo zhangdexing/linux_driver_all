@@ -69,6 +69,8 @@ char *lmk_protect_list[] =
 	"r4u.cellokeypad",
 	"m.ituran.mbkusb",
 	"m.mgroup.opener",
+	".ecar.AppManger",
+	"om.coagent.ecar",
 	NULL,
 };
 void dump_list(void)
