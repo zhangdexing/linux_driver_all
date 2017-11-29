@@ -552,7 +552,7 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
         dprintf(INFO, "Unknown Model!\n");
         break;
     }
-#ifndef BOOTLOADER_MT3561
+
 	if(!(*boot_into_fastboot))
 	{
 	    g_bare_data = (fly_bare_data *)malloc(page_size);//must be page_size
@@ -570,7 +570,6 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
 	        dprintf(CRITICAL, "fmisc:g_bare_data get failed(%d)\n", (!g_bare_data));
 	    }
 	}
-#endif
 
     /*
     {
