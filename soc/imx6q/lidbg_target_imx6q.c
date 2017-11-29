@@ -51,7 +51,7 @@ struct hw_version_specific g_hw_version_specific[] =
             {0, 0, 0, "0"}, //end flag
         },
 
-        .fly_parameter_node = "/dev/block/mmcblk3p14",
+        .fly_parameter_node = "/dev/block/mmcblk3p13",
         .ad_key =
         {
             {
