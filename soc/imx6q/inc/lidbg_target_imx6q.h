@@ -12,6 +12,13 @@
 #define WAKEUP_MCU_END  do{   }while(0)
 #define USB_POWER_FRONT_DISABLE do{	}while(0)
 #define USB_POWER_FRONT_ENABLE do{}while(0)
+#define USB_VBUS_POWER_DISABLE do{}while(0)
+#define USB_VBUS_POWER_ENABLE do{}while(0)
+#define USB_POWER_BACK_DISABLE do{}while(0)
+#define USB_POWER_BACK_ENABLE do{}while(0)
+#define LEVEL_CONVERSION_ENABLE do{}while(0)
+#define USB_BACK_WORK_ENABLE do{}while(0)
+#define USB_POWER_UDISK_ENABLE do{}while(0)
 
 #define  SOC_IO_SUSPEND  do{soc_io_suspend();}while(0)
 #define  SOC_IO_RESUME	 do{soc_io_resume();}while(0)
