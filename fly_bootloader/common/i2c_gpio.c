@@ -150,7 +150,7 @@ static int i2c_outb(struct i2c_gpio_dev *dev, unsigned char c)
         scllo(dev);
     }
     sdahi(dev);
-#ifdef BOOTLOADER_MSM8996
+#if (defined BOOTLOADER_MSM8996 || defined BOOTLOADER_IMX6Q)
 	setsda_in(dev);
 #endif
     if (sclhi(dev) < 0)   /* timeout */
