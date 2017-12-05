@@ -164,14 +164,6 @@ function lidbg_handle()
 			echo cp -f $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 $DBG_OUT_PATH/$2
 			cp -f $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 $DBG_OUT_PATH/$2
 			
-			storageDir=$(ls -d /media/*)
-			for thisDir  in `echo $storageDir | sed 's/=/ /g'`  
-			do   
-			    echo cp -rf $DBG_OUT_PATH $thisDir/out1 
-			    cp -rf $DBG_OUT_PATH/ $thisDir/out1
-			done  
-			
-
 			echo adb push $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/$2 /$2
 			echo adb push $DBG_OUT_PATH/$2 /system/bin/$2
 			echo adb push $DBG_OUT_PATH/$2 /flysystem/lib/out/$2
