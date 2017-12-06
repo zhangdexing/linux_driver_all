@@ -55,6 +55,9 @@ LIDBG_DEFINE;
 #define FM1388_GET_MODE                _IOR(FM1388_IOC_MAGIC,6,int)
 #define FM1388_GET_STATUS              _IOR(FM1388_IOC_MAGIC,7,int)
 
+#define BT_MODE "bt"
+#define BARGEIN_MODE "dueros"
+
 enum FM1388_BOOT_STATE
 {
 	FM1388_COLD_BOOT,
@@ -1444,6 +1447,51 @@ out:
 	return 0;
 }
 
+static ssize_t fm1388_device_mode_write(struct file *file,
+	const char __user * buffer, size_t length, loff_t * offset)
+{
+	char *mode = NULL;
+	
+	lidbg(TAG"%s: entering...\n", __func__);
+
+	if(length <= 0)
+		return 0;
+
+	mode = (char *)kmalloc(length, GFP_KERNEL);
+	if (!mode) {
+		lidbg(TAG"%s: mode allocation failure.\n", __func__);
+		goto switch_mode_out;
+	}
+
+	memset(mode, 0, length);
+	if(copy_from_user(mode, buffer, length))
+	{
+        printk("copy_from_user ERR\n");
+		goto switch_mode_out;
+    }
+
+	mutex_lock(&fm1388_mode_change_lock);
+
+	if(!strncmp(mode, BT_MODE, strlen(BT_MODE)))
+	{
+		fm1388_dsp_mode_change(7);
+		lidbg(TAG"%s: switch mode to bluetooth.\n", __func__);
+	}
+	else if(!strncmp(mode, BARGEIN_MODE, strlen(BARGEIN_MODE)))
+	{
+		fm1388_dsp_mode_change(8);
+		lidbg(TAG"%s: switch mode to bargein.\n", __func__);
+	}else
+		lidbg(TAG"%s: no this mode:%s.\n", __func__, mode);
+
+	mutex_unlock(&fm1388_mode_change_lock);
+
+switch_mode_out:
+	if (mode) 
+		kfree(mode);
+	return length;
+}
+
 static ssize_t fm1388_device_write(struct file *file,
 	const char __user * buffer, size_t length, loff_t * offset)
 {
@@ -1640,6 +1688,11 @@ struct file_operations fm1388_fops = {
 	.unlocked_ioctl = fm1388_device_ioctl,
 };
 
+struct file_operations fm1388_mode_fops = {
+	.owner = THIS_MODULE,
+	.write = fm1388_device_mode_write,
+};
+
 static struct miscdevice fm1388_dev = {
 	.minor = MISC_DYNAMIC_MINOR,
 	.name = "fm1388",
@@ -1738,6 +1791,8 @@ static int fm1388_probe(struct platform_device *pdev)
 	ret = misc_register(&fm1388_dev);
 	if (ret)
 		dev_err(&pdev->dev, "Couldn't register control device\n");
+
+	lidbg_new_cdev(&fm1388_mode_fops, "fm1388_switch_mode");
 
 	INIT_DELAYED_WORK(&dsp_start_vr, dsp_start_vr_work);
 
