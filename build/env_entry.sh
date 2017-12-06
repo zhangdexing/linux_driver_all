@@ -661,7 +661,7 @@ case "$DBG_PLATFORM_ID" in
         export JRE_HOME=$JAVA_HOME/jre
         export CLASSPATH=$JAVA_HOME/lib:$JRE_HOME/lib:$CLASSPATH
         export PATH=$JAVA_HOME/bin:$JRE_HOME/bin:$PATH
-        export SYSTEM_BUILD_TYPE=userdebug
+        export SYSTEM_BUILD_TYPE=user
         export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/vendor/mediatek/proprietary/bootable/bootloader/lk
 	    export DBG_BOOTLOADER_TYPE=LK
         export DBG_BOOTLOADER_IMG=lk.bin
