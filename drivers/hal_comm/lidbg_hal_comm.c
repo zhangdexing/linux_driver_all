@@ -70,7 +70,7 @@ int init_thread_kfifo(struct kfifo *pkfifo, int size)
     ret = kfifo_alloc(pkfifo, size, GFP_KERNEL);
     if (ret < 0)
     {
-        lidbg("kfifo_alloc failed !\n");
+        lidbgerr("kfifo_alloc failed !\n");
         return -EFAULT;
     }
     return ret;
@@ -83,7 +83,7 @@ void put_buf_fifo(struct kfifo *pkfifo , void *buf, int size, spinlock_t *fifo_l
     len = kfifo_avail(pkfifo);
     while(len < size)
     {
-        lidbg( "fifo did't have enough space\n");
+        lidbgerr( "fifo did't have enough space\n");
         ret = kfifo_out_spinlocked(pkfifo, &data_len, 2, fifo_lock);
         pr_debug( "kfifo length is : %d \n", data_len);
         if(ret < 0)

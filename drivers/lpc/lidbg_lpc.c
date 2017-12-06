@@ -121,7 +121,7 @@ static void LPCWriteDataEnqueue(BYTE *buff, short length)
     spin_lock_irqsave(&wbuf_fifo_lock, irqflags);
     if(kfifo_is_full(&wbuf_data_fifo))
     {
-        lidbg(TAG"%s:kfifo full!!!!!\n", __func__);
+        lidbgerr(TAG"%s:kfifo full!!!!!\n", __func__);
         spin_unlock_irqrestore(&wbuf_fifo_lock, irqflags);
         return;
     }
@@ -138,7 +138,7 @@ static void LPCReadDataEnqueue(BYTE *buff, short length)
     spin_lock_irqsave(&notify_fifo_lock, irqflags);
     if(kfifo_is_full(&notify_data_fifo))
     {
-        lidbg(TAG"%s:kfifo full!!!!!\n", __func__);
+        lidbgerr(TAG"%s:kfifo full!!!!!\n", __func__);
         spin_unlock_irqrestore(&notify_fifo_lock, irqflags);
         return;
     }
