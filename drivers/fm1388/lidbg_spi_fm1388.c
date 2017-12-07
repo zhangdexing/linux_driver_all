@@ -314,7 +314,7 @@ void register_fm1388_spi_device(void)
         .mode       = 0x00,
         .bus_num	= 0,
         .chip_select = 0,
-	//	.max_speed_hz = 2000000,
+	.max_speed_hz = 2000000,
     };
     lidbg(TAG"%s:%d\n",__func__,FM1388_SPI_BUS);
     master = spi_busnum_to_master(FM1388_SPI_BUS);
