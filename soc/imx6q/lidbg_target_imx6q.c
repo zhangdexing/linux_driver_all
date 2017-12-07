@@ -42,7 +42,7 @@ struct hw_version_specific g_hw_version_specific[] =
         .i2c_bus_lpc = 2,
 
         .i2c_bus_fm1388=0,
-	    .spi_bus_fm1388=0,
+	    .spi_bus_fm1388=1,
 	    .spi_bus_ymu836=0,
         .ad_val_mcu = 1,
         //.thermal_ctrl_en = 0,
