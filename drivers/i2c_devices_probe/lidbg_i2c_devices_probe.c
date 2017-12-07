@@ -157,8 +157,10 @@ void i2c_devices_scan(struct probe_device *i2cdev, int size)
     for(i = 0; i < size; i++)
     {
     		if(i2cdev->origin_system_probe_only )
-				if(g_var.is_fly)
+				if(g_var.is_fly){
+					i2cdev ++;
 					continue;
+				}
 				
 		if(	(i2cdev->i2c_bus() != LPC_I2_ID) && (i2cdev->i2c_bus() >= 0) && (((1<<(int)i2cdev->type) & scanflag) == 0))
 		{
