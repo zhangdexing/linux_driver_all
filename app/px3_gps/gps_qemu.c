@@ -1009,7 +1009,7 @@ tcc_channel_open_tty( GpsState*      state)
         return -1;
     }
 #endif
-	strcpy(state->device,"/dev/ttyS3");
+	strcpy(state->device,"/dev/ttymxc1");
 	D("gps device:%s\n", state->device);
 	lidbg("gps device:%s\n", state->device);
     return 0;
