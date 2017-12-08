@@ -338,6 +338,10 @@ void  choose_lcd(int lcd_resolution)
 		fly_screen_w = 1280;
 		fly_screen_h = 720;
 		return ;
+	}else if(fly_display ==3){
+		fly_screen_w = 768;
+		fly_screen_h = 1024;
+		return ;
 	}
 #endif
     if(lcd_resolution==lcd_1024_600)
@@ -399,6 +403,9 @@ bool Fly_Get_Resolution(int *x, int *y)
 	        *x = 1280;
 	        *y = 720;
 	        return true;
+	}else if(fly_display == 3){
+		*x = 768;
+		*y = 1024;
 	}else
 		return false;
 }
