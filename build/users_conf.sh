@@ -594,6 +594,8 @@ case "$USERS_ID" in
 			11)
                 export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/msm8909/M8974AAAAANLYD4275
                 export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/8909-release;;
+                15)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/imx6qdl-sabresd;;
 			17)
 		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/msm8996/M8974AAAAANLYD4275
 		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/msm8996-release;;
