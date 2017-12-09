@@ -270,9 +270,10 @@ namespace android
         int                                 prevWidth;
         int                                 prevHeight;
 
-		char *								dispData;
-		char *								jpegData;
-		int									jpegLen;
+	char *								dispData;
+	char *								jpegData;
+	int								jpegLen;
+	bool								isMirror;
 
         int                                 captureFormat;
         char                                dev_name[FILENAME_LENGTH];

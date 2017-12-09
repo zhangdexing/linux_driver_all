@@ -1196,6 +1196,7 @@ try_open_again:
         unsigned int                min;
 		char startNight[PROPERTY_VALUE_MAX];
 		char isDisableOSD_str[PROPERTY_VALUE_MAX];
+		char isMirror[PROPERTY_VALUE_MAX];
 		int isDisableOSD = 0;
 	
         ALOGE("%s: E", __func__);
@@ -1303,6 +1304,18 @@ try_open_again:
         v4l2_vidio_s_ctrl(camHal->fd, "V4L2_CID_EXPOSURE_AUTO_PRIORITY", V4L2_CID_EXPOSURE_AUTO_PRIORITY, 0);
         v4l2_vidio_g_ctrl(camHal->fd, "V4L2_CID_EXPOSURE", V4L2_CID_EXPOSURE);
         v4l2_vidio_g_ctrl(camHal->fd, "V4L2_CID_EXPOSURE_ABSOLUTE", V4L2_CID_EXPOSURE_ABSOLUTE);
+
+		
+		property_get("lidbg.uvccam.isMirror", isMirror, "1");
+		if(atoi(isMirror) > 0) 
+		{
+			camHal->isMirror = true;
+			ALOGE("%s: mirror\n", __func__);
+		}else
+		{
+			camHal->isMirror = false;
+			ALOGE("%s: not mirror\n", __func__);
+		}
 #if 0
 		if(cam_id == 1)
 		{
@@ -1655,7 +1668,12 @@ try_open_again:
 		if(HAL_PIXEL_FORMAT_YCrCb_420_SP == camHal->dispFormat)
 			convert_fun = convert_YUYV_to_420_NV12;
 		else if(HAL_PIXEL_FORMAT_YV12 == camHal->dispFormat)
-			convert_fun = YUV422To420;
+		{
+			if(camHal->isMirror)
+				convert_fun = YUV422To420Mirror;
+			else
+				convert_fun = YUV422To420;
+		}
 		else
 			return rc;
         
@@ -3059,4 +3077,5 @@ ION_OPEN_FAILED:
     }
 
 };
+
 

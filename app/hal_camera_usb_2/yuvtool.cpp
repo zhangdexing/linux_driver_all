@@ -333,6 +333,42 @@ void resample_yv12(char* dest, int dest_w, int dest_h, char* src, int src_w, int
 		}
 	}
 
+	int YUV422To420Mirror(char *pYUV422, char *pYUV420, int lWidth, int lHeight)
+	{
+		int i = 0, j = 0;
+		char *pY = pYUV420;
+		char *pV = pYUV420 + lWidth * lHeight;
+		char *pU = pV + (lWidth * lHeight) / 4;
+
+		char *pYUVTemp = pYUV422;
+		char *pYUVTempNext = pYUV422 + lWidth * 2;
+
+		for (i = 0; i < lHeight; i += 2)
+		{
+		    for (j = 0; j < lWidth; j += 2)
+		    {
+				pY[lWidth - j - 1] = *pYUVTemp++;
+		        pY[lWidth - j - 1 + lWidth] = *pYUVTempNext++;
+
+		        pU[(lWidth - j - 2)/2] = *pYUVTemp++;
+		        pYUVTempNext++;
+
+				pY[lWidth - j - 2] = *pYUVTemp++;
+		        pY[lWidth - j - 2 + lWidth] = *pYUVTempNext++;
+
+		        pV[(lWidth - j - 2)/2] = *pYUVTempNext++;
+				pYUVTemp++;
+		    }
+
+		    pYUVTemp += lWidth*2;
+		    pYUVTempNext += lWidth*2;
+		    pY += lWidth*2;
+		    pU += lWidth/2;
+		    pV += lWidth/2;
+		}
+		return 0;
+	}
+
 	
 	int YUV422To420(char *pYUV422, char *pYUV420, int lWidth, int lHeight)
 	{
