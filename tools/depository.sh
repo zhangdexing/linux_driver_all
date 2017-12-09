@@ -1,4 +1,4 @@
-
+. $DBG_TOOLS_PATH/make_ota_package.sh
 
 function depository_request()
 {
@@ -178,8 +178,7 @@ function depository_make_package()
 	echo $FUNCNAME
 	cd $RELEASE_REPOSITORY
 	rm -r $RELEASE_REPOSITORY/out/*
-	#expect $DBG_TOOLS_PATH/make_package $MAKE_PAKG_NUM
-	./make.sh 
+	expect $DBG_TOOLS_PATH/make_package $MAKE_PAKG_NUM
     echo "***********************************"
     echo "$MAKE_PAKG_NUM"
     echo "***********************************"
@@ -194,12 +193,15 @@ function make_ota_package()
 	rm -rf   $DBG_SYSTEM_DIR/flyaudio/out
 	mkdir -p $DBG_SYSTEM_DIR/flyaudio/out
 if [ $DBG_SOC = mt35x ];then
-        cp -f $DBG_TOOLS_PATH/parameters.sh $DBG_SYSTEM_DIR/flyaudio/tools/parameters3.sh
+        cp -f $DBG_TOOLS_PATH/parameters.sh $DBG_SYSTEM_DIR/flyaudio/out/parameters3.sh
+        cd $DBG_SYSTEM_DIR
+        ./make_new_v3.sh
 else
-	cp -f $DBG_TOOLS_PATH/parameters.sh $DBG_SYSTEM_DIR/flyaudio/tools/parameters.sh
-fi
-		cd $DBG_SYSTEM_DIR
+	cp -f $DBG_TOOLS_PATH/parameters.sh $DBG_SYSTEM_DIR/flyaudio/out/parameters.sh
+	cd $DBG_SYSTEM_DIR
         ./make_new.sh
+fi
+	
 }
 
 function make_origin_ota_package()
