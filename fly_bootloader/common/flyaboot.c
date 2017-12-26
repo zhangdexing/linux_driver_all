@@ -30,6 +30,7 @@ static fly_bare_data *g_bare_data=NULL;
 
 #ifdef BOOTLOADER_MT3561
 int fly_display = 0;
+int fly_manufacturer = 0;
 #endif
 
 #if FLY_SCREEN_SIZE_1024
@@ -73,6 +74,14 @@ enum col_select
     GREEN,
     BLACK,
 };
+
+void dbg_msg_set_test(const char *Resolution)
+{
+	char *kernel_cmd = cmdline_get();
+	sprintf(kernel_cmd, "%s %s", kernel_cmd, Resolution);
+	kernel_cmd = NULL;
+	return ;
+}
 
 void test_display()
 {
@@ -342,6 +351,10 @@ void  choose_lcd(int lcd_resolution)
 		fly_screen_w = 768;
 		fly_screen_h = 1024;
 		return ;
+	}else if(fly_display ==4){
+		fly_screen_w = 1024;
+		fly_screen_h = 768;
+		return ;
 	}
 #endif
     if(lcd_resolution==lcd_1024_600)
@@ -382,7 +395,7 @@ void  choose_lcd(int lcd_resolution)
     }
 }
 #ifdef BOOTLOADER_MT3561
-bool Fly_Get_Resolution(int *x, int *y)
+bool Fly_Get_Resolution(int *x, int *y, int *bit)
 {
 	if(ptn_read("flyparameter", 0, sizeof(RecoveryMeg), &RecoveryMeg))
 	{   
@@ -391,21 +404,37 @@ bool Fly_Get_Resolution(int *x, int *y)
 	/****************************************************************/
 	dprintf(INFO, "HDJ: flyparameter hwInfo.info[11] = %d\n", (RecoveryMeg.hwInfo.info[11] - '0'));
 	fly_display = (RecoveryMeg.hwInfo.info[11] - '0');
+	fly_manufacturer = ((RecoveryMeg.hwInfo.info[8] - '0')*10+(RecoveryMeg.hwInfo.info[9] - '0'));
+	if(fly_manufacturer == 4){
+		*bit = 1;
+	}else{
+		*bit = 0;
+	}
 	if(fly_display == 1){
 	        *x = 960;
 	        *y = 1280;
+		dbg_msg_set_test("display=960_1280");
 	        return true;
 	}else if(fly_display < 1){
 	        *x = 1024;
 	        *y = 600;
+		dbg_msg_set_test("display=1024_600");
 	        return true;
 	}else if(fly_display == 2){
 	        *x = 1280;
 	        *y = 720;
+		dbg_msg_set_test("display=1280_720");
 	        return true;
 	}else if(fly_display == 3){
 		*x = 768;
 		*y = 1024;
+		dbg_msg_set_test("display=768_1024");
+		return true;
+	}else if(fly_display == 4){
+	        *x = 1024;
+	        *y = 768;
+		dbg_msg_set_test("display=1024_768");
+		return true;
 	}else
 		return false;
 }
