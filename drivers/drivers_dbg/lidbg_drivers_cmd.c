@@ -688,6 +688,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#141--add flycam kmsg whitelist \n");
             fs_mem_log("*158#142--power off selinux and enable su \n");
             fs_mem_log("*158#143--power on selinux \n");
+            fs_mem_log("*158#144--parked \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1756,6 +1757,12 @@ void parse_cmd(char *pt)
             lidbg("*158#143--power on selinux \n");
             lidbg_shell_cmd("setenforce 1");
         }
+        else if (!strcmp(argv[1], "*158#144"))
+        {
+            lidbg("*158#144--parked \n");
+            lidbg_shell_cmd("setprop persist.fly.car.status parked");
+        }
+
     }
     else if(!strcmp(argv[0], "flyaudio.code.disable") )
     {
