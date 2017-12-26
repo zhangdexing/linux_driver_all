@@ -145,10 +145,8 @@
 			 g_var.usb_status = 1;\
 			 USB_ID_LOW_HOST;\
 			 USB_POWER_ENABLE;\
-			 msleep(1000);\
 			 USB_POWER_BACK_ENABLE;\
 			 USB_POWER_FRONT_ENABLE;\
-			 msleep(1000);\
 			 USB_POWER_UDISK_ENABLE;\
 			}while(0)
 
