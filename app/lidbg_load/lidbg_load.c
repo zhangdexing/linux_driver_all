@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 
     system( "mount -o rw,remount rootfs /" );
     system( "chmod 777 /flyconfig" );
-    system( "/flysystem/bin/decodeFlyconfig &" );
+    system( "/flysystem/bin/decodeFlyconfig" );
 
     module_insmod("/system/lib/modules/out/lidbg_immediate.ko");
     module_insmod("/flysystem/lib/out/lidbg_immediate.ko");
