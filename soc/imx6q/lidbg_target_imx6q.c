@@ -20,14 +20,15 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_int_button_right1 = 171,
         .gpio_int_button_right2 = 174,
 
-        .gpio_led1 = 31,
+        .gpio_led1 = 29,
         //gpio_led2 = 0,
 
-        .gpio_int_mcu_i2c_request = 204,
-	.gpio_mcu_i2c_wakeup = 105,
-        .gpio_mcu_wp = 9,
-        .gpio_mcu_app = 8,
-	.gpio_request_fastboot= 106,
+        .gpio_int_mcu_i2c_request = 204, //	i2c_c
+	.gpio_mcu_read_busy = 79,	// ap_state6
+	.gpio_mcu_i2c_wakeup = 105,	//	AUD5_RXD
+        .gpio_mcu_wp = 9,	// ap_state2
+        .gpio_mcu_app = 8,	// ap_state1
+	.gpio_request_fastboot= 106,	// ap_state3 ok
 
         .gpio_ts_int = 110,
         .gpio_ts_rst = 111,
