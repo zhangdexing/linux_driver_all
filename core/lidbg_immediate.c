@@ -47,7 +47,7 @@ int set_screen_active_area(void)
 {
     char buff[32] = {0};
     int lcd_type_pos = 5, lcd_type;
-    int len = immediate_file_read("/data/hwinfo.txt", buff, 0, sizeof(buff));
+    int len = immediate_file_read("/data/lidbg/hwinfo.txt", buff, 0, sizeof(buff));
     if(len >= lcd_type_pos)
     {
         buff[lcd_type_pos] = '\0';

@@ -123,8 +123,8 @@ int main(int argc , char **argv)
 	sprintf(newfile,"%s/kmsg.txt",PATH);
 	sprintf(file_seek,"%s/seek",PATH);
 
-	openfd = open(newfile,O_RDWR | O_CREAT,0777);
-	seekfd = open(file_seek,O_RDWR | O_CREAT,0777);
+	openfd = open(newfile,O_RDWR | O_CREAT,777);
+	seekfd = open(file_seek,O_RDWR | O_CREAT,777);
 
     {
     char temp[128];

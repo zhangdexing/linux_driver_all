@@ -3,10 +3,11 @@
 
 #include "lidbg.h"
 
+#define TAG "dlidbg_loader:"
+
 #define  RECOVERY_MODE_DIR "/sbin/recovery"
 #define  FLY_MODE_FILE "/flysystem/lib/out/lidbg_loader.ko"
 #define  DEBUG_MODE_FILE "/data/out/lidbg_loader.ko"
-
 
 int load_modules_count = 0;
 enum boot_mode gboot_mode;
@@ -64,10 +65,10 @@ int thread_check_restart(void *data)
 {
     DUMP_FUN_ENTER;
     ssleep(10);
-    LIDBG_WARN("load_modules_count=%d\n", load_modules_count);
+    LIDBG_WARN(TAG"load_modules_count=%d\n", load_modules_count);
     if(load_modules_count == 0)
     {
-        LIDBG_ERR("load_modules_count err,call kernel_restart!\n");
+        LIDBG_ERR(TAG"load_modules_count err,call kernel_restart!\n");
 
 #ifdef SOC_msm8x25
         kernel_restart(NULL);
@@ -84,14 +85,13 @@ int thread_loader(void *data)
     int tmp;
     DUMP_FUN_ENTER;
 
-    CREATE_KTHREAD(thread_check_restart, NULL);
-#ifndef SOC_msm8x25
-    while(!is_file_exist("/dev/log/userver_ok.txt"))
+    while(!is_lidbg_uevent_ready)
     {
-    	 lidbg("wait for /dev/log/userver_ok.txt\n");
-        msleep(100);
+        lidbg(TAG"wait is_lidbg_uevent_ready\n");
+        msleep(200);
     }
-#endif
+
+    CREATE_KTHREAD(thread_check_restart, NULL);
 
     if(is_file_exist(RECOVERY_MODE_DIR))
         gboot_mode = MD_RECOVERY;
@@ -110,8 +110,8 @@ int thread_loader(void *data)
         gboot_mode = MD_DEBUG;
         kopath = "/data/out/";
     }
-	
-    lidbg("thread_loader start,%d\n", gboot_mode);
+
+    lidbg(TAG"thread_loader start,%d\n", gboot_mode);
     for(j = 0; insmod_soc_list[j] != NULL; j++)
     {
         sprintf(path, "%s%s", kopath, insmod_soc_list[j]);
@@ -134,6 +134,7 @@ int thread_loader(void *data)
 int __init loader_init(void)
 {
     DUMP_BUILD_TIME;
+    LIDBG_WARN(TAG"in\n");
     CREATE_KTHREAD(thread_loader, NULL);
     return 0;
 }

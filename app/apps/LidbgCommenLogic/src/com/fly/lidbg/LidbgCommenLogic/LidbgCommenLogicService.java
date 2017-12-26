@@ -130,7 +130,7 @@ public class LidbgCommenLogicService extends Service
 
         StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
         mStorageManager.registerListener(mStorageEventListener);
-	playMusic("/flysystem/lib/out/welcome.mp3");
+        playMusic("/flysystem/lib/out/welcome.mp3");
     }
     private final StorageEventListener mStorageEventListener = new StorageEventListener()
     {
@@ -140,7 +140,7 @@ public class LidbgCommenLogicService extends Service
             printKernelMsg("onStorageStateChanged :" + path + " " + oldState + " -> " + newState + "\n");
             if(Build.VERSION.SDK_INT >= 23 && Environment.MEDIA_MOUNTED.equals(newState) && !path.contains("emulated") && !path.contains("sdcard") && !path.endsWith("udisk"))
             {
-               printKernelMsg("skip:ln:" + path + " " + oldState + " -> " + newState + "\n");
+                printKernelMsg("skip:ln:" + path + " " + oldState + " -> " + newState + "\n");
                 //FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:mv /storage/udisk /storage/bl_udisk1 ");
                 //printKernelMsg("ln:" + path + " " + oldState + " -> " + newState + "\n");
                 //FileWrite("/dev/lidbg_misc0", false, false, "flyaudio:ln -s -f " + path + " /storage/udisk &");
@@ -150,7 +150,7 @@ public class LidbgCommenLogicService extends Service
                 if( !path.contains("emulated") )
                 {
                     printKernelMsg("conf_check:" + path + "\n");
-                    FileWrite("/dev/lidbg_misc0", false, false, "conf_check:"+path);
+                    FileWrite("/dev/lidbg_misc0", false, false, "conf_check:" + path);
                 }
                 else
                     printKernelMsg("conf_check:.ignore." + path + "\n");
@@ -296,36 +296,36 @@ public class LidbgCommenLogicService extends Service
             return;
         }
         printKernelMsg("mountUmountUdiskUp6_0.skip" );
-/*
-        try
-        {
-        StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
-        final StorageVolume[] volumes = mStorageManager.getVolumeList();
-        for (StorageVolume volume : volumes)
-        {
-            if ( !volume.getPath().contains("emulated") && !volume.getPath().toUpperCase().contains("SDCARD"))
-            {
-                String mVolumeState = mStorageManager.getVolumeState(volume.getPath());
-                printKernelMsg(mount + "/mountUmountUdiskUp6_0.find it->" + volume.getPath() + "  getId:" + volume.getId() + "  getPath:" + volume.getPath() + "  mVolumeState:" + mVolumeState);
-                if(mount)
+        /*
+                try
                 {
-		if(!Environment.MEDIA_MOUNTED.equals(mVolumeState))
-		mStorageManager.mount(volume.getId());
+                StorageManager mStorageManager = (StorageManager) getSystemService(Context.STORAGE_SERVICE);
+                final StorageVolume[] volumes = mStorageManager.getVolumeList();
+                for (StorageVolume volume : volumes)
+                {
+                    if ( !volume.getPath().contains("emulated") && !volume.getPath().toUpperCase().contains("SDCARD"))
+                    {
+                        String mVolumeState = mStorageManager.getVolumeState(volume.getPath());
+                        printKernelMsg(mount + "/mountUmountUdiskUp6_0.find it->" + volume.getPath() + "  getId:" + volume.getId() + "  getPath:" + volume.getPath() + "  mVolumeState:" + mVolumeState);
+                        if(mount)
+                        {
+        		if(!Environment.MEDIA_MOUNTED.equals(mVolumeState))
+        		mStorageManager.mount(volume.getId());
+                        }
+                        else
+                         mStorageManager.unmount(volume.getId());
+                    }
+                    else
+                    {
+                        printKernelMsg(mount+"/mountUmountUdiskUp6_0.not target volume.retry->" + volume.getPath()+"  getId:"+volume.getId());
+                    }
                 }
-                else
-                 mStorageManager.unmount(volume.getId());
-            }
-            else
-            {
-                printKernelMsg(mount+"/mountUmountUdiskUp6_0.not target volume.retry->" + volume.getPath()+"  getId:"+volume.getId());
-            }
-        }
-        }
-        catch (Exception e)
-        {
-            printKernelMsg("mountUmountUdiskUp6_0.error:" + e.getMessage());
-        }
-*/
+                }
+                catch (Exception e)
+                {
+                    printKernelMsg("mountUmountUdiskUp6_0.error:" + e.getMessage());
+                }
+        */
     }
 
     protected void wakeUpSystem()
@@ -399,7 +399,7 @@ public class LidbgCommenLogicService extends Service
                 printKernelMsg("err.return:intent == null \n");
                 return;
             }
-            printKernelMsg("mMediaReceiver:[" + intent.getAction() + "]["+intent.getData().getPath()+"]\n");
+            printKernelMsg("mMediaReceiver:[" + intent.getAction() + "][" + intent.getData().getPath() + "]\n");
         }
     };
 
@@ -738,23 +738,24 @@ public class LidbgCommenLogicService extends Service
         }
         return mList;
     }
-	
-public void playMusic(String fileName)
-{
-	MediaPlayer mediaplayer = new MediaPlayer();
-	printKernelMsg("fuplay: "+fileName);
-	try
-	{
-	mediaplayer.reset();
-	mediaplayer.setDataSource(fileName);
-	mediaplayer.setLooping(false);
-	mediaplayer.prepare();
-	mediaplayer.start();
-	} catch (Exception e)
-	{
-	printKernelMsg("fuplay: "+e.getMessage());
-	}
-}
+
+    public void playMusic(String fileName)
+    {
+        MediaPlayer mediaplayer = new MediaPlayer();
+        printKernelMsg("fuplay: " + fileName);
+        try
+        {
+            mediaplayer.reset();
+            mediaplayer.setDataSource(fileName);
+            mediaplayer.setLooping(false);
+            mediaplayer.prepare();
+            mediaplayer.start();
+        }
+        catch (Exception e)
+        {
+            printKernelMsg("fuplay: " + e.getMessage());
+        }
+    }
     public String FileRead(String fileName)
     {
         String res = null;

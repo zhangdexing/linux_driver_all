@@ -461,6 +461,7 @@ static void parse_cmd(char *pt)
         lidbg_shell_cmd("echo appcmd *158#077 > /dev/lidbg_drivers_dbg0");
         lidbg_shell_cmd("echo appcmd *158#999 > /dev/lidbg_drivers_dbg0");
         lidbg_shell_cmd("procrank > /sdcard/procrank_start.txt");
+        lidbg_shell_cmd("dumpsys meminfo > /sdcard/meminfo_start.txt");
         lidbg_shell_cmd("df > /sdcard/df_start.txt");
     }
 

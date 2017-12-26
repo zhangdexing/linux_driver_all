@@ -1137,7 +1137,11 @@ static int thread_observer(void *data)
                     }
                     break;
 #endif 
-
+        //so much ifdef...........
+        case 66:
+        lidbg("dump meminfo \n");
+        lidbg_shell_cmd("dumpsys meminfo > /sdcard/meminfo_warn.txt");
+        break;
                 }
             }
 	    // lidbg_shell_cmd("pm enable cld.navi.c2739.mainframe");

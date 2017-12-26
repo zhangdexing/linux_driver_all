@@ -139,7 +139,7 @@ bool flyparameter_info_get(void)
                 lidbg(PATA_TAG"fail to cpy parameter\n");
             }
             lidbg_shell_cmd( parameter );
-            fs_clear_file("/data/hwinfo.txt");
+            fs_clear_file("/data/lidbg/hwinfo.txt");
             fs_file_write2("/data/hwinfo.txt", g_recovery_meg->hwInfo.info);
             lidbg_shell_cmd("chmod 777 /data/hwinfo.txt");
             lidbg(PATA_TAG"flyparameter=[%s] len:%d\n", g_recovery_meg->hwInfo.info, len);
@@ -371,7 +371,7 @@ int lidbg_flyparameter_init(void)
         msleep(200);
         cnt++;
     }
-    if(fs_get_file_size(EXTRA_FLYPARA_MIRROR)>0)
+    if(fs_get_file_size(EXTRA_FLYPARA_MIRROR) > 0)
         p_flyparameter_node = EXTRA_FLYPARA_MIRROR;
     else
         lidbg(PATA_TAG"p_flyparameter_node,use default\n");

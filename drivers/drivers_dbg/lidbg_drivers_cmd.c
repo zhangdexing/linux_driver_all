@@ -75,7 +75,9 @@ void dump_sysinfo(bool copy2udisk)
     //udisk check
     if(copy2udisk)
     {
-        //lidbg_shell_cmd("cp -rf /data/reckmsg /sdcard/FlyLog/");
+        lidbg_shell_cmd("cp -rf /data/reckmsg /sdcard/FlyLog/");
+        lidbg_shell_cmd("cp -rf /data/*.txt /sdcard/FlyLog/");
+        lidbg_shell_cmd("cp -rf /data/logcat_pre /sdcard/FlyLog/");
         lidbg_shell_cmd("cp -rf /sdcard/*.txt /sdcard/FlyLog/");
         lidbg_shell_cmd(format_string(true, "cp -rf /sdcard/FlyLog %s ", get_udisk_file_path(NULL, NULL)));
         lidbg_shell_cmd("cp -rf /sdcard/mtklog /sdcard/FlyLog/DriBugReport/drivers/");
@@ -684,6 +686,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#139--ANDROID.API:UNmount udisK && mount  udisK\n");
             fs_mem_log("*158#140--pr_debug lpc_debug \n");
             fs_mem_log("*158#141--add flycam kmsg whitelist \n");
+            fs_mem_log("*158#142--power off selinux and enable su \n");
+            fs_mem_log("*158#143--power on selinux \n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -710,7 +714,6 @@ void parse_cmd(char *pt)
         if (!strcmp(argv[1], "*158#999"))
         {
             char buff[50] = {0};
-            //lidbg_shell_cmd("setenforce 0");
             lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "fileserver.apk")));
             lidbg_shell_cmd("pm install -r /flysystem/lib/out/MobileRateFlow.apk ");
             lidbg_shell_cmd("am start -n com.mypftf.mobile.rateflow/com.mypftf.mobile.rateflowcpu.PackageMainActivity &");
@@ -1698,7 +1701,6 @@ void parse_cmd(char *pt)
         else if (!strcmp(argv[1], "*158#136"))
         {
             char buff[50] = {0};
-            //lidbg_shell_cmd("setenforce 0");
 	     lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "TC.ko")));
             lidbg_domineering_ack();
@@ -1728,6 +1730,31 @@ void parse_cmd(char *pt)
             lidbg("*158#141--add flycam kmsg whitelist \n");
             lidbg_shell_cmd("mount -o remount /system");
             lidbg_shell_cmd("echo Tflycam  >> /flysystem/lib/out/kmsg_wl.conf");
+        }
+        else if (!strcmp(argv[1], "*158#142"))
+        {
+            lidbg("*158#142--power off selinux and enable su \n");
+            lidbg_shell_cmd("setenforce 0");
+            lidbg_shell_cmd("mount -o remount /system");
+            lidbg_shell_cmd("ln -s -f /flysystem/lib/out /system/sbin");
+            lidbg_shell_cmd("setprop ctl.start console");
+            lidbg_shell_cmd("setprop force.ro.secure 0");
+            lidbg_shell_cmd("setprop force.ro.debuggable 1");
+            lidbg_shell_cmd("setprop persist.net.logmask adb");
+            lidbg_shell_cmd("setprop force.ro.adb.secure 0");
+            lidbg_shell_cmd("setprop service.adb.root 1");
+            lidbg_shell_cmd("setprop persist.lidbg.adbroot 1");
+            lidbg_shell_cmd("setprop force.ro.build.type eng");
+            lidbg_shell_cmd("chcon u:object_r:init:s0 /system/bin/sh");
+            lidbg_shell_cmd("chcon u:object_r:init:s0 /flysystem/lib/out/busybox");
+            lidbg_shell_cmd("stop adbd");
+            lidbg_shell_cmd("start adbd");
+            //lidbg_shell_cmd("setenv PATH $PATH:/flysystem/lib/out");
+        }
+        else if (!strcmp(argv[1], "*158#143"))
+        {
+            lidbg("*158#143--power on selinux \n");
+            lidbg_shell_cmd("setenforce 1");
         }
     }
     else if(!strcmp(argv[0], "flyaudio.code.disable") )

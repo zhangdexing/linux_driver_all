@@ -4,6 +4,8 @@
 
 #include <cutils/properties.h>
 #include <sys/statfs.h>
+#define TAG "dlidbg_load:"
+
 int getPathFreeSpace(char *path)
 {
     struct statfs diskInfo;
@@ -23,26 +25,28 @@ int main(int argc, char **argv)
     int recovery_mode, checkout = 0; //checkout=1 origin ; checkout=2 old flyaudio;checkout=3 new flyaudio
     int ret;
 
-    system("setenforce 0");
+    lidbg(TAG"20171129.selinux\n");
 
+    system("setenforce 0");
     system("chmod 777 /dev/dbg_msg");
+    system("start console");
 
     if(is_file_exist("/data/coldBootLogcat.txt"))
     {
-            lidbg("lidbg_iserver: start coldBootLogcat.in./data/coldBootlogcat.txt\n");
-            system("mkdir /data/logcat_pre");
-            system("mv /data/*.txt /data/logcat_pre/");
-            system("logcat -b main -b system -v threadtime -f /data/coldBootlogcat.txt &");
-            system("chmod 777 /data");
-            system("chmod 777 /data/coldBootlogcat.txt");
-            system("chmod 777 /data/logcat_pre");
-            system("chmod 777 /data/logcat_pre/*");
-            lidbg("lidbg_iserver: start coldBootLogcat.out\n");
+        lidbg("lidbg_iserver: start coldBootLogcat.in./data/coldBootlogcat.txt\n");
+        system("mkdir /data/logcat_pre");
+        system("mv /data/*.txt /data/logcat_pre/");
+        system("logcat -b main -b system -v threadtime -f /data/coldBootlogcat.txt &");
+        system("chmod 777 /data");
+        system("chmod 777 /data/coldBootlogcat.txt");
+        system("chmod 777 /data/logcat_pre");
+        system("chmod 777 /data/logcat_pre/*");
+        lidbg("lidbg_iserver: start coldBootLogcat.out\n");
     }
 
 
     DUMP_BUILD_TIME_FILE;
-    lidbg("Build Time:lidbg_iserver: iserver start\n");
+    lidbg(TAG"Build Time:iserver start\n");
     system("mkdir /dev/log");
     system("chmod 777 /dev/log");
     if(is_file_exist("/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/flyparameter"))
@@ -50,14 +54,14 @@ int main(int argc, char **argv)
     else if(is_file_exist("/dev/block/bootdevice/by-name/flyparameter"))
         system("cat /dev/block/bootdevice/by-name/flyparameter > /dev/flyparameter");
     else
-	system("cat /dev/block/mmcblk3p13 > /dev/flyparameter");
-	
+        system("cat /dev/block/mmcblk3p13 > /dev/flyparameter");
+
     system("chmod 444 /dev/flyparameter");
-	
-	system( "mount -o rw,remount rootfs /" );
-	system( "chmod 777 /flyconfig" );
-	system( "/flysystem/bin/decodeFlyconfig &" );
-				
+
+    system( "mount -o rw,remount rootfs /" );
+    system( "chmod 777 /flyconfig" );
+    system( "/flysystem/bin/decodeFlyconfig &" );
+
     module_insmod("/system/lib/modules/out/lidbg_immediate.ko");
     module_insmod("/flysystem/lib/out/lidbg_immediate.ko");
 #if 0
@@ -67,7 +71,7 @@ int main(int argc, char **argv)
         static int cnt = 0;
         if(is_file_exist("/sbin/recovery"))
         {
-            lidbg("lidbg_iserver: this is flyaudio recovery\n");
+            lidbg(TAG"this is flyaudio recovery\n");
             break;
         }
         sleep(1);
@@ -81,31 +85,31 @@ int main(int argc, char **argv)
         if(is_file_exist("/system/etc/build_origin"))
         {
             checkout = 1;
-            lidbg("lidbg_iserver: this is origin system\n");
+            lidbg(TAG"this is origin system\n");
         }
         else
         {
             checkout = 2;
-            lidbg("lidbg_iserver: this is old flyaudio system\n");
+            lidbg(TAG"this is old flyaudio system\n");
         }
     }
     else if(is_file_exist("/system/vendor/lib/out/lidbg_loader.ko"))
     {
         checkout = 3;
-        lidbg("lidbg_iserver: this is new flyaudio system\n");
+        lidbg(TAG"this is new flyaudio system\n");
 
     }
     else
     {
         checkout = 1;
-        lidbg("lidbg_iserver: this is origin system\n");
+        lidbg(TAG"this is origin system\n");
     }
 
     if(is_file_exist("/sbin/recovery"))
     {
         recovery_mode = 1;
         checkout = 1;
-        lidbg("recovery_mode=1\n=====force use origin system=====\n");
+        lidbg(TAG"recovery_mode=1\n=====force use origin system=====\n");
     }
     else
     {
@@ -136,13 +140,13 @@ int main(int argc, char **argv)
             if(access("/system/lib/modules/out/lidbg_userver", X_OK) == 0)
             {
                 system("/system/lib/modules/out/lidbg_userver &");
-                lidbg("lidbg_iserver: origin userver start\n");
+                lidbg(TAG"origin userver start\n");
                 break;
             }
             system("mount -o remount /system");
             system("chmod 777 /system/lib/modules/out/lidbg_userver");
             system("chmod 777 /system/lib/modules/out/*");
-            lidbg("lidbg_iserver: waitting origin lidbg_uevent...\n");
+            lidbg(TAG"waitting origin lidbg_uevent...\n");
             sleep(1);
         }
     }
@@ -169,12 +173,12 @@ int main(int argc, char **argv)
             if(access("/flysystem/lib/out/lidbg_userver", X_OK) == 0)
             {
                 system("/flysystem/lib/out/lidbg_userver &");
-                lidbg("lidbg_iserver: flyaudio userver start\n");
+                lidbg(TAG"flyaudio userver start\n");
                 break;
             }
             system("chmod 777 /flysystem/lib/out/lidbg_userver");
             system("chmod 777 /flysystem/lib/out/*");
-            lidbg("lidbg_iserver: waitting flyaudio lidbg_uevent...\n");
+            lidbg(TAG"waitting flyaudio lidbg_uevent...\n");
             usleep(100 * 1000);
         }
     }
@@ -189,13 +193,13 @@ int main(int argc, char **argv)
         //system("/sbin/recovery &");
     }
 
-//disk space full reboot
+    //disk space full reboot
 #if 1
-    sleep(5*60);// wait for ts load
+    sleep(5 * 60); // wait for ts load
     while(1)
     {
         property_get("persist.fly.system.cleanup", value, "0");
-        lidbg("persist.fly.system.cleanup = %c\n", value[0]);
+        lidbg(TAG"persist.fly.system.cleanup = %c\n", value[0]);
         if (value[0] != '1')
         {
             break;
@@ -208,18 +212,18 @@ int main(int argc, char **argv)
         property_get("lidbg.fly.debugmode", value, "0");
         if (value[0] == '1')
         {
-            sleep(10*60);
+            sleep(10 * 60);
             continue;
         }
         size = getPathFreeSpace("/data");
         if(( size  < 100) && (size  != 0))
         {
-            lidbg("lidbg_iserver: getPathFreeSpace:%d\n", size);
+            lidbg(TAG"getPathFreeSpace:%d\n", size);
             //system("echo ws toast data_size_low 1 > /dev/lidbg_pm0");
             //sleep(2);
             system("reboot data_size_low");
         }
-        sleep(1*60);
+        sleep(1 * 60);
     }
 #endif
     return 0;

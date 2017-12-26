@@ -83,6 +83,7 @@ import android.telephony.TelephonyManager;
 import android.os.Handler;
 
 import android.bluetooth.BluetoothAdapter;
+import java.io.RandomAccessFile;
 
 /*
  * ScreenOn ScreenOff DeviceOff Going2Sleep 四种状态分别表示：1.表示正常开屏状态2.表示关屏，但没关外设的状态
@@ -1006,20 +1007,18 @@ public static void releaseBrightWakeLock()
 		try
 		{
 			int temp = -1;
-			DataInputStream dis = new DataInputStream(new FileInputStream(
-					new File(fileName)));
-			temp = dis.readUnsignedByte();
-			dis.close();
+			RandomAccessFile raf = new RandomAccessFile(fileName, "r");
+			temp=raf.readUnsignedByte();
 			return temp;
 		} catch (FileNotFoundException e)
 		{
 			// TODO Auto-generated catch block
-			LIDBG_PRINT(" readFromFile Exception " + e.getMessage());
+			LIDBG_PRINT(" RandomAccessFile Exception " + e.getMessage());
 			return -1;
 		} catch (IOException e)
 		{
 			// TODO Auto-generated catch block
-			LIDBG_PRINT(" readFromFile Exception " + e.getMessage());
+			LIDBG_PRINT(" RandomAccessFile Exception " + e.getMessage());
 			return -1;
 		}
 	}

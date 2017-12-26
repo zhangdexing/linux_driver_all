@@ -1,6 +1,13 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE := su
+LOCAL_SRC_FILES := su
+LOCAL_MODULE_CLASS := bin
+LOCAL_MODULE_TAGS := optional debug eng tests samples
+LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+include $(BUILD_PREBUILT)
+include $(CLEAR_VARS)
 LOCAL_MODULE := welcome.mp3
 LOCAL_SRC_FILES := welcome.mp3
 LOCAL_MODULE_CLASS := bin
