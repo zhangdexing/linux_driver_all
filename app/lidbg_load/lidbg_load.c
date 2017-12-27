@@ -5,6 +5,7 @@
 #include <cutils/properties.h>
 #include <sys/statfs.h>
 #define TAG "dlidbg_load:"
+static int boot_completed = 0;
 
 int getPathFreeSpace(char *path)
 {
@@ -16,20 +17,42 @@ int getPathFreeSpace(char *path)
     return mbFreedisk;
 }
 
+static void *thread_check_boot_complete(void *data)
+{
+    data = data;
+    while(1)
+    {
+        char value[PROPERTY_VALUE_MAX];
+        property_get("sys.boot_completed", value, "0");
+        if (value[0] == '1')
+        {
+            lidbg( TAG" send message  :boot_completed = %c,delay 2S \n", value[0]);
+            sleep(2);
+            LIDBG_WRITE("/dev/lidbg_interface", "BOOT_COMPLETED");
+            boot_completed = 1;
+            break;
+        }
+        sleep(1);
+    }
+    return ((void *) 0);
+}
+
 char value[PROPERTY_VALUE_MAX];
 int main(int argc, char **argv)
 {
+    pthread_t ntid;
     argc = argc;
     argv = argv;
     pthread_t lidbg_uevent_tid;
     int recovery_mode, checkout = 0; //checkout=1 origin ; checkout=2 old flyaudio;checkout=3 new flyaudio
     int ret;
 
-    lidbg(TAG"20171129.selinux\n");
+    lidbg(TAG"20171129.selinux.bootcom.\n");
 
     system("setenforce 0");
     system("chmod 777 /dev/dbg_msg");
     system("start console");
+    pthread_create(&ntid, NULL, thread_check_boot_complete, NULL);
 
     if(is_file_exist("/data/coldBootLogcat.txt"))
     {

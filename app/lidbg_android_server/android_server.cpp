@@ -77,7 +77,6 @@ static void *thread_check_boot_complete(void *data)
         {
             lidbg( TAG" send message  :boot_completed = %c,delay 2S \n", value[0]);
             sleep(2);
-            LIDBG_WRITE("/dev/lidbg_interface", "BOOT_COMPLETED");
             boot_completed = 1;
             break;
         }
