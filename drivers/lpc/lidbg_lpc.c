@@ -25,6 +25,7 @@ spinlock_t notify_fifo_lock;
 wait_queue_head_t wait_queue;
 struct wake_lock lpc_wakelock;
 bool is_kfifo_empty = 1;
+bool dbg_lpc_send_data = 0;
 
 u8 *wbuf_fifo_buffer;
 static struct kfifo wbuf_data_fifo;
@@ -71,6 +72,9 @@ int LPCCombinDataStream(BYTE *p, UINT len)
         return 1;
     }
 
+    if(dbg_lpc_send_data)
+        lidbg(TAG"LPCCombinDataStream:[0x%x 0x%x 0x%x]\n", p[0], p[1], p[2]);
+
     buf[0] = 0xFF;
     buf[1] = 0x55;
     buf[2] = len + 1;
@@ -105,6 +109,9 @@ static void LPCWriteDataEnqueue(BYTE *buff, short length)
         if(length >= 3 )pr_debug(TAG"ToMCU.skip:%x %x %x\n", buff[0], buff[1], buff[2]);
         return;
     }
+
+    if(dbg_lpc_send_data)
+        lidbg(TAG"LPCWriteDataEnqueue:[0x%x 0x%x 0x%x]\n", buff[0], buff[1], buff[2]);
 
     buf[0] = 0xFF;
     buf[1] = 0x55;
@@ -408,13 +415,22 @@ static ssize_t lpc_write(struct file *filp, const char __user *buf,
     {
         lidbg(TAG"copy_from_user ERR\n");
     }
+    if(!strncmp(mem, "debug raw", 9))
+    {
+        dbg_lpc_send_data = !dbg_lpc_send_data;
+        lidbg(TAG"lpc_write.dbg_lpc_send_data.%d [%s]\n",dbg_lpc_send_data,mem);
+        return size;
+    }
 #if 0
     LPCCombinDataStream(mem, size);//Pack and send
 #else
     LPCWriteDataEnqueue(mem, size);//Pack and enqueue
 #endif
     // if(size >= 3 ) pr_debug(TAG"write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
-    pr_debug(TAG"size:%d,write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", (int)size, mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
+    if(dbg_lpc_send_data)
+        lidbg(TAG"size:%d,write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", (int)size, mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
+	else
+        pr_debug(TAG"size:%d,write: 0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n", (int)size, mem[0], mem[1], mem[2], mem[3], mem[4], mem[5]);
     if(!work_pending(&wBuf_work))
         schedule_work(&wBuf_work);
     return size;
