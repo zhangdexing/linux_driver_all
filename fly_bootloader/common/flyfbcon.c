@@ -39,6 +39,35 @@ typedef struct
 char *text[20];
 int text_row = 0;
 
+void logo_reverse(unsigned char *pDataRGB565, u16 *image_base_wdpi, u16 *image_base_hdpi, int angle)
+{
+	int i, j, x, y;
+	unsigned wdpi = *image_base_wdpi;
+	unsigned hdpi = *image_base_hdpi;
+	unsigned char *pDataReverseRGB565 = (unsigned char *)malloc(sizeof(char) * wdpi * hdpi *2);
+	if(angle == 1){			//90
+		return ;
+	}else if(angle == 2){		//180
+		return ;
+	}else if(angle == 3){		//270
+		for(y=0, i=0; i<wdpi; y+=2, i++)
+			for(x=0, j=0; j<hdpi; x+=2, j++)
+			{
+				pDataReverseRGB565[hdpi*i*2+x]	= pDataRGB565[wdpi*j*2 + (wdpi-i)*2-2];
+				pDataReverseRGB565[(hdpi*i*2)+x+1] = pDataRGB565[wdpi*j*2 + (wdpi-i)*2-1];
+			}
+		*image_base_hdpi = wdpi;
+		*image_base_wdpi = hdpi;
+	}else
+		goto err;
+
+	memcpy(pDataRGB565, pDataReverseRGB565, hdpi*wdpi*2);
+
+err:
+	free(pDataReverseRGB565);
+	pDataReverseRGB565 = NULL;
+	return ;
+}
 
 #if  1
 void display_logo_on_screen(sLogo *plogoparameter)

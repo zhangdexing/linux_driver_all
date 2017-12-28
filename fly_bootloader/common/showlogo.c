@@ -495,6 +495,7 @@ int  show_logo()
     dprintf(INFO, "back_color -> %u\n", pLogoInfo->back_color);
     dprintf(INFO, "reserved -> %u\n", pLogoInfo->reserved);
     dprintf(INFO, "data_len -> %u\n", pLogoInfo->data_len);
+    dprintf(INFO, "display reverse bit -> %d\n", RecoveryMeg.hwInfo.info[12] - '0');
 
     logoPixel = pLogoInfo->width * pLogoInfo->height;
     if (0 == logoPixel)
@@ -542,6 +543,8 @@ int  show_logo()
         dprintf(INFO, "fail to logoDataDecompress\n");
         goto err_out;
     }
+    if((RecoveryMeg.hwInfo.info[12] - '0') != 0)
+    	logo_reverse(pDataRGB565, &pLogoInfo->width, &pLogoInfo->height, (RecoveryMeg.hwInfo.info[12] - '0'));
 
 #if (LOGO_FORMAT == RGB888)
     if (FALSE == rgb565To888(pDataRGB888, pDataRGB565, logoPixel))
