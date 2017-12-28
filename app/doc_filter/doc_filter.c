@@ -140,7 +140,7 @@ bool del_file(char *file)
     DEBUGMSG(TAG"rm old:%s\n", file);
     return true;
 }
-int filterFile( char *s,  char *blackd, char *whited, char *whitelist[], char *blacklist[],  int start_pos, int max_size)
+int filterFile( char *s,  char *blackd, char *whited, char *whitelist[], char *blacklist[],  int start_pos, int max_size, int seek_back)
 {
     FILE *src_file = NULL;
     FILE *b_file = NULL;
@@ -183,6 +183,12 @@ int filterFile( char *s,  char *blackd, char *whited, char *whitelist[], char *b
     fseek (src_file, 0, SEEK_END);
     fileSize = ftell (src_file);
     fseek (src_file, 0, SEEK_SET);
+
+    if(max_size > 0 && seek_back)
+    {
+        DEBUGMSG(TAG "pos oops(max_size>0&&seek_back): start_pos:%d fileSize:%d max_size:%d\n", start_pos, fileSize, max_size);
+        start_pos = start_pos - max_size;
+    }
 
     if(start_pos < 0 || start_pos >= fileSize)
     {
@@ -459,7 +465,7 @@ int main(int argc, char **argv)
         }
     }
 
-    ret = filterFile(spath, blackdpath, whitedpath, gwhitelist, gblacklist, start_pos, mmax_size);
+    ret = filterFile(spath, blackdpath, whitedpath, gwhitelist, gblacklist, start_pos, mmax_size, 1);
     {
         char s[128];
         memset(s, '\0', sizeof(s));
@@ -500,7 +506,7 @@ out:
                 DEBUGMSG(TAG"use:%s\n", spath);
                 blackdpath = spath;
             }
-            sprintf(s, "/flysystem/lib/out/doc_split -e 1 -l 26214400 -s %s -d %s -b %d", blackdpath, cut_file, debugMode);// -p %dseek,
+            sprintf(s, "/flysystem/lib/out/doc_split -e 1 -l %d -s %s -d %s -b %d", mmax_size, blackdpath, cut_file, debugMode); // -p %dseek,
         }
         else  if(strstr(cut_file, "logcat"))
         {
@@ -511,7 +517,7 @@ out:
                 DEBUGMSG(TAG"use:%s\n", spath);
                 blackdpath = spath;
             }
-            sprintf(s, "/flysystem/lib/out/doc_split -s %s -d %s -p %d -l 26214400 -b %d", blackdpath, cut_file, seek, debugMode);
+            sprintf(s, "/flysystem/lib/out/doc_split -s %s -d %s -p %d -l %d -b %d", blackdpath, cut_file, seek, mmax_size, debugMode);
         }
         DEBUGMSG(TAG"start:[%s]\n", s);
         system(s);

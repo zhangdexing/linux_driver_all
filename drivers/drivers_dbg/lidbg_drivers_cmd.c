@@ -12,6 +12,7 @@ void dump_sysinfo(bool copy2udisk)
         lidbg_shell_cmd("echo ws toast copy.to.udisk.start 1 > /dev/lidbg_pm0");
         lidbg_shell_cmd(format_string(true, "rm -rf  %s/FlyLog", get_udisk_file_path(NULL, NULL)));
     }
+    lidbg_shell_cmd("rm -rf /data/lidbg/kmsg_e.txt");
     lidbg_shell_cmd("chmod 777  /sdcard/FlyLog/DriBugReport");
     lidbg_shell_cmd("mkdir  /sdcard/FlyLog/DriBugReport/drivers");
     lidbg_shell_cmd("mkdir   -p /sdcard/FlyLog/DriBugReport/drivers/DVR");
@@ -22,7 +23,7 @@ void dump_sysinfo(bool copy2udisk)
     lidbg_shell_cmd("sh /data/lidbg/dumplog && rm -rf /data/lidbg/dumplog");
 
     lidbg_shell_cmd("echo appcmd *158#133 > /dev/lidbg_drivers_dbg0");
-    ssleep(3);//wait 158133
+    ssleep(5);//wait 158133
     lidbg_shell_cmd("echo appcmd *158#021 > /dev/lidbg_drivers_dbg0");
     lidbg_shell_cmd("chmod 777 /data/lidbg/*");
     lidbg_shell_cmd("chmod 777 /data/lidbg/machine");
@@ -55,7 +56,7 @@ void dump_sysinfo(bool copy2udisk)
 
     //split
     ssleep(5);
-    lidbg_shell_cmd("/flysystem/lib/out/doc_filter -s /data/reckmsg/kmsg.txt -d /sdcard/kmsg_b.txt -w /data/lidbg/kmsg_w.txt -t /flysystem/lib/out/kmsg_wl.conf -y /flysystem/lib/out/kmsg_bl.conf -c /data/lidbg/kmsg_e.txt -m 1 -p 0 -b 0 &");
+    lidbg_shell_cmd("/flysystem/lib/out/doc_filter -s /data/reckmsg/kmsg.txt -d /sdcard/kmsg_b.txt -w /data/lidbg/kmsg_w.txt -t /flysystem/lib/out/kmsg_wl.conf -y /flysystem/lib/out/kmsg_bl.conf -c /data/lidbg/kmsg_e.txt -m 1 -p 0 -l 26214400 -b 0 &");
     lidbg_shell_cmd("cp -rf /data/lidbg /sdcard/FlyLog/DriBugReport/drivers/");
     lidbg_shell_cmd("cp -rf /data/anr /sdcard/FlyLog/DriBugReport/drivers/");
     lidbg_shell_cmd("cp -rf /data/tombstones /sdcard/FlyLog/DriBugReport/drivers/");
@@ -79,9 +80,10 @@ void dump_sysinfo(bool copy2udisk)
         lidbg_shell_cmd("cp -rf /data/*.txt /sdcard/FlyLog/");
         lidbg_shell_cmd("cp -rf /data/logcat_pre /sdcard/FlyLog/");
         lidbg_shell_cmd("cp -rf /sdcard/*.txt /sdcard/FlyLog/");
-        lidbg_shell_cmd(format_string(true, "cp -rf /sdcard/FlyLog %s ", get_udisk_file_path(NULL, NULL)));
-        lidbg_shell_cmd("cp -rf /sdcard/mtklog /sdcard/FlyLog/DriBugReport/drivers/");
+        lidbg_shell_cmd("cp -rf /sdcard/mtklog /sdcard/FlyLog/");
 
+        lidbg_shell_cmd(format_string(true, "cp -rf /sdcard/FlyLog %s ", get_udisk_file_path(NULL, NULL)));
+        lidbg_shell_cmd("sync");
         lidbg_shell_cmd("sleep 3");
         lidbg_shell_cmd("echo ws toast copy.to.udisk.complete 1 > /dev/lidbg_pm0");
     }
