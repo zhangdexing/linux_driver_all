@@ -2,16 +2,21 @@
 #define TEMP_LOG_PATH 	 LIDBG_LOG_DIR"log_ct.txt"
 void  fake_acc_off(void);
 static  int doc_filterloop = 0;
+
+//note:Do not use the cmd below in dump_sysinfo because of IO delay
+//lidbg_shell_cmd("echo appcmd *158#133 > /dev/lidbg_drivers_dbg0");
 void dump_sysinfo(bool copy2udisk)
 {
     LPC_CMD_LPC_DEBUG_REPORT;
     doc_filterloop = 0;	
+		
     if(copy2udisk)
     {
         lidbg_shell_cmd("screencap -p /data/lidbg/screenshot.png &");
         lidbg_shell_cmd("echo ws toast copy.to.udisk.start 1 > /dev/lidbg_pm0");
         lidbg_shell_cmd(format_string(true, "rm -rf  %s/FlyLog", get_udisk_file_path(NULL, NULL)));
     }
+    lidbg_shell_cmd("setprop persist.lidbg.sound.dbg \"11 1\"");
     lidbg_shell_cmd("rm -rf /data/lidbg/kmsg_e.txt");
     lidbg_shell_cmd("chmod 777  /sdcard/FlyLog/DriBugReport");
     lidbg_shell_cmd("mkdir  /sdcard/FlyLog/DriBugReport/drivers");
@@ -22,13 +27,9 @@ void dump_sysinfo(bool copy2udisk)
     lidbg_shell_cmd("/flysystem/lib/out/flydecode_1 -s /sdcard/FlyLog/DriBugReport/dumplog -d /data/lidbg/dumplog -f 0  -m 755 -c 0 -b 0");
     lidbg_shell_cmd("sh /data/lidbg/dumplog && rm -rf /data/lidbg/dumplog");
 
-    lidbg_shell_cmd("echo appcmd *158#133 > /dev/lidbg_drivers_dbg0");
-    ssleep(5);//wait 158133
-    lidbg_shell_cmd("echo appcmd *158#021 > /dev/lidbg_drivers_dbg0");
     lidbg_shell_cmd("chmod 777 /data/lidbg/*");
     lidbg_shell_cmd("chmod 777 /data/lidbg/machine");
     lidbg_shell_cmd("top -n 1 -t -d 1 -m 25 >/data/lidbg/machine/top.txt &");
-    ssleep(2);//wait top
     lidbg_shell_cmd("cat /proc/cmdline > /data/lidbg/machine/machine.txt");
     lidbg_shell_cmd("getprop fly.version.mcu > /data/lidbg/machine/machine.txt");
     lidbg_shell_cmd("getprop ro.release.version > /data/lidbg/machine/machine.txt");
@@ -55,8 +56,6 @@ void dump_sysinfo(bool copy2udisk)
     lidbg_shell_cmd("chmod 777 /data/lidbg/*");
 
     //split
-    ssleep(5);
-    lidbg_shell_cmd("/flysystem/lib/out/doc_filter -s /data/reckmsg/kmsg.txt -d /sdcard/kmsg_b.txt -w /data/lidbg/kmsg_w.txt -t /flysystem/lib/out/kmsg_wl.conf -y /flysystem/lib/out/kmsg_bl.conf -c /data/lidbg/kmsg_e.txt -m 1 -p 0 -l 26214400 -b 0 &");
     lidbg_shell_cmd("cp -rf /data/lidbg /sdcard/FlyLog/DriBugReport/drivers/");
     lidbg_shell_cmd("cp -rf /data/anr /sdcard/FlyLog/DriBugReport/drivers/");
     lidbg_shell_cmd("cp -rf /data/tombstones /sdcard/FlyLog/DriBugReport/drivers/");
@@ -65,6 +64,14 @@ void dump_sysinfo(bool copy2udisk)
     lidbg_shell_cmd("cp -rf /dev/log/DVRERR.txt /sdcard/FlyLog/DriBugReport/drivers/DVR");
     lidbg_shell_cmd("cp -rf /dev/log/gsensor_angle.txt /sdcard/FlyLog/DriBugReport/drivers/DVR");
     lidbg_shell_cmd("cp -rf /dev/log/build_time.txt /sdcard/FlyLog/DriBugReport/drivers/build_time.txt");
+
+    //158021
+    lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE");
+    lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE");
+    lidbg_fifo_get(glidbg_msg_fifo, LIDBG_LOG_DIR"lidbg_mem_log.txt", 0);
+    lidbg_shell_cmd("sleep 2");
+
+    lidbg_shell_cmd("/flysystem/lib/out/doc_filter -s /data/reckmsg/kmsg.txt -d /sdcard/kmsg_b.txt -w /data/lidbg/kmsg_w.txt -t /flysystem/lib/out/kmsg_wl.conf -y /flysystem/lib/out/kmsg_bl.conf -c /data/lidbg/kmsg_e.txt -m 1 -p 0 -l 26214400 -b 0 &");
 
     while(doc_filterloop < 90 && !fs_is_file_exist("/data/lidbg/kmsg_e.txt"))
     {
@@ -832,15 +839,15 @@ void parse_cmd(char *pt)
         }
         else if (!strcmp(argv[1], "*158#021"))
         {
+            if(g_var.is_fly)
+           	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE");
+            else
+               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE");
             lidbg_shell_cmd("chmod 777 /data");
             lidbg_fifo_get(glidbg_msg_fifo, LIDBG_LOG_DIR"lidbg_mem_log.txt", 0);
-	     lidbg_shell_cmd("chmod 777 /data/lidbg/*");
-	    if(g_var.is_fly)
-           	 lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE&");
-           else
-               lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
+            lidbg_shell_cmd("chmod 777 /data/lidbg/*");
 		 
-	     lidbg_shell_cmd("chmod 777 /data/lidbg/reckmsg/* ");
+            lidbg_shell_cmd("chmod 777 /data/lidbg/reckmsg/* ");
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
            // lidbg_domineering_ack();
         }

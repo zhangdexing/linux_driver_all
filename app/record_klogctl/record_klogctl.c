@@ -14,6 +14,7 @@ char newfile[128];
 char file_seek[128];
 void filesize_ctrl();
 #define TAG "record_klogctl:"
+int total_size;
 
 void update_seek()
 {
@@ -25,8 +26,8 @@ void update_seek()
 
 void write_log()
 {
-    int total_size = klogctl(10, 0, 0);
     int seek = 0;
+    total_size = klogctl(10, 0, 0);
     BUFSIZE = total_size * 4;
     buf = (char *)malloc(BUFSIZE);
     memset(buf, '\0', BUFSIZE);
@@ -41,18 +42,7 @@ void write_log()
 
     while(1)
     {
-        readsize = klogctl(4, buf + savesize, total_size);
-        //lidbg(TAG"read %d,%d\n",readsize,total_size);
-        savesize += readsize;
-        if ((readsize > 0) && ( (savesize >= BUFSIZE - total_size) || (save_in_time_mode == 1)))
-        {
-            //lidbg(TAG"write log to file\n");
-            write(openfd, buf, savesize);
-            readsize = savesize = 0;
-            memset(buf, '\0', BUFSIZE);
-            filesize_ctrl();
-            update_seek();
-        }
+        do_log_get(save_in_time_mode);
         sleep(poll_time);
     }
 }
@@ -77,8 +67,21 @@ void filesize_ctrl()
         }
     }
 }
-
-
+void do_log_get(int force_save)
+{
+    readsize = klogctl(4, buf + savesize, total_size);
+    //lidbg(TAG"read %d,%d\n",readsize,total_size);
+    savesize += readsize;
+    if ((readsize > 0) && ( (savesize >= BUFSIZE - total_size) || (force_save == 1)))
+    {
+        //lidbg(TAG"write log to file\n");
+        write(openfd, buf, savesize);
+        readsize = savesize = 0;
+        memset(buf, '\0', BUFSIZE);
+        filesize_ctrl();
+        update_seek();
+    }
+}
 void sigfunc(int sig)
 {
     lidbg(TAG"sigfunc write log to file+\n");
@@ -86,11 +89,7 @@ void sigfunc(int sig)
     if(sig == SIGUSR1)
     {
         lidbg(TAG"sigfunc SIGUSR1\n");
-        write(openfd, buf, savesize);
-        readsize = savesize = 0;
-        memset(buf, '\0', BUFSIZE);
-        filesize_ctrl();
-        update_seek();
+        do_log_get(1);
     }
     else if (sig == SIGUSR2)
     {
