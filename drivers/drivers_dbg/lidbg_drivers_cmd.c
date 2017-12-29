@@ -699,6 +699,9 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#143--power on selinux \n");
             fs_mem_log("*158#144--parked \n");
             fs_mem_log("*158#145--debug lpc driver raw data send\n");
+            fs_mem_log("*158#146--set android all voice stream max \n");
+            fs_mem_log("*158#147--set android all voice stream min \n");
+
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1777,7 +1780,18 @@ void parse_cmd(char *pt)
             lidbg("*158#145--debug lpc driver raw data send\n");
             lidbg_shell_cmd("echo debug raw > /dev/fly_lpc0");
         }
-
+        else if (!strcmp(argv[1], "*158#146"))
+        {
+                lidbg("*158#146--set android all voice stream max \n");
+                lidbg_shell_cmd("setprop persist.lidbg.sound.dbg \"5 15\"");
+                lidbg_domineering_ack();
+        }
+        else if (!strcmp(argv[1], "*158#147"))
+        {
+                lidbg("*158#147--set android all voice stream min \n");
+                lidbg_shell_cmd("setprop persist.lidbg.sound.dbg \"5 0\"");
+                lidbg_domineering_ack();
+        }
     }
     else if(!strcmp(argv[0], "flyaudio.code.disable") )
     {
