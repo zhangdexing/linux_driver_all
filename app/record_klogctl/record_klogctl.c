@@ -24,31 +24,6 @@ void update_seek()
     lidbg(TAG"update_seek.[%d]\n", seek);
 }
 
-void write_log()
-{
-    int seek = 0;
-    total_size = klogctl(10, 0, 0);
-    BUFSIZE = total_size * 4;
-    buf = (char *)malloc(BUFSIZE);
-    memset(buf, '\0', BUFSIZE);
-
-    lseek(seekfd, 0, SEEK_SET);
-    read(seekfd, &seek, sizeof(seek));
-    lseek(openfd, seek, SEEK_SET);
-
-    lidbg(TAG"old seek.[%d],BUFSIZE[%d]\n", seek, BUFSIZE);
-
-    write(openfd, timebuf, strlen(timebuf));
-
-    while(1)
-    {
-        do_log_get(save_in_time_mode);
-        sleep(poll_time);
-    }
-}
-
-
-
 void filesize_ctrl()
 {
     struct stat statbuff;
@@ -105,6 +80,29 @@ void sigfunc(int sig)
         exit(1);
     }
     lidbg(TAG"sigfunc write log to file-\n");
+}
+
+void write_log()
+{
+    int seek = 0;
+    total_size = klogctl(10, 0, 0);
+    BUFSIZE = total_size * 4;
+    buf = (char *)malloc(BUFSIZE);
+    memset(buf, '\0', BUFSIZE);
+
+    lseek(seekfd, 0, SEEK_SET);
+    read(seekfd, &seek, sizeof(seek));
+    lseek(openfd, seek, SEEK_SET);
+
+    lidbg(TAG"old seek.[%d],BUFSIZE[%d]\n", seek, BUFSIZE);
+
+    write(openfd, timebuf, strlen(timebuf));
+
+    while(1)
+    {
+        do_log_get(save_in_time_mode);
+        sleep(poll_time);
+    }
 }
 
 int main(int argc , char **argv)
