@@ -88,6 +88,8 @@ function soc_build_all()
 	soc_prebuild
 	cd $DBG_SYSTEM_DIR
 	./allmake.sh -p $DBG_PLATFORM
+	echo "check the make result and press any key to continue"
+	read
 	soc_postbuild
 }
 
@@ -143,7 +145,9 @@ fi
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/root
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/ETC
 	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/EXECUTABLES/vold_intermediates
-        rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/BOOTLOADER_OBJ
+    rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/obj/BOOTLOADER_OBJ
+	rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system.img
+    rm -rf $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/boot.img
 	#mkdir -p $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/arm2/system/lib64
 	set_env
 }
@@ -169,10 +173,6 @@ function soc_make_otapackage()
 	#cp -u $RELEASE_REPOSITORY/radio/* 	        $DBG_SYSTEM_DIR/device/qcom/msm8226/radio/
 	cd $DBG_SYSTEM_DIR
 
-	if [ -d "$DBG_BOOTLOADER_DIR/flyaudio" ]; then
-		rm -rf "$DBG_BOOTLOADER_DIR/flyaudio"
-	fi
-
 	if [[ $TARGET_PRODUCT = "" ]];then
 		source build/envsetup.sh&&choosecombo release full_$DBG_PLATFORM $SYSTEM_BUILD_TYPE
 	fi
@@ -187,10 +187,6 @@ function soc_make_origin_sytem_image()
 	#cp -u $RELEASE_REPOSITORY/radio/* 	        $DBG_SYSTEM_DIR/device/qcom/msm8226/radio/
 	cd $DBG_SYSTEM_DIR
 
-	if [ -d "$DBG_BOOTLOADER_DIR/flyaudio" ]; then
-		rm -rf "$DBG_BOOTLOADER_DIR/flyaudio"
-	fi
-
 	if [[ $TARGET_PRODUCT = "" ]];then
 		source build/envsetup.sh&&choosecombo release full_$DBG_PLATFORM $SYSTEM_BUILD_TYPE
 	fi
@@ -201,14 +197,14 @@ function soc_make_origin_sytem_image()
 function soc_build_origin_image()
 {
 	echo $FUNCNAME =====$1=========
-	
 #	soc_build_recoveryimage
 	soc_build_all
-	lidbg_build_all
+    lidbg_build_all
+
 if [ $ANDROID_VERSION -ge 600 ];then
-	cp $DBG_ROOT_PATH/conf/init.lidbg.new.rc        $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/root/init.lidbg.rc
+	cp -rf $DBG_ROOT_PATH/conf/init.lidbg.new.rc    $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/root/init.lidbg.rc
 else
-	cp $DBG_ROOT_PATH/conf/init.lidbg.rc        $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/root/init.lidbg.rc
+	cp -rf $DBG_ROOT_PATH/conf/init.lidbg.rc        $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/root/init.lidbg.rc
 fi
 	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin
 	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app
@@ -216,20 +212,20 @@ fi
 	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/priv-app
 	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app
 	mkdir -p  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/etc
-	cp $DBG_OUT_PATH/lidbg_load		       $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin/lidbg_load
-	cp $DBG_OUT_PATH/vold		       	       $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin/vold
-        cp $DBG_ROOT_PATH/app/apk/ESFileExplorer.apk   $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/ESFileExplorer.apk
-	cp -rf $DBG_OUT_PATH                           $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/lib/modules/
-	cp -rf $DBG_SYSTEM_DIR/origin-app/priv-app/*   $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/priv-app/
-	cp -rf $DBG_SYSTEM_DIR/origin-app/app/*        $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/
+	cp -rf $DBG_OUT_PATH/lidbg_load		       			$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin/lidbg_load
+	cp -rf $DBG_OUT_PATH/vold		       	       		$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/bin/vold
+    cp -rf $DBG_ROOT_PATH/app/apk/ESFileExplorer.apk    $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/ESFileExplorer.apk
+	cp -rf $DBG_OUT_PATH                           		$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/lib/modules/
+	cp -rf $DBG_SYSTEM_DIR/origin-app/priv-app/*   		$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/priv-app/
+	cp -rf $DBG_SYSTEM_DIR/origin-app/app/*        		$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/
 	#copy fastboot apk
 	#cd $RELEASE_REPOSITORY
 	#git checkout $REPOSITORY_WORK_BRANCH
 	#cp $DBG_OUT_PATH/FastBoot.apk        $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/FastBoot.apk
-	cp $DBG_OUT_PATH/FlyBootService.apk  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/FlyBootService.apk
-	cp -rf $DBG_OUT_PATH/FlyBootService  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/FlyBootService
-	cp $DBG_OUT_PATH/LidbgCommenLogic.apk  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/LidbgCommenLogic.apk
-	cp -rf $DBG_OUT_PATH/LidbgCommenLogic  $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/LidbgCommenLogic
+	cp -rf $DBG_OUT_PATH/FlyBootService.apk  			$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/FlyBootService.apk
+	cp -rf $DBG_OUT_PATH/FlyBootService  				$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/FlyBootService
+	cp -rf $DBG_OUT_PATH/LidbgCommenLogic.apk  			$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/LidbgCommenLogic.apk
+	cp -rf $DBG_OUT_PATH/LidbgCommenLogic  				$DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/app/LidbgCommenLogic
 	echo "build_origin" > $DBG_SYSTEM_DIR/out/target/product/$DBG_PLATFORM/system/etc/build_origin
 
 	case $1 in
