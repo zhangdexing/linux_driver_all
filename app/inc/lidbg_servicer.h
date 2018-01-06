@@ -25,6 +25,8 @@
 //#include <syslog.h>
 #include <sys/klog.h>
 #include <signal.h>
+#include <semaphore.h>
+
 //#undef printf
 #define lidbg  LIDBG_PRINT
 #define DUMP_BUILD_TIME    do{ lidbg( "Build Time: %s, %s, %s \n", __FUNCTION__, __DATE__, __TIME__);}while(0)

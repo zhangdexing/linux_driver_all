@@ -15,13 +15,16 @@ char file_seek[128];
 void filesize_ctrl();
 #define TAG "record_klogctl:"
 int total_size;
+sem_t sem;
+
 
 void update_seek()
 {
     int seek = lseek(openfd, 0, SEEK_CUR);
     lseek(seekfd, 0, SEEK_SET);
     write(seekfd, &seek, sizeof(seek));
-    lidbg(TAG"update_seek.[%d]\n", seek);
+	if(save_in_time_mode == 0)
+    	lidbg(TAG"update_seek.[%d]\n", seek);
 }
 
 void filesize_ctrl()
@@ -44,6 +47,7 @@ void filesize_ctrl()
 }
 void do_log_get(int force_save)
 {
+	sem_wait(&sem);
     readsize = klogctl(4, buf + savesize, total_size);
     //lidbg(TAG"read %d,%d\n",readsize,total_size);
     savesize += readsize;
@@ -56,6 +60,7 @@ void do_log_get(int force_save)
         filesize_ctrl();
         update_seek();
     }
+	sem_post(&sem);
 }
 void sigfunc(int sig)
 {
@@ -139,7 +144,15 @@ int main(int argc , char **argv)
 
     signal(SIGUSR1, sigfunc);
     signal(SIGUSR2, sigfunc);
+
+	if (sem_init(&sem, 0, 1) == -1) 
+	{
+        lidbg(TAG"Unable to sem_init (%s)", strerror(errno));
+        exit(1);
+    }
     write_log();
+
+	sem_destroy (&sem);
     free(buf);
     close(openfd);
     close(seekfd);
