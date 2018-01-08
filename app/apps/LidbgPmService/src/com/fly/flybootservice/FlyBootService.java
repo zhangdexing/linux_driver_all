@@ -140,6 +140,7 @@ public class FlyBootService extends Service {
     private String[] mWhiteList2 = null;
     //list who can access Internet
     private String[] mInternelWhiteList = null;
+    private String[] mflylidbgconfigList = null;
     //list about all apps'uid who request Internet permission	
     private List<Integer> mInternelAllAppListUID= new ArrayList<Integer>();
     private List<Integer> mInternelWhiteAppListUID= new ArrayList<Integer>();
@@ -152,6 +153,7 @@ public class FlyBootService extends Service {
     private boolean isWifiEnabled=false;
     private boolean isSimCardReady=false;
     private boolean isFirstBoot=true;
+    private boolean mdisableSenvenDaysReboot = false;
 
     String mInternelBlackList[] = {
             "com.qti.cbwidget"
@@ -189,6 +191,9 @@ public class FlyBootService extends Service {
 	mWhiteList = FileReadList("/flysystem/lib/out/appProtectList.conf","\n");
 	mWhiteList2 = FileReadList("/flysystem/flytheme/config/SuspendAppProtectList.conf","\n");
 	mInternelWhiteList = FileReadList("/flysystem/lib/out/appInternetProtectList.conf","\n");
+	mflylidbgconfigList = FileReadList("/flysystem/flyconfig/default/lidbgconfig/flylidbgconfig.txt","\n");
+	mdisableSenvenDaysReboot = isInlidbgconfigList("mdisableSenvenDaysReboot=1");
+        LIDBG_PRINT("mdisableSenvenDaysReboot ["+mdisableSenvenDaysReboot+"]\n");
 	DUMP();
         LIDBG_PRINT("start [FlyaudioInternetEnable]\n");
         FlyaudioInternetEnable();
@@ -1217,6 +1222,20 @@ public static void releaseBrightWakeLock()
 		}
 		return false;
 	}
+	public Boolean isInlidbgconfigList(String item)
+	{
+		if (mflylidbgconfigList!= null)
+		{
+			for (int i = 0; i < mflylidbgconfigList.length; i++)
+			{
+				if (item.equals(mflylidbgconfigList[i]))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 	public void appInternetControl(boolean enable)
 	{
 	    // TODO Auto-generated method stub
@@ -1255,6 +1274,7 @@ public static void releaseBrightWakeLock()
 	}
 	public void DUMP()
 	{
+		LIDBG_PRINT("===================\n");
 		if (mWhiteList != null)
 		{
 			for (int i = 0; i < mWhiteList.length; i++)
@@ -1262,6 +1282,7 @@ public static void releaseBrightWakeLock()
 				LIDBG_PRINT(i +"->"+ mWhiteList[i]+"\n");
 			}
 		}
+		LIDBG_PRINT("===================\n");		
 		if (mWhiteList2 != null)
 		{
 			for (int i = 0; i < mWhiteList2.length; i++)
@@ -1269,6 +1290,15 @@ public static void releaseBrightWakeLock()
 				LIDBG_PRINT(i +"->"+ mWhiteList2[i]+"\n");
 			}
 		}
+		LIDBG_PRINT("===================\n");
+		if (mflylidbgconfigList!= null)
+		{
+			for (int i = 0; i < mflylidbgconfigList.length; i++)
+			{
+				LIDBG_PRINT(i +"->"+ mflylidbgconfigList[i]+"\n");
+			}
+		}
+		LIDBG_PRINT("===================\n");
 		if (mInternelWhiteList != null)
 		{
 			for (int i = 0; i < mInternelWhiteList.length; i++)
@@ -1519,7 +1549,10 @@ public static void releaseBrightWakeLock()
 					restoreAirplaneMode(mFlyBootService);
 					delay(1000);
 				}
+				if(!mdisableSenvenDaysReboot)
 				writeToFile("/dev/lidbg_misc0","flyaudio:reboot lidbg_sevendays_timeout");
+				else
+				LIDBG_PRINT(" mdisableSenvenDaysReboot.skip reboot.[:"+mdisableSenvenDaysReboot+"]\n");
 			//else
 			//	LIDBG_PRINT("salarm:should be reboot but in debug mode.");
 		}
