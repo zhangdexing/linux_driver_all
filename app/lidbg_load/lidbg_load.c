@@ -51,7 +51,8 @@ int main(int argc, char **argv)
 
     system("setenforce 0");
     system("chmod 777 /dev/dbg_msg");
-    system("start console");
+    system("logcat -b main -G 10M");
+    system("logcat -b crash -G 1M");
     pthread_create(&ntid, NULL, thread_check_boot_complete, NULL);
 
     if(is_file_exist("/data/coldBootLogcat.txt"))

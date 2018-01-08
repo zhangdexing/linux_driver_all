@@ -18,6 +18,8 @@ void dump_sysinfo(bool copy2udisk)
     }
     lidbg_shell_cmd("setprop persist.lidbg.sound.dbg \"11 1\"");
     lidbg_shell_cmd("rm -rf /data/lidbg/kmsg_e.txt");
+    lidbg_shell_cmd("rm -rf /sdcard/FlyLog/DriBugReport/logcat_buff.txt");
+
     lidbg_shell_cmd("chmod 777  /sdcard/FlyLog/DriBugReport");
     lidbg_shell_cmd("mkdir  /sdcard/FlyLog/DriBugReport/drivers");
     lidbg_shell_cmd("mkdir   -p /sdcard/FlyLog/DriBugReport/drivers/DVR");
@@ -29,7 +31,14 @@ void dump_sysinfo(bool copy2udisk)
 
     lidbg_shell_cmd("chmod 777 /data/lidbg/*");
     lidbg_shell_cmd("chmod 777 /data/lidbg/machine");
-    lidbg_shell_cmd("top -n 1 -t -d 1 -m 25 >/data/lidbg/machine/top.txt &");
+
+    //start 
+    lidbg_shell_cmd("top -n 1 -t -d 1 -m 25 >/data/lidbg/machine/top.txt");//block cmd shell
+
+    //logcat 
+    lidbg_shell_cmd("logcat -g > /data/lidbg/logcatinfo.txt");
+    lidbg_shell_cmd("logcat -d -v threadtime > /dev/logcat_buff.txt && cp -rf /dev/logcat_buff.txt /sdcard/FlyLog/DriBugReport/&&rm -rf /dev/logcat_buff.txt &");
+		
     lidbg_shell_cmd("cat /proc/cmdline > /data/lidbg/machine/machine.txt");
     lidbg_shell_cmd("getprop fly.version.mcu > /data/lidbg/machine/machine.txt");
     lidbg_shell_cmd("getprop ro.release.version > /data/lidbg/machine/machine.txt");
@@ -52,27 +61,22 @@ void dump_sysinfo(bool copy2udisk)
     lidbg_shell_cmd("dumpsys meminfo > /data/lidbg/pm_info/meminfo.txt");
     lidbg_shell_cmd("iptables -L  > /data/lidbg/pm_info/iptable.txt");
     lidbg_shell_cmd("cat /proc/meminfo > /data/lidbg/pm_info/meminfo2.txt &");
-    lidbg_shell_cmd("chmod 777 /data/lidbg/* -R");
-    lidbg_shell_cmd("chmod 777 /data/lidbg/*");
-
-    //split
-    lidbg_shell_cmd("cp -rf /data/lidbg /sdcard/FlyLog/DriBugReport/drivers/");
-    lidbg_shell_cmd("cp -rf /data/anr /sdcard/FlyLog/DriBugReport/drivers/");
-    lidbg_shell_cmd("cp -rf /data/tombstones /sdcard/FlyLog/DriBugReport/drivers/");
-    lidbg_shell_cmd("cp -rf /system/etc/build_time.txt /FlyLog/DriBugReport/drivers/system_build_time.txt");
-    lidbg_shell_cmd("chmod 777  /dev/log/DVRERR.txt");
-    lidbg_shell_cmd("cp -rf /dev/log/DVRERR.txt /sdcard/FlyLog/DriBugReport/drivers/DVR");
-    lidbg_shell_cmd("cp -rf /dev/log/gsensor_angle.txt /sdcard/FlyLog/DriBugReport/drivers/DVR");
-    lidbg_shell_cmd("cp -rf /dev/log/build_time.txt /sdcard/FlyLog/DriBugReport/drivers/build_time.txt");
 
     //158021
-    lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE");
+    lidbg_shell_cmd("/flysystem/lib/out/sendsignal STORE");//rmmove &
     lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE");
     lidbg_fifo_get(glidbg_msg_fifo, LIDBG_LOG_DIR"lidbg_mem_log.txt", 0);
     lidbg_shell_cmd("sleep 2");
 
-    lidbg_shell_cmd("/flysystem/lib/out/doc_filter -s /data/reckmsg/kmsg.txt -d /sdcard/kmsg_b.txt -w /data/lidbg/kmsg_w.txt -t /flysystem/lib/out/kmsg_wl.conf -y /flysystem/lib/out/kmsg_bl.conf -c /data/lidbg/kmsg_e.txt -m 1 -p 0 -l 26214400 -b 0 &");
+    //do cmd up below
+    lidbg_shell_cmd("cp -rf /data/anr /sdcard/FlyLog/DriBugReport/drivers/");
+    lidbg_shell_cmd("cp -rf /data/tombstones /sdcard/FlyLog/DriBugReport/drivers/");
+    lidbg_shell_cmd("cp -rf /system/etc/build_time.txt /sdcard/FlyLog/DriBugReport/drivers/system_build_time.txt");
+    lidbg_shell_cmd("chmod 777  /dev/log/DVRERR.txt");
+    lidbg_shell_cmd("cp -rf /dev/log/*.txt /sdcard/FlyLog/DriBugReport/drivers");
 
+    //wait kmsg_e.txt to block app and then upload
+    lidbg_shell_cmd("/flysystem/lib/out/doc_filter -s /data/reckmsg/kmsg.txt -d /sdcard/kmsg_b.txt -w /data/lidbg/kmsg_w.txt -t /flysystem/lib/out/kmsg_wl.conf -y /flysystem/lib/out/kmsg_bl.conf -c /data/lidbg/kmsg_e.txt -m 1 -p 0 -l 26214400 -b 0 &");
     while(doc_filterloop < 90 && !fs_is_file_exist("/data/lidbg/kmsg_e.txt"))
     {
         ssleep(1);
@@ -80,6 +84,30 @@ void dump_sysinfo(bool copy2udisk)
         LIDBG_WARN("waiting kmsg_e.txt:%d\n", doc_filterloop);
     }
     lidbg_shell_cmd(format_string(true, "echo  %d > /sdcard/FlyLog/DriBugReport/drivers/doc_filter.txt", doc_filterloop));
+
+    //finish
+    lidbg_shell_cmd("chmod 777 /data/lidbg/* -R");
+    lidbg_shell_cmd("chmod 777 /data/lidbg/*");
+    lidbg_shell_cmd("cp -rf /data/lidbg /sdcard/FlyLog/DriBugReport/drivers/");
+    lidbg_shell_cmd("echo done > /sdcard/FlyLog/DriBugReport/drivers/done.txt");
+    //wait cp done
+    doc_filterloop = 0;
+    while(doc_filterloop < 10 && !fs_is_file_exist("/sdcard/FlyLog/DriBugReport/drivers/done.txt"))
+    {
+        ssleep(1);
+        doc_filterloop++;
+        LIDBG_WARN("waiting done.txt:%d\n", doc_filterloop);
+    }
+
+    //wait logcat done 
+    doc_filterloop = 0;
+    while(doc_filterloop < 50 && !fs_is_file_exist("/sdcard/FlyLog/DriBugReport/logcat_buff.txt"))
+    {
+        ssleep(1);
+        doc_filterloop++;
+        LIDBG_WARN("waiting logcat_buff.txt:%d\n", doc_filterloop);
+    }
+
     //udisk check
     if(copy2udisk)
     {
