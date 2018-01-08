@@ -190,9 +190,9 @@ public class FlyBootService extends Service {
 	mWhiteList2 = FileReadList("/flysystem/flytheme/config/SuspendAppProtectList.conf","\n");
 	mInternelWhiteList = FileReadList("/flysystem/lib/out/appInternetProtectList.conf","\n");
 	DUMP();
-        LIDBG_PRINT("start [getInternelAllAppUids]\n");
-	getInternelAllAppUids(mInternelAllAppListUID);
-        LIDBG_PRINT("stop [getInternelAllAppUids]\n");
+        LIDBG_PRINT("start [FlyaudioInternetEnable]\n");
+        FlyaudioInternetEnable();
+        LIDBG_PRINT("stop [FlyaudioInternetEnable]\n");
         FlyaudioBlackListInternetControl(false);
 	IntentFilter filter = new IntentFilter();
 	filter.addAction("android.intent.action.BOOT_COMPLETED");
@@ -202,9 +202,9 @@ public class FlyBootService extends Service {
 	filter.setPriority(Integer.MAX_VALUE);
 	registerReceiver(myReceiver, filter);
 
-		setAndaddAlarmAtTtime(cmdPara[cmdParabase][0], cmdPara[cmdParabase][1],
-				cmdPara[cmdParabase][2], cmdPara[cmdParabase][3],
-				cmdPara[cmdParabase][4], cmdPara[cmdParabase][5]);
+	setAndaddAlarmAtTtime(cmdPara[cmdParabase][0], cmdPara[cmdParabase][1],
+			cmdPara[cmdParabase][2], cmdPara[cmdParabase][3],
+			cmdPara[cmdParabase][4], cmdPara[cmdParabase][5]);
 
 	intPlatformId = SystemProperties.getInt("persist.lidbg.intPlatformId", 0);
 	switch (intPlatformId) {
