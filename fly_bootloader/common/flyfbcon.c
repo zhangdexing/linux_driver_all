@@ -156,7 +156,7 @@ void display_logo_on_screen(sLogo *plogoparameter)
                         image_base_wdpi * bytes_per_bpp);
             }
 #ifdef BOOTLOADER_IMX6Q
-	flush_memery
+	flush_memery(fly_screen_w, fly_screen_h);
 #endif
         }
         else
@@ -194,7 +194,7 @@ void fly_fbcon_clear(void)
     dprintf(INFO, "Fbcon clear, width[%d] height[%d] base[0x%x]\n", fly_screen_w, fly_screen_h, fb_base_get());
     memset(fb_base_get(), 0x00, count * (FBCON_BPP / 8));
 #ifdef BOOTLOADER_IMX6Q
-	flush_memery
+	flush_memery(fly_screen_w, fly_screen_h);
 #endif
 #ifdef BOOTLOADER_MT3561
 	flush_memery(fly_screen_w, fly_screen_h);
@@ -295,7 +295,7 @@ void fly_setBcol(unsigned long int backcolor)
         for(j = 0; j < 600; j++)
             *ptr++ = GET_COLOR_RGB565(R, G, B);
 #ifdef BOOTLOADER_IMX6Q
-	flush_memery
+	flush_memery(fly_screen_w, fly_screen_h);
 #endif
 #endif
 #ifdef BOOTLOADER_MT3561

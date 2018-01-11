@@ -45,6 +45,6 @@ DECLARE_GLOBAL_DATA_PTR;
 
 extern struct fbcon_config *config;
 extern unsigned page_mask;
-#define flush_memery flush_cache(0x8ef20f60,0x1C2000);
+#define flush_memery(x,y) flush_cache(0x8ef20f60,x*y*3);
 #endif
 
