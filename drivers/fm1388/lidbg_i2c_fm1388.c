@@ -1700,6 +1700,43 @@ static struct miscdevice fm1388_dev = {
 };
 
 
+
+
+#ifdef SUSPEND_ONLINE
+static int lidbg_fm1388_event(struct notifier_block *this,
+                       unsigned long event, void *ptr)
+{
+    DUMP_FUN;
+
+    switch (event)
+    {
+    case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON):
+
+		if(is_host_slept == 1)
+		{
+			is_host_slept = 0;
+			fm1388_boot_status=FM1388_HOT_BOOT;
+			CREATE_KTHREAD(fm1388_fw_loaded,NULL);
+		}
+		break;
+    case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_OFF):
+
+		break;
+    default:
+        break;
+    }
+
+    return NOTIFY_DONE;
+}
+
+static struct notifier_block lidbg_notifier =
+{
+    .notifier_call = lidbg_fm1388_event,
+};
+#endif
+
+
+
 #ifdef CONFIG_PM
 static int fm1388_i2c_suspend(struct device *dev)
 {
@@ -1714,6 +1751,11 @@ static int fm1388_i2c_resume(struct device *dev)
 {
 	//lidbg(TAG"%s: entering\n", __func__);
 	//Todo: something after driver's resume
+
+#ifdef SUSPEND_ONLINE
+	return 0;
+#endif
+
 	is_host_slept = 0;
 	fm1388_boot_status=FM1388_HOT_BOOT;
 	CREATE_KTHREAD(fm1388_fw_loaded,NULL);
@@ -1795,6 +1837,12 @@ static int fm1388_probe(struct platform_device *pdev)
 	lidbg_new_cdev(&fm1388_mode_fops, "fm1388_switch_mode");
 
 	INIT_DELAYED_WORK(&dsp_start_vr, dsp_start_vr_work);
+
+
+#ifdef SUSPEND_ONLINE
+		register_lidbg_notifier(&lidbg_notifier);
+#endif
+
 
 #ifdef FM1388_IRQ
 	INIT_WORK(&fm1388_irq_work, fm1388_irq_handling_work);
