@@ -1711,7 +1711,7 @@ static int lidbg_fm1388_event(struct notifier_block *this,
     switch (event)
     {
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON):
-
+		lidbg(TAG"%s: NOTIFIER_MINOR_ACC_ON:is_host_slept.%d\n", __func__,is_host_slept);
 		if(is_host_slept == 1)
 		{
 			is_host_slept = 0;
@@ -1740,9 +1740,9 @@ static struct notifier_block lidbg_notifier =
 #ifdef CONFIG_PM
 static int fm1388_i2c_suspend(struct device *dev)
 {
-	//lidbg(TAG"%s: entering...\n", __func__);
 	//Todo: something before driver's suspend.
 	is_host_slept = 1;
+	lidbg(TAG"%s: is_host_slept.%d\n", __func__,is_host_slept);
 
 	return 0;
 }
@@ -1753,6 +1753,7 @@ static int fm1388_i2c_resume(struct device *dev)
 	//Todo: something after driver's resume
 
 #ifdef SUSPEND_ONLINE
+	lidbg(TAG"%s: return 0;\n", __func__);
 	return 0;
 #endif
 
@@ -1840,6 +1841,7 @@ static int fm1388_probe(struct platform_device *pdev)
 
 
 #ifdef SUSPEND_ONLINE
+		lidbg(TAG"%s: register_lidbg_notifier\n", __func__);
 		register_lidbg_notifier(&lidbg_notifier);
 #endif
 
