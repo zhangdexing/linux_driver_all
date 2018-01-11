@@ -402,9 +402,15 @@ bool Fly_Get_Resolution(int *x, int *y, int *bit)
 	    dprintf(INFO, "flyaboot init autoUp.val = %d  upName.val = %d\n", RecoveryMeg.bootParam.autoUp.val, RecoveryMeg.bootParam.upName.val);
 	}
 	/****************************************************************/
-	dprintf(INFO, "HDJ: flyparameter hwInfo.info[11] = %d\n", (RecoveryMeg.hwInfo.info[11] - '0'));
-	fly_display = (RecoveryMeg.hwInfo.info[11] - '0');
-	fly_manufacturer = ((RecoveryMeg.hwInfo.info[8] - '0')*10+(RecoveryMeg.hwInfo.info[9] - '0'));
+	if(strncmp(RecoveryMeg.bootParam.bootParamsLen.flags, "BOOTLEN", strlen("BOOTLEN"))  != 0)
+	{
+		dprintf(INFO, "LK bootParamsLen.flags error : %s so user 1024*600 resolution 8bit lcd\n", RecoveryMeg.bootParam.bootParamsLen.flags);
+		fly_display = 0;
+	}else{
+		dprintf(INFO, "HDJ: flyparameter hwInfo.info[11] = %d\n", (RecoveryMeg.hwInfo.info[11] - '0'));
+		fly_display = (RecoveryMeg.hwInfo.info[11] - '0');
+		fly_manufacturer = ((RecoveryMeg.hwInfo.info[8] - '0')*10+(RecoveryMeg.hwInfo.info[9] - '0'));
+	}
 	if(fly_manufacturer == 4){
 		*bit = 1;
 	}else{
@@ -433,7 +439,10 @@ bool Fly_Get_Resolution(int *x, int *y, int *bit)
 	}else if(fly_display == 4){
 	        *x = 1024;
 	        *y = 768;
-		dbg_msg_set_test("display=1024_768");
+		if(fly_manufacturer == 4)
+			dbg_msg_set_test("display=1024_768_6bit");
+		else
+			dbg_msg_set_test("display=1024_768");
 		return true;
 	}else
 		return false;
