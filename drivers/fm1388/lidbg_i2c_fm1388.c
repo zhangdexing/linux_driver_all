@@ -482,12 +482,15 @@ static void fm1388_software_reset(void)
 
 static void fm1388_hardware_reset(void)
 {
-//	SOC_IO_Output(0, FM1388_RESET_PIN, 1);
+	
+#ifdef HEADWARE_RESET
+	SOC_IO_Output(0, FM1388_RESET_PIN, 1);
 	msleep(10);
-//	SOC_IO_Output(0, FM1388_RESET_PIN, 0);
+	SOC_IO_Output(0, FM1388_RESET_PIN, 0);
 	msleep(500);
-//	SOC_IO_Output(0, FM1388_RESET_PIN, 1);
+	SOC_IO_Output(0, FM1388_RESET_PIN, 1);
 	msleep(10);
+#endif
 }
 
 #if 0
@@ -1055,6 +1058,11 @@ int load_fm1388_mode_cfg(char* file_src, unsigned int choosed_mode)
 static int fm1388_fw_loaded(void *data)
 {
 	unsigned int val;
+
+#ifndef HEADWARE_RESET
+	fm1388_write(0x00, 0x10ec);
+#endif
+
 	mutex_lock(&fm1388_init_lock);
 	fm1388_dsp_mode = -1;
 	fm1388_is_dsp_on = false;
@@ -1348,6 +1356,7 @@ static ssize_t fm1388_status_show(struct device *dev,struct device_attribute *at
 
 static ssize_t fm1388_reinit_show(struct device *dev,struct device_attribute *attr, char *buf)
 {
+	fm1388_write(0x00, 0x10ec);
 	CREATE_KTHREAD(fm1388_fw_loaded,NULL);
 	return sprintf(buf, "fm1388_reinit\n");
 }
@@ -1598,26 +1607,42 @@ static u32 fm1388_irq_handler(void *para)
 #ifdef SHOW_FRAMECNT
 static void fm1388_framecnt_handling_work(struct work_struct *work)
 {
-	unsigned int addr, val;
+	unsigned int addr, val, countVal,oldCountVal;
 
 	//lidbg(TAG"%s: going to read the frame count.\n", __func__);
+	addr = FRAME_CNT;
+	fm1388_dsp_mode_i2c_read_addr_2(addr, &oldCountVal);
+	lidbg(TAG"%s: First FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, oldCountVal);
 
 	while (1) {
-		msleep(20000);
+		msleep(1000);
+		
+		if(g_var.acc_flag == FLY_ACC_OFF)
+			continue;
+		
 		spi_test();
 		addr = FRAME_CNT;
-		fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
+		fm1388_dsp_mode_i2c_read_addr_2(addr, &countVal);
 		lidbg(TAG"%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, val);
 
 		addr = CRC_STATUS;
 		fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
 		if (val == 0x8888) {
 			lidbg(TAG"%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
+
+			if(oldCountVal == countVal)
+			{
+				//fm1388_write(0x00, 0x10ec);
+				lidbg(TAG"%s:!!!!!!!!!!!!!!!!!!!!!!1388 count error===================== !!!!!!!!!!!!!!!!!!!!!!!!!!!\n", __func__);
+				 //DUMP_BUILD_TIME;
+				fm1388_fw_loaded(NULL);
+			}
 		} else {
 			lidbg(TAG"%s: CRC_STAUS 0x%x = 0x%x, CRC FAIL!\n", __func__, addr, val);
 			fm1388_fw_loaded(NULL);
 			lidbg(TAG"reinit fm1388!!!!!\n");
 		}
+		oldCountVal = countVal;
 	}
 }
 #endif
@@ -1711,16 +1736,8 @@ static int lidbg_fm1388_event(struct notifier_block *this,
     switch (event)
     {
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON):
-		lidbg(TAG"%s: NOTIFIER_MINOR_ACC_ON:is_host_slept.%d\n", __func__,is_host_slept);
-		if(is_host_slept == 1)
-		{
-			is_host_slept = 0;
-			fm1388_boot_status=FM1388_HOT_BOOT;
-			CREATE_KTHREAD(fm1388_fw_loaded,NULL);
-		}
 		break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_OFF):
-
 		break;
     default:
         break;
