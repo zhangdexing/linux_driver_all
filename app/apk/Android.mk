@@ -107,6 +107,13 @@ include $(BUILD_PREBUILT)
 #LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
 #include $(BUILD_PREBUILT)
 
+include $(CLEAR_VARS)
+LOCAL_MODULE := RecForge.apk
+LOCAL_SRC_FILES := RecForge.apk
+LOCAL_MODULE_CLASS := bin
+LOCAL_MODULE_TAGS := optional debug eng tests samples
+LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+include $(BUILD_PREBUILT)
 
 #include $(CLEAR_VARS)
 #LOCAL_MODULE := ST.ko

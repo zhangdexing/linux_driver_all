@@ -751,6 +751,8 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "MediaPlayerTest.ko")));
             lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "GpsInfo.ko")));
             lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "setting.ko")));
+			lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "RecForge.apk")));
+
             lidbg_domineering_ack();
         }
         if (!strcmp(argv[1], "*158#999"))
