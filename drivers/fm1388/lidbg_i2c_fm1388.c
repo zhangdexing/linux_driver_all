@@ -1756,18 +1756,16 @@ static void fm1388_framecnt_handling_work(struct work_struct *work)
 
             if(oldCountVal == countVal)
             {
-                //fm1388_write(0x00, 0x10ec);
-                lidbg(TAG"%s:!!!!!!!!!!!!!!!!!!!!!!1388 count error===================== !!!!!!!!!!!!!!!!!!!!!!!!!!!\n", __func__);
-                //DUMP_BUILD_TIME;
+                lidbgerr(TAG"%s:!!!!!!!!!!!!!!!!!!!!!!1388err count error===================== !!!!!!!!!!!!!!!!!!!!!!!!!!!\n", __func__);
                 fm1388_fw_loaded(NULL);
             }
         }
         else
         {
-            lidbg(TAG"%s: CRC_STAUS 0x%x = 0x%x, CRC FAIL!\n", __func__, addr, val);
+            lidbgerr(TAG"%s: CRC_STAUS 0x%x = 0x%x, 1388err CRC FAIL!!!!!!!!!!!!!!!!!!!!!!!!!!!!\\n", __func__, addr, val);
             fm1388_fw_loaded(NULL);
-            lidbg(TAG"reinit fm1388!!!!!\n");
         }
+
         oldCountVal = countVal;
     }
 }
