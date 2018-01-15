@@ -31,6 +31,8 @@ static fly_bare_data *g_bare_data=NULL;
 #ifdef BOOTLOADER_MT3561
 int fly_display = 0;
 int fly_manufacturer = 0;
+int fly_reverse = 0;
+int flyparameter_len = 0;
 #endif
 
 #if FLY_SCREEN_SIZE_1024
@@ -405,11 +407,14 @@ bool Fly_Get_Resolution(int *x, int *y, int *bit)
 	if(strncmp(RecoveryMeg.bootParam.bootParamsLen.flags, "BOOTLEN", strlen("BOOTLEN"))  != 0)
 	{
 		dprintf(INFO, "LK bootParamsLen.flags error : %s so user 1024*600 resolution 8bit lcd\n", RecoveryMeg.bootParam.bootParamsLen.flags);
-		fly_display = 0;
 	}else{
-		dprintf(INFO, "HDJ: flyparameter hwInfo.info[11] = %d\n", (RecoveryMeg.hwInfo.info[11] - '0'));
-		fly_display = (RecoveryMeg.hwInfo.info[11] - '0');
-		fly_manufacturer = ((RecoveryMeg.hwInfo.info[8] - '0')*10+(RecoveryMeg.hwInfo.info[9] - '0'));
+		flyparameter_len = strlen(RecoveryMeg.hwInfo.info);
+		if(flyparameter_len >= 13){
+			fly_display = (RecoveryMeg.hwInfo.info[11] - '0');
+			fly_manufacturer = ((RecoveryMeg.hwInfo.info[8] - '0')*10+(RecoveryMeg.hwInfo.info[9] - '0'));
+			fly_reverse = (RecoveryMeg.hwInfo.info[12] - '0');
+		}
+		dprintf(INFO, "HDJ: flyparameter hwInfo.info[9 10] = %d hwInfo.info[12] = %d hwInfo.info[13] = %d len = %d\n", fly_manufacturer,fly_display, fly_reverse, strlen(RecoveryMeg.hwInfo.info));
 	}
 	if(fly_manufacturer == 4){
 		*bit = 1;
@@ -543,7 +548,7 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
             while(--bofore_recovery_time)
             {
                 //display_colour(PreRecoveryModel);
-                display_enter_recovery_count(bofore_recovery_time);
+                if(fly_reverse != 3) display_enter_recovery_count(bofore_recovery_time);
                 if((bofore_recovery_time == 1) || (!judge_key_state()))
                 {
                     Adcnum = get_boot_mode();

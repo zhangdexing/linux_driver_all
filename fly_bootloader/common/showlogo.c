@@ -543,7 +543,7 @@ int  show_logo()
         dprintf(INFO, "fail to logoDataDecompress\n");
         goto err_out;
     }
-    if((RecoveryMeg.hwInfo.info[12] - '0') != 0)
+    if((strlen(RecoveryMeg.hwInfo.info) >= 13) && ((RecoveryMeg.hwInfo.info[12] - '0') != 0))
     	logo_reverse(pDataRGB565, &pLogoInfo->width, &pLogoInfo->height, (RecoveryMeg.hwInfo.info[12] - '0'));
 
 #if (LOGO_FORMAT == RGB888)
