@@ -174,6 +174,13 @@ bool iSOC_ADC_Get (u32 channel , u32 *value)
         return 0;
     return 1;
 }
+
+bool iLPC_ADC_Get(u32 channel , u32 *value)
+{
+    return 0;
+}
+
+
 void iSOC_Key_Report(u32 key_value, u32 type)
 {
     lidbg_key_report(key_value, type);
@@ -385,7 +392,7 @@ static void set_func_tbl(void)
     plidbg_dev->soc_func_tbl.pfnHal_Ts_Callback = NULL;
 
     plidbg_dev->soc_func_tbl.pfnSOC_Temp_Get = iSOC_Temp_Get;
-
+    plidbg_dev->soc_func_tbl.pfnLPC_ADC_Get = iLPC_ADC_Get;
 }
 
 int interface_open(struct inode *inode, struct file *filp)
