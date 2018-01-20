@@ -1746,22 +1746,22 @@ static void fm1388_framecnt_handling_work(struct work_struct *work)
         spi_test();
         addr = FRAME_CNT;
         fm1388_dsp_mode_i2c_read_addr_2(addr, &countVal);
-        lidbg(TAG"%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, val);
 
         addr = CRC_STATUS;
         fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
         if (val == 0x8888)
         {
-            lidbg(TAG"%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
+            //lidbg(TAG"%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
 
             if(oldCountVal == countVal)
             {
-                lidbgerr(TAG"%s:!!!!!!!!!!!!!!!!!!!!!!1388err count error===================== !!!!!!!!!!!!!!!!!!!!!!!!!!!\n", __func__);
+                lidbgerr(TAG"%s:!!!!!!!!!!!!!!!!!!!!!!1388err count error===================== \n", __func__);
                 fm1388_fw_loaded(NULL);
             }
         }
         else
         {
+            lidbgerr(TAG"%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, val);
             lidbgerr(TAG"%s: CRC_STAUS 0x%x = 0x%x, 1388err CRC FAIL!!!!!!!!!!!!!!!!!!!!!!!!!!!!\\n", __func__, addr, val);
             fm1388_fw_loaded(NULL);
         }
