@@ -57,6 +57,7 @@ LIDBG_DEFINE;
 
 #define BT_MODE "bt"
 #define BARGEIN_MODE "dueros"
+#define BYPASS_MODE "bypass"
 //#define HEADWARE_RESET
 
 enum FM1388_BOOT_STATE
@@ -1183,7 +1184,7 @@ static int fm1388_fw_loaded(void *data)
     //   user may change preferred default mode here
     load_fm1388_vec(combine_path_name(filepath_name, "FM1388_run.vec"));
     msleep(10);
-    fm1388_dsp_mode_change(8);	// set default mode, parse from .cfg
+    fm1388_dsp_mode_change(0);	// set default mode, parse from .cfg
 #ifdef SHOW_DL_TIME
     do_gettimeofday(&(txc.time));
     rtc_time_to_tm(txc.time.tv_sec, &tm);
@@ -1602,14 +1603,19 @@ static ssize_t fm1388_device_mode_write(struct file *file,
 
     if(!strncmp(mode, BT_MODE, strlen(BT_MODE)))
     {
-        fm1388_dsp_mode_change(7);
+        fm1388_dsp_mode_change(1);
         lidbg(TAG"%s: switch mode to bluetooth.\n", __func__);
     }
     else if(!strncmp(mode, BARGEIN_MODE, strlen(BARGEIN_MODE)))
     {
-        fm1388_dsp_mode_change(8);
+        fm1388_dsp_mode_change(0);
         lidbg(TAG"%s: switch mode to bargein.\n", __func__);
     }
+	else if(!strncmp(mode, BYPASS_MODE, strlen(BYPASS_MODE)))
+	{
+		fm1388_dsp_mode_change(2);
+        lidbg(TAG"%s: switch mode to bypass.\n", __func__);
+	}
     else
         lidbg(TAG"%s: no this mode:%s.\n", __func__, mode);
 
@@ -1747,6 +1753,7 @@ static void fm1388_framecnt_handling_work(struct work_struct *work)
         addr = FRAME_CNT;
         fm1388_dsp_mode_i2c_read_addr_2(addr, &countVal);
 
+
         addr = CRC_STATUS;
         fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
         if (val == 0x8888)
@@ -1761,7 +1768,7 @@ static void fm1388_framecnt_handling_work(struct work_struct *work)
         }
         else
         {
-            lidbgerr(TAG"%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, val);
+            lidbgerr(TAG"%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, FRAME_CNT, countVal);
             lidbgerr(TAG"%s: CRC_STAUS 0x%x = 0x%x, 1388err CRC FAIL!!!!!!!!!!!!!!!!!!!!!!!!!!!!\\n", __func__, addr, val);
             fm1388_fw_loaded(NULL);
         }
