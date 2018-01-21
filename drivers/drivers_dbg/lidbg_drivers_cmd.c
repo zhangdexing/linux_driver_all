@@ -730,7 +730,9 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#146--set android all voice stream max \n");
             fs_mem_log("*158#147--set android all voice stream min \n");
             fs_mem_log("*158#148--reinit fm1388 \n");
-
+            fs_mem_log("*158#149--switch fm1388 vr mode\n");
+            fs_mem_log("*158#150--switch fm1388 bluetooth mode\n");
+            fs_mem_log("*158#151--switch fm1388 bypass mode\n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1827,6 +1829,24 @@ void parse_cmd(char *pt)
 		 {
 				 lidbg("*158#148--reinit fm1388 \n");
 				 lidbg_shell_cmd("cat /sys/devices/platform/fm1388.0/fm1388_reinit");
+				 lidbg_domineering_ack();
+		 }
+		else if (!strcmp(argv[1], "*158#149"))
+		 {
+				 lidbg("*158#149--switch fm1388 vr mode \n");
+				 lidbg_shell_cmd("echo dueros > /dev/fm1388_switch_mode");
+				 lidbg_domineering_ack();
+		 }
+		else if (!strcmp(argv[1], "*158#150"))
+		 {
+				 lidbg("*158#150--switch fm1388 bt mode \n");
+				 lidbg_shell_cmd("echo bt > /dev/fm1388_switch_mode");
+				 lidbg_domineering_ack();
+		 }
+		else if (!strcmp(argv[1], "*158#151"))
+		 {
+				 lidbg("*158#151--switch fm1388 bypass mode\n");
+				 lidbg_shell_cmd("echo bypass > /dev/fm1388_switch_mode");
 				 lidbg_domineering_ack();
 		 }
 
