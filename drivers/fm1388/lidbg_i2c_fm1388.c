@@ -105,6 +105,7 @@ static struct delayed_work dsp_start_vr;
 //static struct workqueue_struct *fm1388_irq_wq;
 u32 fm1388_irq;
 static int is_host_slept = 0;
+static bool isNotInspectFramecnt = false;
 
 //
 // show DSP frame counter and CRC, for debugging
@@ -1152,7 +1153,6 @@ int load_fm1388_mode_cfg(char *file_src, unsigned int choosed_mode)
 static int fm1388_fw_loaded(void *data)
 {
     unsigned int val;
-
 #ifndef HEADWARE_RESET
     fm1388_write(0x00, 0x10ec);
 #endif
@@ -1616,6 +1616,16 @@ static ssize_t fm1388_device_mode_write(struct file *file,
 		fm1388_dsp_mode_change(2);
         lidbg(TAG"%s: switch mode to bypass.\n", __func__);
 	}
+	else if(!strncmp(mode, "notinspectframecnt", strlen("notinspectframecnt")))
+	{
+		isNotInspectFramecnt = true;
+        lidbg(TAG"%s: isNotInspectFramecnt = true.\n", __func__);
+	}
+	else if(!strncmp(mode, "inspectframecnt", strlen("inspectframecnt")))
+	{
+		isNotInspectFramecnt = false;
+        lidbg(TAG"%s: isNotInspectFramecnt = false.\n", __func__);
+	}
     else
         lidbg(TAG"%s: no this mode:%s.\n", __func__, mode);
 
@@ -1748,6 +1758,9 @@ static void fm1388_framecnt_handling_work(struct work_struct *work)
 
         if(g_var.acc_flag == FLY_ACC_OFF)
             continue;
+		
+		if(isNotInspectFramecnt)
+			continue;
 
         spi_test();
         addr = FRAME_CNT;
@@ -1870,6 +1883,14 @@ static int lidbg_fm1388_event(struct notifier_block *this,
     switch (event)
     {
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON):
+        if(is_host_slept == 1)
+        {
+            is_host_slept = 0;
+            if(isNotInspectFramecnt)
+            {
+                CREATE_KTHREAD(fm1388_fw_loaded,NULL);
+            }
+        }		
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_OFF):
         break;

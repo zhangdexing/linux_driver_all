@@ -733,6 +733,9 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#149--switch fm1388 vr mode\n");
             fs_mem_log("*158#150--switch fm1388 bluetooth mode\n");
             fs_mem_log("*158#151--switch fm1388 bypass mode\n");
+            fs_mem_log("*158#152--switch fm1388 notinspectframecnt\n");
+            fs_mem_log("*158#153--switch fm1388 inspectframecnt\n");
+			
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1847,6 +1850,16 @@ void parse_cmd(char *pt)
 		 {
 				 lidbg("*158#151--switch fm1388 bypass mode\n");
 				 lidbg_shell_cmd("echo bypass > /dev/fm1388_switch_mode");
+				 lidbg_domineering_ack();
+		 }
+		else if (!strcmp(argv[1], "*158#152"))
+		 {
+				 lidbg_shell_cmd("echo inspectframecnt > /dev/fm1388_switch_mode");
+				 lidbg_domineering_ack();
+		 }
+		else if (!strcmp(argv[1], "*158#153"))
+		 {
+				 lidbg_shell_cmd("echo notinspectframecnt > /dev/fm1388_switch_mode");
 				 lidbg_domineering_ack();
 		 }
 
