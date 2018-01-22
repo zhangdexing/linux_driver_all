@@ -77,6 +77,7 @@ void dump_sysinfo(bool copy2udisk)
 
     //wait kmsg_e.txt to block app and then upload
     lidbg_shell_cmd("/flysystem/lib/out/doc_filter -s /data/reckmsg/kmsg.txt -d /sdcard/kmsg_b.txt -w /data/lidbg/kmsg_w.txt -t /flysystem/lib/out/kmsg_wl.conf -y /flysystem/lib/out/kmsg_bl.conf -c /data/lidbg/kmsg_e.txt -m 1 -p 0 -l 26214400 -b 0 &");
+    lidbg_shell_cmd("/system/lib/modules/out/doc_filter -s /data/reckmsg/kmsg.txt -d /sdcard/kmsg_b.txt -w /data/lidbg/kmsg_w.txt -t /system/lib/modules/out/kmsg_wl.conf -y /system/lib/modules/out/kmsg_bl.conf -c /data/lidbg/kmsg_e.txt -m 1 -p 0 -l 26214400 -b 0 &");
     while(doc_filterloop < 90 && !fs_is_file_exist("/data/lidbg/kmsg_e.txt"))
     {
         ssleep(1);
