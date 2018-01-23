@@ -39,7 +39,7 @@ LIDBG_DEFINE;
 #define TAG "dfm1388_i2c:"
 
 #define FM1388_I2C_ADDR 0x2c
-#define FM1388_RESET_PIN 130
+#define FM1388_RESET_PIN 64
 
 #define FM1388_IOC_MAGIC 'k'
 #define FM1388_IOC_MAXNR  7
@@ -58,7 +58,9 @@ LIDBG_DEFINE;
 #define BT_MODE "bt"
 #define BARGEIN_MODE "dueros"
 #define BYPASS_MODE "bypass"
-//#define HEADWARE_RESET
+
+#define HARDWARE_RESET
+#define SOFTWARD_RESET
 
 enum FM1388_BOOT_STATE
 {
@@ -515,7 +517,7 @@ static void fm1388_software_reset(void)
 static void fm1388_hardware_reset(void)
 {
 
-#ifdef HEADWARE_RESET
+#ifdef HARDWARE_RESET
     SOC_IO_Output(0, FM1388_RESET_PIN, 1);
     msleep(10);
     SOC_IO_Output(0, FM1388_RESET_PIN, 0);
@@ -1153,7 +1155,7 @@ int load_fm1388_mode_cfg(char *file_src, unsigned int choosed_mode)
 static int fm1388_fw_loaded(void *data)
 {
     unsigned int val;
-#ifndef HEADWARE_RESET
+#ifdef SOFTWARD_RESET
     fm1388_write(0x00, 0x10ec);
 #endif
 

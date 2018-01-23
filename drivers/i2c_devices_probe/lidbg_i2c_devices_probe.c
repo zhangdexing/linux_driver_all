@@ -1,5 +1,6 @@
 
 #include "lidbg.h"
+#define FM1388_RESET_PIN_ 64
 
 LIDBG_DEFINE;
 
@@ -77,6 +78,16 @@ void radio_reset_lpc(void)
 	LPC_CMD_RADIORST_H;
 	msleep(1000);
 }
+void fm1388_reset(void)
+{
+	SOC_IO_Output(0, FM1388_RESET_PIN_, 1);
+	msleep(10);
+	SOC_IO_Output(0, FM1388_RESET_PIN_, 0);
+	msleep(500);
+	SOC_IO_Output(0, FM1388_RESET_PIN_, 1);
+	msleep(10);
+}
+
 
 void accel_power_enable(void)
 {
@@ -107,7 +118,7 @@ struct probe_device i2c_probe_dev[] =
 	{DEV_RADIO, saf7741_i2c_bus, 0x1c, 0x00, "saf7741.ko", radio_reset_lpc, NULL ,1},
 	{DEV_RADIO, tef6638_i2c_bus, 0x63, 0x00, "tef6638.ko", radio_reset_lpc, NULL ,1},
 #endif
-	{DEV_CARPLAY, fm1388_i2c_bus, 0x2c, 0x00, "lidbg_spi_fm1388.ko,lidbg_i2c_fm1388.ko", NULL, NULL ,0},
+	{DEV_CARPLAY, fm1388_i2c_bus, 0x2c, 0x00, "lidbg_spi_fm1388.ko,lidbg_i2c_fm1388.ko", fm1388_reset, NULL ,0},
 };
 
 void parse_ts_info(struct probe_device *i2cdev_info)
