@@ -1498,6 +1498,7 @@ void parse_cmd(char *pt)
         else if (!strcmp(argv[1], "*158#106"))
         {
             lidbg("*158#106-- USB SLAVE MODE\n");
+		lidbg_shell_cmd("echo disable_hub_check > /dev/flydev0");
 #ifdef SOC_mt35x
            {
 		lidbg_shell_cmd("chmod 777 /sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode");

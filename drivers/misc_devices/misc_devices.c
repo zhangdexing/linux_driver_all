@@ -14,6 +14,7 @@ static struct timer_list usb_release_timer;
 #define LCD_ON_DELAY (1200)//acc_on-->lcd_on
 static struct wake_lock device_wakelock;
 //int usb_request = 0;
+static u32 hub_check_en = 1;
 
 #if defined(CONFIG_FB)
 struct notifier_block devices_notif;
@@ -76,7 +77,6 @@ static int devices_notifier_callback(struct notifier_block *self,
 
 static u32 last_usb_off_time = 0;
 
-
 void usb_camera_enable(bool enable)
 {
     DUMP_FUN;
@@ -114,7 +114,7 @@ static int thread_usb_hub_check(void *data)
      else
           lidbg("sdcard1 success\n");
 
-     while((g_var.usb_status == 1) && ( g_var.acc_flag == FLY_ACC_ON))
+     while((hub_check_en == 1) &&(g_var.usb_status == 1) && ( g_var.acc_flag == FLY_ACC_ON))
      {
 
 		char buff[32] = {0};
@@ -603,6 +603,11 @@ static void parse_cmd(char *pt)
 	else if (!strncmp(argv[0], "cvbs_on", 7))
 	{
 		LPC_CMD_CVBS_POWER_ON;
+	}
+	else if (!strncmp(argv[0], "disable_hub_check", 17))
+	{
+		hub_check_en = 0;
+		lidbg("hub_check_en:%d\n",hub_check_en);
 	}
 }
 
