@@ -1,6 +1,10 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/../inc
+LOCAL_MODULE_PATH := $(DBG_OUT_PATH)
+include $(DBG_BUILD_PATH)/build_cfg.mk
+
 # our own branch needs these headers
 
 LOCAL_MODULE_TAGS := optional
