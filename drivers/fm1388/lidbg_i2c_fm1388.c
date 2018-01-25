@@ -510,20 +510,20 @@ static int fm1388_run_dsp_addr_list(struct  fm1388_dsp_addr_list *list, size_t l
 #endif
 static void fm1388_software_reset(void)
 {
-    //lidbg(TAG"%s\n", __func__);
-    //	fm1388_write(0x00, 0x10ec);
+#ifdef SOFTWARD_RESET
+    fm1388_write(0x00, 0x10ec);
+    msleep(100);
+#endif
 }
 
 static void fm1388_hardware_reset(void)
 {
 
 #ifdef HARDWARE_RESET
-    SOC_IO_Output(0, FM1388_RESET_PIN, 1);
-    msleep(10);
     SOC_IO_Output(0, FM1388_RESET_PIN, 0);
-    msleep(500);
+    msleep(100);
     SOC_IO_Output(0, FM1388_RESET_PIN, 1);
-    msleep(10);
+    msleep(100);
 #endif
 }
 
@@ -1155,11 +1155,12 @@ int load_fm1388_mode_cfg(char *file_src, unsigned int choosed_mode)
 static int fm1388_fw_loaded(void *data)
 {
     unsigned int val;
-#ifdef SOFTWARD_RESET
-    fm1388_write(0x00, 0x10ec);
-#endif
+
 
     mutex_lock(&fm1388_init_lock);
+	
+    fm1388_hardware_reset();
+    fm1388_software_reset();
     fm1388_dsp_mode = -1;
     fm1388_is_dsp_on = false;
     fm1388_config_status = false;
@@ -1168,8 +1169,7 @@ static int fm1388_fw_loaded(void *data)
     rtc_time_to_tm(txc.time.tv_sec, &tm);
     lidbg(TAG"%s#########:: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year + 1900, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 #endif
-    fm1388_hardware_reset();
-    fm1388_software_reset();
+
     if(fm1388_boot_status == FM1388_HOT_BOOT)
     {
         fm1388_spi_device_reload();
@@ -1756,14 +1756,11 @@ static void fm1388_framecnt_handling_work(struct work_struct *work)
 
     while (1)
     {
-        msleep(1000);
+        msleep(2000);
 
-        if(g_var.acc_flag == FLY_ACC_OFF)
+        if((g_var.acc_flag == FLY_ACC_OFF)||(isNotInspectFramecnt) ||(is_host_slept == 1))
             continue;
-		
-		if(isNotInspectFramecnt)
-			continue;
-
+	
         spi_test();
         addr = FRAME_CNT;
         fm1388_dsp_mode_i2c_read_addr_2(addr, &countVal);
@@ -1887,11 +1884,8 @@ static int lidbg_fm1388_event(struct notifier_block *this,
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON):
         if(is_host_slept == 1)
         {
-            is_host_slept = 0;
-            if(isNotInspectFramecnt)
-            {
-                CREATE_KTHREAD(fm1388_fw_loaded,NULL);
-            }
+            CREATE_KTHREAD(fm1388_fw_loaded,NULL);
+	     is_host_slept = 0;
         }		
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_OFF):
