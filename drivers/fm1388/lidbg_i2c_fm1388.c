@@ -108,6 +108,8 @@ static struct delayed_work dsp_start_vr;
 u32 fm1388_irq;
 static int is_host_slept = 0;
 static bool isNotInspectFramecnt = false;
+static bool isLock = false;
+
 
 //
 // show DSP frame counter and CRC, for debugging
@@ -1156,8 +1158,11 @@ static int fm1388_fw_loaded(void *data)
 {
     unsigned int val;
 
+    if(isLock)
+        	return -1;
 
     mutex_lock(&fm1388_init_lock);
+    isLock = true;
 	
     fm1388_hardware_reset();
     fm1388_software_reset();
@@ -1197,6 +1202,7 @@ static int fm1388_fw_loaded(void *data)
     fm1388_config_status = true;
     spi_test();
     mutex_unlock(&fm1388_init_lock);
+    isLock = false;
     return 0;
 }
 
@@ -1758,7 +1764,7 @@ static void fm1388_framecnt_handling_work(struct work_struct *work)
     {
         msleep(2000);
 
-        if((g_var.acc_flag == FLY_ACC_OFF)||(isNotInspectFramecnt) ||(is_host_slept == 1))
+        if((g_var.acc_flag == FLY_ACC_OFF)||(isNotInspectFramecnt) ||(is_host_slept == 1) || (isLock))
             continue;
 	
         spi_test();
