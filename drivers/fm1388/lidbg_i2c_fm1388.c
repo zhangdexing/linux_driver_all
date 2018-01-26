@@ -109,7 +109,7 @@ u32 fm1388_irq;
 static int is_host_slept = 0;
 static bool isNotInspectFramecnt = false;
 static bool isLock = false;
-
+static short resumeAfterReinitCount = 0;
 
 //
 // show DSP frame counter and CRC, for debugging
@@ -158,6 +158,8 @@ typedef struct cfg_mode_cmd_t
 int load_fm1388_mode_cfg(char *file_src, unsigned int choosed_mode);
 int load_fm1388_vec(char *file_src);
 char *combine_path_name(char *s, char *append);
+
+static bool isFrameCountRise(void);
 
 
 static int fm1388_i2c_write(unsigned int reg, unsigned int value)
@@ -1164,43 +1166,51 @@ static int fm1388_fw_loaded(void *data)
     mutex_lock(&fm1388_init_lock);
     isLock = true;
 	
-    fm1388_hardware_reset();
-    fm1388_software_reset();
-    fm1388_dsp_mode = -1;
-    fm1388_is_dsp_on = false;
-    fm1388_config_status = false;
+	while(1)
+	{
+	    fm1388_hardware_reset();
+	    fm1388_software_reset();
+	    fm1388_dsp_mode = -1;
+	    fm1388_is_dsp_on = false;
+	    fm1388_config_status = false;
 #ifdef SHOW_DL_TIME
-    do_gettimeofday(&(txc.time));
-    rtc_time_to_tm(txc.time.tv_sec, &tm);
-    lidbg(TAG"%s#########:: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year + 1900, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	    do_gettimeofday(&(txc.time));
+	    rtc_time_to_tm(txc.time.tv_sec, &tm);
+	    lidbg(TAG"%s#########:: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year + 1900, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 #endif
 
-    if(fm1388_boot_status == FM1388_HOT_BOOT)
-    {
-        fm1388_spi_device_reload();
-    }
-    load_fm1388_init_vec(combine_path_name(filepath_name, "FM1388_init.vec"));
-    fm1388_is_dsp_on = true;	// set falg due to the last command of init VEC file will power on DSP
+	    if(fm1388_boot_status == FM1388_HOT_BOOT)
+	    {
+	        fm1388_spi_device_reload();
+	    }
+	    load_fm1388_init_vec(combine_path_name(filepath_name, "FM1388_init.vec"));
+	    fm1388_is_dsp_on = true;	// set falg due to the last command of init VEC file will power on DSP
 
-    msleep(10);	// wait HWfm1388_spi_device_reload ready to load firmware
-    fm1388_dsp_load_fw();
-    msleep(10);
+	    msleep(10);	// wait HWfm1388_spi_device_reload ready to load firmware
+	    fm1388_dsp_load_fw();
+	    msleep(10);
 
-    // TODO:
-    //   example to set default mode to mode 0
-    //   user may change preferred default mode here
-    load_fm1388_vec(combine_path_name(filepath_name, "FM1388_run.vec"));
-    msleep(10);
-    fm1388_dsp_mode_change(0);	// set default mode, parse from .cfg
+	    // TODO:
+	    //   example to set default mode to mode 0
+	    //   user may change preferred default mode here
+	    load_fm1388_vec(combine_path_name(filepath_name, "FM1388_run.vec"));
+	    msleep(10);
+	    fm1388_dsp_mode_change(0);	// set default mode, parse from .cfg
 #ifdef SHOW_DL_TIME
-    do_gettimeofday(&(txc.time));
-    rtc_time_to_tm(txc.time.tv_sec, &tm);
-    lidbg(TAG"%s#########:: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year + 1900, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	    do_gettimeofday(&(txc.time));
+	    rtc_time_to_tm(txc.time.tv_sec, &tm);
+	    lidbg(TAG"%s#########:: %d-%d-%d %d:%d:%d \n", __func__, tm.tm_year + 1900, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 #endif
-    fm1388_dsp_mode_i2c_read_addr_2(0x180200CA, &val);	// check register 0x65 to make sure DSP is running
-    lidbg(TAG"addr=0x180200CA, val=0x%x (value must be 0x7fe)\n", val);
-    fm1388_config_status = true;
-    spi_test();
+	    fm1388_dsp_mode_i2c_read_addr_2(0x180200CA, &val);	// check register 0x65 to make sure DSP is running
+	    lidbg(TAG"addr=0x180200CA, val=0x%x (value must be 0x7fe)\n", val);
+	    fm1388_config_status = true;
+	    spi_test();
+		resumeAfterReinitCount++;
+
+		if(isFrameCountRise())
+			break;
+	}
+	
     mutex_unlock(&fm1388_init_lock);
     isLock = false;
     return 0;
@@ -1645,6 +1655,47 @@ switch_mode_out:
     return length;
 }
 
+static ssize_t  fm1388_status_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
+{
+    char status_buf[6];
+
+	while(1)
+	{
+		if(isLock && (resumeAfterReinitCount<3))
+		{
+			msleep(100);
+			continue;
+		}
+		
+	    if(!isFrameCountRise())
+	    {
+			lidbg(TAG"%s: CRC ERROR!\n", __func__);
+			strcpy(status_buf, "error");
+			
+			if(resumeAfterReinitCount >= 3)
+				break;
+	    }
+	    else
+	    {
+	        //lidbg(TAG"%s: CRC OK!\n", __func__);
+	        strcpy(status_buf, "ok");
+			break;
+	    }
+		resumeAfterReinitCount = 0;
+	}
+
+    if(copy_to_user(buffer, status_buf, strlen(status_buf)))
+    {
+        lidbg(TAG"%s:copy_to_user ERR\n", __func__);
+        return -1;
+    }
+	
+	lidbg(TAG"%s: CRC status %s!\n", __func__, status_buf);
+
+    return strlen(status_buf);
+	
+}
+
 static ssize_t fm1388_device_write(struct file *file,
                                    const char __user *buffer, size_t length, loff_t *offset)
 {
@@ -1753,45 +1804,23 @@ static u32 fm1388_irq_handler(void *para)
 #ifdef SHOW_FRAMECNT
 static void fm1388_framecnt_handling_work(struct work_struct *work)
 {
-    unsigned int addr, val, countVal, oldCountVal;
-
-    //lidbg(TAG"%s: going to read the frame count.\n", __func__);
-    addr = FRAME_CNT;
-    fm1388_dsp_mode_i2c_read_addr_2(addr, &oldCountVal);
-    lidbg(TAG"%s: First FRAME COUNTER 0x%x = 0x%x\n", __func__, addr, oldCountVal);
+    unsigned int addr, val;
+    addr = CRC_STATUS;
 
     while (1)
     {
-        msleep(2000);
+        msleep(10000);
 
         if((g_var.acc_flag == FLY_ACC_OFF)||(isNotInspectFramecnt) ||(is_host_slept == 1) || (isLock))
             continue;
-	
-        spi_test();
-        addr = FRAME_CNT;
-        fm1388_dsp_mode_i2c_read_addr_2(addr, &countVal);
 
 
-        addr = CRC_STATUS;
         fm1388_dsp_mode_i2c_read_addr_2(addr, &val);
-        if (val == 0x8888)
+        if ((val != 0x8888) || (!isFrameCountRise()))
         {
-            //lidbg(TAG"%s: CRC_STAUS 0x%x = 0x%x, CRC OK!\n", __func__, addr, val);
-
-            if(oldCountVal == countVal)
-            {
-                lidbgerr(TAG"%s:!!!!!!!!!!!!!!!!!!!!!!1388err count error===================== \n", __func__);
-                fm1388_fw_loaded(NULL);
-            }
-        }
-        else
-        {
-            lidbgerr(TAG"%s: FRAME COUNTER 0x%x = 0x%x\n", __func__, FRAME_CNT, countVal);
             lidbgerr(TAG"%s: CRC_STAUS 0x%x = 0x%x, 1388err CRC FAIL!!!!!!!!!!!!!!!!!!!!!!!!!!!!\\n", __func__, addr, val);
             fm1388_fw_loaded(NULL);
         }
-
-        oldCountVal = countVal;
     }
 }
 #endif
@@ -1867,6 +1896,7 @@ struct file_operations fm1388_mode_fops =
 {
     .owner = THIS_MODULE,
     .write = fm1388_device_mode_write,
+    .read = fm1388_status_read,
 };
 
 static struct miscdevice fm1388_dev =
@@ -1875,6 +1905,21 @@ static struct miscdevice fm1388_dev =
     .name = "fm1388",
     .fops = &fm1388_fops
 };
+
+static bool isFrameCountRise(void)
+{
+	    unsigned int addr, countVal=0, oldCountVal=0;		
+		addr = FRAME_CNT;
+
+	    fm1388_dsp_mode_i2c_read_addr_2(addr, &oldCountVal);
+	    msleep(20);
+	    fm1388_dsp_mode_i2c_read_addr_2(addr, &countVal);
+
+		if(countVal != oldCountVal)
+			return true;
+		else
+			return false;
+}
 
 
 
@@ -1891,7 +1936,8 @@ static int lidbg_fm1388_event(struct notifier_block *this,
         if(is_host_slept == 1)
         {
             CREATE_KTHREAD(fm1388_fw_loaded,NULL);
-	     is_host_slept = 0;
+            is_host_slept = 0;
+            resumeAfterReinitCount = 0;
         }		
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_OFF):
@@ -2017,6 +2063,7 @@ static int fm1388_probe(struct platform_device *pdev)
         dev_err(&pdev->dev, "Couldn't register control device\n");
 
     lidbg_new_cdev(&fm1388_mode_fops, "fm1388_switch_mode");
+	lidbg_shell_cmd("chmod 777 /dev/fm1388_switch_mode");
 
     INIT_DELAYED_WORK(&dsp_start_vr, dsp_start_vr_work);
 
