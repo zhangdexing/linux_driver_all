@@ -111,13 +111,13 @@ static struct snd_soc_dai_driver adau1452_dai = {
         .playback = {
                 .stream_name = "Playback",
                 .channels_min = 1,
-                .channels_max = 4,
+                .channels_max = 2,
                 .rates = SNDRV_PCM_RATE_8000_96000,
                 .formats = ADAU1452_FORMATS,},
         .capture = {
                 .stream_name = "Capture",
                 .channels_min = 1,
-                .channels_max = 4,
+                .channels_max = 2,
                 .rates = SNDRV_PCM_RATE_8000_96000,
                 .formats = ADAU1452_FORMATS,},
         .ops = &adau1452_dai_ops,
@@ -148,7 +148,7 @@ static struct snd_soc_codec_driver soc_codec_dev_adau1452 = {
         //.reg_cache_default = wm8960_reg,
 };
 
-static __devinit int codec_adau1452_probe(struct platform_device *dev)
+static  int codec_adau1452_probe(struct platform_device *dev)
 {
 //    struct wm8960_priv *wm8960;
     int ret;

@@ -16,7 +16,7 @@
 #include <sound/pcm_params.h>
 #include <sound/soc.h>
 #include <linux/fsl_devices.h>
-#include <mach/audmux.h>
+//#include <mach/audmux.h>
 
 
 //struct imx_priv {
@@ -62,6 +62,7 @@
 
 static struct snd_soc_card snd_soc_card_imx;
 
+/*
 static int imx_audmux_config(int slave, int master)
 {
     unsigned int ptcr, pdcr;
@@ -82,16 +83,18 @@ static int imx_audmux_config(int slave, int master)
 
     return 0;
 }
+*/
 
-static int __devinit imx_adau1452_probe(struct platform_device *pdev)
+static int  imx_adau1452_probe(struct platform_device *pdev)
 {
     struct mxc_audio_platform_data *plat = pdev->dev.platform_data;
     //struct imx_priv *priv = &card_priv;
     int ret = 0;
 
     //priv->pdev = pdev;
-    printk("sandro add in %s %d plat->src_port=%d plat->ext_port=%d\n", __func__, __LINE__, plat->src_port, plat->ext_port);
-    imx_audmux_config(plat->src_port, plat->ext_port);
+//    printk("sandro add in %s %d plat->src_port=%d plat->ext_port=%d\n", __func__, __LINE__, plat->src_port, plat->ext_port);
+    printk("sandro add in %s %d \n", __func__, __LINE__);
+//    imx_audmux_config(plat->src_port, plat->ext_port);
 //
 //    if (plat->init && plat->init()) {
 //        ret = -EINVAL;
@@ -107,7 +110,7 @@ static int __devinit imx_adau1452_probe(struct platform_device *pdev)
     return 0;
 }
 
-static int __devexit imx_adau1452_remove(struct platform_device *pdev)
+static int imx_adau1452_remove(struct platform_device *pdev)
 {
 
     return 0;
@@ -268,7 +271,7 @@ static struct snd_soc_card snd_soc_card_imx = {
         .num_links  = ARRAY_SIZE(imx_dai),
 };
 
-
+/*
 static struct mxc_audio_platform_data adau1452_data =
         {
                 .ssi_num = 1,
@@ -281,6 +284,7 @@ static struct mxc_audio_platform_data adau1452_data =
                 //.init = mxc_wm8960_init,
                 //.clock_enable = wm8960_clk_enable,
         };
+*/
 
 static struct platform_device mx6_topeet_audio_adau1452_device =
         {
@@ -319,7 +323,7 @@ static int __init imx_adau_asoc_init(void)
     int ret;
 
     printk("sandro add in %s %d\n", __func__, __LINE__);
-    mxc_register_device(&mx6_topeet_audio_adau1452_device, &adau1452_data);
+    mxc_register_device(&mx6_topeet_audio_adau1452_device, NULL);
     ret = platform_driver_register(&adau1452_driver);
     if (ret < 0)
         goto exit;
@@ -345,7 +349,7 @@ static int __init imx_adau_asoc_init(void)
     return ret;
 }
 
-static void __exit imx_adau_asoc_exit(void)
+static void  imx_adau_asoc_exit(void)
 {
     platform_driver_unregister(&adau1452_driver);
     platform_device_unregister(imx_snd_device);
