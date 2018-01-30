@@ -258,8 +258,8 @@ static struct snd_soc_dai_link imx_dai[] = {
                 .stream_name = "HiFi",
                 .codec_dai_name = "adau1452-hifi",
                 .codec_name = "adau1452-codec.0",
-                .cpu_dai_name   = "imx-ssi.1",
-                .platform_name  = "imx-pcm-audio.1",
+                .cpu_dai_name   = "mt-soc-dl1dai-driver",
+                .platform_name  = "mt-soc-dl1-pcm",
                 .init       = imx_adau1452_init,
                 .ops        = &imx_hifi_ops,
         },
@@ -334,6 +334,8 @@ static int __init imx_adau_asoc_init(void)
         goto err_device_alloc;
 
     platform_set_drvdata(imx_snd_device, &snd_soc_card_imx);
+
+
 
     ret = platform_device_add(imx_snd_device);
 
