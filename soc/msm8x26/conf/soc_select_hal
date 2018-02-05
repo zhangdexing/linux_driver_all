@@ -6,6 +6,7 @@ export CONFIG_HAL_ANDROID_SERVER=y
 export CONFIG_HAL_GPSLIB=y
 export CONFIG_HAL_USB_CAMERA=y
 export CONFIG_HAL_USB_CAMERA_PREVIEW=y
+export CONFIG_HAL_GSENSOR=y
 
 #lidbgpmserver服务只在6.0以上自动编译否则需手动修改屏蔽编译错误再编译
     case $DBG_PLATFORM_ID in

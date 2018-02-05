@@ -20,7 +20,10 @@ SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,record_klogctl)
 
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,lidbg_umount)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,apk)
+
+ifeq ($(CONFIG_HAL_GSENSOR),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,Gsensor_Handler)
+endif
 
 ifeq ($(CONFIG_HAL_ANDROID_SERVER),y)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,lidbg_android_server)
