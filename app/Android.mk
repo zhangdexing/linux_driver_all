@@ -1,4 +1,5 @@
 
+SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,logcat)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,decodeFlyconfig)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,doc_split)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,doc_filter)
