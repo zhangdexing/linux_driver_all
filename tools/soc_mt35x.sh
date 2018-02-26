@@ -87,7 +87,7 @@ function soc_build_all()
 	echo $FUNCNAME
 	soc_prebuild
 	cd $DBG_SYSTEM_DIR
-	./allmake.sh -p $DBG_PLATFORM
+	bash ./allmake.sh -p $DBG_PLATFORM
 	echo "check the make result and press any key to continue"
 	read
 	soc_postbuild
