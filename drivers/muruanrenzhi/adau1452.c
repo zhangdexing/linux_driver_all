@@ -164,6 +164,7 @@ static  int codec_adau1452_probe(struct platform_device *dev)
 
     ret = snd_soc_register_codec(&dev->dev,
                                  &soc_codec_dev_adau1452, &adau1452_dai, 1);
+    printk("snd_soc_register_codec:ret,%d\n", ret);
 //    if (ret < 0)
 //        kfree(wm8960);
     return ret;

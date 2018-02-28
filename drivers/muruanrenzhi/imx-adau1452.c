@@ -258,8 +258,8 @@ static struct snd_soc_dai_link imx_dai[] = {
                 .stream_name = "HiFi",
                 .codec_dai_name = "adau1452-hifi",
                 .codec_name = "adau1452-codec.0",
-                .cpu_dai_name   = "mt-soc-dl1dai-driver",
-                .platform_name  = "mt-soc-dl1-pcm",
+                .cpu_dai_name   = "mt-soc-ul1dai-driver",//mt-soc-dl1dai-driver
+                .platform_name  = "mt-soc-ul1-pcm",
                 .init       = imx_adau1452_init,
                 .ops        = &imx_hifi_ops,
         },
