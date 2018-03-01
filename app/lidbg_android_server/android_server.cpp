@@ -412,7 +412,9 @@ int main(int argc, char **argv)
     bool first_boot = 0;
     lidbg(TAG"main\n");
 
-    signal(SIGSEGV, recvSignal);
+    //add all sig 
+    for (int i = 1; i < SIGUSR2; i++)
+        signal(i, recvSignal);
 
     pthread_create(&ntid, NULL, thread_check_boot_complete, NULL);
     while(boot_completed == 0)
