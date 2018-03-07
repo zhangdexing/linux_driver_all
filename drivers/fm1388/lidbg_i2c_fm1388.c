@@ -1601,7 +1601,11 @@ static ssize_t fm1388_device_mode_write(struct file *file,
     lidbg(TAG"%s: entering...\n", __func__);
 
     if(length <= 0)
-        return 0;
+	    return 0;
+
+    if(is_host_slept == 1)
+	    return -1;
+	
 
     mode = (char *)kmalloc(length, GFP_KERNEL);
     if (!mode)
@@ -1621,12 +1625,14 @@ static ssize_t fm1388_device_mode_write(struct file *file,
 
     if(!strncmp(mode, BT_MODE, strlen(BT_MODE)))
     {
-        fm1388_dsp_mode_change(1);
+        if(fm1388_dsp_mode != 1)
+             fm1388_dsp_mode_change(1);
         lidbg(TAG"%s: switch mode to bluetooth.\n", __func__);
     }
     else if(!strncmp(mode, BARGEIN_MODE, strlen(BARGEIN_MODE)))
     {
-        fm1388_dsp_mode_change(0);
+        if(fm1388_dsp_mode != 0)
+              fm1388_dsp_mode_change(0);
         lidbg(TAG"%s: switch mode to bargein.\n", __func__);
     }
 	else if(!strncmp(mode, BYPASS_MODE, strlen(BYPASS_MODE)))
