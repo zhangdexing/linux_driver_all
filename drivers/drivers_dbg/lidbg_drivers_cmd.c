@@ -736,7 +736,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#151--switch fm1388 bypass mode\n");
             fs_mem_log("*158#152--switch fm1388 notinspectframecnt\n");
             fs_mem_log("*158#153--switch fm1388 inspectframecnt\n");
-			
+            fs_mem_log("*158#154--pre_wakeup_quick\n");
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1862,6 +1862,12 @@ void parse_cmd(char *pt)
 		else if (!strcmp(argv[1], "*158#153"))
 		 {
 				 lidbg_shell_cmd("echo notinspectframecnt > /dev/fm1388_switch_mode");
+				 lidbg_domineering_ack();
+		 }
+		else if (!strcmp(argv[1], "*158#154"))
+		 {
+				 lidbg("*158#154--pre_wakeup_quick\n");
+				 lidbg_shell_cmd("echo pre_wakeup_quick > /dev/flyaudio_pm0");
 				 lidbg_domineering_ack();
 		 }
 

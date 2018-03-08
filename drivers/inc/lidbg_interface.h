@@ -217,6 +217,7 @@ typedef enum
     FLY_ANDROID_UP,
     FLY_DEVICE_UP,
     FLY_SCREEN_ON,
+    FLY_PRE_WAKEUP,
 } FLY_SYSTEM_STATUS;
 #else
 typedef enum

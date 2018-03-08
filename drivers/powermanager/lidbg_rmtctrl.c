@@ -11,7 +11,10 @@ LIDBG_DEFINE;
 #define GOTO_SLEEP_JIFF (15)
 #define GOTO_SLEEP_TIME_S (jiffies + GOTO_SLEEP_JIFF*HZ)
 
-#define AUTO_SLEEP_JIFF (15)
+#define AUTO_SLEEP_DEFAULT_JIFF (15)
+#define PRE_WAKEUP_TIMEOUT_DEFAULT_JIFF (5*60)
+
+static int  AUTO_SLEEP_JIFF=AUTO_SLEEP_DEFAULT_JIFF;
 #define AUTO_SLEEP_TIME_S (jiffies + AUTO_SLEEP_JIFF*HZ)
 
 #define UNORMAL_WAKEUP_TIME_MINU (30)
@@ -153,6 +156,7 @@ static void acc_detect_timer_func(unsigned long data)
 void acc_status_handle(FLY_ACC_STATUS val)
 {
 	static u32 acc_count = 0;
+	AUTO_SLEEP_JIFF=AUTO_SLEEP_DEFAULT_JIFF;
 	lidbg(TAG"acc_status_handle: in val:%d,FLY_ACC_ON:%d\n",val,FLY_ACC_ON);
 	if(val == FLY_ACC_ON)
 	{
@@ -338,9 +342,39 @@ wait_for_data:
 	return size;
 }
 
+static int pre_wakeup_quick = 0;
 ssize_t rmtctrl_write (struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
-	return 0;
+    char *cmd[32] = {NULL};
+    int cmd_num  = 0;
+    char cmd_buf[512];
+    memset(cmd_buf, '\0', 512);
+
+    if(copy_from_user(cmd_buf, buf, size))
+    {
+        PM_ERR("copy_from_user ERR\n");
+    }
+    if(cmd_buf[size - 1] == '\n')
+        cmd_buf[size - 1] = '\0';
+
+    cmd_num = lidbg_token_string(cmd_buf, " ", cmd) ;
+    lidbg(TAG"rmtctrl_write :-------%s-------\n", cmd[0]);
+    //flyaudio logic
+    if(!strcmp(cmd[0], "pre_wakeup"))
+    {
+        //lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 28 &");
+        send_app_status(FLY_PRE_WAKEUP);
+        AUTO_SLEEP_JIFF = PRE_WAKEUP_TIMEOUT_DEFAULT_JIFF;
+        if(pre_wakeup_quick == 1)
+            AUTO_SLEEP_JIFF = 10;
+        mod_timer(&rmtctrl_timer, AUTO_SLEEP_TIME_S);
+        lidbg(TAG"rmtctrl_write :pre_wakeup.,modify rmtctrl_timer,time:%dS\n", PRE_WAKEUP_TIMEOUT_DEFAULT_JIFF);
+    }
+    else if(!strcmp(cmd[0], "pre_wakeup_quick"))
+    {
+        pre_wakeup_quick = 1;
+    }
+    return size;
 }
 
 static int lidbg_rmtctrl_event(struct notifier_block *this,

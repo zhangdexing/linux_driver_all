@@ -103,6 +103,8 @@ public class FlyBootService extends Service {
     private static int FBS_DEVICE_UP = 8;
     private static int FBS_SCREEN_ON = 9;
     private static int FBS_SLEEP_TIMEOUT = 10;
+    private static int FBS_PRE_WAKEUP = 11;
+
     public static String action = "com.flyaudio.power";
     public static String PowerBundle = "POWERBUNDLE";
     public static String keyScreenOn = "KEY_SCREEN_ON";
@@ -363,6 +365,9 @@ public class FlyBootService extends Service {
 								if(blSuspendUnairplaneFlag)
 									KillProcess(true);
 								//InternetDisable();
+							}else if(pmState == FBS_PRE_WAKEUP){
+								LIDBG_PRINT(" get pm state: FBS_PRE_WAKEUP\n");
+								wakeup();
 							}else
 								LIDBG_PRINT(" undefined pm state: " + pmState);
 							pmOldState=pmState;
@@ -557,6 +562,9 @@ public class FlyBootService extends Service {
 			msgTokenal("flyaudio gotosleep TEST");
 			fbPm.goToSleep(SystemClock.uptimeMillis());
 			break;
+			case 28:
+			wakeup();
+			break;
 			default:
 			LIDBG_PRINT("BroadcastReceiver.action:unkown"+action+"\n");
 			break;
@@ -717,6 +725,10 @@ public static void releaseBrightWakeLock()
 			msgTokenal("flyaudio gotosleep");
 		}
 		releaseWakeLock();
+	}
+	private void wakeup(){
+		fbPm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+		fbPm.wakeUp(SystemClock.uptimeMillis());
 	}
 
 	private void start_fastboot(){
