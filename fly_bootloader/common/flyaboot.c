@@ -565,10 +565,12 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
     display_colour(model);
 #else
 
-    display_colour(Adcnum);
+    if(fly_reverse != 3)
+        display_colour(Adcnum);
     while(Adcnum && (count_down_time--))
     {
-        display_count(Adcnum, count_down_time);
+        if(fly_reverse != 3)
+             display_count(Adcnum, count_down_time);
         //		mdelay(700);
         if( !judge_key_state())
         {
@@ -644,7 +646,8 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
     else
     {
         fly_setBcol(WHITE_COL);
-        fly_text_lk(8, (fly_screen_h - 10), INTO_REC, BLACK_COL);
+        if(fly_reverse != 3)
+                fly_text_lk(8, (fly_screen_h - 10), INTO_REC, BLACK_COL);
     }
 
     if(*boot_into_fastboot == true)
