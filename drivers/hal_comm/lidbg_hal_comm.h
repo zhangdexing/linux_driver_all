@@ -13,7 +13,7 @@
 
 #define _IOCOM_DIRBITS 2
 #define _IOCOM_TYPEBITS 8
-#define _IOCOM_SIZEBITS	30
+#define _IOCOM_SIZEBITS	22
 
 #define _IOCOM_TYPEMASK ((1 << _IOCOM_TYPEBITS)-1)
 #define _IOCOM_DIRMASK ((1 << _IOCOM_DIRBITS)-1)
@@ -21,17 +21,18 @@
 
 
 #define _IOCOM_TYPESHIFT 0
-#define _IOCOM_SIZESHIFT 0
+#define _IOCOM_SIZESHIFT (_IOCOM_TYPESHIFT + _IOCOM_TYPEBITS)
 #define _IOCOM_DIRSHIFT (_IOCOM_SIZESHIFT + _IOCOM_SIZEBITS)
 
-#define _IOCOM(dir,size) \
-        (((dir) << _IOCOM_DIRSHIFT) | \
-         ((size) << _IOCOM_SIZESHIFT))
+#define _IOCOM(dir,type,size) \
+	(((dir) << _IOCOM_DIRSHIFT) | \
+	 ((type) << _IOCOM_TYPESHIFT) | \
+	 ((size) << _IOCOM_SIZESHIFT))
 
 /* used to create numbers */
-#define _IOOM(size)     _IOCOM(_IOCOM_NONE,(size))
-#define _IOROM(size)      _IOCOM(_IOCOM_READ,(size))
-#define _IOWOM(size)      _IOCOM(_IOCOM_WRITE,(size))
+#define _IOOM(type,size)     _IOCOM(_IOCOM_NONE,(type),(size))
+#define _IOROM(type,size)      _IOCOM(_IOCOM_READ,(type),(size))
+#define _IOWOM(type,size)      _IOCOM(_IOCOM_WRITE,(type),(size))
 
 /* used to decode ioctl numbers.. */
 #define _IOCOM_DIR(arg)            (((arg) >> _IOCOM_DIRSHIFT) & _IOCOM_DIRMASK)
