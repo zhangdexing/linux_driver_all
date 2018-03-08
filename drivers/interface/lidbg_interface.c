@@ -42,6 +42,9 @@ static int bl_event_handle(struct notifier_block *this,
     	{
         		lidbg("LCD_ON1\n");
         		LCD_ON;
+        		lidbg("LCD_ON1.in.hold_bootanim2.false\n");
+        		lidbg_shell_cmd("setprop lidbg.hold_bootanim2 false");
+        		lidbg_shell_cmd("echo LCD_ON1.hold_bootanim2.false > /dev/lidbg_msg");
 	}
     else
         LCD_OFF;
