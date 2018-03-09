@@ -1938,7 +1938,8 @@ static int lidbg_fm1388_event(struct notifier_block *this,
 
     switch (event)
     {
-    case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON):
+    case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_UP)://NOTIFIER_MINOR_ACC_ON
+    lidbg("lidbg_fm1388_event.FLY_DEVICE_UP\n");
         if(is_host_slept == 1)
         {
             CREATE_KTHREAD(fm1388_fw_loaded,NULL);
