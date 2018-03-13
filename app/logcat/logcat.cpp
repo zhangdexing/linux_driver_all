@@ -36,6 +36,27 @@
 #include <log/logprint.h>
 #include <utils/threads.h>
 
+/*==================================================*/  
+#define TAG_FILE_PATH  "/flysystem/lib/out/logactWhiteTAG.txt"
+
+#define TAGOUTFILE_1  "/sdcard/logcatWT1.txt"
+#define TAGOUTFILE_2  "/sdcard/logcatWT2.txt"
+
+#define FILE_SIZE 7340032 
+
+#define BUFSIZE 1024
+
+static int g_outFD_TAG1 = -1;
+static int g_outFD_TAG2 = -1;
+
+static FILE *tagfile = NULL;
+
+static bool g_outFD1_flag = false;	
+static bool g_outFD2_flag = false;	
+static bool temp_flag1 = false;	
+static bool temp_flag2 = false;	
+/*==================================================*/
+
 #define DEFAULT_MAX_ROTATED_LOGS 4
 
 static AndroidLogFormat * g_logformat;
@@ -195,6 +216,103 @@ for (const auto & line : WhiteList)
     return false;
 }
 
+/************add code*************************/
+std::vector<std::string> Whitetag;
+
+void yh_open_tagfile()
+{
+	g_outFD_TAG1 = openLogFile(TAGOUTFILE_1);
+	if(g_outFD_TAG1 < 0)
+	{
+		fprintf(stderr, "open %s fail!\n",TAGOUTFILE_1);
+		return ;
+	}
+		
+	g_outFD_TAG2 = openLogFile(TAGOUTFILE_2);
+	if(g_outFD_TAG2 < 0)
+	{
+		fprintf(stderr, "open %s fail!\n",TAGOUTFILE_2);
+		close(g_outFD_TAG1);
+		return ;
+	}
+}
+
+bool yh_datematching(const char *date)
+{
+	int i = 0;
+	
+	for(i=0; i<(int)Whitetag.size(); i++)
+	{
+		//Whether the judgment is equal or not
+		if(strcmp(Whitetag[i].c_str(),date) == 0)
+			break;
+	} 
+	
+	return (i < (int)Whitetag.size()) ? true : false;
+}
+
+int yh_inittagfile()
+{	
+	//Whether the judgment file exists
+	if(access(TAG_FILE_PATH,F_OK))
+	{
+		fprintf(stderr, "file does not exist\n");		
+		return -1;
+	}
+	
+	//open the tag file
+	tagfile = fopen(TAG_FILE_PATH, "r");
+	if(tagfile == NULL)
+	{
+		fprintf(stderr, "fail to open file！\n");
+		return -1;
+	}
+	
+	//The number of rows in a statistical file
+	int stringbuf_index = 0;
+	char stringbuf[BUFSIZE] = {0};
+	
+	while(fgets(stringbuf, BUFSIZE, tagfile) != NULL)
+	{
+		/*while(stringbuf[stringbuf_index] != '\0')
+		{
+			if(stringbuf[stringbuf_index] == '\r' || stringbuf[stringbuf_index] == '\n')
+				break;
+			stringbuf_index++;
+		}
+		if(stringbuf_index<(int)strlen(stringbuf))
+			stringbuf[stringbuf_index] = '\0';*/
+			
+		stringbuf_index = (int)strlen(stringbuf);
+		for(;;)
+		{
+			stringbuf_index--;
+			if(stringbuf[stringbuf_index] == '\r' || stringbuf[stringbuf_index] == '\n')
+				stringbuf[stringbuf_index] = '\0';
+			else
+				break;
+		}
+		
+		//insert string
+		Whitetag.push_back(stringbuf);
+		
+		//Empty array
+		bzero(stringbuf,BUFSIZE);
+		//stringbuf_index = 0;
+	}
+
+	yh_open_tagfile();
+	return 0;
+}
+
+void yh_close_fun()
+{
+	fclose(tagfile);
+	close(g_outFD_TAG1);
+	close(g_outFD_TAG2);
+}
+
+/*********************************************/
 static void processBuffer(log_device_t* dev, struct log_msg *buf)
 {
     int bytesWritten = 0;
@@ -224,24 +342,141 @@ static void processBuffer(log_device_t* dev, struct log_msg *buf)
     }
 
 
-if(firstInit==1)
-{
-firstInit=0;
-initBlackList("/system/lib/modules/out/logcatBlackList.conf");
-initBlackList("/flysystem/lib/out/logcatBlackList.conf");
-initWhiteList("/system/lib/modules/out/logcatWhiteList.conf");
-initWhiteList("/flysystem/lib/out/logcatWhiteList.conf");
-g_whiteFd = openLogFile("/sdcard/logcatWhiteMsg.txt");
-}
-err=0;
-if(isInBlackList(entry.tag))
-err=1;
+	if(firstInit==1)
+	{
+		firstInit=0;
+		initBlackList("/system/lib/modules/out/logcatBlackList.conf");
+		initBlackList("/flysystem/lib/out/logcatBlackList.conf");
+		initWhiteList("/system/lib/modules/out/logcatWhiteList.conf");
+		initWhiteList("/flysystem/lib/out/logcatWhiteList.conf");
+		g_whiteFd = openLogFile("/sdcard/logcatWhiteMsg.txt");
+		
+		//Add code
+		yh_inittagfile();
+	}
+	err=0;
+	
+	if(isInBlackList(entry.tag))
+		err=1;
 
 
     if (err!=1&&android_log_shouldPrintLine(g_logformat, entry.tag, entry.priority)) {
-        bytesWritten = android_log_printLogLine(g_logformat, g_outFD, &entry);
-if(isInWhiteList(entry.tag))
-android_log_printLogLine(g_logformat, g_whiteFd, &entry);
+        //bytesWritten = android_log_printLogLine(g_logformat, g_outFD, &entry);
+		
+		//add code
+		if(yh_datematching(entry.tag))
+		{
+			struct stat sta,stb;
+			
+			//Determine whether the two files exist
+			if(access(TAGOUTFILE_1, F_OK))
+			{
+				close(g_outFD_TAG1);
+				g_outFD_TAG1 = openLogFile(TAGOUTFILE_1);
+			}
+			if(access(TAGOUTFILE_2, F_OK))
+			{
+				close(g_outFD_TAG2);
+				g_outFD_TAG2 = openLogFile(TAGOUTFILE_2);
+			}
+				
+			//Get the file size
+			if( !stat(TAGOUTFILE_1, &sta) && !stat(TAGOUTFILE_2, &stb) )
+			{
+				if( (sta.st_size == 0) && (stb.st_size == 0) ){
+					//write logcatWT1.txt
+					if(g_outFD2_flag)
+					{
+						g_outFD2_flag = false;
+						bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG2, &entry);
+					}
+					else
+						bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG1, &entry);
+				}
+				else if( (sta.st_size < FILE_SIZE) && (stb.st_size == 0) ){
+					
+					//write logcatWT1.txt
+					lseek(g_outFD_TAG1, 0, SEEK_END);
+					bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG1, &entry);
+				}
+				else if( (sta.st_size == 0) && (stb.st_size < FILE_SIZE) ){
+					
+					//write logcatWT2.txt
+					lseek(g_outFD_TAG2, 0, SEEK_END);
+					bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG2, &entry);
+					
+					g_outFD2_flag = true;
+				}
+				else if((sta.st_size >= FILE_SIZE) && (stb.st_size < FILE_SIZE)){
+					
+					//write logcatWT2.txt
+					lseek(g_outFD_TAG2, 0, SEEK_END);
+					bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG2, &entry);
+					
+					g_outFD1_flag = false;	
+					g_outFD2_flag = true;	
+					temp_flag1 = false;	
+					temp_flag2 = true;	
+				}
+				else if((sta.st_size < FILE_SIZE) && (stb.st_size >= FILE_SIZE)){
+					
+					//write logcatWT1.txt
+					lseek(g_outFD_TAG1, 0, SEEK_END);
+					bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG1, &entry);
+					
+					g_outFD1_flag = true;	
+					g_outFD2_flag = false;	
+					temp_flag1 = true;	
+					temp_flag2 = false;	
+				}
+				//exception handling
+				else if( ((sta.st_size < (FILE_SIZE)) && (stb.st_size < (FILE_SIZE))) || (sta.st_size == stb.st_size) )
+				{
+					if(temp_flag2)
+					{
+						bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG2, &entry);
+					}
+					else if(temp_flag1)
+					{
+						bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG1, &entry);
+					}
+					else{
+						//Empty file
+						truncate(TAGOUTFILE_1, 0);
+						truncate(TAGOUTFILE_2, 0);
+					}
+				}
+				//Two texts are full at the same time
+				else{
+					//The judgment is finally full
+					if(g_outFD2_flag){	
+						
+						lseek(g_outFD_TAG1, 0, SEEK_SET);
+						
+						//Empty file
+						truncate(TAGOUTFILE_1, 0);
+						bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG1, &entry);
+						g_outFD2_flag = false;
+					
+					}
+					if(g_outFD1_flag){
+					
+						lseek(g_outFD_TAG2, 0, SEEK_SET);
+						
+						//Empty file
+						truncate(TAGOUTFILE_2, 0);
+						bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG2, &entry);
+						g_outFD1_flag = false;
+					}					
+				}
+			}	
+		}
+		else
+			bytesWritten = android_log_printLogLine(g_logformat, g_outFD, &entry);
+		/**************************************************************************/
+		
+		if(isInWhiteList(entry.tag))
+		android_log_printLogLine(g_logformat, g_whiteFd, &entry);
 
         if (bytesWritten < 0) {
             logcat_panic(false, "output error");
@@ -1072,6 +1307,9 @@ int main(int argc, char **argv)
     }
 
     android_logger_list_free(logger_list);
+	
+	/******add code*******/
+	yh_close_fun();
 
     return EXIT_SUCCESS;
 }
