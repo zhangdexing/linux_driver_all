@@ -1072,6 +1072,8 @@ static int thread_observer(void *data)
                     break;
 #ifdef SUSPEND_ONLINE
                 case 60:
+		  lidbgerr("send broadcast to disable dueros !!\n");
+                lidbg_shell_cmd("am broadcast -a flyaudio.intent.action.CONTROL_VOICE --es ENABLE_VOICE disable_voice &");
 #else
                 case 11:
 #endif
@@ -1142,12 +1144,7 @@ static int thread_observer(void *data)
         lidbg("dump meminfo \n");
         lidbg_shell_cmd("dumpsys meminfo > /sdcard/meminfo_warn.txt");
         break;
-#ifdef SUSPEND_ONLINE
-                case 120:
-		  lidbgerr("send broadcast to disable dueros !!\n");
-                lidbg_shell_cmd("am broadcast -a flyaudio.intent.action.CONTROL_VOICE --es ENABLE_VOICE disable_voice &");
-                break;
-#endif
+
                 }
             }
 	    // lidbg_shell_cmd("pm enable cld.navi.c2739.mainframe");
