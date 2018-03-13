@@ -37,12 +37,15 @@
 #include <utils/threads.h>
 
 /*==================================================*/  
+#include <list>
+
 #define TAG_FILE_PATH  "/flysystem/lib/out/logactWhiteTAG.txt"
 
 #define TAGOUTFILE_1  "/sdcard/logcatWT1.txt"
 #define TAGOUTFILE_2  "/sdcard/logcatWT2.txt"
 
-#define FILE_SIZE 7340032 
+//#define FILE_SIZE 7340032 
+#define FILE_SIZE (128*1024) 
 
 #define BUFSIZE 1024
 
@@ -52,9 +55,9 @@ static int g_outFD_TAG2 = -1;
 static FILE *tagfile = NULL;
 
 static bool g_outFD1_flag = false;	
-static bool g_outFD2_flag = false;	
-static bool temp_flag1 = false;	
-static bool temp_flag2 = false;	
+static bool g_outFDtemp = false;	
+
+using namespace std;
 /*==================================================*/
 
 #define DEFAULT_MAX_ROTATED_LOGS 4
@@ -218,6 +221,9 @@ for (const auto & line : WhiteList)
 
 /************add code*************************/
 std::vector<std::string> Whitetag;
+std::list<std::string> logbuflist;
+
+static size_t logoutsizebytes = 0;
 
 void yh_open_tagfile()
 {
@@ -273,16 +279,7 @@ int yh_inittagfile()
 	char stringbuf[BUFSIZE] = {0};
 	
 	while(fgets(stringbuf, BUFSIZE, tagfile) != NULL)
-	{
-		/*while(stringbuf[stringbuf_index] != '\0')
-		{
-			if(stringbuf[stringbuf_index] == '\r' || stringbuf[stringbuf_index] == '\n')
-				break;
-			stringbuf_index++;
-		}
-		if(stringbuf_index<(int)strlen(stringbuf))
-			stringbuf[stringbuf_index] = '\0';*/
-			
+	{			
 		stringbuf_index = (int)strlen(stringbuf);
 		for(;;)
 		{
@@ -310,6 +307,133 @@ void yh_close_fun()
 	fclose(tagfile);
 	close(g_outFD_TAG1);
 	close(g_outFD_TAG2);
+}
+
+int yh_logwritefile(int fd)
+{
+	if(fd < 0)
+	{
+		fprintf(stderr,"The file descriptor is empty");
+		return -1;
+	}
+	
+	lseek(fd, 0, SEEK_END);
+	int ret = 0;
+	std::list<string>::iterator it;
+	for(it=logbuflist.begin(); it != logbuflist.end(); it++)
+	{
+		ret = write(fd, (*it).c_str(), (int)strlen((*it).c_str()));
+		if(ret < (int)strlen((*it).c_str()))
+			break;
+	}
+	
+	return (it == logbuflist.end()) ? 1: 0;
+}
+
+int yh_printlogLine()
+{
+	struct stat sta,stb;
+			
+	//Determine whether the two files exist
+	 if(access(TAGOUTFILE_1, F_OK))
+	{
+		close(g_outFD_TAG1);
+		g_outFD_TAG1 = openLogFile(TAGOUTFILE_1);
+	}
+	if(access(TAGOUTFILE_2, F_OK))
+	{
+		close(g_outFD_TAG2);
+		g_outFD_TAG2 = openLogFile(TAGOUTFILE_2);
+	} 
+
+	//Get the file size
+	if(!stat(TAGOUTFILE_1, &sta) && !stat(TAGOUTFILE_2, &stb)){
+		if((sta.st_size == 0) && (stb.st_size == 0)){
+			if(g_outFD1_flag){
+				g_outFD1_flag = false;
+				
+				if(!yh_logwritefile(g_outFD_TAG2)){
+					printf("write %s fail!\n",TAGOUTFILE_2);
+				}
+			}else{
+				g_outFD1_flag = true;
+				
+				if(!yh_logwritefile(g_outFD_TAG1))
+					printf("write %s fail!\n",TAGOUTFILE_1);					
+			}	
+		}
+		else if((sta.st_size < FILE_SIZE) && (stb.st_size >= FILE_SIZE)){
+			g_outFD1_flag = true;
+			g_outFDtemp = true;
+			
+			if(!yh_logwritefile(g_outFD_TAG1))
+				printf("write %s fail!\n",TAGOUTFILE_1);									
+		}
+		else if((sta.st_size >= FILE_SIZE) && (stb.st_size < FILE_SIZE)){
+			g_outFD1_flag = false;
+			g_outFDtemp = true;
+			
+			if(!yh_logwritefile(g_outFD_TAG2))
+				printf("write %s fail!\n",TAGOUTFILE_2);
+		}
+		else if(sta.st_size >= FILE_SIZE && stb.st_size >= FILE_SIZE){
+			if(g_outFD1_flag){
+				g_outFD1_flag = false;
+				
+				lseek(g_outFD_TAG2, 0, SEEK_SET);
+				truncate(TAGOUTFILE_2, 0);
+				
+				if(!yh_logwritefile(g_outFD_TAG2))
+					printf("write %s fail!\n",TAGOUTFILE_2);
+			}else{
+				g_outFD1_flag = true;
+				
+				lseek(g_outFD_TAG1, 0, SEEK_SET);
+				truncate(TAGOUTFILE_1, 0);
+				
+				if(!yh_logwritefile(g_outFD_TAG1))
+					printf("write %s fail!\n",TAGOUTFILE_1);
+			}
+		}else{
+			if(g_outFDtemp){
+				if(g_outFD1_flag){
+					if(!yh_logwritefile(g_outFD_TAG1))
+						printf("write %s fail!\n",TAGOUTFILE_1);
+				}
+				else{
+					if(!yh_logwritefile(g_outFD_TAG2))
+						printf("write %s fail!\n",TAGOUTFILE_2);
+				}
+			}else{
+				if(!yh_logwritefile(g_outFD_TAG1))
+						printf("write %s fail!\n",TAGOUTFILE_1);
+			}	
+		}
+	}
+
+	logoutsizebytes = 0;
+	return 0;
+}
+
+
+void yh_signalhandle(int sig)
+{
+	if(sig == SIGUSR2)
+	{
+		/* int n=0;
+		std::list<string>::iterator text;
+		for(text=logbuflist.begin(); text != logbuflist.end(); text++)
+		{
+			printf("logbuflist[%d]=%s",n++,(*text).c_str());
+		}
+		
+		printf("logoutsizebytes = %d\n",(int)logoutsizebytes); */
+		yh_printlogLine();
+				
+		//empty logbuflist
+		logbuflist.clear();
+		
+	}
 }
 
 /*********************************************/
@@ -341,7 +465,6 @@ static void processBuffer(log_device_t* dev, struct log_msg *buf)
         goto error;
     }
 
-
 	if(firstInit==1)
 	{
 		firstInit=0;
@@ -366,117 +489,28 @@ static void processBuffer(log_device_t* dev, struct log_msg *buf)
 		//add code
 		if(yh_datematching(entry.tag))
 		{
-			struct stat sta,stb;
+			char defaultbuffer[512];
+			char *outbuffer = NULL;
+			static size_t totallen;
 			
-			//Determine whether the two files exist
-			if(access(TAGOUTFILE_1, F_OK))
-			{
-				close(g_outFD_TAG1);
-				g_outFD_TAG1 = openLogFile(TAGOUTFILE_1);
-			}
-			if(access(TAGOUTFILE_2, F_OK))
-			{
-				close(g_outFD_TAG2);
-				g_outFD_TAG2 = openLogFile(TAGOUTFILE_2);
-			}
+			outbuffer = android_log_formatLogLine(g_logformat, defaultbuffer, sizeof(defaultbuffer), &entry, &totallen);
+			
+			logoutsizebytes += strlen(outbuffer);
+			logbuflist.push_back(outbuffer); 
+			
+			if(logoutsizebytes >= FILE_SIZE){
+				yh_printlogLine();
 				
-			//Get the file size
-			if( !stat(TAGOUTFILE_1, &sta) && !stat(TAGOUTFILE_2, &stb) )
-			{
-				if( (sta.st_size == 0) && (stb.st_size == 0) ){
-					//write logcatWT1.txt
-					if(g_outFD2_flag)
-					{
-						g_outFD2_flag = false;
-						bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG2, &entry);
-					}
-					else
-						bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG1, &entry);
-				}
-				else if( (sta.st_size < FILE_SIZE) && (stb.st_size == 0) ){
-					
-					//write logcatWT1.txt
-					lseek(g_outFD_TAG1, 0, SEEK_END);
-					bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG1, &entry);
-				}
-				else if( (sta.st_size == 0) && (stb.st_size < FILE_SIZE) ){
-					
-					//write logcatWT2.txt
-					lseek(g_outFD_TAG2, 0, SEEK_END);
-					bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG2, &entry);
-					
-					g_outFD2_flag = true;
-				}
-				else if((sta.st_size >= FILE_SIZE) && (stb.st_size < FILE_SIZE)){
-					
-					//write logcatWT2.txt
-					lseek(g_outFD_TAG2, 0, SEEK_END);
-					bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG2, &entry);
-					
-					g_outFD1_flag = false;	
-					g_outFD2_flag = true;	
-					temp_flag1 = false;	
-					temp_flag2 = true;	
-				}
-				else if((sta.st_size < FILE_SIZE) && (stb.st_size >= FILE_SIZE)){
-					
-					//write logcatWT1.txt
-					lseek(g_outFD_TAG1, 0, SEEK_END);
-					bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG1, &entry);
-					
-					g_outFD1_flag = true;	
-					g_outFD2_flag = false;	
-					temp_flag1 = true;	
-					temp_flag2 = false;	
-				}
-				//exception handling
-				else if( ((sta.st_size < (FILE_SIZE)) && (stb.st_size < (FILE_SIZE))) || (sta.st_size == stb.st_size) )
-				{
-					if(temp_flag2)
-					{
-						bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG2, &entry);
-					}
-					else if(temp_flag1)
-					{
-						bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG1, &entry);
-					}
-					else{
-						//Empty file
-						truncate(TAGOUTFILE_1, 0);
-						truncate(TAGOUTFILE_2, 0);
-					}
-				}
-				//Two texts are full at the same time
-				else{
-					//The judgment is finally full
-					if(g_outFD2_flag){	
-						
-						lseek(g_outFD_TAG1, 0, SEEK_SET);
-						
-						//Empty file
-						truncate(TAGOUTFILE_1, 0);
-						bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG1, &entry);
-						g_outFD2_flag = false;
-					
-					}
-					if(g_outFD1_flag){
-					
-						lseek(g_outFD_TAG2, 0, SEEK_SET);
-						
-						//Empty file
-						truncate(TAGOUTFILE_2, 0);
-						bytesWritten = android_log_printLogLine(g_logformat, g_outFD_TAG2, &entry);
-						g_outFD1_flag = false;
-					}					
-				}
-			}	
+				//empty logbuflist
+				logbuflist.clear();
+			}				
 		}
 		else
 			bytesWritten = android_log_printLogLine(g_logformat, g_outFD, &entry);
 		/**************************************************************************/
 		
 		if(isInWhiteList(entry.tag))
-		android_log_printLogLine(g_logformat, g_whiteFd, &entry);
+			android_log_printLogLine(g_logformat, g_whiteFd, &entry);
 
         if (bytesWritten < 0) {
             logcat_panic(false, "output error");
@@ -574,7 +608,7 @@ static void show_help(const char *cmd)
                     "  -T <count>      print only the most recent <count> lines (does not imply -d)\n"
                     "  -T '<time>'     print most recent lines since specified time (not imply -d)\n"
                     "                  count is pure numerical, time is 'MM-DD hh:mm:ss.mmm'\n"
-                    "  -g              get the size of the log's ring buffer and exit\n"
+                    "  -g              get the size of the log's ring buffer and exit\n"	//获取缓冲区大小
                     "  -L              dump logs from prior to last reboot\n"
                     "  -b <buffer>     Request alternate ring buffer, 'main', 'system', 'radio',\n"
                     "                  'events', 'crash' or 'all'. Multiple -b parameters are\n"
@@ -582,7 +616,7 @@ static void show_help(const char *cmd)
                     "                  -b main -b system -b crash.\n"
                     "  -B              output the log in binary.\n"
                     "  -S              output statistics.\n"
-                    "  -G <size>       set size of log ring buffer, may suffix with K or M.\n"
+                    "  -G <size>       set size of log ring buffer, may suffix with K or M.\n" //设置缓冲区的大小
                     "  -p              print prune white and ~black list. Service is specified as\n"
                     "                  UID, UID/PID or /PID. Weighed for quicker pruning if prefix\n"
                     "                  with ~, otherwise weighed for longevity if unadorned. All\n"
@@ -785,15 +819,16 @@ int main(int argc, char **argv)
     size_t tail_lines = 0;
     log_time tail_time(log_time::EPOCH);
 
-    signal(SIGPIPE, exit);
-
+    signal(SIGPIPE, exit);	
+    signal(SIGUSR2, yh_signalhandle);
+	
     g_logformat = android_log_format_new();
 
     if (argc == 2 && 0 == strcmp(argv[1], "--help")) {
         show_help(argv[0]);
         return EXIT_SUCCESS;
     }
-
+	//./logcat -r 512 -f 2.txt  g_logRotateSizeKBytes = 512 g_outputFileName = 2.txt
     for (;;) {
         int ret;
 
@@ -1139,7 +1174,7 @@ int main(int argc, char **argv)
                          dev->device);
         }
 
-        if (clearLog) {
+        if (clearLog) { //0
             int ret;
             ret = android_logger_clear(dev->logger);
             if (ret) {
@@ -1147,11 +1182,11 @@ int main(int argc, char **argv)
             }
         }
 
-        if (setLogSize && android_logger_set_log_size(dev->logger, setLogSize)) {
+        if (setLogSize /* = 0*/ && android_logger_set_log_size(dev->logger, setLogSize)) {
             logcat_panic(false, "failed to set the log size");
         }
 
-        if (getLogSize) {
+        if (getLogSize) { //0
             long size, readable;
 
             size = android_logger_get_log_size(dev->logger);
@@ -1163,18 +1198,20 @@ int main(int argc, char **argv)
             if (readable < 0) {
                 logcat_panic(false, "failed to get the readable log size");
             }
+//main: ring buffer is 10Mb (9Mb consumed), max entry is 5120b, max payload is 4076b
 
             printf("%s: ring buffer is %ld%sb (%ld%sb consumed), "
                    "max entry is %db, max payload is %db\n", dev->device,
-                   value_of_size(size), multiplier_of_size(size),
-                   value_of_size(readable), multiplier_of_size(readable),
+                   value_of_size(size/*总的大小*/), multiplier_of_size(size),/*M单位*/
+                   value_of_size(readable/*已经使用*/), multiplier_of_size(readable),
                    (int) LOGGER_ENTRY_MAX_LEN, (int) LOGGER_ENTRY_MAX_PAYLOAD);
+				   
         }
 
         dev = dev->next;
     }
 
-    if (setPruneList) {
+    if (setPruneList) { //NULL
         size_t len = strlen(setPruneList);
         /*extra 32 bytes are needed by  android_logger_set_prune_list */
         size_t bLen = len + 32;
@@ -1190,7 +1227,7 @@ int main(int argc, char **argv)
         }
     }
 
-    if (printStatistics || getPruneList) {
+    if (printStatistics /* 0 */ || getPruneList /* 0 */) {
         size_t len = 8192;
         char *buf;
 
@@ -1245,7 +1282,7 @@ int main(int argc, char **argv)
     }
 
 
-    if (getLogSize) {
+    if (getLogSize) { //0
         return EXIT_SUCCESS;
     }
     if (setLogSize || setPruneList) {
