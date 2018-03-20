@@ -179,6 +179,7 @@ int gtp_i2c_read(struct i2c_client *client, u8 *buf, int len)
         if (ret == 2)
             break;
         retries++;
+        msleep(300);
     }
     if (retries >= 5)
     {
@@ -224,6 +225,7 @@ int gtp_i2c_write(struct i2c_client *client, u8 *buf, int len)
         if (ret == 1)
             break;
         retries++;
+        msleep(300);
     }
     if ((retries >= 5))
     {
@@ -2442,6 +2444,7 @@ static int gtp_init_ext_watchdog(struct i2c_client *client)
         if (ret == 1)
             return 1;
         retries++;
+        msleep(300);
     }
     if (retries >= 5)
         dev_err(&client->dev, "init external watchdog failed!");
