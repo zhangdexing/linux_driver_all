@@ -1,36 +1,27 @@
 #include "lidbg.h"
 #include "lidbg_hal_comm.h"
-#define TAG "FLY: lidbg_hal_comm "
-#define hal_comm_debug(tag, format, args...) printk(KERN_DEBUG"%s: "format, tag, ##args)
 
 LIDBG_DEFINE;
 
 struct list_head *klisthead ;
-typedef enum
-    {
-	MCU,
-	HAL,
-	MOD,
-	ALL,
-    }TYPE;
+
 typedef struct fifo_list
 {
-    TYPE type;
-    char ID;
+    int mark_type;
     struct kfifo data_fifo;
     struct list_head list;
     wait_queue_head_t fifo_wait_queue;
     spinlock_t fifo_lock;
-
 } threads_list;
 
 #define HAL_FIFO_SIZE (1024*16)
+
 
 static DEFINE_MUTEX(list_mutex);
 
 int init_thread_kfifo(struct kfifo *pkfifo, int size);
 
-static loff_t node_default_lseek(struct file *file, loff_t offset, int origin)
+loff_t node_default_lseek(struct file *file, loff_t offset, int origin)
 {
     return 0;
 }
@@ -41,22 +32,21 @@ void list_init(struct list_head *hlist)
     INIT_LIST_HEAD(hlist);
 }
 
-threads_list *add_node_list(struct list_head *hlist, char ID, TYPE type)
+threads_list *add_node_list(struct list_head *hlist, int thread_type)
 {
     threads_list *listnode;
     listnode = (threads_list *)kmalloc(sizeof(threads_list), GFP_KERNEL);
     if(listnode == NULL)
         lidbg("Fail malloc\n");
     mutex_lock(&list_mutex);
-    listnode->ID = ID;
-    listnode->type = type;
+    listnode->mark_type = thread_type;
     init_thread_kfifo(&listnode->data_fifo, HAL_FIFO_SIZE);
     list_add_tail(&listnode->list, hlist);
     mutex_unlock(&list_mutex);
     return listnode;
 }
 
-threads_list *search_each_node(struct list_head *hlist, char ID, TYPE type)
+threads_list *search_each_node(struct list_head *hlist, int thread_type)
 {
     struct list_head *pos;
     threads_list *p , *plist = NULL;
@@ -64,7 +54,7 @@ threads_list *search_each_node(struct list_head *hlist, char ID, TYPE type)
     list_for_each(pos, hlist)
     {
         p = list_entry(pos, threads_list, list);
-        if(p->ID == ID && p->type == type)
+        if(p->mark_type == thread_type)
         {
             plist = p;
         }
@@ -161,76 +151,21 @@ static ssize_t hal_comm_write(struct file *filp, const char __user *buf,
 
     return 0;
 }
-static int send_all_fifo(struct list_head *hlist, const void  *buf,short size)
-{
 
-    bool is_kfifo_empty;
-    struct list_head *pos;
-	threads_list *p  = NULL;
-	mutex_lock(&list_mutex);
-	list_for_each(pos, hlist)
-	{
-		if(1)
-		{
-			p = list_entry(pos, threads_list, list);
-			is_kfifo_empty = kfifo_is_empty(&p->data_fifo);
-			put_buf_fifo(&p->data_fifo, &size, 2, &p->fifo_lock);
-			put_buf_fifo(&p->data_fifo, (void *)buf, size, &p->fifo_lock);
-			//lidbg("send_all_fifo fifo ID is =%x\n",p->ID);
-			if(is_kfifo_empty)
-				wake_up_interruptible(&p->fifo_wait_queue);
-		}
-	}
-   mutex_unlock(&list_mutex);
-    return 0;
-}
 static long hal_comm_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
     threads_list *tmp_list = NULL;
-    char ID;
-	int ret;
-	TYPE type;
+    int tmp_type, ret;
     short data_size;
-    char *argv=(char *)arg;
+    tmp_type = _IOCOM_TYPE(cmd);
     data_size = _IOCOM_SIZE(cmd);
-	ID=(char)argv[3];
-        if((char)argv[1]==0x55)
-	{
-		type = MOD;
-		ID   = 0x55;
-	}
-	else if((char)argv[1]==0x53)
-	{
-		type=MCU;
-		ID=0x53;
-	}
-	else if((char)argv[1]==0x54)
-	{
-		type=HAL;
-	}
-	else if((char)argv[1]==0xff)
-	{
-		type=ALL;
-	}
-	else
-	{
-		type=HAL;
-	}
-    //hal_comm_debug(TAG,"enter hal_comm_ioctl ID : %x ,type : %d ,size : %d ,direction : %d \n", ID , type, data_size, _IOCOM_DIR(cmd));
-	if(type==ALL && _IOCOM_DIR(cmd) == 1)
-	{
-		//lidbg("send_all_fifo\n");
-		send_all_fifo(klisthead,(void *)arg,data_size);
-		return data_size;
-	}
-    else if(list_empty(klisthead) || ( (tmp_list = search_each_node(klisthead, ID, type) ) == NULL) )
+    pr_debug("kfifo = type : %d ,size : %d ,direction : %d \n", tmp_type , data_size, _IOCOM_DIR(cmd));
+
+    if(list_empty(klisthead) || ( (tmp_list = search_each_node(klisthead, tmp_type) ) == NULL) )
     {
-        tmp_list = add_node_list(klisthead, ID, type);
+        tmp_list = add_node_list(klisthead, tmp_type);
         init_waitqueue_head(&tmp_list->fifo_wait_queue);
         spin_lock_init(&tmp_list->fifo_lock);
-	//hal_comm_debug(TAG, "init kfifo ID : %x, type : %d, size : %d, direction : %d\n", ID , type, data_size, _IOCOM_DIR(cmd));
-
-
     }
 
     if(_IOCOM_DIR(cmd) == 1)//write
@@ -238,16 +173,13 @@ static long hal_comm_ioctl(struct file *filp, unsigned int cmd, unsigned long ar
     	 bool is_kfifo_empty = kfifo_is_empty(&tmp_list->data_fifo);
 	 put_buf_fifo(&tmp_list->data_fifo, &data_size, 2, &tmp_list->fifo_lock);
         put_buf_fifo(&tmp_list->data_fifo, (void *)arg, data_size, &tmp_list->fifo_lock);
-	 if(is_kfifo_empty){
+	 if(is_kfifo_empty)
 	 	wake_up_interruptible(&tmp_list->fifo_wait_queue);
-		//hal_comm_debug(TAG, "wake_up_interruptible ID : %x, type : %d, size : %d, direction : %d\n", ID , type, data_size, _IOCOM_DIR(cmd));
-	}
     }
     else//read
     {
         if(kfifo_is_empty(&tmp_list->data_fifo))
             ret = wait_event_interruptible(tmp_list->fifo_wait_queue, !kfifo_is_empty(&tmp_list->data_fifo));
-	//hal_comm_debug(TAG, "wait_event_interruptible exit ID : %x, type : %d, size : %d, direction : %d\n", ID , type, data_size, _IOCOM_DIR(cmd));
         data_size = get_buf_fifo(&tmp_list->data_fifo, (void *)arg, &tmp_list->fifo_lock);
     }
     return data_size;
@@ -262,6 +194,7 @@ static struct file_operations hal_comm_fops =
     .unlocked_ioctl = hal_comm_ioctl,
     .release = hal_comm_close,
 };
+
 
 
 static int  hal_comm_probe(struct platform_device *pdev)
@@ -305,7 +238,7 @@ static struct platform_driver hal_comm_driver =
 
 static int  hal_comm_init(void)
 {
-    LIDBG_DEFINE;
+    LIDBG_GET;
     platform_device_register(&lidbg_hal_comm);
     platform_driver_register(&hal_comm_driver);
     return 0;
