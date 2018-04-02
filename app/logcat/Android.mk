@@ -15,6 +15,5 @@ LOCAL_MODULE := logcat
 
 LOCAL_CFLAGS := -Werror
 
-include $(BUILD_EXECUTABLE)
-
-include $(call first-makefiles-under,$(LOCAL_PATH))
+#include $(BUILD_EXECUTABLE)
+#include $(call first-makefiles-under,$(LOCAL_PATH))
