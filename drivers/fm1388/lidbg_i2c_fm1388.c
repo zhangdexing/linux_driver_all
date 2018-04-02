@@ -98,6 +98,7 @@ static struct platform_device *fm1388_pdev;
 static bool fm1388_is_dsp_on = false;	// is dsp power on? dsp is off in init time
 //static unsigned int fm1388_dsp_mode = FM_SMVD_CFG_BARGE_IN;
 static int fm1388_dsp_mode = -1;	// DSP working mode, user define mode in .cfg file
+static int current_mode = 0;	// DSP working mode, user define mode in .cfg file
 static struct mutex fm1388_index_lock, fm1388_dsp_lock, fm1388_mode_change_lock;
 static struct mutex fm1388_init_lock;
 static struct delayed_work dsp_start_vr;
@@ -549,7 +550,7 @@ static void fm1388_dsp_mode_change(unsigned int mode)
     unsigned int addr, val, times = 10;
 
     fm1388_dsp_mode = mode;
-
+    
     //	lidbg(TAG"%s: fm1388_dsp_mode = %d\n", __func__, fm1388_dsp_mode);
     if(load_fm1388_vec(combine_path_name(filepath_name, "FM1388_sleep.vec")) == OPEN_NO_ERROR)
     {
@@ -581,6 +582,7 @@ static void fm1388_dsp_mode_change(unsigned int mode)
         if(load_fm1388_mode_cfg(combine_path_name(filepath_name, "FM1388_mode.cfg"), fm1388_dsp_mode) == OPEN_NO_ERROR)
         {
             load_fm1388_vec(combine_path_name(filepath_name, "FM1388_wakeup.vec"));
+	    current_mode = mode;
         }
         else
         {
@@ -1195,7 +1197,7 @@ static int fm1388_fw_loaded(void *data)
 	    //   user may change preferred default mode here
 	    load_fm1388_vec(combine_path_name(filepath_name, "FM1388_run.vec"));
 	    msleep(10);
-	    fm1388_dsp_mode_change(0);	// set default mode, parse from .cfg
+	    fm1388_dsp_mode_change(current_mode);	// set default mode, parse from .cfg
 #ifdef SHOW_DL_TIME
 	    do_gettimeofday(&(txc.time));
 	    rtc_time_to_tm(txc.time.tv_sec, &tm);
@@ -1626,13 +1628,22 @@ static ssize_t fm1388_device_mode_write(struct file *file,
     if(!strncmp(mode, BT_MODE, strlen(BT_MODE)))
     {
         if(fm1388_dsp_mode != 1)
-             fm1388_dsp_mode_change(1);
+	{
+		isLock = true;
+		fm1388_dsp_mode_change(1);
+		isLock = false;
+	}
+		
         lidbg(TAG"%s: switch mode to bluetooth.\n", __func__);
     }
     else if(!strncmp(mode, BARGEIN_MODE, strlen(BARGEIN_MODE)))
     {
         if(fm1388_dsp_mode != 0)
-              fm1388_dsp_mode_change(0);
+	{
+		isLock = true;
+		fm1388_dsp_mode_change(0);
+		isLock = false;
+	}
         lidbg(TAG"%s: switch mode to bargein.\n", __func__);
     }
 	else if(!strncmp(mode, BYPASS_MODE, strlen(BYPASS_MODE)))
