@@ -156,6 +156,7 @@ public class FlyBootService extends Service {
     private boolean isSimCardReady=false;
     private boolean isFirstBoot=true;
     private boolean mdisableSenvenDaysReboot = false;
+    private boolean mEnableNDaysShutdown = false;
 
     String mInternelBlackList[] = {
             "com.qti.cbwidget"
@@ -195,23 +196,24 @@ public class FlyBootService extends Service {
 	mInternelWhiteList = FileReadList("/flysystem/lib/out/appInternetProtectList.conf","\n");
 	mflylidbgconfigList = FileReadList("/flysystem/flyconfig/default/lidbgconfig/flylidbgconfig.txt","\n");
 	mdisableSenvenDaysReboot = isInlidbgconfigList("mdisableSenvenDaysReboot=1");
-        LIDBG_PRINT("mdisableSenvenDaysReboot ["+mdisableSenvenDaysReboot+"]\n");
+	mEnableNDaysShutdown = isInlidbgconfigList("mEnableNDaysShutdown=1");
+	LIDBG_PRINT("mdisableSenvenDaysReboot ["+mdisableSenvenDaysReboot+"]\n");
+	LIDBG_PRINT("mEnableNDaysShutdown ["+mEnableNDaysShutdown+"]\n");
 	DUMP();
-        LIDBG_PRINT("start [FlyaudioInternetEnable]\n");
-        FlyaudioInternetEnable();
-        LIDBG_PRINT("stop [FlyaudioInternetEnable]\n");
-        FlyaudioBlackListInternetControl(false);
+	LIDBG_PRINT("start [FlyaudioInternetEnable]\n");
+	FlyaudioInternetEnable();
+	LIDBG_PRINT("stop [FlyaudioInternetEnable]\n");
+	FlyaudioBlackListInternetControl(false);
 	IntentFilter filter = new IntentFilter();
 	filter.addAction("android.intent.action.BOOT_COMPLETED");
 	filter.addAction("com.lidbg.flybootserver.action");
 	filter.addAction(Intent.ACTION_SCREEN_OFF);
 	filter.addAction(Intent.ACTION_SCREEN_ON);
+	filter.addAction(Intent.ACTION_SHUTDOWN);	
 	filter.setPriority(Integer.MAX_VALUE);
 	registerReceiver(myReceiver, filter);
 
-	setAndaddAlarmAtTtime(cmdPara[cmdParabase][0], cmdPara[cmdParabase][1],
-			cmdPara[cmdParabase][2], cmdPara[cmdParabase][3],
-			cmdPara[cmdParabase][4], cmdPara[cmdParabase][5]);
+	setAndaddAlarmAtTtime(0, 1,	rebootabsolutelyHour, 0,	0, 24 * 60 * 60 * 1000);
 
 	intPlatformId = SystemProperties.getInt("persist.lidbg.intPlatformId", 0);
 	switch (intPlatformId) {
@@ -438,6 +440,10 @@ public class FlyBootService extends Service {
 				acquireBrightWakeLock();
 				return;
 			}
+			else  if (intent.getAction().equals(Intent.ACTION_SHUTDOWN))
+			{
+				return;
+			}
 			else  if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF))
 			{
 				releaseBrightWakeLock();
@@ -511,12 +517,9 @@ public class FlyBootService extends Service {
 				FlyaudioBlackListInternetControl(true);
 			break;
 			case 14:
+				mdebugAlarm = 1 ;
+				setAndaddAlarmAtTtime(mdebugAlarm, -1,-1, -1,-1,-1);
 				LIDBG_PRINT("start  test mode:setAndaddAlarmAtTtime\n");
-				cmdParabase = 2;
-				setAndaddAlarmAtTtime(cmdPara[cmdParabase][0], cmdPara[cmdParabase][1],
-				cmdPara[cmdParabase][2], cmdPara[cmdParabase][3],
-				cmdPara[cmdParabase][4], cmdPara[cmdParabase][5]);
-				handleRebootEvent();
 			break;
 			case 15:
 				LIDBG_PRINT(" isWifiApEnabled:"+isWifiApEnabled()+"\n");
@@ -564,6 +567,12 @@ public class FlyBootService extends Service {
 			break;
 			case 28:
 			wakeup();
+			break;
+			case 29:
+				mdebugAlarm = 1 ;
+				mEnableNDaysShutdown = true;
+				setAndaddAlarmAtTtime(mdebugAlarm, -1,-1, -1,-1,-1);
+				LIDBG_PRINT("start  test mode:mEnableNDaysShutdown\n");
 			break;
 			default:
 			LIDBG_PRINT("BroadcastReceiver.action:unkown"+action+"\n");
@@ -1437,168 +1446,150 @@ public static void releaseBrightWakeLock()
 		}
 	}
 /////////////////////////////alarm added below/////////////////////////////////////////
-	protected long[][] cmdPara =
-	{
-			// repearAlarm/intervalDate/absolutelyHour/absolutelyMinutes/absolutelySeconds/repeatIntervalTimeInMillis
-			// factory para,cmdParabase = 0
-			{ 1, 6, 23, 0, 0, 24 * 60 * 60 * 1000 },
-			{ 1, 1, 3, 0, 0, 24 * 60 * 60 * 1000 },
-			// debug para below up,cmdParabase = 2
-			{ 1, 0, 22, 0, 0, 5* 60 * 1000 },
-			{ 1, 1, 6, 0, 0, 5 * 60 * 1000 }, };
-	protected long oldTimes;
-	private int cmdParabase = 0;
-	protected int loopCount = 0;
-	private long previousACCOffTime = SystemClock.elapsedRealtime();
-	private PendingIntent peration;
-	private AlarmManager mAlarmManager;
-	private BroadcastReceiver mAlarmBroadcast = new BroadcastReceiver()
-	{
-		private long interval = 0;
+protected long oldTimes;
+protected int alarmloopCount = 0;
+private long previousACCOffTime = SystemClock.elapsedRealtime();
+private PendingIntent peration;
+private AlarmManager mAlarmManager;
+private int mdebugAlarm = 0;
+private int rebootabsolutelyHour = 3;
 
-		@Override
-		public void onReceive(Context arg0, Intent arg1)
-		{
-			// TODO Auto-generated method stub
-			loopCount++;
-			String msg = arg1.getStringExtra("msg");
-			interval = SystemClock.elapsedRealtime() - oldTimes;
-			oldTimes = SystemClock.elapsedRealtime();
-			String log = msg + "\n" + getCurrentTimeString() + "\nloopCount:"
-					+ loopCount + "/" + "interval:" + interval / 1000 + "S\n";
-			LIDBG_PRINT(log);
-			if(cmdParabase==2)
-			{
-				acquireWakeLock();
-				handleRebootEvent();
-				LIDBG_PRINT("test seven days reboot\n");
-				writeToFile("/dev/lidbg_misc0","flyaudio:reboot lidbg_sevendays_timeout");
-				return;
-			}
+private BroadcastReceiver mAlarmBroadcast = new BroadcastReceiver()
+{
+    private long interval = 0;
+    @Override
+    public void onReceive(Context arg0, Intent arg1)
+    {
+        // TODO Auto-generated method stub
+        alarmloopCount++;
 
-			if (loopCount == 1)
-			{
-				setAndaddAlarmAtTtime(cmdPara[cmdParabase + 1][0],
-						cmdPara[cmdParabase + 1][1],
-						cmdPara[cmdParabase + 1][2],
-						cmdPara[cmdParabase + 1][3],
-						cmdPara[cmdParabase + 1][4],
-						cmdPara[cmdParabase + 1][5]);
-			}
-			if (loopCount >= 2)
-			{
-				handleRebootEvent();
-			}
-		}
-	};
+        String msg = arg1.getStringExtra("msg");
+        interval = SystemClock.elapsedRealtime() - oldTimes;
+        oldTimes = SystemClock.elapsedRealtime();
+        String log = msg  + getCurrentTimeString() + " alarmloopCount:" + alarmloopCount + "/" + "interval:" + interval / 1000 + "S\n";
+        LIDBG_PRINT(log);
 
-	private void setAndaddAlarmAtTtime(long repearAlarm, long intervalDate,
-			long absolutelyHour, long absolutelyMinutes,
-			long absolutelySeconds, long repeatIntervalTimeInMillis)
-	{
-		// TODO Auto-generated method stub
-		LIDBG_PRINT("salarm.=====add new alarm=======\nrepeatIntervalTimeInMillis:"
-						+ repeatIntervalTimeInMillis / 1000 + "S\n"+"cmdParabase:"+cmdParabase+ "\n");
-		oldTimes = SystemClock.elapsedRealtime();
+        if (alarmloopCount >= 7)
+        {
+            handleRebootEvent(1);
+        }
+        else if (alarmloopCount == 5)
+        {
+            handleRebootEvent(0);
+        }
+        else
+        {
+            setAndaddAlarmAtTtime(mdebugAlarm, 1, rebootabsolutelyHour, 0, 0, 24 * 60 * 60 * 1000);
+        }
+    }
+};
 
-		Intent intent = new Intent("LIDBG_ALARM_REBOOT");
-		intent.putExtra("msg", "salarm=========LIDBG_ALARM_REBOOT===========\n");
-		peration = PendingIntent.getBroadcast(this, 0, intent, 0);
+private void setAndaddAlarmAtTtime(long debug, long intervalDate, long absolutelyHour, long absolutelyMinutes, long absolutelySeconds, long repeatIntervalTimeInMillis)
+{
+    // TODO Auto-generated method stub
+    long mfutureTime;
+    oldTimes = SystemClock.elapsedRealtime();
 
-		// get AlarmManager
-		mAlarmManager = (AlarmManager) this
-				.getSystemService(Context.ALARM_SERVICE);
-		mAlarmManager.cancel(peration);
-		long mfutureTime;
-		if(cmdParabase==2)
-		{
-			mfutureTime=SystemClock.elapsedRealtime()+cmdPara[cmdParabase + 1][5];
-			LIDBG_PRINT("debug mode.S:"+cmdPara[cmdParabase + 1][5]/1000);
-		}
-		else
-			mfutureTime=SystemClock.elapsedRealtime()+ getFutureCalenderTimeInMillis(intervalDate,absolutelyHour, absolutelyMinutes,absolutelySeconds);
-		if (repearAlarm == 1)
-		{
-			mAlarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,mfutureTime,repeatIntervalTimeInMillis, peration);
-		} else
-		{
-			mAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,mfutureTime, peration);
-		}
+    Intent intent = new Intent("LIDBG_ALARM_REBOOT");
+    intent.putExtra("msg", "salarm.LIDBG_ALARM_REBOOT.triger====");
+    peration = PendingIntent.getBroadcast(this, 0, intent, 0);
 
-		registerReceiver(mAlarmBroadcast,
-				new IntentFilter("LIDBG_ALARM_REBOOT"));
-	}
+    mAlarmManager = (AlarmManager) this.getSystemService(Context.ALARM_SERVICE);
+    mAlarmManager.cancel(peration);
+    if (debug == 1)
+    {
+        Date curDate = new Date(System.currentTimeMillis());
+        intervalDate = 0;
+        absolutelyHour = curDate.getHours();
+        absolutelyMinutes = curDate.getMinutes() + 1;
+        absolutelySeconds = 0;
+        repeatIntervalTimeInMillis = 1 * 60 * 1000;
+    }
+    LIDBG_PRINT("salarm.absolutelyHour=" + absolutelyHour + " absolutelyMinutes=" + absolutelyMinutes+ " intervalDate=" + intervalDate + "S\n");
+    LIDBG_PRINT("salarm.setAndaddAlarmAtTtime.repeatIntervalTimeInMillis:" + repeatIntervalTimeInMillis / 1000 + "S\n");
+    LIDBG_PRINT("salarm.setAndaddAlarmAtTtime.alarmloopCount=" + alarmloopCount + "\n");
+    mfutureTime = SystemClock.elapsedRealtime() + getFutureCalenderTimeInMillis(intervalDate, absolutelyHour, absolutelyMinutes, absolutelySeconds);
+    mAlarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, mfutureTime, repeatIntervalTimeInMillis, peration);
+    //mAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, mfutureTime, peration);
+    registerReceiver(mAlarmBroadcast, new IntentFilter("LIDBG_ALARM_REBOOT"));
+}
 
-	protected String getCurrentTimeString()
-	{
-		// TODO Auto-generated method stub
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date curDate = new Date(System.currentTimeMillis());
-		return df.format(curDate);
-	}
+protected String getCurrentTimeString()
+{
+    // TODO Auto-generated method stub
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    Date curDate = new Date(System.currentTimeMillis());
+    return df.format(curDate);
+}
 
-	protected void handleRebootEvent()
-	{
-		// TODO Auto-generated method stub
-		long intervalTimesS = (SystemClock.elapsedRealtime() - previousACCOffTime) / 1000;
-		Date curDate = new Date(System.currentTimeMillis());
-		int curHours = curDate.getHours();
-		int accState = SystemProperties.getInt("persist.lidbg.acc.status", 0);// o:ACC on , 1:ACC off
-		String logString ="salarm.handleRebootEvent"
-			+"\ncurHours:"+ curHours
-			+"\npurposeHours:"+cmdPara[cmdParabase + 1][2]
-			+"\naccState:"+accState
-			+"\ncmdParabase:"+cmdParabase
-			+ "\nintervalTimesS:" + intervalTimesS	+ "\n";
-		LIDBG_PRINT(logString);
-		if (curHours == cmdPara[cmdParabase + 1][2]&&accState==1&& intervalTimesS > 2 * 60 * 60)// 
-		{
-			//if(cmdParabase==0)
-				acquireWakeLock();
-				LIDBG_PRINT(" isAirplaneOn:"+isAirplaneOn+"\n");
-				if (!isAirplaneOn)
-				{
-					restoreAirplaneMode(mFlyBootService);
-					delay(1000);
-				}
-				if(!mdisableSenvenDaysReboot)
-				writeToFile("/dev/lidbg_misc0","flyaudio:reboot lidbg_sevendays_timeout");
-				else
-				LIDBG_PRINT(" mdisableSenvenDaysReboot.skip reboot.[:"+mdisableSenvenDaysReboot+"]\n");
-			//else
-			//	LIDBG_PRINT("salarm:should be reboot but in debug mode.");
-		}
-	}
+protected void handleRebootEvent(int reboot)
+{
+    // TODO Auto-generated method stub
+    long intervalTimesS = (SystemClock.elapsedRealtime() - previousACCOffTime) / 1000;
+    Date curDate = new Date(System.currentTimeMillis());
+    int curHours = curDate.getHours();
+    int accState = SystemProperties.getInt("persist.lidbg.acc.status", 0);// o:ACC on , 1:ACC off
+    String logString = "salarm.handleRebootEvent." + " curHours:" + curHours  + " accState:" + accState + " intervalTimesS:" + intervalTimesS+ " reboot:" + reboot+ "\n";
+    LIDBG_PRINT(logString);
+    if (mdebugAlarm==1|| curHours == rebootabsolutelyHour && accState == 1&& intervalTimesS > 2 * 60 * 60)
+    {
+        acquireWakeLock();
+        LIDBG_PRINT("salarm.isAirplaneOn:" + isAirplaneOn +" mdebugAlarm:"+mdebugAlarm+ "\n");
+        if (!isAirplaneOn)
+        {
+            restoreAirplaneMode(mFlyBootService);
+            delay(1000);
+        }
+        if(reboot == 1)
+        {
+            if(!mdisableSenvenDaysReboot)
+            {
+                LIDBG_PRINT("salarm.reboot devices:lidbg_sevendays_timeout\n");
+                writeToFile("/dev/lidbg_misc0", "flyaudio:reboot lidbg_sevendays_timeout");
+            }
+            else
+                LIDBG_PRINT("salarm.mdisableSenvenDaysReboot.skip reboot.[:" + mdisableSenvenDaysReboot + "]\n");
+        }
+        else
+        {
+            if(mEnableNDaysShutdown)
+            {
+                LIDBG_PRINT("salarm.shutdown devices\n");
+                writeToFile("/dev/lidbg_misc0", "flyaudio:svc power shutdown");
+                LIDBG_PRINT("tell LPC to disable SOC power supply\n");
+                writeToFile("/dev/flydev0", "disable_soc_power");	
+            }
+            else
+                LIDBG_PRINT("salarm.mEnableNDaysShutdown.skip shutdown.[:" + mEnableNDaysShutdown + "]\n");
+        }
+    }
+}
 
-	private long getFutureCalenderTimeInMillis(long intervalDate,
-			long absolutelyHour, long absolutelyMinutes, long absolutelySeconds)
-	{
-		// TODO Auto-generated method stub
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date curDate = new Date(System.currentTimeMillis());
+private long getFutureCalenderTimeInMillis(long intervalDate, long absolutelyHour, long absolutelyMinutes, long absolutelySeconds)
+{
+    // TODO Auto-generated method stub
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    Date curDate = new Date(System.currentTimeMillis());
 
-		Calendar calendar = Calendar.getInstance();
-		TimeZone tm = TimeZone.getTimeZone("GMT");
-		calendar.setTimeZone(tm);
-		calendar.clear();
+    Calendar calendar = Calendar.getInstance();
+    TimeZone tm = TimeZone.getTimeZone("GMT");
+    calendar.setTimeZone(tm);
+    calendar.clear();
 
-		String currentTime = df.format(curDate);
+    String currentTime = df.format(curDate);
 
-		curDate.setDate(curDate.getDate() + (int) intervalDate);
-		curDate.setHours((int) absolutelyHour);
-		curDate.setMinutes((int) absolutelyMinutes);
-		curDate.setSeconds((int) absolutelySeconds);
+    curDate.setDate(curDate.getDate() + (int) intervalDate);
+    curDate.setHours((int) absolutelyHour);
+    curDate.setMinutes((int) absolutelyMinutes);
+    curDate.setSeconds((int) absolutelySeconds);
 
-		calendar.setTime(curDate);
-		String futureTime = df.format(curDate);
-		long intervalTime = calendar.getTimeInMillis()
-				- System.currentTimeMillis();
+    calendar.setTime(curDate);
+    String futureTime = df.format(curDate);
+    long intervalTime = calendar.getTimeInMillis() - System.currentTimeMillis();
 
-		String logString = "\nsalarm.currentTime:" + currentTime + "\nfutureTime:"
-				+ futureTime + "\nintervalTime:" + intervalTime / 1000
-				+ "\ncurDate.getHours():" + curDate.getHours()+"\n";
-		LIDBG_PRINT(logString);
-		return intervalTime;
-	}
+    String logString = "salarm.currentTime:" + currentTime + " futureTime:" + futureTime + " intervalTime:" + intervalTime / 1000 + " curDate.getHours():" + curDate.getHours() + "\n";
+    LIDBG_PRINT(logString);
+    return intervalTime;
+}
 }
 

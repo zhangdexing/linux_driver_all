@@ -485,7 +485,6 @@ static void parse_cmd(char *pt)
 		    usb_camera_enable(true);
 		    mod_timer(&usb_release_timer,jiffies + 180*HZ);
 		}
-		
     }
     else if (!strcmp(argv[0], "udisk_unrequest"))
     {
@@ -541,7 +540,6 @@ static void parse_cmd(char *pt)
 
 		}
 	}
-
     else if (!strcmp(argv[0], "flyaudio_reboot"))
     {
         g_var.flyaudio_reboot=1;
@@ -608,6 +606,11 @@ static void parse_cmd(char *pt)
 	{
 		hub_check_en = 0;
 		lidbg("hub_check_en:%d\n",hub_check_en);
+	}
+	else if (!strncmp(argv[0], "disable_soc_power", 17))
+	{
+		lidbg("LPC_CMD_DISABLE_SOC_POWER\n");
+		LPC_CMD_DISABLE_SOC_POWER;
 	}
 }
 

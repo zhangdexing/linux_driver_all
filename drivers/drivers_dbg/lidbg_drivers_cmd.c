@@ -660,7 +660,7 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#075--enable crash detect & debug by gsensor\n");
             fs_mem_log("*158#076--enable gsensor data for android\n");
             fs_mem_log("*158#077--dumpsys meminfo\n");
-            fs_mem_log("*158#078--test seven day timeout :will reboot at tomorow 6:00,Reset once per hour\n");
+            fs_mem_log("*158#078--test seven day timeout :9 mins later\n");
             fs_mem_log("*158#079--open binder debug\n");
             fs_mem_log("*158#080--disable third part apk\n");
             fs_mem_log("*158#081--enable third part apk\n");
@@ -737,6 +737,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#152--switch fm1388 notinspectframecnt\n");
             fs_mem_log("*158#153--switch fm1388 inspectframecnt\n");
             fs_mem_log("*158#154--pre_wakeup_quick\n");
+            fs_mem_log("*158#155--test N day shutdown :6 mins later\n");
+
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
             show_password_list();
@@ -1870,7 +1872,12 @@ void parse_cmd(char *pt)
 				 lidbg_shell_cmd("echo pre_wakeup_quick > /dev/flyaudio_pm0");
 				 lidbg_domineering_ack();
 		 }
-
+		else if (!strcmp(argv[1], "*158#155"))
+		 {
+				 lidbg("*158#155--test N day shutdown :6 mins later\n");
+				 lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 29 &");
+				 lidbg_domineering_ack();
+		 }
     }
     else if(!strcmp(argv[0], "flyaudio.code.disable") )
     {

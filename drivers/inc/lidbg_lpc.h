@@ -83,6 +83,12 @@
         SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
 				}while(0)
 				
+#define LPC_CMD_DISABLE_SOC_POWER  do{\
+        u8 buff[] = {0x00, 0xf1, 0x01};\
+        lidbg("LPC_CMD_DISABLE_SOC_POWER.done\n");\
+        SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
+				}while(0)
+				
 #ifdef MUC_DSP7741
 #define LPC_CMD_RADIO_INIT  do{\
 		u8 buff[] = {0x10, 0x01, 0x01};\
