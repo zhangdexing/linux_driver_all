@@ -114,6 +114,15 @@ static int thread_usb_hub_check(void *data)
      else
           lidbg("sdcard1 success\n");
 
+#ifdef SOC_mt35x
+		// sometimes it is in a_host mode,udisk work unnormal,but,give a mode change ,it works fine.
+	 	lidbg("set usb b_peripheral mode\n");
+       	lidbg_readwrite_file("/sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode", NULL, "b_peripheral", strlen("b_peripheral"));
+		ssleep(2);
+	 	lidbg("set usb a_host mode\n");
+       	lidbg_readwrite_file("/sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode", NULL, "a_host", strlen("a_host"));
+#endif
+
      while((hub_check_en == 1) &&(g_var.usb_status == 1) && ( g_var.acc_flag == FLY_ACC_ON))
      {
 
@@ -136,6 +145,13 @@ static int thread_usb_hub_check(void *data)
 #endif
 
 #ifdef SOC_mt35x
+	 	lidbg("set usb a_host mode\n");
+       	lidbg_readwrite_file("/sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode", NULL, "a_host", strlen("a_host"));
+		ssleep(2);
+		// sometimes it is in a_host mode,udisk work unnormal,but,give a mode change ,it works fine.
+	 	lidbg("set usb b_peripheral mode\n");
+       	lidbg_readwrite_file("/sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode", NULL, "b_peripheral", strlen("b_peripheral"));
+		ssleep(2);
 	 	lidbg("set usb a_host mode\n");
        	lidbg_readwrite_file("/sys/devices/platform/mt_usb/musb-hdrc.0.auto/mode", NULL, "a_host", strlen("a_host"));
 #endif
