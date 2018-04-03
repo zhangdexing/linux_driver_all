@@ -244,6 +244,12 @@ typedef enum
 	FLY_ACC_ON,
 }FLY_ACC_STATUS;
 
+typedef enum
+{
+	FLY_CARBACK_ENTRY,
+	FLY_CARBACK_EXIT,
+}FLY_CARBACK_STATUS;
+
 
 typedef enum
 {
