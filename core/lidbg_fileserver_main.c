@@ -47,8 +47,6 @@ void lidbg_fileserver_main(int argc, char **argv)
     case 6:
         break;
     case 10:
-        FS_WARN("<fs_show_filename_list>\n");
-        fs_show_filename_list();
         break;
     case 11:
         FS_ALWAYS("<fs_msg_fifo_to_file>\n");
@@ -97,7 +95,6 @@ void check_conf_file(void)
         lidbg_shell_cmd("rm -rf "LIDBG_KMSG_FILE_PATH);
         lidbg_shell_cmd("rm -rf "LIDBG_LOG_DIR"lidbg_mem_log.txt");
         lidbg_shell_cmd("rm -rf "PATH_FS_FIFO_FILE);
-        lidbg_shell_cmd("rm -rf "LIDBG_TRACE_MSG_PATH);
     }
 
 }

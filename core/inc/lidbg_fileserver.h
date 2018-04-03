@@ -31,19 +31,12 @@ struct string_dev
     void (*callback)(char *key, char *value);
     void (*cb_filedetec)(char *filename );
 };
-struct fs_filename_item
-{
-    struct list_head tmp_list;
-    char *filename;
-    bool remove_after_copy;
-};
 #define LIDBG_LOG_DIR "/data/lidbg/"
 #define LIDBG_MEM_DIR "/dev/log/"
 #define LIDBG_OSD_DIR LIDBG_LOG_DIR"lidbg_osd/"
 
 extern void lidbg_fileserver_main(int argc, char **argv);
 extern void fs_file_separator(char *file2separator);
-extern void fs_regist_filedetec(char *filename, void (*cb_filedetec)(char *filename ));
 extern void fs_save_state(void);
 extern int fs_get_file_size(char *file);
 extern int get_machine_id(void);
@@ -63,7 +56,6 @@ extern bool fs_is_file_exist(char *file);
 extern bool fs_is_file_updated(char *filename, char *infofile);
 extern bool fs_copy_file(char *from, char *to);
 extern bool fs_copy_file_encode(char *from, char *to);
-extern void fs_show_filename_list(void);
 extern void fs_save_list_to_file(void);
 
 extern bool is_out_updated;
@@ -73,7 +65,6 @@ extern int fs_slient_level;
 
 extern struct list_head lidbg_drivers_list;
 extern struct list_head lidbg_core_list;
-extern struct list_head fs_filename_list;
 extern struct list_head lidbg_machine_info_list;
 
 #define printk_fs(msg...)  do { lidbg(  "lidbg_fs: " msg); }while(0)

@@ -10,18 +10,14 @@ struct cmd_item lidbg_cmd_item[] =
     {"mem", lidbg_mem_main},
     {"i2c", mod_i2c_main},
     {"io", mod_io_main},
-#ifndef SOC_msm8x25
     //   {"spi",mod_spi_main},
-#endif
     {"display", lidbg_display_main},
     {"key", lidbg_key_main},
     {"touch", lidbg_touch_main},
     {"soc", lidbg_soc_main},
     //{"uart", lidbg_uart_main},
     {"servicer", lidbg_servicer_main},
-    {"cmm", mod_cmn_main},
     {"file", lidbg_fileserver_main},
-    //{"trace_msg", trace_msg_main},
     {"mem_log", mem_log_main},
 };
 

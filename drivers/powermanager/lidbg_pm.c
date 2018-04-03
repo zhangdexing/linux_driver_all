@@ -681,12 +681,8 @@ ssize_t pm_write (struct file *filp, const char __user *buf, size_t size, loff_t
             else
                lidbg_shell_cmd("/system/lib/modules/out/sendsignal STORE &");
 #ifdef SOC_mt3360
-            //ssleep(1);
             lidbg("fly power key gotosleep ++\n");
             lidbg_key_report(KEY_POWER, KEY_PRESSED);
-            //msleep(100);
-            //lidbg_key_report(KEY_POWER, KEY_RELEASED);
-            //lidbg("fly power key gotosleep --\n");
             mod_timer(&suspendkey_timer, SUSPEND_KEY_POLLING_TIME);
 #else
 #ifdef SUSPEND_ONLINE

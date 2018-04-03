@@ -93,7 +93,6 @@
 #include "lidbg_fs.h"
 #include "lidbg_wakelock_stat.h"
 #include "lidbg_mem_log.h"
-#include "lidbg_trace_msg.h"
 #include "lidbg_immediate.h"
 #include "lidbg_soc.h"
 #include "lidbg_bare_para.h"

@@ -520,39 +520,6 @@ struct mounted_volume *find_mounted_volume_by_mount_point(char *mount_point)
     return NULL;
 }
 
-void mod_cmn_main(int argc, char **argv)
-{
-
-    if(!strcmp(argv[0], "user"))
-    {
-
-        if(argc < 2)
-        {
-            lidbg("Usage:\n");
-            lidbg("bin_path\n");
-            lidbg("bin_path argv1\n");
-            return;
-
-        }
-
-        {
-            char *argv2[] = { argv[1], argv[2], argv[3], argv[4], NULL };
-            static char *envp[] = { "HOME=/", "TERM=linux", "PATH=/system/bin:/sbin", NULL };
-            int ret;
-            lidbg("%s ,%s ,%s ,%s\n", argv[1], argv[2], argv[3], argv[4]);
-
-            ret = call_usermodehelper(argv[1], argv2, envp, UMH_WAIT_PROC);
-            if (ret < 0)
-                lidbg("lunch fail!\n");
-            else
-                lidbg("lunch  success!\n");
-        }
-
-    }
-
-    return;
-}
-
 static int __init cmn_init(void)
 {
     create_new_proc_entry();
@@ -581,7 +548,6 @@ EXPORT_SYMBOL(lidbg_get_random_number);
 EXPORT_SYMBOL(lidbg_toast_show);
 EXPORT_SYMBOL(lidbg_get_usb_device_type);
 EXPORT_SYMBOL(lidbg_domineering_ack);
-EXPORT_SYMBOL(mod_cmn_main);
 EXPORT_SYMBOL(lidbg_get_ns_count);
 EXPORT_SYMBOL(get_tick_count);
 EXPORT_SYMBOL(lidbg_readwrite_file);

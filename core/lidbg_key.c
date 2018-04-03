@@ -17,18 +17,8 @@ static int lidbg_keycode[] =
 void lidbg_key_report(u32 key_value, u32 type)
 {
     lidbg("key - key_value:%d\n", key_value);
-    /*
-    	if(key_value == KEY_HOME)
-    	{
-    		lidbg_shell_cmd("am start -a android.intent.action.MAIN -c android.intent.category.HOME");
-    		return ;
-    	}
-    */
-#ifdef SOC_msm8x25
-#else
     if(key_value == KEY_HOME)
         key_value = KEY_HOMEPAGE;
-#endif
     if(type == KEY_PRESSED)
         lidbg("key - press\n");
     else if(type == KEY_RELEASED)
@@ -162,8 +152,7 @@ int lidbg_key_init(void)
 
 
     __set_bit(EV_KEY, input->evbit);
-    //??????.SKUD.futengfei
-#if 0//(defined(BOARD_V1) || defined(BOARD_V2))
+#if 0
     for (i = 1; i < KEY_MAX; i++)
     {
         input_set_capability(input, EV_KEY, i);
