@@ -192,6 +192,11 @@ public class FlyBootService extends Service {
 	fbPm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 	mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
 	mWhiteList = FileReadList("/flysystem/lib/out/appProtectList.conf","\n");
+	if(!isFileExist("/flysystem/lib/out/appProtectList.conf"))
+	{
+		LIDBG_PRINT("use origin appProtectList\n");
+		mWhiteList = FileReadList("/system/lib/modules/out/appProtectList.conf","\n");
+	}
 	mWhiteList2 = FileReadList("/flysystem/flytheme/config/SuspendAppProtectList.conf","\n");
 	mInternelWhiteList = FileReadList("/flysystem/lib/out/appInternetProtectList.conf","\n");
 	mflylidbgconfigList = FileReadList("/flysystem/flyconfig/default/lidbgconfig/flylidbgconfig.txt","\n");
@@ -602,6 +607,11 @@ public class FlyBootService extends Service {
 			mList = tempString.trim().split(split);
 		}
 		return mList;
+	}
+	public boolean isFileExist(String file)
+	{
+		File kmsgfiFile = new File(file);
+		return kmsgfiFile.exists();
 	}
 	public String FileRead(String fileName)
 	{
