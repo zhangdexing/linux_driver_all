@@ -195,9 +195,31 @@ fi
 
 }
 
+function mx6_menu()
+{
+	echo [0] make imx6q bootloader
+	echo [1] make imx6qplus bootloader
+}
+
+function soc_select_mx6qsabresdandroid_defconfig()
+{
+	make mx6qsabresdandroid_defconfig
+	make -j32
+	cp u-boot.imx $DBG_SYSTEM_DIR/out/target/product/sabresd_6dq/u-boot-imx6q.imx
+}
+
+function soc_select_mx6qpsabresdandroid_defconfig()
+{
+	make mx6qpsabresdandroid_defconfig
+	make -j32
+	cp u-boot.imx $DBG_SYSTEM_DIR/out/target/product/sabresd_6dq/u-boot-imx6qp.imx
+}
+
 function soc_build_bootloader()
 {
 	echo $FUNCNAME
+	mx6_menu
+	read -p "Enter your select:" name1
 
 	if [ ! -d "$DBG_BOOTLOADER_DIR/flyaudio" ]; then
 		mkdir "$DBG_BOOTLOADER_DIR/flyaudio"
@@ -218,9 +240,14 @@ function soc_build_bootloader()
 	export ARCH=arm
 	export CROSS_COMPILE=$DBG_SYSTEM_DIR/prebuilts/gcc/linux-x86/arm/arm-eabi-4.6/bin/arm-eabi-
 	make distclean
-	make mx6qsabresdandroid_config
-	make 
-	cp u-boot.imx $DBG_SYSTEM_DIR/out/target/product/sabresd_6dq/u-boot-imx6q.imx
+	case $name1 in
+	0)
+	        soc_select_mx6qsabresdandroid_defconfig;;
+	1)
+	        soc_select_mx6qpsabresdandroid_defconfig;;
+	*)
+	        echo
+	esac
 
 }
 
