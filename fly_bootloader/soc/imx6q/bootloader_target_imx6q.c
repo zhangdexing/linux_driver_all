@@ -7,8 +7,8 @@ struct bootloader_hw_config g_hw_info[] =
             .ad_vol = 3200,
         },
         .ctp_info = {
-            .ctp_int = 110,
-            .ctp_rst = 111,
+            .ctp_int = 60,
+            .ctp_rst = 61,
             .ctp_sda = 154,
             .ctp_scl = 155,
         },
