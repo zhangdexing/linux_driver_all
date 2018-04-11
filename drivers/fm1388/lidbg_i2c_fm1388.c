@@ -94,6 +94,8 @@ char filepath_name[255];
 //#define MCLK 24576000
 //#define LRCK 48000
 
+#define CTRL_GPIOS
+
 static struct platform_device *fm1388_pdev;
 static bool fm1388_is_dsp_on = false;	// is dsp power on? dsp is off in init time
 //static unsigned int fm1388_dsp_mode = FM_SMVD_CFG_BARGE_IN;
@@ -162,6 +164,10 @@ char *combine_path_name(char *s, char *append);
 
 static bool isFrameCountRise(void);
 
+#ifdef CTRL_GPIOS
+struct pinctrl *pinctrliis0=NULL;
+struct pinctrl_state *pins_default=NULL, *pins_sleep=NULL;
+#endif
 
 static int fm1388_i2c_write(unsigned int reg, unsigned int value)
 {
@@ -1951,6 +1957,10 @@ static int lidbg_fm1388_event(struct notifier_block *this,
     {
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_UP)://NOTIFIER_MINOR_ACC_ON
     lidbg("lidbg_fm1388_event.FLY_DEVICE_UP\n");
+#ifdef CTRL_GPIOS
+        if(pinctrliis0 && pins_default)
+            pinctrl_select_state(pinctrliis0,pins_default);
+#endif
         if(is_host_slept == 1)
         {
             CREATE_KTHREAD(fm1388_fw_loaded,NULL);
@@ -1960,6 +1970,13 @@ static int lidbg_fm1388_event(struct notifier_block *this,
         break;
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_OFF):
         break;
+		
+    case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_DOWN):
+#ifdef CTRL_GPIOS
+		if(pinctrliis0 && pins_default)
+			pinctrl_select_state(pinctrliis0,pins_sleep);
+#endif
+        break;	
     default:
         break;
     }
@@ -2116,6 +2133,61 @@ static int fm1388_probe(struct platform_device *pdev)
     return 0;
 }
 
+#ifdef CTRL_GPIOS
+static int fm1388_pinctrl_probe(struct platform_device *pdev)
+{
+    int ret;
+
+    lidbg(TAG"%s: entry.\n", __func__);
+
+    if(pdev == NULL)
+    {
+	lidbg(TAG"%s: pdev==NULL.\n", __func__);
+	return -1;
+    }
+	
+    pinctrliis0 = devm_pinctrl_get(&pdev->dev);
+    if(IS_ERR(pinctrliis0))
+    {
+	    ret = PTR_ERR(pinctrliis0);
+	    lidbg(TAG"%s: pinctrliis0 get failed,ret=%d.\n", __func__,ret);
+    }
+
+    pins_default = pinctrl_lookup_state(pinctrliis0,"gpios_def_cfg");
+    if(IS_ERR(pins_default))
+    {
+	    ret = PTR_ERR(pins_default);
+	    lidbg(TAG"%s: pins_default get failed,ret=%d.\n", __func__,ret);
+    }
+
+    pins_sleep= pinctrl_lookup_state(pinctrliis0,"gpios_sleep_cfg");
+    if(IS_ERR(pins_sleep))
+    {
+	    ret = PTR_ERR(pins_sleep);
+	    lidbg(TAG"%s: pins_sleep get failed,ret=%d.\n", __func__,ret);
+    }
+
+	lidbg(TAG"%s: exit.\n", __func__);
+
+    return 0;
+}
+
+
+
+static const struct of_device_id fm1388_of_match[] = {
+	   {.compatible = "fm,fm1388pinsctrl",},
+	   {},
+};
+
+
+ static struct platform_driver fm1388_pinctrl = {
+	    .driver = {
+		.name = "fm1388pinsctrl",
+		.of_match_table = fm1388_of_match,
+	   	},
+		.probe = fm1388_pinctrl_probe,
+ };
+#endif
 
 static int fm1388_remove(struct platform_device *pdev)
 {
@@ -2146,6 +2218,9 @@ static int fm1388_init(void)
 {
     DUMP_BUILD_TIME;
     LIDBG_GET;
+#ifdef CTRL_GPIOS
+    platform_driver_register(&fm1388_pinctrl);
+#endif
     platform_device_register(&fm1388_devices);
     platform_driver_register(&fm1388_driver);
     return 0;
