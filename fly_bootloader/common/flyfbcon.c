@@ -141,34 +141,19 @@ void display_logo_on_screen(sLogo *plogoparameter)
 		}
 	}
 #else
-    if (bytes_per_bpp == 2)// 2
-    {
         if (CLEAN_SCREEN_WRITE)
         {
             memset (fb_base_get(), 0xf1, FBCON_WIDTH * FBCON_HEIGHT * bytes_per_bpp);
         }
-        if(FLY_SCREEN_SIZE_1024)
-        {
             for (i = 0; i < image_base_hdpi ; i++)
             {
-                memcpy ((fb_base_get() + (((1024 - image_base_wdpi) / 2 +  ((i + (600 - image_base_hdpi) / 2) * 1024)) * bytes_per_bpp)),
+                memcpy ((fb_base_get() + (((fly_screen_w - image_base_wdpi) / 2 +  ((i + (fly_screen_h - image_base_hdpi) / 2) * fly_screen_w)) * bytes_per_bpp)),
                         pImageBuffer + (i * image_base_wdpi * bytes_per_bpp) ,
                         image_base_wdpi * bytes_per_bpp);
             }
 #ifdef BOOTLOADER_IMX6Q
 	flush_memery(fly_screen_w, fly_screen_h);
 #endif
-        }
-        else
-        {
-            for (i = 0; i < 480; i++)
-            {
-                memcpy (fb_base_get() + ((0 + (i * FBCON_WIDTH)) * bytes_per_bpp),
-                        pImageBuffer + (i * 800 * bytes_per_bpp),
-                        800 * bytes_per_bpp);
-            }
-        }
-    }
 #endif
 #ifdef BOOTLOADER_MT3561
 	flush_memery(fly_screen_w, fly_screen_h);
@@ -291,8 +276,8 @@ void fly_setBcol(unsigned long int backcolor)
     unsigned char B = backcolor & 0xff;
 
     ptr = gd->fb_base;
-    for(i = 0; i < 1024; i++)
-        for(j = 0; j < 600; j++)
+    for(i = 0; i < fly_screen_w; i++)
+        for(j = 0; j < fly_screen_h; j++)
             *ptr++ = GET_COLOR_RGB565(R, G, B);
 #ifdef BOOTLOADER_IMX6Q
 	flush_memery(fly_screen_w, fly_screen_h);
@@ -387,7 +372,7 @@ void fly_putpext(int x, int y, unsigned long  color)
         tem[m++] = GET_COLOR_RGB565(R, G, B);
         tem[m++] = GET_COLOR_RGB565(R, G, B) >> 8;
     }
-    memcpy (fb_base_get() + ((x + (y * FBCON_WIDTH)) * 2), tem, 1 * 2);
+    memcpy (fb_base_get() + ((x + (y * fly_screen_w)) * 2), tem, 1 * 2);
 #ifdef BOOTLOADER_TYPE_UBOOT
 	flush_cache(fb_base_get() + ((x + (y * FBCON_WIDTH)) * 2),1 * 2);
 #endif

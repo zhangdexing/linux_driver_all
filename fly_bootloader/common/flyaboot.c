@@ -187,7 +187,7 @@ void display_colour(int model)
     }
 
     //		dprintf(INFO,"[FLYADIO]dcz ====>> len = %d count = %d \n",len,count);
-#ifdef BOOTLOADER_MT3561
+#if (defined BOOTLOADER_MT3561 || defined BOOTLOADER_IMX6Q)
 	flush_memery(fly_screen_w, fly_screen_h);
 #endif
     return ;
@@ -201,7 +201,7 @@ void display_enter_recovery_count(int count)
     fly_version(fly_screen_w - 30, fly_screen_h - 10, "%d", 0Xffffff, count);
 #endif
 
-#ifdef BOOTLOADER_MT3561
+#if (defined BOOTLOADER_MT3561 || defined BOOTLOADER_IMX6Q)
 	flush_memery(fly_screen_w, fly_screen_h);
 #endif
     return ;
@@ -233,7 +233,7 @@ static void display_count(int model, int count)
     default:
         break;
     }
-#ifdef BOOTLOADER_MT3561
+#if (defined BOOTLOADER_MT3561 || defined BOOTLOADER_IMX6Q)
 	flush_memery(fly_screen_w, fly_screen_h);
 #endif
     return ;
@@ -510,7 +510,7 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
 
     bp_meg = RecoveryMeg.bootParam.upName.val;
     dprintf(INFO, "flyaboot init bp_meg = %d\n", bp_meg);
-    choose_lcd(lcd_resolution);
+    choose_lcd(lcd_1280_720);
     dprintf(INFO,"lcd_resolution %d*%d\n",fly_screen_w,fly_screen_h);
     flyaudio_hw_init();
     fly_fbcon_clear();
@@ -548,7 +548,11 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
             while(--bofore_recovery_time)
             {
                 //display_colour(PreRecoveryModel);
+#ifdef BOOTLOADER_MT3561
                 if(fly_reverse != 3) display_enter_recovery_count(bofore_recovery_time);
+#else
+                display_enter_recovery_count(bofore_recovery_time);
+#endif
                 if((bofore_recovery_time == 1) || (!judge_key_state()))
                 {
                     Adcnum = get_boot_mode();
@@ -565,12 +569,20 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
     display_colour(model);
 #else
 
+#ifdef BOOTLOADER_MT3561
     if(fly_reverse != 3)
         display_colour(Adcnum);
+#else
+        display_colour(Adcnum);
+#endif
     while(Adcnum && (count_down_time--))
     {
+#ifdef BOOTLOADER_MT3561
         if(fly_reverse != 3)
              display_count(Adcnum, count_down_time);
+#else
+             display_count(Adcnum, count_down_time);
+#endif
         //		mdelay(700);
         if( !judge_key_state())
         {
@@ -646,13 +658,17 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
     else
     {
         fly_setBcol(WHITE_COL);
+#ifdef BOOTLOADER_MT3561
         if(fly_reverse != 3)
                 fly_text_lk(8, (fly_screen_h - 10), INTO_REC, BLACK_COL);
+#else
+                fly_text_lk(8, (fly_screen_h - 10), INTO_REC, BLACK_COL);
+#endif
     }
 
     if(*boot_into_fastboot == true)
         display_fastboot_meg();
-#ifdef BOOTLOADER_MT3561
+#if (defined BOOTLOADER_MT3561 || defined BOOTLOADER_IMX6Q)
 	flush_memery(fly_screen_w, fly_screen_h);
 #endif
 	bootloader_exit_func();

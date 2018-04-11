@@ -579,7 +579,7 @@ int  show_logo()
     display_logo_on_screen(&LogoRGB888Info);
 
 #ifdef BOOTLOADER_IMX6Q
-    memcpy ((unsigned char *)(0x16100000), (unsigned char *)fb_base_get(), 1024*600*2);
+    memcpy ((unsigned char *)(0x16100000), (unsigned char *)fb_base_get(), fly_screen_w*fly_screen_h*(FBCON_BPP/8));
 #endif
 
 #ifndef LOGO_ADD_ALLOCED
