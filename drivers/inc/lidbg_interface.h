@@ -248,8 +248,7 @@ typedef enum
 {
 	FLY_CARBACK_ENTRY,
 	FLY_CARBACK_EXIT,
-}FLY_CARBACK_STATUS;
-
+}FLY_PLATFORM_EVENT_MSG;
 
 typedef enum
 {

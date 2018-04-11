@@ -2,11 +2,51 @@
 LIDBG_DEFINE;
 
 #define TAG	 "platform_event:"
+#define PLATFORMEVENT_FIFO_SIZE 512
 
 static wait_queue_head_t wait_queue;
-struct work_struct work_carback_status;
-static bool is_gpio_trigger = 0;
-static int carback_state;
+
+spinlock_t fifo_lock;
+
+static struct kfifo event_fifo;
+static unsigned int *event_buffer;
+
+struct gpio_event_data {
+	struct work_struct event_work;
+	void (*work_handle)(struct work_struct *);
+	int data;
+	int irq;
+	int gpio;
+};
+
+typedef enum
+{
+	FLY_CARBACK,
+}FLY_PLATFORM_EVENTS;
+
+#define GPIO_EVENT_NUM 1
+
+static struct gpio_event_data gpio_event_data_list[GPIO_EVENT_NUM];
+
+static void update_gpio_status(int index)
+{
+	gpio_event_data_list[index].data = SOC_IO_Input(gpio_event_data_list[index].gpio, gpio_event_data_list[index].gpio, GPIO_CFG_PULL_UP);
+	kfifo_in_spinlocked(&event_fifo, &index, sizeof(index), &fifo_lock);
+	wake_up_interruptible(&wait_queue);
+}
+
+static void disable_gpio_irq(void)
+{
+	lidbg(TAG"carback  disable gprio irq \n");
+	disable_irq(gpio_event_data_list[FLY_CARBACK].irq);
+}
+
+static void enable_gpio_irq(void)
+{
+	lidbg(TAG"carback  enable gprio irq \n");
+	enable_irq(gpio_event_data_list[FLY_CARBACK].irq);
+}
+
 
 static int lidbg_platform_event_event(struct notifier_block *this,
 		unsigned long event, void *ptr)
@@ -16,16 +56,12 @@ static int lidbg_platform_event_event(struct notifier_block *this,
 	switch (event)
 	{
 		case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_OFF):
-			lidbg(TAG"carback  disable gprio irq \n");
-			disable_irq(GPIO_TO_INT(CARBACK_STATE_IO));
+			disable_gpio_irq();
 			break;
 
 		case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, NOTIFIER_MINOR_ACC_ON):
-			lidbg(TAG"carback  enable gprio irq \n");
-			carback_state = SOC_IO_Input(CARBACK_STATE_IO, CARBACK_STATE_IO, GPIO_CFG_PULL_UP);
-			is_gpio_trigger = true; //acc on before into carback
-			enable_irq(GPIO_TO_INT(CARBACK_STATE_IO));
-			wake_up_interruptible(&wait_queue);
+			enable_gpio_irq();
+			update_gpio_status(FLY_CARBACK);
 			break;
 		default:
 			break;
@@ -40,40 +76,26 @@ static struct notifier_block lidbg_platform_event_notifier =
 };
 
 
-irqreturn_t carback_state_isr(int irq, void *dev_id)
+irqreturn_t gpio_state_isr(int irq, void *dev)
 {
-	lidbg(TAG"carback  state irq is coming \n");
-	if(!work_pending(&work_carback_status))
-		schedule_work(&work_carback_status);
+	lidbg(TAG"gpio irq [%d] is coming \n",irq);
+
+	if(irq == gpio_event_data_list[FLY_CARBACK].irq)
+	{
+		if(!work_pending(&gpio_event_data_list[FLY_CARBACK].event_work))
+			schedule_work(&gpio_event_data_list[FLY_CARBACK].event_work);
+	}
 	return IRQ_HANDLED;
 }
 
 
 static void work_carback_status_handle(struct work_struct *work)
 {
-	int val = -1;
+	update_gpio_status(FLY_CARBACK);
 
-	val = SOC_IO_Input(CARBACK_STATE_IO, CARBACK_STATE_IO, GPIO_CFG_PULL_UP);
-
-	lidbg(TAG">>>>> work_carback_status_handle =======>>>[%s]\n",(val == FLY_CARBACK_ENTRY)?"FLY_CARBACK_ENTRY":"FLY_CARBACK_EXIT");
-
-	carback_state = val;
-	is_gpio_trigger = true;
-	wake_up_interruptible(&wait_queue);
+	lidbg(TAG">>>>> work_carback_status_handle =======>>>[%s]\n",(gpio_event_data_list[FLY_CARBACK].data == FLY_CARBACK_ENTRY)?"FLY_CARBACK_ENTRY":"FLY_CARBACK_EXIT");
 }
 
-/*
-static void platform_event_suspend(void)
-{
-
-	return;
-}
-
-static void platform_event_resume(void)
-{
-	return;
-}
-*/
 
 int platform_event_open (struct inode *inode, struct file *filp)
 {
@@ -82,66 +104,77 @@ int platform_event_open (struct inode *inode, struct file *filp)
 
 ssize_t  platform_event_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
 {
+
+	unsigned int cmd = 999;
+	int data = -1;
+	int ret;
+
 	lidbg(TAG"platform_event_read enter\n");
 
-	if(!is_gpio_trigger)
+	if(kfifo_is_empty(&event_fifo))
 	{
-		if(wait_event_interruptible(wait_queue, is_gpio_trigger))
+		if(wait_event_interruptible(wait_queue, !kfifo_is_empty(&event_fifo)))
 		{
-			lidbg(TAG"platform_event_read error\n");
+			lidbg(TAG"platform_event_read ERESTARTSYS\n");
 			return -ERESTARTSYS;
 		}
 	}
-	is_gpio_trigger = false;
 
-	if (copy_to_user(buffer, &carback_state,  4))
+	ret = kfifo_out_spinlocked(&event_fifo, &cmd, 4,&fifo_lock);
+	if(ret < 0)
+		lidbg(TAG"platform_event_read kfifo_out_spinlocked failed\n");
+
+	switch(cmd)
 	{
-		lidbg(TAG"copy_to_user ERR\n");
+		case FLY_CARBACK:
+			data = gpio_event_data_list[FLY_CARBACK].data;
+			break;
+		default:
+			lidbg(TAG"platform_event_read exit,no the cmd %u\n",cmd);
+			return -EINVAL;
 	}
-	lidbg(TAG"platform_event_read exit,status = %d\n",carback_state);
+
+	if(copy_to_user(buffer, &data,  4))
+		lidbg(TAG"copy_to_user ERR\n");
+
+	lidbg(TAG"platform_event_read exit,data = %d\n",data);
+
+
 	return size;
 }
 
 
 ssize_t platform_event_write (struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
-#if 0
-    char *cmd[32] = {NULL};
-    int cmd_num  = 0;
-    char cmd_buf[512];
-    memset(cmd_buf, '\0', 512);
 
-    if(copy_from_user(cmd_buf, buf, size))
-    {
-        PM_ERR("copy_from_user ERR\n");
-    }
-    if(cmd_buf[size - 1] == '\n')
-        cmd_buf[size - 1] = '\0';
+	char *cmd[32] = {NULL};
+	int cmd_num  = 0;
+	int i;
+	char cmd_buf[512];
+	unsigned int cmd_buf_list[32];
+	memset(cmd_buf, '\0', 512);
 
-    cmd_num = lidbg_token_string(cmd_buf, " ", cmd) ;
-    lidbg(TAG"rmtctrl_write :-------%s-------\n", cmd[0]);
 
-	if(!strcmp(cmd[0],"0"))
+
+	if(copy_from_user(cmd_buf, buf, size))
 	{
-		lidbg(TAG">>>>> platform_event_write 0=======>>>>>\n");
-		carback_state = 0;
-		is_gpio_trigger = true;
-		wake_up_interruptible(&wait_queue);
+		PM_ERR("copy_from_user ERR\n");
+	}
+	if(cmd_buf[size - 1] == '\n')
+		cmd_buf[size - 1] = '\0';
 
-	}
-	else if(!strcmp(cmd[0],"1"))
+
+	lidbg(TAG"platform_event_write :-------%s-------\n", cmd_buf);
+	cmd_num = lidbg_token_string(cmd_buf, " ", cmd) ;
+
+	for(i=0 ; i<cmd_num; i++)
 	{
-		lidbg(TAG">>>>> platform_event_write 1=======>>>>>\n");
-		carback_state = 1;
-		is_gpio_trigger = true;
-		wake_up_interruptible(&wait_queue);
+		cmd_buf_list[i] = simple_strtoul(cmd[i], 0, 0);
 	}
-	else
-	{
-		lidbg(TAG">>>>> platform_event_write other=======>>>>>\n");
-		lidbg(TAG">>>>> platform_event_write read gpio %d = %d=======>>>>>\n",CARBACK_STATE_IO,SOC_IO_Input(CARBACK_STATE_IO, CARBACK_STATE_IO, GPIO_CFG_PULL_UP));
-	}
-#endif
+
+	kfifo_in_spinlocked(&event_fifo, cmd_buf_list, 4*cmd_num, &fifo_lock);
+
+	lidbg(TAG"platform_event_write num :%d\n", cmd_num);
 	return size;
 }
 
@@ -153,26 +186,45 @@ static  struct file_operations platform_event_fops =
 	.write = platform_event_write,
 };
 
+
+static int init_gpio_event_data(void)
+{
+	int ret = 0;
+
+	gpio_event_data_list[FLY_CARBACK].work_handle = work_carback_status_handle;
+	gpio_event_data_list[FLY_CARBACK].data = SOC_IO_Input(CARBACK_STATE_IO, CARBACK_STATE_IO, GPIO_CFG_PULL_UP);
+	gpio_event_data_list[FLY_CARBACK].gpio = CARBACK_STATE_IO;
+	gpio_event_data_list[FLY_CARBACK].irq = GPIO_TO_INT(CARBACK_STATE_IO);
+
+	SOC_IO_ISR_Add(CARBACK_STATE_IO, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, gpio_state_isr, NULL);
+	//enable_irq(gpio_event_data_list[FLY_CARBACK].irq); //Must be disable_irq before enable_irq
+
+	INIT_WORK(&gpio_event_data_list[FLY_CARBACK].event_work, gpio_event_data_list[FLY_CARBACK].work_handle);
+
+	return ret;
+}
+
 static int lidbg_platform_event_probe(struct platform_device *pdev)
 {
-
 	init_waitqueue_head(&wait_queue);
-
+	
 	register_lidbg_notifier(&lidbg_platform_event_notifier);
+
+	event_buffer = (unsigned int *)kmalloc(PLATFORMEVENT_FIFO_SIZE, GFP_KERNEL);
+	if(event_buffer == NULL)
+	{
+		lidbg(TAG"kmalloc event_buffer error.\n");
+		return 0;
+	}
+
+	kfifo_init(&event_fifo, event_buffer, PLATFORMEVENT_FIFO_SIZE);
+	spin_lock_init(&fifo_lock);
 
 	lidbg_new_cdev(&platform_event_fops, "flyaudio_event");
 	lidbg_shell_cmd("chmod 777 /dev/flyaudio_event");
 
-	carback_state = SOC_IO_Input(CARBACK_STATE_IO, CARBACK_STATE_IO, GPIO_CFG_PULL_UP);
-	SOC_IO_ISR_Add(CARBACK_STATE_IO, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, carback_state_isr, NULL);
-	
-	is_gpio_trigger = true; //insomd before into carback
-	wake_up_interruptible(&wait_queue);
-	//enable_irq(GPIO_TO_INT(CARBACK_STATE_IO));  //Must disable_irq before enable_irq
-
-	INIT_WORK(&work_carback_status, work_carback_status_handle);
-
-	
+	init_gpio_event_data();
+	update_gpio_status(FLY_CARBACK);
 
 	return 0;
 }
@@ -242,3 +294,4 @@ module_exit(lidbg_platform_event_exit);
 
 MODULE_DESCRIPTION("lidbg.platform_event");
 MODULE_LICENSE("GPL");
+
