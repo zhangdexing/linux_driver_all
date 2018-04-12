@@ -446,62 +446,64 @@ static jclass registerNativeMethods(JNIEnv *env, const char *className, JNINativ
     return clazz;
 }
 
+const char *LidbgJniNativeclassPathName[] =
+{
+    "com/android/mypftf99/app4haljni/LidbgJniNative",
+    "cn/flyaudio/clientservice/video/LidbgJniNative",
+    "com/lidbg/sdk/LidbgJniNative",
+    NULL,
+};
+const char *LidbgIICNativeclassPathName[] =
+{
+    "com/android/mypftf99/app4haljni/LidbgIICNative",
+    "com/lidbg/sdk/LidbgIICNative",
+    NULL,
+};
 static int registerNatives(JNIEnv *env)
 {
-    int ret[6] = {JNI_FALSE}, i;
-    //.1
+    int ret = 0, i = 0;
+
+    while(LidbgJniNativeclassPathName[i] != NULL)
     {
-        static const char *classPathName = "com/android/mypftf99/app4haljni/LidbgJniNative";
+        const char *classPathName = LidbgJniNativeclassPathName[i];
+        i++;
         jclass clazz = registerNativeMethods(env, classPathName, methods, sizeof(methods) / sizeof(methods[0]));
         if (clazz)
         {
             lidbg(DEBG_TAG"[%s].suc.%s\n", __FUNCTION__, classPathName);
             method_call_java_test = env->GetMethodID(clazz, "hal2jni2appCallBack", "(Ljava/lang/String;)V");
             method_call_java_drivers_abnormal_event = env->GetMethodID(clazz, "driverAbnormalEvent", "(I)V");
-            ret[0] = JNI_TRUE;
+            ret++;
         }
         else
         {
             lidbg(DEBG_TAG"[%s].fail.%s\n", __FUNCTION__, classPathName);
         }
     }
-    //.2
+
+    i = 0;
+    while(LidbgIICNativeclassPathName[i] != NULL)
     {
-        static const char *classPathName = "cn/flyaudio/clientservice/video/LidbgJniNative";
-        jclass clazz = registerNativeMethods(env, classPathName, methods, sizeof(methods) / sizeof(methods[0]));
-        if (clazz)
-        {
-            lidbg(DEBG_TAG"[%s].suc.%s\n", __FUNCTION__, classPathName);
-            method_call_java_test = env->GetMethodID(clazz, "hal2jni2appCallBack", "(Ljava/lang/String;)V");
-            method_call_java_drivers_abnormal_event = env->GetMethodID(clazz, "driverAbnormalEvent", "(I)V");
-            ret[1] = JNI_TRUE;
-        }
-        else
-        {
-            lidbg(DEBG_TAG"[%s].fail.%s\n", __FUNCTION__, classPathName);
-        }
-    }
-    //.3
-    {
-        static const char *classPathName = "com/android/mypftf99/app4haljni/LidbgIICNative";
+        const char *classPathName = LidbgIICNativeclassPathName[i];
+        i++;
         jclass clazz = registerNativeMethods(env, classPathName, I2C_methods, sizeof(I2C_methods) / sizeof(I2C_methods[0]));
         if (clazz)
         {
             lidbg(DEBG_TAG"[%s].suc.%s\n", __FUNCTION__, classPathName);
-            ret[2] = JNI_TRUE;
+            ret++;
         }
         else
         {
             lidbg(DEBG_TAG"[%s].fail.%s\n", __FUNCTION__, classPathName);
         }
     }
+
     //result
-    for(i = 0; i < 6; i++)
-    {
-        if(ret[i] == JNI_TRUE)
-            return JNI_TRUE;
-    }
-    return JNI_FALSE;
+    lidbg(DEBG_TAG"[%s].ret.%d\n", __FUNCTION__, ret);
+    if(ret > 0)
+        return JNI_TRUE;
+    else
+        return JNI_FALSE;
 }
 jint JNI_OnLoad(JavaVM *vm, void * /*reserved*/)
 {
