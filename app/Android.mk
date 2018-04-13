@@ -1,5 +1,4 @@
 
-SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,logcat)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,libalsa-intf)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,decodeFlyconfig)
 SUBDIR_MAKEFILES += $(call all-named-subdir-makefiles,doc_split)
