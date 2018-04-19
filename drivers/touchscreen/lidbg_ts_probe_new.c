@@ -587,9 +587,9 @@ static void ts_probe_exit(void)
 static unsigned int flyts_hal_poll(struct file *filp, struct poll_table_struct *wait)
 {
     unsigned int mask = 0;
-    lidbg("[flyts_hal_poll]wait begin\n");
+    //lidbg("[flyts_hal_poll]wait begin\n");
     poll_wait(filp, &wait_queue, wait);
-    lidbg("[flyts_hal_poll]wait done\n");
+    //lidbg("[flyts_hal_poll]wait done\n");
     down(&sem);
     if(!kfifo_is_empty(&flyts_hal_data_fifo))
     {
