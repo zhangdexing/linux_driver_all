@@ -400,6 +400,14 @@ public class LidbgCommenLogicService extends Service
                 return;
             }
             printKernelMsg("mMediaReceiver:[" + intent.getAction() + "][" + intent.getData().getPath() + "]\n");
+	   if(intent.getAction().equals("android.intent.action.MEDIA_MOUNTED")&&intent.getData().getPath().contains("sdcard1")&&isFileExist(intent.getData().getPath()+"/autoupdate.lidbg"))
+	   {
+	   	String log = getCurrentTimeString()+":start auto update\r\n";
+		FileDelete(intent.getData().getPath()+"/autoupdate.lidbg");
+		printKernelMsg(log);
+		FileWrite(intent.getData().getPath()+"/autoupdate.log", true, true, log);
+		FileWrite("/dev/lidbg_drivers_dbg0", false, false, "appcmd *158#115");
+	   }
         }
     };
 
@@ -625,6 +633,35 @@ public class LidbgCommenLogicService extends Service
         }
         return true;
     }
+public void FileDelete(String fileName)
+{
+	// TODO Auto-generated method stub
+	File mFile = new File(fileName);
+	if (mFile.isFile())
+	{
+		mFile.delete();
+		return;
+	}
+	if (mFile.isDirectory())
+	{
+		File[] childFile = mFile.listFiles();
+		if (childFile != null && childFile.length >= 0)
+		{
+			for (File f : childFile)
+			{
+				if (f.isDirectory())
+				{
+					FileDelete(f.getAbsolutePath());
+				} else
+				{
+					f.delete();
+				}
+
+			}
+		}
+	}
+	mFile.delete();
+}
     public boolean isFileExist(String file)
     {
         File kmsgfiFile = new File(file);
