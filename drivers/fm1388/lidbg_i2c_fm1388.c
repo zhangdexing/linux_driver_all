@@ -62,6 +62,13 @@ LIDBG_DEFINE;
 #define HARDWARE_RESET
 #define SOFTWARD_RESET
 
+
+enum FM1388_CAR_TYPE
+{
+	RUIJIE=1,
+	MENGDIOU
+};
+
 enum FM1388_BOOT_STATE
 {
     FM1388_COLD_BOOT,
@@ -82,7 +89,7 @@ int fm1388_config_status = false;
 #endif
 #define DSP_PARAMETER_READY 0x5ffdffea
 
-char filepath[] = "/flysystem/lib/out/fm1388/";
+char filepath[255] = "/flysystem/lib/out/fm1388/";
 
 char filepath_name[255];
 
@@ -2025,6 +2032,26 @@ static const struct dev_pm_ops fm1388_i2c_ops =
     .resume  = fm1388_i2c_resume,
 };
 
+static void set_vec_file_path(void)
+{
+	int car_type=0;
+	fs_get_intvalue(g_var.pflyhal_config_list, "fm1388_config", &car_type, NULL);
+
+	switch(car_type)
+	{
+		case RUIJIE:
+			strcat(filepath,"ruijie/");
+			break;
+		case MENGDIOU:
+			strcat(filepath,"mengdiou/");
+			break;
+		default:
+			strcat(filepath,"ruijie/");
+			break;
+	}
+	lidbg(TAG"car_type=%u,vec file path=%s\n", car_type, filepath);
+}
+
 static int fm1388_probe(struct platform_device *pdev)
 {
     int ret;
@@ -2037,6 +2064,7 @@ static int fm1388_probe(struct platform_device *pdev)
     mutex_init(&fm1388_mode_change_lock);
     mutex_init(&fm1388_init_lock);
     lidbg(TAG"%s: device_create_file - dev_attr_fm1388_reg.\n", __func__);
+	set_vec_file_path();
     ret = device_create_file(&pdev->dev, &dev_attr_fm1388_reg);
     if (ret != 0)
     {
