@@ -403,9 +403,11 @@ public class LidbgCommenLogicService extends Service
 	   if(intent.getAction().equals("android.intent.action.MEDIA_MOUNTED")&&intent.getData().getPath().contains("sdcard1")&&isFileExist(intent.getData().getPath()+"/autoupdate.lidbg"))
 	   {
 	   	String log = getCurrentTimeString()+":start auto update\r\n";
-		FileDelete(intent.getData().getPath()+"/autoupdate.lidbg");
+	   	String upath = intent.getData().getPath();
+		if(!isFileExist(upath+"/autoupdate.hold"))
+			FileDelete(upath+"/autoupdate.lidbg");
 		printKernelMsg(log);
-		FileWrite(intent.getData().getPath()+"/autoupdate.log", true, true, log);
+		FileWrite(upath+"/autoupdate.log", true, true, log);
 		FileWrite("/dev/lidbg_drivers_dbg0", false, false, "appcmd *158#115");
 	   }
         }
