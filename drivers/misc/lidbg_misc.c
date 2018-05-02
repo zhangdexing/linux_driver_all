@@ -160,29 +160,22 @@ static int thread_udisk_misc(void *data)
     allow_signal(SIGSTOP);
     while(!kthread_should_stop())
     {
-        if(!wait_for_completion_interruptible(&udisk_misc_wait))
+
+	    if(g_var.recovery_mode == 1)
+	    {
+	       // lidbg(TAG"g_var.recovery_mode == 1 \n");
+			msleep(1000);
+		}
+        else if(!wait_for_completion_interruptible(&udisk_misc_wait))
+		{
+			lidbg(TAG"wait_for_completion_interruptible udisk_misc_wait \n");
+		}
+
+		
         {
             int i = 0;
 
-            if((g_var.recovery_mode == 1) && !fs_is_file_exist("recovery.conf"))
-            {
-#if 0
-                ssleep(2);
-                lidbg(TAG"mount /usb \n");
-                lidbg_shell_cmd("umount /usb");
-                lidbg_shell_cmd("mkdir -m 777 /usb");
-
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*1 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*2 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*3 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*4 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*5 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*6 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*7 /usb");
-                lidbg_shell_cmd("mount -t vfat /dev/block/sd*8 /usb");
-#endif
-            }
-            else
+			
             {
                 int pos = 0;
                 char buff[128] = {0};
@@ -196,7 +189,7 @@ static int thread_udisk_misc(void *data)
                         if(fs_is_file_exist(pPah[pos]))
                             goto found;
                     }
-                    ssleep(1);
+                    msleep(200);
                     i++;
                 }
 found:
