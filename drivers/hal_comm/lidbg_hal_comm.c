@@ -178,7 +178,7 @@ int put_buf_fifo(struct kfifo *pkfifo , char *buf, int bufLen, spinlock_t *fifo_
 		return 0;
 	}
 	len = kfifo_avail(pkfifo);
-	while(len+sizeof(bufLen) < bufLen)
+	while(len < bufLen + sizeof(bufLen))
 	{
 		lidbg( "fifo did't have enough space\n");
 		ret = kfifo_out_spinlocked(pkfifo, &data_len, sizeof(data_len), fifo_lock);
