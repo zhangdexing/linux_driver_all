@@ -68,6 +68,7 @@ enum FM1388_CAR_TYPE
 	RUIJIE=1,
 	MENGDIOU
 };
+static int fm1388_is_bypass = 0;
 
 enum FM1388_BOOT_STATE
 {
@@ -1635,7 +1636,13 @@ static ssize_t fm1388_device_mode_write(struct file *file,
         printk("copy_from_user ERR\n");
         goto switch_mode_out;
     }
-
+	
+	if(fm1388_is_bypass && (!strncmp(mode, BT_MODE, strlen(BT_MODE)) || !strncmp(mode, BYPASS_MODE, strlen(BYPASS_MODE)) || !strncmp(mode, BARGEIN_MODE, strlen(BARGEIN_MODE))))
+	{
+		lidbg(TAG"%s: Is fixed bypass mode!!!\n", __func__);
+		goto switch_mode_out;
+	}
+		
     mutex_lock(&fm1388_mode_change_lock);
 
     if(!strncmp(mode, BT_MODE, strlen(BT_MODE)))
@@ -2035,21 +2042,33 @@ static const struct dev_pm_ops fm1388_i2c_ops =
 static void set_vec_file_path(void)
 {
 	int car_type=0;
-	fs_get_intvalue(g_var.pflyhal_config_list, "fm1388_config", &car_type, NULL);
-
-	switch(car_type)
+	
+	fs_get_intvalue(g_var.pflyhal_config_list, "fm1388_is_bypass", &fm1388_is_bypass, NULL);
+	lidbg(TAG"fm1388_is_bypass=%d\n", fm1388_is_bypass);
+	
+	if(fm1388_is_bypass)
 	{
-		case RUIJIE:
-			strcat(filepath,"ruijie/");
-			break;
-		case MENGDIOU:
-			strcat(filepath,"mengdiou/");
-			break;
-		default:
-			strcat(filepath,"ruijie/");
-			break;
+		current_mode = 5;
+		strcat(filepath,"common/");
 	}
-	lidbg(TAG"car_type=%u,vec file path=%s\n", car_type, filepath);
+	else
+	{
+		fs_get_intvalue(g_var.pflyhal_config_list, "fm1388_config", &car_type, NULL);
+		switch(car_type)
+		{
+			case RUIJIE:
+				strcat(filepath,"ruijie/");
+				break;
+			case MENGDIOU:
+				strcat(filepath,"mengdiou/");
+				break;
+			default:
+				strcat(filepath,"ruijie/");
+				break;
+		}
+		lidbg(TAG"car_type=%u,vec file path=%s\n", car_type, filepath);
+	}
+	
 }
 
 static int fm1388_probe(struct platform_device *pdev)
