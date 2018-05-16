@@ -202,6 +202,7 @@ public class FlyBootService extends Service {
 	mflylidbgconfigList = FileReadList("/flysystem/flyconfig/default/lidbgconfig/flylidbgconfig.txt","\n");
 	mdisableSenvenDaysReboot = isInlidbgconfigList("mdisableSenvenDaysReboot=1");
 	mEnableNDaysShutdown = isInlidbgconfigList("mEnableNDaysShutdown=1");
+	mEnableNDaysShutdown = true;
 	LIDBG_PRINT("mdisableSenvenDaysReboot ["+mdisableSenvenDaysReboot+"]\n");
 	LIDBG_PRINT("mEnableNDaysShutdown ["+mEnableNDaysShutdown+"]\n");
 	DUMP();
@@ -271,6 +272,7 @@ public class FlyBootService extends Service {
 						}
 						else{
 							if(pmState == FBS_SCREEN_OFF){
+								alarmNdayShutDCount = 0;
 								isAirplaneOn = isAirplaneModeOn(mFlyBootService);
 								isWifiApEnabled = isWifiApEnabled();
 								isWifiEnabled = isWifiEnabled();
@@ -1458,6 +1460,7 @@ public static void releaseBrightWakeLock()
 /////////////////////////////alarm added below/////////////////////////////////////////
 protected long oldTimes;
 protected int alarmloopCount = 0;
+protected int alarmNdayShutDCount = 0;
 private long previousACCOffTime = SystemClock.elapsedRealtime();
 private PendingIntent peration;
 private AlarmManager mAlarmManager;
@@ -1472,20 +1475,22 @@ private BroadcastReceiver mAlarmBroadcast = new BroadcastReceiver()
     {
         // TODO Auto-generated method stub
         alarmloopCount++;
+        alarmNdayShutDCount++;
 
         String msg = arg1.getStringExtra("msg");
         interval = SystemClock.elapsedRealtime() - oldTimes;
         oldTimes = SystemClock.elapsedRealtime();
-        String log = msg  + getCurrentTimeString() + " alarmloopCount:" + alarmloopCount + "/" + "interval:" + interval / 1000 + "S\n";
+        String log = msg  + getCurrentTimeString() + " alarmloopCount:" + alarmloopCount + " alarmNdayShutDCount:" + alarmNdayShutDCount + "/" + "interval:" + interval / 1000 + "S\n";
         LIDBG_PRINT(log);
+
+        if (alarmNdayShutDCount >= 4)
+        {
+            handleRebootEvent(0);
+        }
 
         if (alarmloopCount >= 7)
         {
             handleRebootEvent(1);
-        }
-        else if (alarmloopCount == 5)
-        {
-            handleRebootEvent(0);
         }
         else
         {
