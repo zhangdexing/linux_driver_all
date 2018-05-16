@@ -1,10 +1,15 @@
 /*
- * fm1388-spi.c  --  FM1388 audio driver
+ * drivers/spi/spi-fm1388.c
+ * (C) Copyright 2014-2018
+ * Fortemedia, Inc. <www.fortemedia.com>
+ * Author: HenryZhang <henryhzhang@fortemedia.com>;
+ * 			LiFu <fuli@fortemedia.com>
  *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
  */
 
 #include <linux/init.h>
@@ -39,7 +44,7 @@ LIDBG_DEFINE;
 
 static struct spi_device *fm1388_spi;
 
-int fm1388_spi_read(unsigned int addr, unsigned int *val, size_t len)
+int fm1388_spi_read(u32 addr, u32 *val, size_t len)
 {
     struct spi_device *spi = fm1388_spi;
     struct spi_message message;
@@ -82,14 +87,15 @@ int fm1388_spi_read(unsigned int addr, unsigned int *val, size_t len)
         *val = read_buf[12] | read_buf[11] << 8 | read_buf[10] << 16 |
                read_buf[9] << 24;
     else
-        *val = read_buf[1] | read_buf[0] << 8;
+        *val = read_buf[10] | read_buf[9] << 8;
 
-    lidbg(TAG"%s status:%d\n", __FUNCTION__, status);
+	
+    //lidbg(TAG"%s status:%d\n", __FUNCTION__, status);
     return status;
 }
 EXPORT_SYMBOL(fm1388_spi_read);
 
-int fm1388_spi_write(unsigned int addr, unsigned int val, size_t len)
+int fm1388_spi_write(u32 addr, u32 val, size_t len)
 {
     //struct spi_device *spi = fm1388_spi;
     int status;
@@ -135,68 +141,111 @@ EXPORT_SYMBOL_GPL(fm1388_spi_write);
  *
  * Returns true for success.
  */
-int fm1388_spi_burst_read(unsigned int addr, u8 *rxbuf, size_t len)
+int fm1388_spi_burst_read(u32 addr, u8 *rxbuf, size_t len)
 {
-    u8 spi_cmd = FM1388_SPI_CMD_BURST_READ;
-    u8 write_buf[512];
-    int status;
-    unsigned int i, offset = 0;
+	u8 spi_cmd = FM1388_SPI_CMD_BURST_READ;
+	int status = 0;
+	u8 write_buf[9] = {0};
+	u32 end, offset = 0;
+	char tmp[FM1388_SPI_READ_BUF_LEN+9];
+	int one_len;
 
-    struct spi_message message;
-    struct spi_transfer x[1];
+	struct spi_message message;
+	struct spi_transfer x[5];
+	u32 ptr = 0;
 
-    write_buf[0] = spi_cmd;
-    write_buf[1] = ((addr + offset) & 0xff000000) >> 24;
-    write_buf[2] = ((addr + offset) & 0x00ff0000) >> 16;
-    write_buf[3] = ((addr + offset) & 0x0000ff00) >> 8;
-    write_buf[4] = ((addr + offset) & 0x000000ff) >> 0;
+//pr_err("%s: start...	addr = %#x, len =%#x\n", __func__, addr, len);
+	write_buf[0] = spi_cmd;
+	while (offset < len) {
+		if (offset + FM1388_SPI_READ_BUF_LEN <= len)
+			end = FM1388_SPI_READ_BUF_LEN;
+		else
+			end = len - offset;
 
-    spi_message_init(&message);
-    memset(x, 0, sizeof(x));
-#if 0
-    x[0].len = 5;
-    x[0].tx_buf = write_buf;
-    spi_message_add_tail(&x[0], &message);
+//pr_err("%s: offset = %#x, end =%#x\n", __func__, offset, end);
 
-    x[1].len = 4;
-    x[1].tx_buf = write_buf;
-    spi_message_add_tail(&x[1], &message);
+		ptr = addr + offset;
+		write_buf[1] = (ptr >> 24) & 0xFF;
+		write_buf[2] = (ptr >> 16) & 0xFF;
+		write_buf[3] = (ptr >> 8) & 0xFF;
+		write_buf[4] = (ptr) & 0xFF;
+//		write_buf[5] = 0;
+//		write_buf[6] = 0;
+//		write_buf[7] = 0;
+//		write_buf[8] = 0;
 
-    x[2].len = len;
-    x[2].rx_buf = rxbuf + offset;
-    spi_message_add_tail(&x[2], &message);
+		spi_message_init(&message);
+
+		memset(x, 0, sizeof(x));
+		x[0].len = 9+end;
+		x[0].tx_buf = write_buf;
+		x[0].rx_buf = tmp;
+//		x[0].delay_usecs = 0;
+//		x[0].speed_hz = 20000000;
+		spi_message_add_tail(&x[0], &message);
+
+//		x[1].len = end;
+//		x[1].rx_buf = rxbuf + offset;
+//		x[1].delay_usecs = 0;
+//		x[1].speed_hz = 20000000;
+//		spi_message_add_tail(&x[1], &message);
+
+		status = spi_sync(fm1388_spi, &message);
+
+		if (status) {
+			lidbg(TAG"%s: error occurs, status=%x\n", __func__, status);
+			return -ESPIREAD;
+		}
+		
+		if(message.actual_length != (x[0].len)) {
+			lidbg(TAG"%s: did not get enough data when spi burst read, actual_length=%d needread=%d\n", 
+				__func__, message.actual_length, x[0].len);
+
+			one_len = (message.actual_length - 9);
+		}
+		else {
+			one_len = FM1388_SPI_READ_BUF_LEN;
+		}
+		memcpy(rxbuf+offset,tmp+9,one_len);
+		offset += one_len;
+		
+	}
+
+#if 0 //beacause caller will swap, annotation
+	int i;
+	char c;
+
+	//swap big endian and little endian
+	for(i=0;i<len;i+=8)
+	{
+		c = rxbuf[i];
+		rxbuf[i] = rxbuf[i+7];
+		rxbuf[i+7] = c;
+		
+		c = rxbuf[i+1];
+		rxbuf[i+1] = rxbuf[i+6];
+		rxbuf[i+6] = c;
+		
+		c = rxbuf[i+2];
+		rxbuf[i+2] = rxbuf[i+5];
+		rxbuf[i+5] = c;
+		
+		c = rxbuf[i+3];
+		rxbuf[i+3] = rxbuf[i+4];
+		rxbuf[i+4] = c;
+	}
 #endif
-    x[0].len = 9 + len;
-    x[0].tx_buf = write_buf;
-    x[0].rx_buf = rxbuf + offset;
-    spi_message_add_tail(&x[0], &message);
-    status = spi_sync(fm1388_spi, &message);
 
-    if (status)
-        return false;
+	if(!status) {
+//pr_err("%s: finished\n", __func__);
+		return ESUCCESS;
+	}
+	else {
+		lidbg(TAG"%s: failed to swap data. addr = %#x, len = %d\n", __func__, addr, (int)len);
+	}	
 
-    for (i = 0; i < len; i += 8)
-    {
-        write_buf[0] = rxbuf[i + 0+9];
-        write_buf[1] = rxbuf[i + 1+9];
-        write_buf[2] = rxbuf[i + 2+9];
-        write_buf[3] = rxbuf[i + 3+9];
-        write_buf[4] = rxbuf[i + 4+9];
-        write_buf[5] = rxbuf[i + 5+9];
-        write_buf[6] = rxbuf[i + 6+9];
-        write_buf[7] = rxbuf[i + 7+9];
+	return -ESPIREAD;
 
-        rxbuf[i + 0+9] = write_buf[7];
-        rxbuf[i + 1+9] = write_buf[6];
-        rxbuf[i + 2+9] = write_buf[5];
-        rxbuf[i + 3+9] = write_buf[4];
-        rxbuf[i + 4+9] = write_buf[3];
-        rxbuf[i + 5+9] = write_buf[2];
-        rxbuf[i + 6+9] = write_buf[1];
-        rxbuf[i + 7+9] = write_buf[0];
-    }
-
-    return true;
 }
 EXPORT_SYMBOL_GPL(fm1388_spi_burst_read);
 
@@ -273,6 +322,25 @@ int fm1388_spi_burst_write(u32 addr, const u8 *txbuf, size_t len)
 
 EXPORT_SYMBOL_GPL(fm1388_spi_burst_write);
 
+//fuli 20160827 added to change spi speed before burst read
+int fm1388_spi_change_maxspeed(u32 new_speed) {
+	int ret;
+	
+	fm1388_spi->max_speed_hz = new_speed;
+
+	ret = spi_setup(fm1388_spi);
+	if (ret < 0) {
+		lidbg(TAG"%s spi_setup() failed\n",__FUNCTION__);
+		return -ESPISETFAIL;
+	}
+	lidbg(TAG"%s: max_speed = %d, chip_select = %d, mode = %d, modalias = %s\n", 
+			__func__, fm1388_spi->max_speed_hz, fm1388_spi->chip_select, fm1388_spi->mode, fm1388_spi->modalias);
+
+	return ESUCCESS;
+}
+EXPORT_SYMBOL_GPL(fm1388_spi_change_maxspeed);
+//
+
 //add by flyaudio
 void spi_test(void)
 {
@@ -282,30 +350,57 @@ void spi_test(void)
     unsigned int read_value;
     unsigned int len = 256 * 100;
     unsigned int i = 0, j = 0;
-    unsigned char *read_buf;
+    unsigned char *read_buf,write_buf;
     int ret1, ret2;
+	unsigned int rb2=0,wb2=0x18af;
 
-    read_buf = kmalloc(len, GFP_KERNEL);
-    if(!read_buf)
-        lidbg(TAG"alloc buf for fm1388 burst read err!");
-    ret1 = fm1388_spi_write(address, write_value, 4);
-    ret2 = fm1388_spi_read(address, &read_value, 4);
+//test write read 2 byte
+    ret1 = fm1388_spi_write(address, wb2, 2);
+    ret2 = fm1388_spi_read(address, &rb2, 2);
+    lidbg(TAG"write_addr:%x,write_value=0x%x,read_value=0x%x,writeRet:%d,readRet:%d\n", address, wb2, rb2, ret1, ret2);
 
-    lidbg(TAG"write_addr:%x,write_value=0x%x,read_value=0x%0x,writeRet:%d,readRet:%d\n", address, write_value, read_value, ret1, ret2);
+//test write read 4 byte
+	wb2=0x18af1234;
+    ret1 = fm1388_spi_write(address, wb2, 4);
+    ret2 = fm1388_spi_read(address, &rb2, 4);
+    lidbg(TAG"write_addr:%x,write_value=0x%x,read_value=0x%x,writeRet:%d,readRet:%d\n", address, wb2, rb2, ret1, ret2);
 
+//test burst write read
+	len = 10000;
+	read_buf = kmalloc(len, GFP_KERNEL);
+	if(!read_buf)
+	{
+		lidbg(TAG"alloc buf for fm1388 burst read err!");
+		return;
+	}
 
-    for(j = 0; j < len / 0x100; j++)
-    {
-        lidbg(TAG"-----------0x%x\n", 0x100 * j);
-        fm1388_spi_burst_read(address + 0x100 * j, read_buf, 0x100);
-        for(i = 0; i < 0x100;)
-            lidbg(TAG"0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x---0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n",
-                  read_buf[9+i++], read_buf[9+i++], read_buf[9+i++], read_buf[9+i++],
-                  read_buf[9+i++], read_buf[9+i++], read_buf[9+i++], read_buf[9+i++],
-                  read_buf[9+i++], read_buf[9+i++], read_buf[9+i++], read_buf[9+i++],
-                  read_buf[9+i++], read_buf[9+i++], read_buf[9+i++], read_buf[9+i++]);
-        msleep(20);
-    }
+	write_buf = kmalloc(len, GFP_KERNEL);
+	if(!write_buf)
+	{
+		lidbg(TAG"alloc buf for fm1388 burst write err!");
+		return;
+	}
+
+	for(i=0;i<len;i++)
+	{
+		write_buf[i]=i;
+	}
+
+	ret1 = fm1388_spi_burst_write(address,write_buf,len);
+	ret2 = fm1388_spi_burst_read(address,read_buf,len);
+
+	for(i=0;i<len-15;i+=16)
+	{
+		lidbg(TAG"0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x\n",
+			read_buf[i],read_buf[i+1],read_buf[i+2],read_buf[i+3],read_buf[i+4],read_buf[i+5],
+			read_buf[i+6],read_buf[i+7],read_buf[i+8],read_buf[i+9],read_buf[i+10],read_buf[i+11],read_buf[i+12],
+			read_buf[i+13],read_buf[i+14],read_buf[i+15]);
+	}
+
+	lidbg(TAG"writeRet:%d,readRet:%d\n", ret1, ret2);
+	kfree(read_buf);
+	kfree(write_buf);
+
 #endif
 }
 EXPORT_SYMBOL_GPL(spi_test);
