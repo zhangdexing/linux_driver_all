@@ -202,7 +202,6 @@ public class FlyBootService extends Service {
 	mflylidbgconfigList = FileReadList("/flysystem/flyconfig/default/lidbgconfig/flylidbgconfig.txt","\n");
 	mdisableSenvenDaysReboot = isInlidbgconfigList("mdisableSenvenDaysReboot=1");
 	mEnableNDaysShutdown = isInlidbgconfigList("mEnableNDaysShutdown=1");
-	mEnableNDaysShutdown = true;
 	LIDBG_PRINT("mdisableSenvenDaysReboot ["+mdisableSenvenDaysReboot+"]\n");
 	LIDBG_PRINT("mEnableNDaysShutdown ["+mEnableNDaysShutdown+"]\n");
 	DUMP();
