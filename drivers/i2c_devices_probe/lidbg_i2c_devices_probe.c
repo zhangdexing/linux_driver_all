@@ -12,8 +12,6 @@ typedef enum
 	DEV_LED,
 	DEV_RADIO,
 	DEV_CARPLAY,
-	DEV_DS90UB9XX,
-
 } i2cdev_type;
 
 static int scanflag;
@@ -73,12 +71,6 @@ int fm1388_i2c_bus(void)
 {
 	return FM1388_I2C_BUS;
 }
-
-int ds90ub927_i2c_bus(void)
-{
-	return UB927_I2C_BUS;
-}
-
 void radio_reset_lpc(void)
 {
 	LPC_CMD_RADIORST_L;
@@ -127,7 +119,6 @@ struct probe_device i2c_probe_dev[] =
 	{DEV_RADIO, tef6638_i2c_bus, 0x63, 0x00, "tef6638.ko", radio_reset_lpc, NULL ,1},
 #endif
 	{DEV_CARPLAY, fm1388_i2c_bus, 0x2c, 0x00, "lidbg_spi_fm1388.ko,lidbg_i2c_fm1388.ko", fm1388_reset, NULL ,0},
-	{DEV_DS90UB9XX, ds90ub927_i2c_bus, 0x0c, 0x00, "ds90ub9xx.ko", NULL, NULL, 0},
 };
 
 void parse_ts_info(struct probe_device *i2cdev_info)

@@ -89,8 +89,6 @@ struct hw_version_specific
     int i2c_bus_dsi83;
     int i2c_bus_bx5b3a;
     int i2c_bus_ts;
-    int i2c_bus_ub927;
-    int i2c_bus_ub928;
     int i2c_bus_gps;
     int i2c_bus_saf7741;
     int i2c_bus_tef6638;
@@ -150,8 +148,6 @@ extern struct hw_version_specific g_hw_version_specific[];
 
 //touch
 #define TS_I2C_BUS      (g_hw.i2c_bus_ts)
-#define UB927_I2C_BUS	(g_hw.i2c_bus_ub927)
-#define UB928_I2C_BUS	(g_hw.i2c_bus_ub928)
 #define GTP_RST_PORT    (g_hw.gpio_ts_rst)
 #define GTP_INT_PORT    (g_hw.gpio_ts_int)
 

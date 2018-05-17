@@ -822,7 +822,6 @@ static void gtp_reset_guitar(struct goodix_ts_data *ts, int ms)
     ret  = GPIO_MultiFun_Set(GTP_RST_PORT, PINMUX_LEVEL_GPIO_END_FLAG);
 #endif
     /* This reset sequence will selcet I2C slave address */
-    lidbg_readwrite_file("/dev/ds90ub9xx", NULL, "w ub928 0x20 0x10", sizeof("w 1 0x2c 0x20 0x10"));
     SOC_IO_Output(0, GTP_RST_PORT, 0);
     msleep(ms);
 
@@ -833,7 +832,6 @@ static void gtp_reset_guitar(struct goodix_ts_data *ts, int ms)
 
     udelay(RESET_DELAY_T3_US);
 
-    lidbg_readwrite_file("/dev/ds90ub9xx", NULL, "w ub928 0x20 0x90", sizeof("w 1 0x2c 0x20 0x10"));
     SOC_IO_Output(0, GTP_RST_PORT, 1);
     msleep(RESET_DELAY_T4);
 
@@ -2207,7 +2205,6 @@ static const struct dev_pm_ops goodix_ts_dev_pm_ops =
 
 static int goodix_ac_ts_suspend(struct device *dev)
 {
-    lidbg_readwrite_file("/dev/ds90ub9xx", NULL, "w ub928 0x20 0x10", sizeof("w 1 0x2c 0x20 0x10"));
     SOC_IO_Output(0, GTP_RST_PORT, !GTP_RST_PORT_ACTIVE);
     return 0;
 }
@@ -2270,7 +2267,6 @@ static void goodix_ts_suspend(struct goodix_ts_data *ts)
      * delay 48 + 10ms to ensure reliability
      */
     msleep(58);
-    lidbg_readwrite_file("/dev/ds90ub9xx", NULL, "w ub928 0x20 0x10", sizeof("w 1 0x2c 0x20 0x10"));
     SOC_IO_Output(0, GTP_RST_PORT, !GTP_RST_PORT_ACTIVE);
     lidbg( "gt911 GTP_RST_PORT.disable\n");
 }
@@ -2291,7 +2287,6 @@ static int goodix_ts_resume_thread(void *data)
     struct goodix_ts_data *ts = data;
     FUNCTION_IN;
     lidbg( "gt911 GTP_RST_PORT.enable\n");
-    lidbg_readwrite_file("/dev/ds90ub9xx", NULL, "w ub928 0x20 0x90", sizeof("w 1 0x2c 0x20 0x10"));
     SOC_IO_Output(0, GTP_RST_PORT, GTP_RST_PORT_ACTIVE);
     msleep(100);
     ret = gtp_wakeup_sleep(ts);
