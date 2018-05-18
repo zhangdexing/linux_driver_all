@@ -146,27 +146,52 @@ static int init_ub928(void)
 	return push_ub928_config(ub928_init_config, sizeof(ub928_init_config) / sizeof(ds90ub9xx_setting));
 }
 
-static void loading_gt9xx_driver(void)
+static void loading_gt9xx_driver(int state)
 {
-	UB928_STATE = 1;
+	UB928_STATE = state;
 	return ;
 }
 
-int ds90ub9xx_open(struct inode *inode, struct file *filp)
+static int ds90ub9xx_open(struct inode *inode, struct file *filp)
 {
 	hal_comm_debug_err(TAG, "ds90ub9xx_open\n");
 	return 0;
 }
 
-int ds90ub9xx_close(struct inode *inode, struct file *filp)
+static int ds90ub9xx_close(struct inode *inode, struct file *filp)
 {
 	hal_comm_debug_err(TAG, "ds90ub9xx_close \n");
 	return 0;
 }
 
+static int  ds90ub9xx_suspend(struct platform_device *pdev, pm_message_t state)
+{
+	hal_comm_debug(TAG, "enter ds90ub9xx_suspend \n");
+	loading_gt9xx_driver(0);
+	return 0;
+}
+
+static int ds90ub9xx_resume(struct platform_device *pdev)
+{
+	int ret = -1;
+	hal_comm_debug(TAG, "enter ds90ub9xx_resume \n");
+	ret = init_ub927();
+	if(ret < 0){
+	        hal_comm_debug_err(TAG, "init ub927 fail !\n");
+	        return ret;
+	}
+	ret = init_ub928();
+	if(ret < 0){
+	        hal_comm_debug_err(TAG, "init ub928 fail !\n");
+	}else{
+		loading_gt9xx_driver(1);
+	}
+	return 0;
+}
+
 static ssize_t ds90ub9xx_write(struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
-	int argc = 0, i = 0, ret = -1;
+	int argc = 0, ret = -1;
 	char *argv[32] = {0};
 	char str[1024];
 	if (copy_from_user(str, (char *)buf, size) > 0)
@@ -251,7 +276,7 @@ static int  ds90ub9xx_probe(struct platform_device *pdev)
 		if(ret < 0){
 			hal_comm_debug_err(TAG, "gt9xx_reset_guitar fail !\n");
 		}else{
-			loading_gt9xx_driver();
+			loading_gt9xx_driver(1);
 		}
 	}
 	ret = lidbg_new_cdev(&ds90ub9xx_dev_fops, "ds90ub9xx");
@@ -280,6 +305,8 @@ static struct platform_driver ds90ub9xx_driver =
 {
 	.probe		= ds90ub9xx_probe,
 	.remove     = ds90ub9xx_remove,
+	.suspend	= ds90ub9xx_suspend,
+	.resume		= ds90ub9xx_resume,
 	.driver         = {
 	    .name = "ds90ub9xx",
 	    .owner = THIS_MODULE,

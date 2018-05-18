@@ -142,6 +142,7 @@ struct hw_version_specific g_hw_version_specific[] =
 	.i2c_bus_accel = 0,
         .i2c_bus_dsi83 = 0,
         .i2c_bus_ts = 1,
+	.i2c_bus_ub9xx = 1,
         .i2c_bus_gps = 0,
         .i2c_bus_tef6638 = 0,
         .i2c_bus_lpc = 3,
