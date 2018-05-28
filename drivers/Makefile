@@ -8,4 +8,4 @@ obj-y	:=  accel/ drivers_dbg/ gps/ touchscreen/ interface/\
 		temp/ button/ tef6638/ sound_det/ uvc_cam/ flycam/\
 		i2c_devices_probe/ lowmemorykillprotectlist/\
 		factory_machine_patch/ fm1388/ hal_comm/ module_comm/\
-		bare_para/ ad/ detect_carback/ ds90ub9xx/
+		bare_para/ ad/ detect_carback/ ds90ub9xx/ smi130/
