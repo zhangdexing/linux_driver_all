@@ -549,6 +549,8 @@ static void fm1388_hardware_reset(void)
 {
 
 #ifdef HARDWARE_RESET
+    SOC_IO_Output(0, FM1388_RESET_PIN, 1);
+    msleep(100);
     SOC_IO_Output(0, FM1388_RESET_PIN, 0);
     msleep(100);
     SOC_IO_Output(0, FM1388_RESET_PIN, 1);
@@ -2180,6 +2182,9 @@ static int fm1388_fw_loaded(void *data)
 
 		if(isFrameCountRise())
 			break;
+		if(g_var.acc_flag == FLY_ACC_OFF)
+			break;
+		msleep(500);
 	}
 	
     mutex_unlock(&fm1388_init_lock);
@@ -3327,6 +3332,7 @@ static int lidbg_fm1388_event(struct notifier_block *this,
 #endif
         if(is_host_slept == 1)
         {
+            SOC_IO_Output(0, FM1388_RESET_PIN, 1);
             CREATE_KTHREAD(fm1388_fw_loaded,NULL);
             is_host_slept = 0;
             resumeAfterReinitCount = 0;
@@ -3336,6 +3342,7 @@ static int lidbg_fm1388_event(struct notifier_block *this,
         break;
 		
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_DOWN):
+        SOC_IO_Output(0, FM1388_RESET_PIN, 0);
 #ifdef CTRL_GPIOS
 		if(pinctrliis0 && pins_default)
 			pinctrl_select_state(pinctrliis0,pins_sleep);
