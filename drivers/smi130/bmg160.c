@@ -15,6 +15,7 @@
 */
 
 #include "bmg160.h"
+#include <linux/module.h>
 static struct bmg160_t *p_bmg160;
 
 
@@ -7318,3 +7319,21 @@ BMG160_RETURN_FUNCTION_TYPE bmg160_set_sleepdur(unsigned char duration)
 	return comres;
 }
 
+EXPORT_SYMBOL(bmg160_init);
+EXPORT_SYMBOL(bmg160_get_dataXYZ);
+EXPORT_SYMBOL(bmg160_get_range_reg);
+EXPORT_SYMBOL(bmg160_set_range_reg);
+EXPORT_SYMBOL(bmg160_set_bw);
+EXPORT_SYMBOL(bmg160_enable_fast_offset);
+EXPORT_SYMBOL(bmg160_set_fast_offset_en_ch);
+EXPORT_SYMBOL(bmg160_set_slow_offset_en_ch);
+EXPORT_SYMBOL(bmg160_set_slow_offset_dur);
+EXPORT_SYMBOL(bmg160_set_slow_offset_th);
+EXPORT_SYMBOL(bmg160_selftest);
+EXPORT_SYMBOL(bmg160_get_sleepdur);
+EXPORT_SYMBOL(bmg160_set_sleepdur);
+EXPORT_SYMBOL(bmg160_get_autosleepdur);
+EXPORT_SYMBOL(bmg160_set_autosleepdur);
+EXPORT_SYMBOL(bmg160_get_bw);
+EXPORT_SYMBOL(bmg160_get_mode);
+EXPORT_SYMBOL(bmg160_set_mode);
