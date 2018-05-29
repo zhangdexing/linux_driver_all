@@ -232,7 +232,7 @@ static void __exit bst_exit(void)
 
 MODULE_AUTHOR("contact@bosch-sensortec.com");
 MODULE_DESCRIPTION("BST CLASS CORE");
-MODULE_LICENSE("GPL V2");
+MODULE_LICENSE("GPL");
 
 module_init(bst_init);
 module_exit(bst_exit);
