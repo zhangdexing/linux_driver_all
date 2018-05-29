@@ -118,7 +118,7 @@ struct bst_dev *bst_allocate_device(void)
 	}
 	return dev;
 }
-EXPORT_SYMBOL(bst_allocate_device);
+EXPORT_SYMBOL_GPL(bst_allocate_device);
 
 
 
@@ -141,7 +141,7 @@ void bst_free_device(struct bst_dev *dev)
 	if (dev)
 		bst_put_device(dev);
 }
-EXPORT_SYMBOL(bst_free_device);
+EXPORT_SYMBOL_GPL(bst_free_device);
 
 /**
  * bst_register_device - register device with input core
@@ -187,7 +187,7 @@ int bst_register_device(struct bst_dev *dev)
 	mutex_unlock(&bst_mutex);
 	return 0;
 }
-EXPORT_SYMBOL(bst_register_device);
+EXPORT_SYMBOL_GPL(bst_register_device);
 
 /**
  * bst_unregister_device - unregister previously registered device
@@ -208,7 +208,7 @@ void bst_unregister_device(struct bst_dev *dev)
 	mutex_unlock(&bst_mutex);
 	device_unregister(&dev->dev);
 }
-EXPORT_SYMBOL(bst_unregister_device);
+EXPORT_SYMBOL_GPL(bst_unregister_device);
 
 static int __init bst_init(void)
 {

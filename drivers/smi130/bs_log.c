@@ -43,8 +43,8 @@ uint8_t get_debug_log_level(void)
 	return debug_log_level;
 }
 
-EXPORT_SYMBOL(set_debug_log_level);
-EXPORT_SYMBOL(get_debug_log_level);
+EXPORT_SYMBOL_GPL(set_debug_log_level);
+EXPORT_SYMBOL_GPL(get_debug_log_level);
 
 #endif/*BOSCH_DRIVER_LOG_FUNC*/
 /*@}*/
