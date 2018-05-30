@@ -1,11 +1,14 @@
 
 #include "lidbg.h"
+static int led_on_delay = 1000;
+static int led_off_delay = 1000;
+
 void led_on(void)
 {
     LED_ON;
-    msleep(1000);
+    msleep(led_on_delay);
     LED_OFF;
-    msleep(1000);
+    msleep(led_off_delay);
 }
 
 
@@ -31,5 +34,10 @@ void led_resume(void)
 void led_suspend(void)
 {
     LED_OFF;
+}
+void led_time_set(int on,int off)
+{
+    led_on_delay=on;
+    led_off_delay=off;
 }
 

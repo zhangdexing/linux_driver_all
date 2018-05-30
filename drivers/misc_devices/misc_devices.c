@@ -619,6 +619,14 @@ static void parse_cmd(char *pt)
 		lidbg("LPC_CMD_DISABLE_SOC_POWER\n");
 		LPC_CMD_DISABLE_SOC_POWER;
 	}
+	else if (!strncmp(argv[0], "led_time", 8))
+	{
+		int on,off;
+		on = simple_strtoul(argv[1], 0, 0);
+		off = simple_strtoul(argv[2], 0, 0);
+		lidbg("led_time:on.%d off.%d \n",on,off);
+		led_time_set(on, off);
+	}
 }
 
 

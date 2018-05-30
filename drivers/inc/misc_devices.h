@@ -21,6 +21,7 @@ int thread_led(void *data);
 int thread_thermal(void *data);
 void led_resume(void);
 void led_suspend(void);
+void led_time_set(int on,int off);
 void temp_init(void);
 
 int thread_sound_detect(void *data);
