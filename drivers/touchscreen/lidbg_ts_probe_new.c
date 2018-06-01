@@ -33,9 +33,22 @@ struct ts_devices g_ts_devices;
          x = max_x-x;\
        }while (0)
 
+#define GTP_TOP_SCOPE_Y(y, scope)  do{\
+	if(y < scope)\
+		y = screen_touch_scope_val;\
+       }while (0)
+
+#define GTP_TOP_SCOPE_X(x, scope)  do{\
+	if(x < scope)\
+		x = screen_touch_scope_val;\
+       }while (0)
+
 static int ts_scan_delayms;
 
 int ts_should_revert = -1;
+static int screen_touch_scope_y = 0;
+static int screen_touch_scope_x = 0;
+static int screen_touch_scope_val = 0;
 bool is_ts_load = false;
 u32 max_x, max_y;
 
@@ -200,6 +213,10 @@ void ts_devices_init(void)
     snprintf(tmp, sizeof(tmp), "ts_config/ts_config_%d.conf", g_var.hw_info.virtual_key );
 
     get_lidbg_file_path(ts_config_file, tmp);
+
+    fs_get_intvalue(g_var.pflyhal_config_list, "screen_touch_scope_Y", &screen_touch_scope_y, NULL);
+    fs_get_intvalue(g_var.pflyhal_config_list, "screen_touch_scope_X", &screen_touch_scope_x, NULL);
+    fs_get_intvalue(g_var.pflyhal_config_list, "screen_touch_scope_val", &screen_touch_scope_val, NULL);
 
     if(g_var.hw_info.virtual_key)
     {
@@ -368,6 +385,10 @@ void ts_data_report(touch_type t, int id, int x, int y, int w)
         GTP_REVERT_Y(y);
     if (3 == ts_should_revert)
         GTP_REVERT_X(x);
+    if (screen_touch_scope_y)
+	GTP_TOP_SCOPE_Y(y, screen_touch_scope_y);
+    if (screen_touch_scope_x)
+	GTP_TOP_SCOPE_X(x, screen_touch_scope_x);
     pr_debug("%s:%d,%d[%d,%d,%d]\n", __FUNCTION__, t, id, x, y, w);
     if(g_var.hw_info.virtual_key > 0)
     {
