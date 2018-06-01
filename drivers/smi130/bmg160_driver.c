@@ -42,6 +42,7 @@
 #include "bmg160.h"
 #include "bs_log.h"
 
+#define BMG_DEBUG
 /* sensor specific */
 #define SENSOR_NAME "bmg160"
 
