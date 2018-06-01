@@ -1320,7 +1320,7 @@ static int bmg_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	/* do soft reset */
 	mdelay(5);
 
-	err = bmg_set_soft_reset(client);
+	//err = bmg_set_soft_reset(client);
 	err = 1;
 
 	if (err < 0) {
