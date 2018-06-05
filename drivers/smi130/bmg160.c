@@ -7024,7 +7024,7 @@ BMG160_RETURN_FUNCTION_TYPE bmg160_selftest(unsigned char *result)
 	BMG160_SELF_TEST_ADDR_TRIGBIST__REG, &data1, C_BMG160_One_U8X);
 
 	/* Waiting time to complete the selftest process */
-	p_bmg160->delay_msec(10);
+	p_bmg160->delay_msec(50);
 
 	/* Reading Selftest result bir bist_failure */
 	comres += p_bmg160->BMG160_BUS_READ_FUNC(p_bmg160->dev_addr,
