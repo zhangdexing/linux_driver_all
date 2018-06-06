@@ -792,6 +792,10 @@ int thread_dev_init(void *data)
 	   HAL_IS_READY;
 //led
      CREATE_KTHREAD(thread_led, NULL);
+    if(g_var.recovery_mode == 1)
+		led_heartbeat_set(3);//recovery mode
+    else
+		led_heartbeat_set(2);//normal mode
 
 //sound
  #ifdef MUC_CONTROL_DSP
