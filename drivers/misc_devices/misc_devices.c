@@ -627,6 +627,14 @@ static void parse_cmd(char *pt)
 		lidbg("led_time:on.%d off.%d \n",on,off);
 		led_time_set(on, off);
 	}
+    else if (!strcmp(argv[0], "led_heartbeat_set"))
+	{
+		int times;
+		times = simple_strtoul(argv[1], 0, 0);
+		lidbg("heartbeat_times:%d \n",times);
+		led_heartbeat_set(times);
+	}
+
 }
 
 
