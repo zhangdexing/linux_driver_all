@@ -826,6 +826,9 @@ int thread_dev_init(void *data)
 
 static int soc_dev_probe(struct platform_device *pdev)
 {
+    fs_get_intvalue(g_var.pflyhal_config_list, "lidbg.hubcheck.en", &(hub_check_en), NULL);
+    lidbg("lidbg.hubcheck.en:%d\n",hub_check_en);
+
 #if defined(CONFIG_FB)
     devices_notif.notifier_call = devices_notifier_callback;
     fb_register_client(&devices_notif);
