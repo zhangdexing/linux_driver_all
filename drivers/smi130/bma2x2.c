@@ -52,6 +52,19 @@
 
 #include "bstclass.h"
 #include "bs_log.h"
+#include "lidbg.h"
+#define TAG "lidbg_bgm160"
+
+typedef struct {
+	int axis;
+	int valueYaw;
+	int valuePitch;
+	int valueRoll;
+	int interval;
+	long tickTime;
+}lidbg_bma2x2_data;
+struct i2c_client *client_save;
+
 
 #define ACC_NAME  "ACC"
 /*#define CONFIG_BMA_ENABLE_NEWDATA_INT 1*/
@@ -6549,6 +6562,48 @@ static irqreturn_t bma2x2_irq_handler(int irq, void *handle)
 #endif /* defined(BMA2X2_ENABLE_INT1)||defined(BMA2X2_ENABLE_INT2) */
 
 
+static int get_bma2x2_data(char *buf)
+{
+	lidbg_bma2x2_data data;
+	struct bma2x2acc acc_value;
+
+	bma2x2_read_accel_xyz(client_save, BMA255_TYPE ,&acc_value);
+
+	data.axis = 4;
+	data.valueYaw = acc_value.z;	//z
+	data.valuePitch =acc_value.x;	//x
+	data.valueRoll = acc_value.y;	//y
+	data.interval = -1;
+	data.tickTime = -1;
+
+	sprintf(buf,"%d#%d#%d#%d#%d#%ld#\n",data.axis,data.valueYaw,data.valuePitch,data.valueRoll,data.interval,data.tickTime);
+
+	return strlen(buf);
+}
+
+ssize_t  lidbg_bma2x2_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
+{
+	char buf[255];
+	int len;
+
+	len = get_bma2x2_data(buf);
+
+	if (copy_to_user(buffer, buf, len))
+	{
+		lidbg(TAG"copy_to_user ERR\n");
+		return -EFAULT;
+	}
+
+	return len;
+}
+
+static  struct file_operations lidbg_bma2x2_fops =
+{
+	.owner = THIS_MODULE,
+	.read = lidbg_bma2x2_read,
+};
+
+
 static int bma2x2_probe(struct i2c_client *client,
 		const struct i2c_device_id *id)
 {
@@ -6562,6 +6617,7 @@ static int bma2x2_probe(struct i2c_client *client,
 	struct input_dev *dev_interrupt;
 
 	PINFO("bma2x2_probe start\n");
+	client_save = client;
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		PERR("i2c_check_functionality error\n");
@@ -6846,9 +6902,12 @@ static int bma2x2_probe(struct i2c_client *client,
 	setup_timer(&data->tap_timer, bma2x2_tap_timeout_handle,
 			(unsigned long)data);
 #endif
-	if (bma2x2_set_mode(client, BMA2X2_MODE_SUSPEND, BMA_ENABLED_ALL) < 0)
+	if (bma2x2_set_mode(client, BMA2X2_MODE_NORMAL, BMA_ENABLED_ALL) < 0)
 		return -EINVAL;
 	PINFO("BMA2x2 driver probe successfully");
+
+	lidbg_new_cdev(&lidbg_bma2x2_fops, "lidbg_bma2x2");
+	lidbg_shell_cmd("chmod 777 /dev/lidbg_bma2x2");	
 
 	return 0;
 
