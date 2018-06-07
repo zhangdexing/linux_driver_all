@@ -7338,3 +7338,5 @@ EXPORT_SYMBOL_GPL(bmg160_get_bw);
 EXPORT_SYMBOL_GPL(bmg160_get_mode);
 EXPORT_SYMBOL_GPL(bmg160_set_mode);
 EXPORT_SYMBOL_GPL(bmg160_set_soft_reset);
+EXPORT_SYMBOL_GPL(bmg160_get_Temperature);
+

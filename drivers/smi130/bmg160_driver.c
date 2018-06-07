@@ -41,6 +41,18 @@
 
 #include "bmg160.h"
 #include "bs_log.h"
+#include "lidbg.h"
+#define TAG "lidbg_bgm160"
+
+typedef struct {
+	int axis;
+	int valueYaw;
+	int valuePitch;
+	int valueRoll;
+	char temperature;
+	int interval;
+	long tickTime;
+}lidbg_bgm160_data;
 
 #define BMG_DEBUG
 /* sensor specific */
@@ -1297,6 +1309,50 @@ static void bmg_input_destroy(struct bmg_client_data *client_data)
 	input_free_device(dev);
 }
 
+static int get_bgm160_data(char *buf)
+{
+	lidbg_bgm160_data data;
+	struct bmg160_data_t data_xyz;
+	unsigned char tem;
+
+	bmg160_get_dataXYZ(&data_xyz);
+	bmg160_get_Temperature(&tem);
+
+	data.axis = 4;
+	data.valueYaw = data_xyz.dataz;		//z
+	data.valuePitch = data_xyz.datax;		//x
+	data.valueRoll = data_xyz.datay;		//y
+	data.temperature = tem; 
+	data.interval = -1;
+	data.tickTime = -1;
+
+	sprintf(buf,"%d#%d#%d#%d#%hhd#%d#%ld",data.axis,data.valueYaw,data.valuePitch,data.valueRoll,data.temperature,data.interval,data.tickTime);
+
+	return strlen(buf);
+}
+
+ssize_t  lidbg_bmg160_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
+{
+	char buf[255];
+	int len;
+
+	len = get_bgm160_data(buf);
+
+	if (copy_to_user(buffer, buf, len))
+	{
+		lidbg(TAG"copy_to_user ERR\n");
+		return -EFAULT;
+	}
+
+	return len;
+}
+
+static  struct file_operations lidbg_bmg160_fops =
+{
+	.owner = THIS_MODULE,
+	.read = lidbg_bmg160_read,
+};
+
 static int bmg_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	int err = 0;
@@ -1321,7 +1377,7 @@ static int bmg_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	/* do soft reset */
 	mdelay(5);
 
-	//err = bmg_set_soft_reset(client);
+	err = bmg_set_soft_reset(client);
 	err = 1;
 
 	if (err < 0) {
@@ -1397,7 +1453,7 @@ static int bmg_probe(struct i2c_client *client, const struct i2c_device_id *id)
 
 	/* now it's power on which is considered as resuming from suspend */
 	err = BMG_CALL_API(set_mode)(
-			BMG_VAL_NAME(MODE_SUSPEND));
+			BMG_VAL_NAME(MODE_NORMAL));
 
 	if (err < 0)
 		goto exit_err_sysfs;
@@ -1414,7 +1470,12 @@ static int bmg_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	dev_dbg(&client->dev,
 		"i2c_client: %p client_data: %p i2c_device: %p input: %p",
 		client, client_data, &client->dev, client_data->input);
-
+	
+	//bmg160_set_range_reg(C_BMG160_BW_230Hz_U8X);
+	bmg160_set_bw(C_BMG160_BW_116Hz_U8X); //more hight more unstable(xyz value)
+	lidbg_new_cdev(&lidbg_bmg160_fops, "lidbg_bmg160");
+	lidbg_shell_cmd("chmod 777 /dev/lidbg_bmg160");
+	
 	return 0;
 
 exit_err_sysfs:
