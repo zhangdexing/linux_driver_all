@@ -1,6 +1,7 @@
 
 #include "lidbg.h"
 #define FM1388_RESET_PIN_ 64
+#define SMI130_I2C_BUS 0
 
 LIDBG_DEFINE;
 
@@ -13,6 +14,7 @@ typedef enum
 	DEV_RADIO,
 	DEV_CARPLAY,
 	DEV_DS90UB9XX,
+	DEV_SMI130,
 
 } i2cdev_type;
 
@@ -79,6 +81,12 @@ int ds90ub9xx_i2c_bus(void)
 	return UB9XX_I2C_BUS;
 }
 
+int smi130_i2c_bus(void)
+{
+	return SMI130_I2C_BUS;
+}
+
+
 void radio_reset_lpc(void)
 {
 	LPC_CMD_RADIORST_L;
@@ -128,6 +136,7 @@ struct probe_device i2c_probe_dev[] =
 #endif
 	{DEV_CARPLAY, fm1388_i2c_bus, 0x2c, 0x00, "lidbg_spi_fm1388.ko,lidbg_i2c_fm1388.ko", fm1388_reset, NULL ,0},
 	{DEV_DS90UB9XX, ds90ub9xx_i2c_bus, 0x0c, 0x00, "ds90ub9xx.ko", NULL, NULL, 0},
+	{DEV_SMI130,smi130_i2c_bus, 0x19, 0x00, "bmg160.ko,bmg160_driver.ko,bstclass.ko,bma2x2.ko", NULL, NULL, 0},
 };
 
 void parse_ts_info(struct probe_device *i2cdev_info)
