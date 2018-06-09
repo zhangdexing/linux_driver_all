@@ -1472,7 +1472,7 @@ static int bmg_probe(struct i2c_client *client, const struct i2c_device_id *id)
 		client, client_data, &client->dev, client_data->input);
 	
 	//bmg160_set_range_reg(C_BMG160_BW_230Hz_U8X);
-	bmg160_set_bw(C_BMG160_BW_116Hz_U8X); //more hight more unstable(xyz value)
+	bmg160_set_bw(C_BMG160_BW_12Hz_U8X); //more hight more unstable(xyz value)
 	lidbg_new_cdev(&lidbg_bmg160_fops, "lidbg_bmg160");
 	lidbg_shell_cmd("chmod 777 /dev/lidbg_bmg160");
 	
