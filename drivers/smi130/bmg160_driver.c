@@ -1326,7 +1326,7 @@ static int get_bgm160_data(char *buf)
 	data.interval = -1;
 	data.tickTime = -1;
 
-	sprintf(buf,"%d#%d#%d#%d#%hhd#%d#%ld",data.axis,data.valueYaw,data.valuePitch,data.valueRoll,data.temperature,data.interval,data.tickTime);
+	sprintf(buf,"%d#%d#%d#%d#%hhd#%d#%ld\n",data.axis,data.valueYaw,data.valuePitch,data.valueRoll,data.temperature,data.interval,data.tickTime);
 
 	return strlen(buf);
 }
