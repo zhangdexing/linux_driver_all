@@ -43,6 +43,8 @@
 #include "bs_log.h"
 #include "lidbg.h"
 #define TAG "lidbg_bgm160"
+#include <linux/delay.h>
+#include <linux/kthread.h>
 
 typedef struct {
 	int axis;
@@ -1330,11 +1332,33 @@ static int get_bgm160_data(char *buf)
 
 	return strlen(buf);
 }
+static int is_read_ready=0;
+static wait_queue_head_t wait_queue;
+static int thread_set_read_ready(void *data)
+{
+	while(1)
+	{
+		is_read_ready=1;
+		wake_up_interruptible(&wait_queue);
+		msleep(100);
+	}
+	return 1;
+}
 
 ssize_t  lidbg_bmg160_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
 {
 	char buf[255];
 	int len;
+	if(!is_read_ready)
+	{
+
+		if(wait_event_interruptible(wait_queue, is_read_ready))
+		{
+			lidbg(TAG"bgm160 wait_event_interruptible error\n");
+			return -ERESTARTSYS;
+		}
+	}
+	is_read_ready=0;
 
 	len = get_bgm160_data(buf);
 
@@ -1475,7 +1499,10 @@ static int bmg_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	bmg160_set_bw(C_BMG160_BW_12Hz_U8X); //more hight more unstable(xyz value)
 	lidbg_new_cdev(&lidbg_bmg160_fops, "lidbg_bmg160");
 	lidbg_shell_cmd("chmod 777 /dev/lidbg_bmg160");
-	
+	init_waitqueue_head(&wait_queue);
+	wake_up_interruptible(&wait_queue);
+	kthread_run(thread_set_read_ready, NULL, "set_read_ready");
+
 	return 0;
 
 exit_err_sysfs:
