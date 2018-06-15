@@ -28,6 +28,7 @@
 #include <linux/mutex.h>
 #include <linux/interrupt.h>
 #include <linux/delay.h>
+#include <linux/kthread.h>
 #include <asm/irq.h>
 #include <linux/irq.h>
 
@@ -6581,11 +6582,35 @@ static int get_bma2x2_data(char *buf)
 	return strlen(buf);
 }
 
+static int is_read_ready=0;
+static wait_queue_head_t wait_queue;
+static int thread_set_read_ready(void *data)
+{
+	while(1)
+	{
+		is_read_ready=1;
+		wake_up_interruptible(&wait_queue);
+		msleep(90);
+	}
+	return 1;
+}
+
 ssize_t  lidbg_bma2x2_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
 {
 	char buf[255];
 	int len;
+	
+	if(!is_read_ready)
+	{
 
+		if(wait_event_interruptible(wait_queue, is_read_ready))
+		{
+			lidbg(TAG"bma2x2 wait_event_interruptible error\n");
+			return -ERESTARTSYS;
+		}
+	}
+	is_read_ready=0;
+	
 	len = get_bma2x2_data(buf);
 
 	if (copy_to_user(buffer, buf, len))
@@ -6908,6 +6933,10 @@ static int bma2x2_probe(struct i2c_client *client,
 
 	lidbg_new_cdev(&lidbg_bma2x2_fops, "lidbg_bma2x2");
 	lidbg_shell_cmd("chmod 777 /dev/lidbg_bma2x2");	
+	
+	init_waitqueue_head(&wait_queue);
+	wake_up_interruptible(&wait_queue);
+	kthread_run(thread_set_read_ready, NULL, "set_read_ready");
 
 	return 0;
 

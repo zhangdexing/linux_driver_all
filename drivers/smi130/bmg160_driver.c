@@ -1340,7 +1340,7 @@ static int thread_set_read_ready(void *data)
 	{
 		is_read_ready=1;
 		wake_up_interruptible(&wait_queue);
-		msleep(100);
+		msleep(90);
 	}
 	return 1;
 }
