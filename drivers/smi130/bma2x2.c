@@ -6674,7 +6674,9 @@ static int bma2x2_probe(struct i2c_client *client,
 	mutex_init(&data->value_mutex);
 	mutex_init(&data->mode_mutex);
 	mutex_init(&data->enable_mutex);
-	bma2x2_set_bandwidth(client, BMA2X2_BW_15_63HZ);//change to 10
+	
+	bma2x2_set_bandwidth(client, BMA2X2_BW_31_25HZ);//change to 10
+
 	bma2x2_set_range(client, BMA2X2_RANGE_SET);
 
 #if defined(BMA2X2_ENABLE_INT1) || defined(BMA2X2_ENABLE_INT2)
