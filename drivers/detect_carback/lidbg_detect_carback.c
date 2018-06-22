@@ -8,6 +8,13 @@ struct work_struct work_carback_status;
 static int carback_state_old=-1;
 static int carback_state_new=-1;
 
+#define TRANSPOND_BUFFER_SIZE 255
+static char transpond_buffer[TRANSPOND_BUFFER_SIZE];
+static int can_read = 0;
+static spinlock_t spinlock;
+static wait_queue_head_t transpond_wait_queue;
+
+
 static int lidbg_detect_carback_event(struct notifier_block *this,
 		unsigned long event, void *ptr)
 {
@@ -106,11 +113,11 @@ ssize_t  detect_carback_read(struct file *filp, char __user *buffer, size_t size
 
 ssize_t detect_carback_write (struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
-#if 0
+#if 1
     char *cmd[32] = {NULL};
     int cmd_num  = 0;
     char cmd_buf[512];
-    memset(cmd_buf, '\0', 512);carback_state_new
+    memset(cmd_buf, '\0', 512);
 
     if(copy_from_user(cmd_buf, buf, size))
     {
@@ -144,6 +151,72 @@ ssize_t detect_carback_write (struct file *filp, const char __user *buf, size_t 
 	return size;
 }
 
+int carback_transpond_open (struct inode *inode, struct file *filp)
+{
+	return 0;
+}
+
+ssize_t  carback_transpond_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
+{
+	char local_buf[TRANSPOND_BUFFER_SIZE];
+	int len=size;
+
+	if(len>TRANSPOND_BUFFER_SIZE || len<0)
+		len = TRANSPOND_BUFFER_SIZE;
+	
+	if(!can_read)
+	{
+		if(wait_event_interruptible(transpond_wait_queue, can_read))
+		{
+			return -ERESTARTSYS;
+		}
+	}
+
+	memset(local_buf,0,TRANSPOND_BUFFER_SIZE);
+	spin_lock(&spinlock);
+	strncpy(local_buf,transpond_buffer,len);
+	can_read = 0;
+	spin_unlock(&spinlock);
+
+
+	if (copy_to_user(buffer, local_buf, len))
+	{
+		lidbg(TAG"copy_to_user ERR\n");
+		return -EFAULT;
+	}
+	
+	lidbg(TAG"carback_transpond_read exit\n");
+	return len;
+}
+
+
+ssize_t carback_transpond_write (struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
+{
+	char local_buf[TRANSPOND_BUFFER_SIZE];
+	int len=size;
+
+	if(len>TRANSPOND_BUFFER_SIZE || len<0)
+		len = TRANSPOND_BUFFER_SIZE;
+	
+    if(copy_from_user(local_buf, buf, len))
+    {
+        PM_ERR("copy_from_user ERR\n");
+		return -EFAULT;
+    }
+
+	spin_lock(&spinlock);
+	memset(transpond_buffer,0,TRANSPOND_BUFFER_SIZE);
+	strncpy(transpond_buffer,local_buf,len);
+	can_read = 1;
+	spin_unlock(&spinlock);
+
+	wake_up_interruptible(&transpond_wait_queue);
+
+	lidbg(TAG"carback_transpond_write exit\n");
+	return len;
+}
+
+
 static  struct file_operations detect_carback_fops =
 {
 	.owner = THIS_MODULE,
@@ -151,6 +224,15 @@ static  struct file_operations detect_carback_fops =
 	.read = detect_carback_read,
 	.write = detect_carback_write,
 };
+
+static  struct file_operations carback_transpond_fops =
+{
+	.owner = THIS_MODULE,
+	.open = carback_transpond_open,
+	.read = carback_transpond_read,
+	.write = carback_transpond_write,
+};
+
 
 static int lidbg_detect_carback_probe(struct platform_device *pdev)
 {
@@ -170,7 +252,11 @@ static int lidbg_detect_carback_probe(struct platform_device *pdev)
 
 	INIT_WORK(&work_carback_status, work_carback_status_handle);
 
-	
+
+	init_waitqueue_head(&transpond_wait_queue);
+	spin_lock_init(&spinlock);
+	lidbg_new_cdev(&carback_transpond_fops, "flyaudio_carback_transpond");
+	lidbg_shell_cmd("chmod 777 /dev/flyaudio_carback_transpond");
 
 	return 0;
 }
