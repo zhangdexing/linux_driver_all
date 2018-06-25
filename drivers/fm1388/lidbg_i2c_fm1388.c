@@ -187,6 +187,9 @@ struct pinctrl *pinctrliis0=NULL;
 struct pinctrl_state *pins_default=NULL, *pins_sleep=NULL;
 #endif
 
+static int fm1388_fw_loaded(void *data);
+
+
 static int fm1388_i2c_write(unsigned int reg, unsigned int value)
 {
     u8 data[3];
@@ -1244,7 +1247,7 @@ u8 disable_spi_play( void )
 		lidbg(TAG"%s: error return from fm1388_spi_write(). err = %x\n", __func__, err);
         return err;
     }
-
+	fm1388_fw_loaded(NULL); //zhl add 
     return err;
 }
 
@@ -1696,7 +1699,7 @@ static void fm1388_dsp_load_fw(void)
     {
         lidbg(TAG"%s: firmware FM1388_50000000.dat.\n", __func__);
         fm1388_spi_burst_write(0x50000000, fw->data,
-                               ((fw->size / 8) + 1) * 8);
+                               fw->size);
 
         release_firmware(fw);
         fw = NULL;
@@ -1708,7 +1711,7 @@ static void fm1388_dsp_load_fw(void)
         lidbg(TAG"%s: firmware FM1388_5FFC0000.dat.\n", __func__);
 
         fm1388_spi_burst_write(0x5ffc0000, fw->data,
-                               ((fw->size / 8) + 1) * 8);
+                               fw->size);
 
         release_firmware(fw);
         fw = NULL;
@@ -1720,7 +1723,7 @@ static void fm1388_dsp_load_fw(void)
         lidbg(TAG"%s: firmware FM1388_5FFE0000.dat.\n", __func__);
 
         fm1388_spi_burst_write(0x5ffe0000, fw->data,
-                               ((fw->size / 8) + 1) * 8);
+                               fw->size);
 
         release_firmware(fw);
         fw = NULL;
@@ -1732,7 +1735,7 @@ static void fm1388_dsp_load_fw(void)
         lidbg(TAG"%s: firmware FM1388_60000000.dat.\n", __func__);
 
         fm1388_spi_burst_write(0x60000000, fw->data,
-                               ((fw->size / 8) + 1) * 8);
+                               fw->size);
 
         release_firmware(fw);
         fw = NULL;
@@ -2889,7 +2892,7 @@ static ssize_t fm1388_device_write(struct file *file,
 	}
 
 
-    lidbg(TAG"%s: entering...\n", __func__);
+    //lidbg(TAG"%s: entering...\n", __func__);
     local_dev_cmd = (dev_cmd_short *)kmalloc(length, GFP_KERNEL);
     if (!local_dev_cmd)
     {
@@ -3053,6 +3056,7 @@ static ssize_t fm1388_device_write(struct file *file,
 				kthread_stop(fm1388_data->playback_thread_id);
 				fm1388_data->playback_thread_id = NULL;
 			}
+			fm1388_fw_loaded(NULL);
 			break;
 
 		case FM_SMVD_DSP_FETCH_VDATA_START:
@@ -3342,6 +3346,7 @@ static int lidbg_fm1388_event(struct notifier_block *this,
         break;
 		
     case NOTIFIER_VALUE(NOTIFIER_MAJOR_SYSTEM_STATUS_CHANGE, FLY_DEVICE_DOWN):
+		is_host_slept = 1;
         SOC_IO_Output(0, FM1388_RESET_PIN, 0);
 #ifdef CTRL_GPIOS
 		if(pinctrliis0 && pins_default)
@@ -3366,27 +3371,16 @@ static struct notifier_block lidbg_notifier =
 #ifdef CONFIG_PM
 static int fm1388_i2c_suspend(struct device *dev)
 {
-    //Todo: something before driver's suspend.
-    is_host_slept = 1;
-    lidbg(TAG"%s: is_host_slept.%d\n", __func__, is_host_slept);
+    lidbg(TAG"%s: return 0;\n", __func__);
 
     return 0;
 }
 
 static int fm1388_i2c_resume(struct device *dev)
 {
-    //lidbg(TAG"%s: entering\n", __func__);
-    //Todo: something after driver's resume
-
-#ifdef SUSPEND_ONLINE
     lidbg(TAG"%s: return 0;\n", __func__);
-    return 0;
-#endif
 
-    is_host_slept = 0;
-    fm1388_boot_status = FM1388_HOT_BOOT;
-    CREATE_KTHREAD(fm1388_fw_loaded, NULL);
-    return 0;
+	return 0;
 }
 #endif
 
