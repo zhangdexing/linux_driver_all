@@ -536,6 +536,11 @@ void flyaboot_init(unsigned *boot_into_recovery, bool *boot_into_fastboot)
 #endif
 
     backlight_enable();
+#ifdef SYSTEM_FASTBOOT
+	dprintf(INFO, " enabled system fastboot so no mode detele !\n");
+	bootloader_exit_func();
+	return ;
+#endif
     ctp_type_get();
 
 #ifdef RECOVER_MANUUAL_HIGH_LEVEL
