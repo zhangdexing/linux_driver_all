@@ -357,6 +357,10 @@ void  choose_lcd(int lcd_resolution)
 		fly_screen_w = 1024;
 		fly_screen_h = 768;
 		return ;
+	}else if(fly_display ==5){
+		fly_screen_w = 800;
+		fly_screen_h = 480;
+		return ;
 	}
 #endif
     if(lcd_resolution==lcd_1024_600)
@@ -448,6 +452,14 @@ bool Fly_Get_Resolution(int *x, int *y, int *bit)
 			dbg_msg_set_test("display=1024_768_6bit");
 		else
 			dbg_msg_set_test("display=1024_768");
+		return true;
+	}else if(fly_display == 5){
+		*x = 800;
+		*y = 480;
+		if(fly_manufacturer == 4)
+			dbg_msg_set_test("display=800_480_6bit");
+		else
+			dbg_msg_set_test("display=800_480");
 		return true;
 	}else
 		return false;
