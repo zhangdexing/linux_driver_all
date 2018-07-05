@@ -45,6 +45,7 @@
 
 #include "i2c-fm1388.h"
 #include "lidbg.h"
+
 LIDBG_DEFINE;
 
 #define TAG "dfm1388_i2c:"
@@ -4241,6 +4242,116 @@ static long fm1388_device_ioctl(struct file *filp, unsigned int cmd, unsigned lo
     return 0;
 }
 
+static unsigned int read_reg_addr = 0;
+#define REG_READ 0
+#define REG_WRITE 1
+
+
+static ssize_t	fm1388_reg_read(struct file *filp, char __user *buffer, size_t size, loff_t *offset)
+{
+	unsigned int addr,value;
+
+	addr = read_reg_addr;
+
+	if(!addr)
+	{
+		lidbg(TAG"addr invalid:0X%u\n",addr);
+		return -EINVAL;
+	}
+	
+	fm1388_dsp_mode_i2c_read_addr_2(addr, &value);
+	
+	if(copy_to_user(buffer, &value, sizeof(value)))
+	{
+		lidbg(TAG"%s:copy_to_user ERR\n", __func__);
+		return -EBUSY;
+	}
+
+	lidbg(TAG"read buf:0X%x\n",value);
+	return sizeof(value);
+	
+}
+
+static ssize_t	fm1388_reg_write(struct file *file, const char __user *buffer, size_t length, loff_t *offset)
+{
+	char local_buf[100];
+	unsigned int w_addr;
+	unsigned int w_val;
+    if(length <= 0)
+	    return 0;	
+
+    if(copy_from_user(local_buf, buffer, length))
+    {
+        lidbg(TAG"copy_from_user ERR\n");
+        return -EBUSY;
+    }
+
+	if((length == 5)&&(local_buf[0]==REG_READ))
+	{
+		read_reg_addr = local_buf[1] + (local_buf[2]<<8) + (local_buf[3]<<16) + (local_buf[4]<<24);
+		lidbg(TAG"read reg:0X%x\n",read_reg_addr);
+	}
+	else if((length == 9)&&(local_buf[0]==REG_WRITE))
+	{
+		w_addr = local_buf[1] + (local_buf[2]<<8) + (local_buf[3]<<16) + (local_buf[4]<<24);
+		w_val = local_buf[5] + (local_buf[6]<<8) + (local_buf[7]<<16) + (local_buf[8]<<24);
+		fm1388_dsp_mode_i2c_write_addr(w_addr, w_val, FM1388_I2C_CMD_16_WRITE);
+		lidbg(TAG"write reg:0X%x,val:0x%x\n",w_addr,w_val);
+	}
+	else
+		lidbg(TAG"data invail,len:%d\n",(int)length);
+
+	return length;
+}
+
+struct reg_data
+{
+	int addr;
+	int val;
+};
+
+static long fm1388_reg_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+{
+	struct reg_data local_reg_data;
+	
+	if(copy_from_user((void *)&local_reg_data, (void __user *) arg, sizeof(struct reg_data))){
+		lidbg(TAG"copy_from_user ERR\n");
+		return -EBUSY;
+	}
+
+	switch(cmd)
+	{
+		case REG_READ:
+			fm1388_dsp_mode_i2c_read_addr_2(local_reg_data.addr, &(local_reg_data.val));
+			lidbg(TAG"read reg:0X%x,val:0x%x\n", local_reg_data.addr, local_reg_data.val);
+			if(copy_to_user((void __user *) arg, (const void *)&local_reg_data, sizeof(struct reg_data))){
+				lidbg(TAG"copy_to_user ERR\n");
+				return -EBUSY;
+			}
+			break;
+
+		case REG_WRITE:
+			fm1388_dsp_mode_i2c_write_addr(local_reg_data.addr, local_reg_data.val, FM1388_I2C_CMD_16_WRITE);
+			lidbg(TAG"read reg:0X%x,val:0x%x\n", local_reg_data.addr, local_reg_data.val);
+			break;
+
+		default:
+			lidbg(TAG"data invail,cmd:%d\n",cmd);
+	}
+	return 0;
+}
+
+
+struct file_operations fm1388_reg_fops =
+{
+    .owner = THIS_MODULE,
+    .read = fm1388_reg_read,
+    .write = fm1388_reg_write,
+    .unlocked_ioctl = fm1388_reg_ioctl,
+};
+
+
+
 struct file_operations fm1388_fops =
 {
     .owner = THIS_MODULE,
@@ -4475,6 +4586,9 @@ static int fm1388_probe(struct platform_device *pdev)
 
     lidbg_new_cdev(&fm1388_mode_fops, "fm1388_switch_mode");
 	lidbg_shell_cmd("chmod 777 /dev/fm1388_switch_mode");
+
+	lidbg_new_cdev(&fm1388_reg_fops, "fm1388_reg");
+	lidbg_shell_cmd("chmod 777 /dev/fm1388_reg");
 
 
     INIT_DELAYED_WORK(&dsp_start_vr, dsp_start_vr_work);
