@@ -2741,7 +2741,7 @@ out:
 static ssize_t fm1388_device_mode_write(struct file *file,
                                         const char __user *buffer, size_t length, loff_t *offset)
 {
-    char *mode = NULL;
+    char mode[30];
 
     lidbg(TAG"%s: entering...\n", __func__);
 
@@ -2751,13 +2751,6 @@ static ssize_t fm1388_device_mode_write(struct file *file,
     if((is_host_slept == 1)||isLock)
 	    return -1;
 	
-
-    mode = (char *)kmalloc(length, GFP_KERNEL);
-    if (!mode)
-    {
-        lidbg(TAG"%s: mode allocation failure.\n", __func__);
-        goto switch_mode_out;
-    }
 
     memset(mode, 0, length);
     if(copy_from_user(mode, buffer, length))
@@ -2795,20 +2788,22 @@ static ssize_t fm1388_device_mode_write(struct file *file,
 	}
         lidbg(TAG"%s: switch mode to bargein.\n", __func__);
     }
-	else if(!strncmp(mode, BYPASS_MODE, strlen(BYPASS_MODE)))
+	else if(!strncmp(mode, "cmd", 3))
 	{
-		fm1388_dsp_mode_change(2);
-        lidbg(TAG"%s: switch mode to bypass.\n", __func__);
-	}
-	else if(!strncmp(mode, "notinspectframecnt", strlen("notinspectframecnt")))
-	{
-		isNotInspectFramecnt = true;
-        lidbg(TAG"%s: isNotInspectFramecnt = true.\n", __func__);
-	}
-	else if(!strncmp(mode, "inspectframecnt", strlen("inspectframecnt")))
-	{
-		isNotInspectFramecnt = false;
-        lidbg(TAG"%s: isNotInspectFramecnt = false.\n", __func__);
+		if(!strncmp(mode+3,"mode",4))
+		{
+			isLock = true;
+			fm1388_dsp_mode_change(mode[7]-'0');
+			isLock = false;
+		}
+		else if(!strncmp(mode+3,"check",strlen("check")))
+		{
+			isNotInspectFramecnt = false;
+		}
+		else if(!strncmp(mode+3,"notcheck",strlen("notcheck")))
+		{
+			isNotInspectFramecnt = true;
+		}
 	}
     else
         lidbg(TAG"%s: no this mode:%s.\n", __func__, mode);
@@ -3393,6 +3388,11 @@ static const struct dev_pm_ops fm1388_i2c_ops =
 static void set_vec_file_path(void)
 {
 	int car_type=0;
+
+	if(gboot_mode == MD_FLYSYSTEM)
+		strcpy(filepath,"/flysystem/lib/out/fm1388/");
+	else
+		strcpy(filepath,"/system/lib/modules/out/fm1388/");
 	
 	fs_get_intvalue(g_var.pflyhal_config_list, "fm1388_is_bypass", &fm1388_is_bypass, NULL);
 	lidbg(TAG"fm1388_is_bypass=%d\n", fm1388_is_bypass);

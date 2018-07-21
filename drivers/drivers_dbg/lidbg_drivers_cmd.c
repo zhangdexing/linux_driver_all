@@ -732,11 +732,9 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#146--set android all voice stream max \n");
             fs_mem_log("*158#147--set android all voice stream min \n");
             fs_mem_log("*158#148--reinit fm1388 \n");
-            fs_mem_log("*158#149--switch fm1388 vr mode\n");
-            fs_mem_log("*158#150--switch fm1388 bluetooth mode\n");
-            fs_mem_log("*158#151--switch fm1388 bypass mode\n");
-            fs_mem_log("*158#152--switch fm1388 notinspectframecnt\n");
-            fs_mem_log("*158#153--switch fm1388 inspectframecnt\n");
+            fs_mem_log("*158#149X--fm1388 X:[0 vr mode][1 bt mode][3 mic0 mode][4 mic1 mode][5 mic01 bypass][8 check][9 not check] \n");
+			fs_mem_log("*158#150X--RecForge X:[0 install][1 start] \n");
+			fs_mem_log("*158#151--fm1388 cp spi record tool \n");
             fs_mem_log("*158#154--pre_wakeup_quick\n");
             fs_mem_log("*158#155--test N day shutdown :6 mins later\n");
 
@@ -1847,33 +1845,50 @@ void parse_cmd(char *pt)
 				 lidbg_shell_cmd("cat /sys/devices/platform/fm1388.0/fm1388_reinit");
 				 lidbg_domineering_ack();
 		 }
-		else if (!strcmp(argv[1], "*158#149"))
+		else if (!strncmp(argv[1], "*158#149", strlen("*158#149")))
 		 {
-				 lidbg("*158#149--switch fm1388 vr mode \n");
-				 lidbg_shell_cmd("echo dueros > /dev/fm1388_switch_mode");
+		         lidbg("*158#149X--fm1388 X:[0 vr mode][1 bt mode][3 mic0 mode][4 mic1 mode][5 mic01 bypass][8 check][9 not check] \n");
+				 if(strlen(argv[1])>8)
+				 {
+				 	if((argv[1][8]>='0') && (argv[1][8]<='7'))
+				 	{
+						lidbg_shell_cmd(format_string(false, "echo cmdmode%c > /dev/fm1388_switch_mode",argv[1][8]));
+				 	}
+					else if(argv[1][8]=='8')
+						lidbg_shell_cmd("echo check > /dev/fm1388_switch_mode");
+					else if(argv[1][8]=='9')
+				 		lidbg_shell_cmd("echo notcheck > /dev/fm1388_switch_mode");
+				 }
+				 
 				 lidbg_domineering_ack();
 		 }
-		else if (!strcmp(argv[1], "*158#150"))
+		else if (!strncmp(argv[1], "*158#150", strlen("*158#150")))
 		 {
-				 lidbg("*158#150--switch fm1388 bt mode \n");
-				 lidbg_shell_cmd("echo bt > /dev/fm1388_switch_mode");
+			    char buff[50] = {0};
+				lidbg("*158#150X--RecForge X:[0 install][1 start] \n");
+				 if((strlen(argv[1])>8) && (argv[1][8]=='1'))
+				 {
+				 	lidbg_shell_cmd("am start -n dje073.android.audiorecorder/dje073.android.audiorecorder.ActivitySplash");
+				 }
+				 else
+					 lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "RecForge.apk")));
+
 				 lidbg_domineering_ack();
 		 }
-		else if (!strcmp(argv[1], "*158#151"))
+		else if (!strncmp(argv[1], "*158#151", strlen("*158#151")))
 		 {
-				 lidbg("*158#151--switch fm1388 bypass mode\n");
-				 lidbg_shell_cmd("echo bypass > /dev/fm1388_switch_mode");
-				 lidbg_domineering_ack();
-		 }
-		else if (!strcmp(argv[1], "*158#152"))
-		 {
-				 lidbg_shell_cmd("echo inspectframecnt > /dev/fm1388_switch_mode");
-				 lidbg_domineering_ack();
-		 }
-		else if (!strcmp(argv[1], "*158#153"))
-		 {
-				 lidbg_shell_cmd("echo notinspectframecnt > /dev/fm1388_switch_mode");
-				 lidbg_domineering_ack();
+				lidbg("*158#151--fm1388 cp spi record tool \n");
+				lidbg_shell_cmd("mount -o remount /system");
+				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/FM1388_ADB_Tool_ /system/bin/FM1388_ADB_Tool");
+				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/fm_fm1388_ /system/bin/fm_fm1388");
+				lidbg_shell_cmd("chmod 777 /system/bin/FM1388_ADB_Tool");
+				lidbg_shell_cmd("chmod 777 /system/bin/fm_fm1388");
+				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/libFM1388Parameter.so /system/lib/libFM1388Parameter.so");
+				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/libfm1388.so /system/lib/libfm1388.so");
+				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/libfmrec_1388.so /system/lib/libfmrec_1388.so");
+				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/user_defined_path.cfg /system/etc/firmware/user_defined_path.cfg");
+
+				lidbg_domineering_ack();
 		 }
 		else if (!strcmp(argv[1], "*158#154"))
 		 {

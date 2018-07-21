@@ -30,6 +30,7 @@ rm $dest_dir/drivers.conf  &> /dev/null
 rm $dest_dir/state.conf    &> /dev/null
 mkdir $dest_dir/fm1388 &> /dev/null
 cp -r ./fm1388/fm1388_config/* $dest_dir/fm1388  &> /dev/null
+cp -r $DBG_ROOT_PATH/app/fm1388_android_tool/tool	$dest_dir/fm1388/	&> /dev/null
 
 
 for each_dir in `ls -l | grep "^d" | awk '{print $NF}'`
