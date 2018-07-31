@@ -66,7 +66,6 @@ extern int stop_spi_playback();
 extern int get_channel_number(char* file_path);
 extern bool check_channel_mapping(int channel_num, char* channel_mapping);
 extern int start_debug_record(unsigned int ch_num, unsigned char* ch_idx, char* filepath);
-extern int stop_debug_record(const char* wav_file_name, const unsigned char* channels);
 extern int close_cdev(int fm_cdev_hdl);
 
 #endif // __FM_SMVD_H__

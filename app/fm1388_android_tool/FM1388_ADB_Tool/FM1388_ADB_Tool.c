@@ -4,108 +4,54 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include "../FM1388_Parameter_Lib/libFM1388Parameter.h"
 #include "../libfm1388/libfm1388.h"
+#include "FM1388_CommandLine_Parser.h"
 
-const char* mode_config_file_name = "FM1388_mode.cfg";
-const char* request_parameter_filename				= "FM1388_ADB_Parameter.txt";
-const char* result_filename							= "FM1388_ADB_Result.txt";
 char request_parameter_filepath[MAX_PATH_LENGTH]	= { 0 };
 char result_filepath[MAX_PATH_LENGTH]				= { 0 };
 
-//parse mode config file
-int parse_mode_config(char* firmware_path, ModeInfo** modeinfo, int* mode_num) {
-	char	mode_config_file_path[MAX_PATH_LENGTH] = { 0 };
-	int		num = 0;
-	int		ret = 0;
+int process_spi_operation(char* parameter_string, char* result_file_path, char* strSDCARD);
+int process_read_write_data(char* request_parameter_filepath, char* result_filepath);
 
-	if ((firmware_path == NULL) || (mode_num == NULL)) {
-		LOGD("[parse_mode_config] Got wrong parameter.\n");
-		return -1;
-	}
-
-	snprintf(mode_config_file_path, MAX_PATH_LENGTH - 1, "%s%s", firmware_path, mode_config_file_name);
-
-	num = get_parameter_number(mode_config_file_path);
-	//LOGD("[parse_mode_config] num=%d\n", num);
-	if (num <= 0) {
-		LOGD("[parse_mode_config] Got empty or wrong mode information file.\n");
-		return -1;
-	}
-
-	*modeinfo = (ModeInfo*)malloc(sizeof(ModeInfo) * num);
-	if (*modeinfo == NULL) {
-		LOGD("[parse_mode_config] Can not allocate memory for mode information.\n");
-		return -1;
-	}
-
-	ret = parse_mode_file(mode_config_file_path, *modeinfo, ',');
-	//LOGD("[parse_mode_config] parse_mode_file return=%d\n", ret);
-	if (ret < 0) {
-		LOGD("[parse_mode_config] Error occurs when parsing mode information.\n");
-		return -1;
-	}
-
-	*mode_num = num;
-
-	return 0;
+void show_command_line_usage(void) {
+	printf("FM1388_ADB_Tool usages:\n");
+	printf("\t-get-version\t\t\tget ADB Tool version.\n");
+	printf("\t-get-FW-buildno\t\t\tget Firmware build number.\n");
+	printf("\t-get-path\t\t\tget sdcard and vec file path.\n");
+	printf("\t-read-write-data\t\t\tread write memory data.\n");
+	printf("\t-read-write-parameter\t\tread write parameter.\n");
+	printf("\t-play-record --cmd=xxx --rec-channel=xxx --rec-file=xxx --channel-map=xxx --play-file=xxx --option=xxx\n\t\t\t\t\tSPI playback recording.\n");
+	printf("\t-download-FW --mode=xxx\t\tdownload firmware and set specified mode.\n");
+	printf("\t-switch-mode --mode=xxx\t\tjust switch mode.\n");
+	printf("\t-reset\t\t\t\treset DSP.\n");
+	printf("\t-check-dependency\t\tcheck FM1388 device, lib existence.\n");
+	
+	return;
 }
 
-int get_request_parameter(char* request_parameter_filepath, RequestPara** request_para, int* request_parameter_number) {
-	int temp_parameter_number = 0;
-	int parameter_number = 0;
-	int i = 0;
-	
-	if ((request_parameter_filepath == NULL) || (request_parameter_number == NULL)) {
-		LOGD("[get_request_parameter] Got wrong parameter.\n");
-		return -1;
-	}
+//old parameter format:
+//FM1388_ADB_Tool							//use default sdcard and vec path, do read / write FM1388 tuning parameter according to FM1388_ADB_Parameter.txt, result save in FM1388_ADB_Result.txt
+//FM1388_ADB_Tool $sdcard_path $vec_path	//use specified default sdcard and vec path, do read / write FM1388 tuning parameter according to FM1388_ADB_Parameter.txt, result save in FM1388_ADB_Result.txt
+//FM1388_ADB_Tool $sdcard_path $vec_path $SPI_play_record_param	//use specified default sdcard and vec path, do SPI playback and/or recording, result save in FM1388_ADB_Result.txt
 
-	//get requested parameter number to allocate memory for structure
-	temp_parameter_number = get_parameter_number(request_parameter_filepath);
-	if (temp_parameter_number <= 0) {
-		LOGD("[get_request_parameter] Got empty request parameter file.\n");
-		return -1;
-	}
-
-	*request_para = (RequestPara*)malloc(sizeof(RequestPara) * temp_parameter_number);
-	if (*request_para == NULL) {
-		LOGD("[get_request_parameter] Can not allocate memory for request parameter.\n");
-		return -1;
-	}
-	//LOGD("[get_request_parameter] get request parameter number=%d\n", temp_parameter_number);
-
-	//parse requested parameter file
-	parameter_number = parse_para_file(request_parameter_filepath, *request_para, '\t');
-	if (parameter_number <= 0) {
-		LOGD("[get_request_parameter] Got wrong format request parameter file.\n");
-		return -1;
-	}
-	
-	*request_parameter_number = parameter_number;
-	
-	return 0;
-}
-
+//new parameter format:
+//FM1388_ADB_Tool -get-version		//get ADB Tool version, result save in FM1388_ADB_Result.txt
+//FM1388_ADB_Tool -get-FW-buildno		//get Firmware build number, result save in FM1388_ADB_Result.txt
+//FM1388_ADB_Tool -get-path			//get sdcard and vec file path, result save in FM1388_ADB_Result.txt
+//FM1388_ADB_Tool -read-write-data	//read write memory data, read/write op and address is in FM1388_ADB_Parameter.txt, result save in FM1388_ADB_Result.txt
+//FM1388_ADB_Tool -read-write-parameter	//read write parameter, read/write op and address is in FM1388_ADB_Parameter.txt, result save in FM1388_ADB_Result.txt
+//FM1388_ADB_Tool -play-record --cmd=xxx --rec-channel=xxx --rec-file=xxx --channel-map=xxx --play-file=xxx --option=xxx 		//SPI playback recording
+//FM1388_ADB_Tool -download-FW --mode=xxx	//download firmware and set specified mode
+//FM1388_ADB_Tool -switch-mode --mode=xxx	//just switch mode
+//FM1388_ADB_Tool -reset			//redownload firmware and set mode as current
+//FM1388_ADB_Tool -check-dependency	//check FM1388 device, lib existence
 int main(int argc, char** argv)
 {
 	char			sdcard_path[MAX_PATH_LENGTH] = { 0 };
 	char			firmware_path[MAX_PATH_LENGTH] = { 0 };
-	RequestPara* 	request_parameter			= NULL;
-	RequestPara* 	result_parameter			= NULL;
-	int				request_parameter_number	= 0;
-	int 			total_parameter_number		= 0;
-	ModeInfo*		mode_info		= NULL;
-	int				mode_number		= 0;
 	int				i				= 0;
-	int				result_index	= 0;
-	int				need_change		= 0;
 	int				ret				= 0;
-	int				current_mode	= 0;
-	char			current_parameter_file_path[MAX_PATH_LENGTH] = { 0 };
 
-	LOGD("[FM1388_ADB_Tool] enter.\n");
-	
 	//initialize lifm1388 and device
 	ret = lib_open_device();
 	if (ret != ESUCCESS) {
@@ -113,10 +59,30 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
+
+	output_debug_log(true, "Welcome to use FM1388_ADB_Tool(%s)\n", ADB_TOOL_VERSION);
+	ret = parse_execute_command(argc, argv);
+	if(ret < 0) {
+		if(EPARAMINVAL == ret) {
+			output_debug_log(true, "[FM1388_ADB_Tool] Got wrong parameter.\n");
+			show_command_line_usage();
+		}
+		else {
+			output_debug_log(true, "[FM1388_ADB_Tool] Error occus when execute command.\n");
+		}
+		goto END;
+	}
+	else if(ret == MAX_COMMAND_NUM){
+		output_debug_log(true, "[FM1388_ADB_Tool] can not find command from parameter, will do as old version.\n");
+	}
+	else {
+		goto END;
+	}
+	
 	//get sdcard path from command line parameter
 	if ((argc > 4)) {
-		LOGD("[FM1388_ADB_Tool] Too many parameters.\n");
-		goto END;
+		output_debug_log(true, "[FM1388_ADB_Tool] Too many parameters.\n");
+		show_command_line_usage();
 	}
 	else if ((argc == 3)) {
 		strncpy(sdcard_path, argv[1], MAX_PATH_LENGTH - 1);
@@ -134,8 +100,9 @@ int main(int argc, char** argv)
 		for(i = strlen(firmware_path) - 1; i > 0; i--) {
 			if(firmware_path[i] == '/') break;
 		}
+		
 		if((i <= 0) || (firmware_path[i] != '/')) {
-			LOGD("[FM1388_ADB_Tool] FM1388 firmware and parameter file path is not correct.\n");
+			output_debug_log(true, "[FM1388_ADB_Tool] FM1388 firmware and parameter file path is not correct.\n");
 			goto END;
 		}
 		else {
@@ -150,90 +117,20 @@ int main(int argc, char** argv)
 	if(argc == 4) {
 		ret = process_spi_operation(argv[3], result_filepath, sdcard_path);
 		if (ret < 0) {
-			LOGD("[FM1388_ADB_Tool] Error occurs when processing SPI play and record.\n");
+			output_debug_log(true, "[FM1388_ADB_Tool] Error occurs when processing SPI play and record.\n");
 		}
-		goto END;
 	}
 	else {
-		//parse mode config file
-		ret = parse_mode_config(firmware_path, &mode_info, &mode_number);
-		//LOGD("[FM1388_ADB_Tool] ret=%d\n", ret);
-		//LOGD("[FM1388_ADB_Tool] mode_number=%d\n", mode_number);
+		ret = process_read_write_data(request_parameter_filepath, result_filepath);
 		if (ret < 0) {
-			LOGD("[FM1388_ADB_Tool] Error occurs when parsing mode information.\n");
-			goto END;
+			output_debug_log(true, "[FM1388_ADB_Tool] Error occurs when do parameter read/write.\n");
 		}
-
-		//get current mode and vec file path
-		current_mode = get_mode();
-		//LOGD("[FM1388_ADB_Tool] current_mode=%d\n", current_mode);
-		if (current_mode < 0) {
-			LOGD("[FM1388_ADB_Tool] Error occurs when calling get_mode(). ret = %d\n", current_mode);
-			goto END;
-		}
-
-		//LOGD("[FM1388_ADB_Tool] mode_info[current_mode].parameter_file_name=%s\n", mode_info[current_mode].parameter_file_name);
-
-		//parse current performance parameter vec file to memory
-		snprintf(current_parameter_file_path, MAX_PATH_LENGTH - 1, "%s%s", firmware_path, mode_info[current_mode].parameter_file_name);
-
-		//get requested parameter number to allocate memory for structure
-		ret = get_request_parameter(request_parameter_filepath, &request_parameter, &request_parameter_number);
-		LOGD("[FM1388_ADB_Tool] ret=%d\n", ret);
-		LOGD("[FM1388_ADB_Tool] request_parameter_number=%d\n", request_parameter_number);
-		if (ret < 0) {
-			LOGD("[FM1388_ADB_Tool] Error occurs when calling get_request_parameter(). ret=%d\n", ret);
-			goto END;
-		}
-
-
-		LOGD("[FM1388_ADB_Tool] deal with write parameter.\n");
-		//process write operation first and save parameter vec file
-		for (i = 0; i < request_parameter_number; i++) {
-			if (request_parameter[i].op == OPERATION_WRITE) {
-				ret = set_dsp_mem_value_spi(request_parameter[i].addr, request_parameter[i].value);
-				if(ret != ESUCCESS) {
-					LOGD("[FM1388_ADB_Tool] Failed to write parameter to FM1388. ret=%d\n", ret);
-				}
-			}
-		}
-
-		LOGD("[FM1388_ADB_Tool] deal with read parameter.\n");
-		//process read operation, then generate result file
-		result_parameter = (RequestPara*)malloc(sizeof(RequestPara) * request_parameter_number);
-		if (result_parameter == NULL) {
-			LOGD("[FM1388_ADB_Tool] Can not allocate memory for result parameter.\n");
-			goto END;
-		}
-
-		LOGD("[FM1388_ADB_Tool] generate result array.\n");
-		result_index = 0;
-		for (i = 0; i < request_parameter_number; i++) {
-			if (request_parameter[i].op == OPERATION_READ) {
-				request_parameter[i].value = get_dsp_mem_value_spi(request_parameter[i].addr) & 0xFFFF;
-				
-				result_parameter[result_index].addr = request_parameter[i].addr;
-				result_parameter[result_index].value = request_parameter[i].value;
-				LOGD("[FM1388_ADB_Tool] address=%08x\n", result_parameter[result_index].addr);
-				LOGD("[FM1388_ADB_Tool] value=%04x\n", result_parameter[result_index].value);
-				strncpy(result_parameter[result_index].comment, request_parameter[i].comment, COMMENT_LENGTH);
-
-				result_index++;
-			}
-		}
-		
-		LOGD("[FM1388_ADB_Tool] generate result file.\n");		
-		if(result_index > 0)
-			generate_result_file(result_filepath, result_parameter, result_index);
 	}
 	
 END:
-	if (request_parameter != NULL) free(request_parameter);
-	if (result_parameter != NULL) free(result_parameter);
-	if (mode_info != NULL) free(mode_info);
 	lib_close_device();
 
-	LOGD("[FM1388_ADB_Tool] Finished!\n");
+	output_debug_log(true, "[FM1388_ADB_Tool] Finished!\n");
 
 	return 0;
 }

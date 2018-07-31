@@ -29,6 +29,8 @@ extern int fm_wav_write_header(int fd, int read_total, int extraChunkSize, wav_h
 
 static unsigned char voice_buffer[FM1388_BUFFER_LEN] = { 0 };
 static unsigned char voice_buffer_temp[FM1388_BUFFER_LEN] = { 0 };
+static user_defined_path user_path;
+int output_debug_log(bool output_console, const char *fmt, ...);
 
 //functions for transform channel data
 int swap_spi_data(unsigned char* pdata, unsigned int data_length, int frame_size, const unsigned char* channels)
@@ -38,7 +40,7 @@ int swap_spi_data(unsigned char* pdata, unsigned int data_length, int frame_size
 	unsigned char  temp;
 
 	if ((pdata == NULL) || (data_length == 0)) {
-		printf("%s: please provide valid parameter. pdata=0x%#x, data_length =%#x\n",
+		output_debug_log(true, "[%s]: please provide valid parameter. pdata=0x%#x, data_length =%#x\n",
 			__func__, *pdata, data_length);
 		return -EPARAMINVAL;
 	}
@@ -134,19 +136,19 @@ int convert_data_core(const int fd_in, const int fd_out,
 	char chunk_info[DSP_SPI_REC_EXTRA_CHUNK_HEADER] = { 0 };
 
 	if((fd_in <= 0) || (fd_out <= 0)) {
-		printf("%s:  file handle is invalid. \n", __func__);
+		output_debug_log(true, "[%s]:  file handle is invalid. \n", __func__);
 		return -ENOTOPEN;
 	}
 
 	if((channel_number <= 0) || (channel_number > DSP_SPI_REC_CH_NUM) || 
 		(frame_size < 0) || (frame_size > 1000)){
-		printf("%s:  parameter is invalid. channel_number=%d, frame_size=%d\n", __func__, channel_number, frame_size);
+		output_debug_log(true, "[%s]:  parameter is invalid. channel_number=%d, frame_size=%d\n", __func__, channel_number, frame_size);
 		return -EPARAMINVAL;
 	}
 
 	if(((sample_rate != 8000) && (sample_rate != 16000) && (sample_rate != 24000) && (sample_rate != 48000)) || 
 		((bits_per_sample != 8) && (bits_per_sample != 16) && (bits_per_sample != 24) && (bits_per_sample != 32))){
-		printf("%s:  sample rate or bit length is invalid. sample_rate=%d, bits_per_sample=%d\n", __func__, sample_rate, bits_per_sample);
+		output_debug_log(true, "[%s]:  sample rate or bit length is invalid. sample_rate=%d, bits_per_sample=%d\n", __func__, sample_rate, bits_per_sample);
 		return -EPARAMINVAL;
 	}
 
@@ -170,7 +172,7 @@ int convert_data_core(const int fd_in, const int fd_out,
 			ret = fm_wav_write_data(fd_out, (char*)voice_buffer, need_read);
 		}
 		else {
-			printf("%s:  swap_spi_data() failed. ret=%d\n", __func__, ret);
+			output_debug_log(true, "[%s]:  swap_spi_data() failed. ret=%d\n", __func__, ret);
 			return ret;
 		}
 
@@ -208,13 +210,13 @@ int convert_data(const char* data_file_name, const char* wav_file_name,
 
 	fd_out = open(wav_file_name, O_CREAT | O_RDWR, 0666);
 	if (fd_out == -1) {
-		printf("fail to open output file\n");
+		output_debug_log(true, "fail to open output file\n");
 		return -EFAILOPEN;
 	}
 
 	fd = open(data_file_name, O_RDONLY);
 	if (fd == -1) {
-		printf("fail to open data file\n");
+		output_debug_log(true, "fail to open data file\n");
 		close(fd_out);
 		return -EFAILOPEN;
 	}
@@ -366,13 +368,13 @@ char **remove_row_comment(char* file_name, int* count)
 	int    num = -1;
 	
 	if(file_name == NULL) {
-		printf ("   Got invalid file name.\n");
+		output_debug_log(true, "   Got invalid file name.\n");
 		return NULL;
 	}
 	
 	fd = open (file_name, O_RDONLY);
 	if (fd == -1) {
-		printf ("   Could not open the file:%s.\n", file_name);
+		output_debug_log(true, "   Could not open the file:%s.\n", file_name);
 	} else {
 		num = filegets(fd, s, CONFIG_LINE_LEN);
 		while (num != 0) {
@@ -389,7 +391,7 @@ char **remove_row_comment(char* file_name, int* count)
 		memset(dst_argv, 0, line_number * sizeof(char*));
 
 		if(dst_argv == NULL) {
-			printf("   Failed to alloc memory.");
+			output_debug_log(true, "   Failed to alloc memory.");
 			close (fd);
 			return NULL;
 		}
@@ -431,7 +433,7 @@ int load_fm1388_mode_cfg(char* file_src, support_mode* mode_info)
 	}
 	
 	if(processed_argv == NULL) {
-		printf("   Can not get configuration data from file: %s\n", file_src);
+		output_debug_log(true, "   Can not get configuration data from file: %s\n", file_src);
 		ret = -EFAILOPEN;
 	} else {
 		mode_info->number = cmd_count;
@@ -469,10 +471,220 @@ int get_dsp_sample_rate(int sample_rate) {
 	int sample_rate_index = sample_rate & 0xFFFF;
 	
 	if((sample_rate_index < 0) || (sample_rate_index > 0x3)) { 
-		printf("sample_rate value is not valid:%d.", sample_rate_index);
+		output_debug_log(true, "sample_rate value is not valid:%d.", sample_rate_index);
 		return -EDATAINVAL;
 	}
    
 	cur_sample_rate = sample_rate_list[sample_rate_index];
 	return cur_sample_rate;
 }	
+
+void strip_white_space(char* source_string, int offset, char* target_string, int len) {
+	int i = 0, j = 0;
+	
+	if((source_string == NULL) || (target_string == NULL) || (offset < 0) || (len <= 0)) return;
+	
+	i = offset;
+	while((source_string[i] != 0) && (i < CONFIG_LINE_LEN) && (j < len)){
+		if((source_string[i] != ' ') && (source_string[i] != '\t') && (source_string[i] != '\r') && (source_string[i] != '\n')) {
+			target_string[j++] = source_string[i];
+		}
+		
+		i++;
+	}
+	
+	target_string[j] = 0;
+	return;
+}
+
+// load user-defined path setting file, if file does not exist use default setting
+int load_user_setting(void) {
+    int		fd = -1;
+    int 	num = 0;
+    char 	firmware_path[CONFIG_LINE_LEN];	
+    char 	user_file_path[CONFIG_LINE_LEN];	
+    char 	s[CONFIG_LINE_LEN];	//assume each line of the opened file is below 255 characters
+
+	memset(firmware_path, 0, CONFIG_LINE_LEN);
+	memset(user_file_path, 0, CONFIG_LINE_LEN);
+	
+	//set default path to SDcard and mode path, then parse config file to get user-defined path to replace these path
+	strncpy(user_path.sdcard_path, DEFAULT_SDCARD_PATH, MAX_PATH_LEN);
+	strncpy(firmware_path, DEFAULT_MODE_CFG_LOCATION, CONFIG_LINE_LEN);
+	strncpy(user_path.mode_cfg_path, DEFAULT_MODE_CFG_LOCATION, CONFIG_LINE_LEN);
+	strncat(user_path.mode_cfg_path, MODE_CFG_FILE_NAME, CONFIG_LINE_LEN);
+	
+	strncpy(user_file_path, firmware_path, CONFIG_LINE_LEN);
+	strncat(user_file_path, USER_DEFINED_PATH_FILE, CONFIG_LINE_LEN);
+	
+	
+	fd = open (user_file_path, O_RDONLY);
+    if (fd == -1) {
+       output_debug_log(true, "[%s]File %s could not be opened or does not exist, will use default setting for sdcard and vec location.\n", __func__, user_file_path);
+       return -EFAILOPEN;
+    }
+    else{
+		//printf ("%s, File %s opened!...\n", __func__, user_file_path);
+		num = filegets(fd, s, CONFIG_LINE_LEN);
+		while (num != 0) {
+			if(s[0] == '*' || s[0] == '#' || s[0] == '/' || s[0] == 0xD || s[0] == 0x0) {
+				//continue;
+			} else {
+				if(strncasecmp(s, USER_VEC_PATH, strlen(USER_VEC_PATH)) == 0) {
+					strip_white_space(s, strlen(USER_VEC_PATH), user_path.mode_cfg_path, CONFIG_LINE_LEN);
+					strncat(user_path.mode_cfg_path, MODE_CFG_FILE_NAME, CONFIG_LINE_LEN);
+					output_debug_log(false, "[%s]: mode file path is %s\n", __func__, user_path.mode_cfg_path);
+				}
+				else if(strncasecmp(s, USER_KERNEL_SDCARD_PATH, strlen(USER_KERNEL_SDCARD_PATH)) == 0) {
+					//not need parse kernel space sd card path
+				}
+				else if(strncasecmp(s, USER_USER_SDCARD_PATH, strlen(USER_USER_SDCARD_PATH)) == 0) {
+					strip_white_space(s, strlen(USER_USER_SDCARD_PATH), user_path.sdcard_path, MAX_PATH_LEN);
+					output_debug_log(false, "[%s]: sdcard path is %s\n", __func__, user_path.sdcard_path);
+				}
+				else if(strncasecmp(s, USER_OUTPUT_LOG, strlen(USER_OUTPUT_LOG)) == 0) {
+					strip_white_space(s, strlen(USER_OUTPUT_LOG), user_path.output_log, MAX_PATH_LEN);
+					user_path.b_output_log = (user_path.output_log[0] == 'y' || user_path.output_log[0] == 'Y') ? true : false;
+					output_debug_log(false, "[%s]: output_log is %s\n", __func__, user_path.b_output_log ? "yes" : "no");
+				}
+			}
+			num = filegets(fd, s, CONFIG_LINE_LEN);
+		}
+    }
+
+	close(fd);
+	
+	output_debug_log(true, "Finally used path setting is:\n");
+	output_debug_log(true, "\tsdcard=%s\n", user_path.sdcard_path);
+	output_debug_log(true, "\tcfg_path=%s\n", user_path.mode_cfg_path);
+	output_debug_log(true, "\toutput_log=%d\n", user_path.b_output_log);
+	
+	return ESUCCESS;
+}
+
+char* get_cfg_path(void) {
+	if((user_path.mode_cfg_path == NULL) || (user_path.mode_cfg_path[0] == 0)) 
+		load_user_setting();
+	
+	return user_path.mode_cfg_path;
+}
+
+char* get_sdcard_root(void) {
+	if((user_path.sdcard_path == NULL) || (user_path.sdcard_path[0] == 0)) 
+		load_user_setting();
+	
+	return user_path.sdcard_path;
+}
+
+bool is_output_log(void) {
+	if((user_path.output_log == NULL) || (user_path.output_log[0] == 0)) 
+		load_user_setting();
+	
+	return user_path.b_output_log;
+}
+
+int check_create_log_folder(void) {
+	int  ret = ESUCCESS;
+	char str_log_folder_path[MAX_PATH_LEN];
+	
+	if(user_path.b_output_log == false) return ESUCCESS;
+	
+	snprintf(str_log_folder_path, MAX_PATH_LEN, "%s%s", user_path.sdcard_path, USER_LOG_FOLDER);
+
+	ret = access(str_log_folder_path, R_OK | W_OK);
+	if(ret != 0) {
+		printf("[%s]log folder (%s) does not exist or you have not enough right.\n", __func__, str_log_folder_path);
+		ret = mkdir(str_log_folder_path, 0666);
+		if(ret != 0) {
+			printf("[%s]fail to create log folder (%s), please check you have enough right or not.\n", __func__, str_log_folder_path);
+			
+			user_path.output_log[0] = 'n';
+			user_path.b_output_log = false;
+			return -EFAILOPEN;
+		}
+	}
+
+	return ESUCCESS;
+}
+
+int generate_log_file_name(char* file_name) {
+	time_t timep;  
+    struct tm *p;  
+	char str_today[32];
+	
+	if(file_name == NULL) return -1;
+	
+	if(user_path.b_output_log == false) return ESUCCESS;
+	
+	//get today's date
+    time(&timep);  
+    p = gmtime(&timep);  
+	snprintf(str_today, 32, "%04d%02d%02d", (1900+p->tm_year), (1+p->tm_mon), p->tm_mday);	
+
+	//combine log file name
+	snprintf(file_name, MAX_PATH_LEN, "%s%s/%s%s.txt", 
+			user_path.sdcard_path, USER_LOG_FOLDER, USER_USER_LOG_PREFIX, str_today);
+			
+	return ESUCCESS;
+}
+
+int get_output_log_file_path(char* str_log_file_path) {
+	int  ret = ESUCCESS;
+
+	if(str_log_file_path == NULL) return -1;
+	
+	ret = check_create_log_folder();
+	if(ret != ESUCCESS) return ret;
+	
+	ret = generate_log_file_name(str_log_file_path);
+	if(ret != ESUCCESS) return ret;
+	
+	return ESUCCESS;
+}
+
+int output_debug_log(bool output_console, const char *fmt, ...) {  
+    va_list  argp;  
+    int ret = ESUCCESS;
+    char str_log_file_path[MAX_PATH_LEN];
+    FILE* fp = NULL;
+	time_t timep;  
+    struct tm *p;  
+    
+    if(fmt == NULL) return -EPARAMINVAL;
+    
+	if(output_console == true) {
+		va_start(argp,  fmt);  
+		vfprintf(stderr, fmt, argp);
+		va_end(argp);  
+	}
+
+    //not allow to output log
+    if(user_path.b_output_log == false) {
+		return ESUCCESS;
+	}
+   
+    //get log file path
+    memset(str_log_file_path, 0, MAX_PATH_LEN);
+	ret = get_output_log_file_path(str_log_file_path);
+    if(ret != ESUCCESS) return ret;
+    
+    //open file
+    fp = fopen(str_log_file_path, "a+");
+    if(fp == NULL) {
+		return -EFAILOPEN;
+	}
+	
+	//get today's date time
+    time(&timep);  
+    p = gmtime(&timep);  
+    
+    fprintf(fp,  "[%04d-%02d-%02d %02d:%02d:%02d]:  ", 
+				(1900+p->tm_year), (1+p->tm_mon), p->tm_mday, p->tm_hour, p->tm_min, p->tm_sec);  
+    va_start(argp,  fmt);  
+    vfprintf(fp,  fmt,  argp);  
+    va_end(argp);  
+   
+    fclose(fp);
+	
+    return ESUCCESS;
+} 

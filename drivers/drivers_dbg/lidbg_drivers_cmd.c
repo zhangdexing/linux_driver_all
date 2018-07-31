@@ -735,6 +735,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#149X--fm1388 X:[0 vr mode][1 bt mode][3 mic0 mode][4 mic1 mode][5 mic01 bypass][8 check][9 not check] \n");
 			fs_mem_log("*158#150X--RecForge X:[0 install][1 start] \n");
 			fs_mem_log("*158#151--fm1388 cp spi record tool \n");
+			fs_mem_log("*158#152X--fm1388 spi record X:[0 start 017][1 stop  017][2 start 01457][3 stop 01457][other cp file to udisk]\n");
+			fs_mem_log("*158#153--fm1388 set vec path\n");
             fs_mem_log("*158#154--pre_wakeup_quick\n");
             fs_mem_log("*158#155--test N day shutdown :6 mins later\n");
 
@@ -1887,6 +1889,38 @@ void parse_cmd(char *pt)
 				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/libfm1388.so /system/lib/libfm1388.so");
 				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/libfmrec_1388.so /system/lib/libfmrec_1388.so");
 				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/user_defined_path.cfg /system/etc/firmware/user_defined_path.cfg");
+				lidbg_shell_cmd("sync");
+
+				lidbg_domineering_ack();
+		 }
+		 else if (!strncmp(argv[1], "*158#152", strlen("*158#152")))
+		 {
+				lidbg("*158#152X--fm1388 spi record X:[0 start 017][1 stop  017][2 start 01457][3 stop 01457][other cp file to udisk]\n");
+ 				if(!strncmp(argv[1], "*158#1520", strlen("*158#1520")))
+					lidbg_shell_cmd("FM1388_ADB_Tool /sdcard/ /system/etc/firmware/ RS1100000100spi_record.wav***************************************************");
+				else if(!strncmp(argv[1], "*158#1521", strlen("*158#1521")))
+					lidbg_shell_cmd("FM1388_ADB_Tool /sdcard/ /system/etc/firmware/ RT1100000100spi_record.wav***************************************************");
+				else if(!strncmp(argv[1], "*158#1522", strlen("*158#1522")))
+					lidbg_shell_cmd("FM1388_ADB_Tool /sdcard/ /system/etc/firmware/ RS1100110100spi_record.wav***************************************************");
+				else if(!strncmp(argv[1], "*158#1523", strlen("*158#1523")))
+					lidbg_shell_cmd("FM1388_ADB_Tool /sdcard/ /system/etc/firmware/ RT1100110100spi_record.wav***************************************************");
+				else
+				{
+					lidbg("enter 158152\n");
+					lidbg_shell_cmd("chmod 777 /storage/udisk/ && cp -rf /sdcard/spi_record.wav /storage/udisk/spi_record.wav && sync");
+					//lidbg_shell_cmd("echo appcmd *158#082 > /dev/lidbg_drivers_dbg0");
+				}
+				
+				lidbg_domineering_ack();
+		 }
+		  else if (!strncmp(argv[1], "*158#153", strlen("*158#153")))
+		 {
+				lidbg("*158#153--fm1388 set vec path\n");
+ 				if(strlen(argv[1])>8)
+ 				{
+					lidbg_shell_cmd(format_string(false, "echo setpath%c > /dev/fm1388_switch_mode",argv[8]));
+					lidbg_shell_cmd("cat /sys/devices/platform/fm1388.0/fm1388_reinit");
+ 				}
 
 				lidbg_domineering_ack();
 		 }

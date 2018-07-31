@@ -14,6 +14,7 @@
 #include <linux/input.h>
 #include <unistd.h>
 #include <pthread.h>
+//#include <linux/delay.h>
 #include <signal.h>
 #include <time.h>
 #include <sys/statfs.h>
@@ -57,7 +58,7 @@ int get_audio_conf(rec_param *p_rec_param)
 			printf("   The wav file name is invalid\n");
 		}
 		else {
-			snprintf(play_file_full_path, MAX_PATH_LEN, "%s%s", SDCARD_PATH, rec_file);
+			snprintf(play_file_full_path, MAX_PATH_LEN, "%s%s", get_sdcard_path(), rec_file);
 			temp_fp = fopen(play_file_full_path, "wb");
 			if(temp_fp) {
 				fclose(temp_fp);
@@ -69,6 +70,7 @@ int get_audio_conf(rec_param *p_rec_param)
 		}
 	} while (!i);
 	printf("   The wav file path is: %s\n\n", rec_file);
+	output_debug_log(false, "%s: The wav file path is: %s\n", __func__, rec_file);
 	strcpy(p_rec_param->rec_file, rec_file);
 
 	printf(" - Please select the channels for recording.\n");
@@ -92,6 +94,7 @@ int get_audio_conf(rec_param *p_rec_param)
 	}
 	rec_chs[DSP_SPI_REC_CH_NUM] = 0;
 	printf("   The selected channels are: %10s\n", rec_chs);
+	output_debug_log(false, "%s: The selected channels are: %10s\n", __func__, rec_chs);
 
 	if (rec_chs[0] == 'a') {
 		ch_num = DSP_SPI_REC_CH_NUM;
@@ -127,6 +130,7 @@ int get_playback_conf(play_param *p_playback_param)
 	
 	if(p_playback_param == NULL) {
 		printf(" - Invalid parameter data structure.\n");
+		output_debug_log(false, "%s: Invalid parameter data structure.\n", __func__);
 	}
 	
 	do {
@@ -134,15 +138,17 @@ int get_playback_conf(play_param *p_playback_param)
 		i = scanf("%127s", play_file);
 		if(!i) {
 			printf("   The wav file name is invalid\n");
+			output_debug_log(false, "%s: The wav file name is invalid\n", __func__);
 		}
 		else {
-			snprintf(play_file_full_path, MAX_PATH_LEN, "%s%s", SDCARD_PATH, play_file);
+			snprintf(play_file_full_path, MAX_PATH_LEN, "%s%s", get_sdcard_path(), play_file);
 			temp_fp = fopen(play_file_full_path, "rb");
 			if(temp_fp) {
 				fclose(temp_fp);
 			}
 			else {
 				printf("   The wav file can not be accessed.\n");
+				output_debug_log(false, "%s: The wav file can not be accessed.\n", __func__);
 				i = 0;
 			}
 
@@ -150,11 +156,13 @@ int get_playback_conf(play_param *p_playback_param)
 			ch_num = get_channel_number(play_file);
 			if(ch_num <= 0) {
 				printf("   Fail to parse the wav file you provided.\n");
+				output_debug_log(false, "%s: Fail to parse the wav file you provided.\n", __func__);
 				i = 0;
 			}
 		}
 	} while (!i);
 	printf("   The wav file path is: %s\n\n", play_file_full_path);
+	output_debug_log(false, "%s: The wav file path is: %s\n", __func__, play_file_full_path);
 	strncpy(p_playback_param->wav_file, play_file, MAX_PATH_LEN);
 
 	
@@ -180,6 +188,7 @@ int get_playback_conf(play_param *p_playback_param)
 	}
 	
 	printf("   The selected channel mapping is: %s\n", channel_mapping);
+	output_debug_log(false, "%s: The selected channel mapping is: %s\n", __func__, channel_mapping);
 
 	strncpy(p_playback_param->channel_mapping, channel_mapping, MAX_MAPPING_STR_LEN);
 
@@ -235,20 +244,20 @@ int get_playback_conf(play_param *p_playback_param)
 	return 0;
 }
 
-void stop_recording(rec_param* rec_param_data) {
+void stop_recording(rec_param* rec_param_data, dev_cmd_record_result *rec_result) {
 	if((vbuf_read_flag == 1)) {
-		stop_debug_record(rec_param_data->rec_file, rec_param_data->ch_idx);
+		stop_debug_record(rec_param_data->rec_file, rec_param_data->ch_idx, rec_result);
 		vbuf_read_flag = 0;
 	}
 }
 
-void stop_playback(play_param* playback_param_data) {
+void stop_playback(play_param* playback_param_data, dev_cmd_playback_result *playback_result) {
 	if((vbuf_write_flag == 1)) {
 		if(playback_param_data->need_recording == 1) {
-			stop_spi_playback_rec(playback_param_data->rec_file, playback_param_data->rec_ch_idx);
+			stop_spi_playback_rec(playback_param_data->rec_file, playback_param_data->rec_ch_idx, playback_result);
 		}
 		else {
-			stop_spi_playback();
+			stop_spi_playback(playback_result);
 		}
 		vbuf_write_flag = 0;
 	}
@@ -281,22 +290,22 @@ int main(int argc, char** argv)
 	int  mode, playback_status;
 	unsigned int    reg, choosed_mode, matched = 0;
 	unsigned int  	reg_val, addr;
-
+	dev_cmd_record_result rec_result;
+	dev_cmd_playback_result playback_result;
+	
 	err_code = lib_open_device();
 	if(err_code < 0) {
 		printf("   Failed to open device..\n");
 		return err_code;
 	}
-	
-	strncpy(SDCARD_PATH, get_sdcard_path(), MAX_PATH_LEN);
-	strncpy(MODE_CFG_LOCATION, get_cfg_location(), CONFIG_LINE_LEN);
-	
 
+	output_debug_log(false, "[fm_fm1388--%s]Enter fm_fm1388\n", __func__);
     //Feature: 1228
     //1. open cfg file and parse the file to get the available mode number
     //2. in appliation's menu prompt user with above available modes
-    if(load_fm1388_mode_cfg(MODE_CFG_LOCATION, &mode_info) != ESUCCESS) {
-        printf("   Failed to open and parse cfg. %s\n", MODE_CFG_LOCATION);
+    if(load_fm1388_mode_cfg(get_cfg_location(), &mode_info) != ESUCCESS) {
+        printf("   Failed to open and parse cfg. %s\n", get_cfg_location());
+        output_debug_log(false, "[fm_fm1388--%s]Failed to open and parse cfg. %s\n", __func__, get_cfg_location());
         return -EFAILOPEN;        
     }
 
@@ -307,7 +316,7 @@ int main(int argc, char** argv)
 		printf("\n\nSupported modes:\n");
 		mode = get_mode();
 		
-		printf("current mode=%d\n",mode);
+		output_debug_log(true, "current mode=%d\n", mode);
 		for(i = 0; i < mode_info.number; i++) {
 			if(mode == mode_info.mode[i])
 				printf("    %2x...%-s (current used)\n", mode_info.mode[i], mode_info.comment[i]);
@@ -326,9 +335,11 @@ int main(int argc, char** argv)
 				mode = get_mode();
 				if(mode < 0) {
 					printf(" - Error occurs when get DSP mode. errorcode=%d\n", mode);
+					output_debug_log(false, "[fm_fm1388--%s]Error occurs when get DSP mode. errorcode=%d\n", __func__, mode);
 				}
 				else {
 					printf(" - The current dsp_mode = %x\n", mode);
+					output_debug_log(false, "[fm_fm1388--%s]The current dsp_mode = %x\n", __func__, mode);
 				}
 				break;
 
@@ -336,6 +347,7 @@ int main(int argc, char** argv)
 				mode = get_mode();
 				if(mode < 0) {
 					printf(" - Error occurs when get DSP mode. errorcode=%d\n", mode);
+					output_debug_log(false, "[fm_fm1388--%s]Error occurs when get DSP mode. errorcode=%d\n", __func__, mode);
 				}
 				else {
 					printf(" - The current dsp_mode = %x\n", mode);
@@ -348,12 +360,14 @@ int main(int argc, char** argv)
 								err_code = set_mode(choosed_mode);
 								if(err_code != ESUCCESS) {
 									printf(" - Error occurs when set DSP mode. errorcode=%d\n", err_code);
+									output_debug_log(false, "[fm_fm1388--%s]Error occurs when set DSP mode. errorcode=%d\n", __func__, err_code);
 									break;
 								}
 								else {
 									matched = 1;
 									dsp_mode = get_mode();
 									printf(" - The current dsp_mode = %x.\n", dsp_mode);
+									output_debug_log(false, "[fm_fm1388--%s]The current dsp_mode = %x.\n", __func__, dsp_mode);
 									break;
 								}
 							}
@@ -368,21 +382,24 @@ int main(int argc, char** argv)
 							(choosed_mode!=FM_SMVD_CFG_CM))
 							matched = 0;
 					}
-					if(!matched)
-						printf(" - The mode %x is not supported yet\n", choosed_mode);
-
+					if(!matched) {
+						printf(" - The mode %x is not supported yet.\n", choosed_mode);
+						output_debug_log(false, "[fm_fm1388--%s]The mode %x is not supported yet.\n", __func__, choosed_mode);
+					}
 				}
 				break;
 
 			case START_VBUF_WRITE:
 				if(vbuf_read_flag == 1){
 					printf(" - The last debug recording is not stopped, please stop it if you want to start a new playback.\n");
+					output_debug_log(false, "[fm_fm1388--%s]The last debug recording is not stopped, please stop it if you want to start a new playback.\n", __func__);
 					break;
 				}
 				
 				playback_status = is_playing();
 				if(playback_status == 1) {
 					printf(" - The last playback is not stopped, please stop it if you want to start a new playback.\n");
+					output_debug_log(false, "[fm_fm1388--%s]The last playback is not stopped, please stop it if you want to start a new playback.\n", __func__);
 					vbuf_write_flag = 0;
 					break;
 				}
@@ -390,6 +407,7 @@ int main(int argc, char** argv)
 				if(playback_status < 0) break;
 				
 				printf(" - Start SPI Playback...\n");
+				output_debug_log(false, "[fm_fm1388--%s]Start SPI Playback...\n", __func__);
 				get_playback_conf(&local_playback_param);
 				
 				//remove final wav file if it exists
@@ -399,6 +417,7 @@ int main(int argc, char** argv)
 											local_playback_param.rec_ch_idx, local_playback_param.rec_file);
 				if(err_code != ESUCCESS) {
 					printf(" - Failed to play!\n");
+					output_debug_log(false, "[fm_fm1388--%s]Failed to play!\n", __func__);
 					break;
 				}
 				
@@ -407,16 +426,30 @@ int main(int argc, char** argv)
 
 			case STOP_VBUF_WRITE:
 				printf(" - Stop SPI Playback.\n");
-				stop_playback(&local_playback_param);
+				output_debug_log(false, "[fm_fm1388--%s]Stop SPI Playback.\n", __func__);
+				stop_playback(&local_playback_param, &playback_result);
+
+				printf("loss frame number:%d among total frame:%d.\n", playback_result.error_frame_number, playback_result.total_frame_number);
+				output_debug_log(false, "[fm_fm1388-%s] loss frame number:%d among total frame:%d.\n", 
+							__func__, playback_result.error_frame_number, playback_result.total_frame_number);
+				if(playback_result.error_frame_number != 0) {
+					printf("first loss occurs at the %dth frame.\n", playback_result.first_error_frame_counter);
+					output_debug_log(false, "[fm_fm1388-%s] first loss occurs at the %dth frame.\n", __func__, playback_result.first_error_frame_counter);
+					printf("last loss occurs at the %dth frame.\n", playback_result.last_error_frame_counter);
+					output_debug_log(false, "[fm_fm1388-%s] last loss occurs at the %dth frame.\n", __func__, playback_result.last_error_frame_counter);
+				}
+	
 				vbuf_write_flag = 0;
 				break;
 
 			case START_VBUF_READ:
 				if((vbuf_write_flag == 1) || (vbuf_read_flag == 1)){
 					printf(" - The last debug recording or playback is not stopped, please stop it if you want to start a new recording.\n");
+					output_debug_log(false, "[fm_fm1388--%s]The last debug recording or playback is not stopped, please stop it if you want to start a new recording.\n", __func__);
 					break;
 				}
 				printf(" - Start debug recording...\n");
+				output_debug_log(false, "[fm_fm1388--%s]Start debug recording...\n", __func__);
 				if(!err_code) {
 					get_audio_conf(&local_rec_param);
 					
@@ -424,6 +457,7 @@ int main(int argc, char** argv)
 					err_code = start_debug_record(local_rec_param.ch_num, local_rec_param.ch_idx, local_rec_param.rec_file);
 					if(err_code != ESUCCESS) {
 						printf(" - Failed to record!\n");
+						output_debug_log(false, "[fm_fm1388--%s]Failed to record!\n", __func__);
 						break;
 					}
 					
@@ -451,23 +485,39 @@ int main(int argc, char** argv)
 							int seconds_avail	= free_disk_kb / kb_per_second / 2;
 
 							printf("\n   You can record about %d seconds.\n", seconds_avail);
+							output_debug_log(false, "[fm_fm1388--%s]You can record about %d seconds.\n", __func__, seconds_avail);
 						}
 					}
 				}
 				else if(err_code == -EFAILOPEN) {
 					printf(" - Failed to open character device.\n");
+					output_debug_log(false, "[fm_fm1388--%s]Failed to open character device.\n", __func__);
 				}
 				else if(err_code == -EDATAINVAL) {
 					printf(" - Got invalidate data from DSP.\n");
+					output_debug_log(false, "[fm_fm1388--%s]Got invalidate data from DSP.\n", __func__);
 				}
 				else {
 					printf(" - Error occurs when get DSP data address. errorcode=%d\n", err_code);
+					output_debug_log(false, "[fm_fm1388--%s]Error occurs when get DSP data address. errorcode=%d\n", __func__, err_code);
 				}
 				break;
 
 			case STOP_VBUF_READ:
 				printf(" - Stop debug recording.\n");
-				stop_recording(&local_rec_param);
+				output_debug_log(false, "[fm_fm1388--%s]Stop debug recording.\n", __func__);
+				stop_recording(&local_rec_param, &rec_result);
+				
+				printf("loss frame number:%d among total frame:%d.\n", rec_result.error_frame_number, rec_result.total_frame_number);
+				output_debug_log(false, "[fm_fm1388-%s] loss frame number:%d among total frame:%d.\n", 
+							__func__, rec_result.error_frame_number, rec_result.total_frame_number);
+				if(rec_result.error_frame_number != 0) {
+					printf("first loss occurs at the %dth frame.\n", rec_result.first_error_frame_counter);
+					output_debug_log(false, "[fm_fm1388-%s] first loss occurs at the %dth frame.\n", __func__, rec_result.first_error_frame_counter);
+					printf("last loss occurs at the %dth frame.\n", rec_result.last_error_frame_counter);
+					output_debug_log(false, "[fm_fm1388-%s] last loss occurs at the %dth frame.\n", __func__, rec_result.last_error_frame_counter);
+				}
+	
 				vbuf_read_flag = 0;
 				break;
 
@@ -477,9 +527,11 @@ int main(int argc, char** argv)
 				if(reg <= (unsigned int)0xff){
 					reg_val = get_reg_value(reg);
 					printf(" - reg = 0x%02x, val=0x%04x\n\n", reg, reg_val);
+					output_debug_log(false, "[fm_fm1388--%s]get reg value, reg = 0x%02x, val=0x%04x\n\n", __func__, reg, reg_val);
 				}
 				else {
-					printf(" - The reg is greater than 0xff\n");
+					printf(" - The reg is greater than 0xff.\n");
+					output_debug_log(false, "[fm_fm1388--%s]get reg value, The reg(%x) is greater than 0xff.\n", __func__, reg);
 				}
 				break;
 
@@ -490,10 +542,12 @@ int main(int argc, char** argv)
 				scanf("%127x", &reg_val);
 				if(reg <= 0xff && reg_val <= 0xffff){
 					printf(" - reg = 0x%02x, val=0x%04x\n", reg, reg_val);
+					output_debug_log(false, "[fm_fm1388--%s]set reg value, reg = 0x%02x, val=0x%04x\n", __func__, reg, reg_val);
 					set_reg_value(reg, reg_val);
 				}
 				else {
-					printf(" - The reg is greater than 0xff or the value is greater than 0xffff \n");
+					printf(" - The reg is greater than 0xff or the value is greater than 0xffff.\n");
+					output_debug_log(false, "[fm_fm1388--%s]set reg value, The reg(%x) is greater than 0xff or the value(%x) is greater than 0xffff.\n", __func__, reg, reg_val);
 				}
 				break;
 
@@ -503,9 +557,11 @@ int main(int argc, char** argv)
 				if(addr <= (unsigned int)0xffffffff){
 					reg_val = get_dsp_mem_value(addr);
 					printf(" - addr = 0x%08x, val=0x%08x\n", addr, reg_val);
+					output_debug_log(false, "[fm_fm1388--%s]get memory data, addr = 0x%08x, val=0x%08x\n", __func__, addr, reg_val);
 				}
 				else {
-					printf(" - The addr is greater than 32 bits\n");
+					printf(" - The addr is greater than 32 bits.\n");
+					output_debug_log(false, "[fm_fm1388--%s]get memory data, The addr(%x) is greater than 32 bits.\n", __func__, addr);
 				}
 				break;
 
@@ -516,10 +572,12 @@ int main(int argc, char** argv)
 				scanf("%127x", &reg_val);
 				if(addr <= (unsigned int)0xffffffff){
 					printf(" - addr = 0x%08x, val=0x%04x\n", addr, reg_val);
+					output_debug_log(false, "[fm_fm1388--%s]set memory data: addr = 0x%08x, val=0x%04x\n", __func__, addr, reg_val);
 					set_dsp_mem_value(addr, reg_val);
 				}
 				else {
-					printf(" - The addr is greater than 32 bits\n");
+					printf(" - The addr is greater than 32 bits.\n");
+					output_debug_log(false, "[fm_fm1388--%s]set memory data: The addr(%x) is greater than 32 bits.\n", __func__, addr);
 				}
 				break;
 
@@ -528,8 +586,8 @@ int main(int argc, char** argv)
 				break;
 
 			case QUIT_PROGRAM:
-				stop_recording(&local_rec_param);
-				stop_playback(&local_playback_param);
+				stop_recording(&local_rec_param, &rec_result);
+				stop_playback(&local_playback_param, &playback_result);
 				vbuf_read_flag = 0;
 				vbuf_write_flag = 0;
 				loop = false;
@@ -542,6 +600,7 @@ int main(int argc, char** argv)
 
 	lib_close_device();
 	
+	output_debug_log(false, "[fm_fm1388--%s]Terminate fm_fm1388 normally.\n", __func__);
 	return ESUCCESS;
 }
 

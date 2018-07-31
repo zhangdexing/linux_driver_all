@@ -52,7 +52,7 @@
 #define ENOENOUGHDATA		10020
 
 #define FM1388_FIFO_LEN			32768	//(1920 * 4)	//(3072)//2048 < 160*2*8=2560 < 3072
-#define FM1388_BUFFER_LEN		4096
+#define FM1388_BUFFER_LEN		3840
 #define CMD_BUF_LEN				1024
 #define DSP_SPI_REC_CH_NUM		10
 #define MAX_COMMENT_LEN			100
@@ -67,19 +67,28 @@
 #define DSP_INITIALIZED			(0x07FF)
 #define DSP_STATUS_ADDR			(0x180200CA)
 
-#define PLAY_READY          	0x0001
-#define PLAY_READY_RESET    	0xFFFE
-#define RECORD_READY      	  	0x0002
-#define RECORD_READY_RESET  	0xFFFD
-#define PLAY_ERROR          	0x0004
-#define PLAY_ERROR_RESET    	0xFFFB
-#define RECORD_ERROR        	0x0008
-#define RECORD_ERROR_RESET  	0xFFF7
-#define PLAY_ENABLE         	0x4000
-#define PLAY_ENABLE_RESET   	0xBFFF
+#define	BUFFER_NUMBER				4
+#define	DSP_OUTPUT_BUFFER_SIZE		FM1388_BUFFER_LEN
+#define FM1388_REC_BUFFER_LEN		(FM1388_BUFFER_LEN << 2)
+
+#define RECORD_ERROR_COUNTER_ADDR  	(0x5FFDFFAE)
+#define RECORD_SYNC_BUFFER0_ADDR  	(0x5FFDFFB0)
+#define RECORD_SYNC_BUFFER1_ADDR  	(0x5FFDFFB2)
+#define RECORD_SYNC_BUFFER2_ADDR  	(0x5FFDFFB4)
+#define RECORD_SYNC_BUFFER3_ADDR  	(0x5FFDFFB6)
+#define DSP_RECORD_BUFFER_INDEX_ADDR (0x5001B830)
+
+#define PLAYBACK_ERROR_COUNTER_ADDR (0x5FFDFFA4)
+#define PLAYBACK_SYNC_BUFFER0_ADDR 	(0x5FFDFFA6)
+#define PLAYBACK_SYNC_BUFFER1_ADDR  (0x5FFDFFA8)
+#define PLAYBACK_SYNC_BUFFER2_ADDR  (0x5FFDFFAA)
+#define PLAYBACK_SYNC_BUFFER3_ADDR  (0x5FFDFFAC)
+#define DSP_PLAYBACK_BUFFER_INDEX_ADDR (0x5FFD1AF4)
+
+#define PLAY_ENABLE         	0x4001
+#define PLAY_ENABLE_RESET   	0xBFFE
 #define RECORD_ENABLE       	0x8000
 #define RECORD_ENABLE_RESET 	0x7FFF
-#define KEY_PHRASE          	(0x25A<<4)
 
 /* DSP Mode I2C Control*/
 #define FM1388_DSP_I2C_OP_CODE	0x00
@@ -206,6 +215,20 @@ typedef struct dev_cmd_start_rec_t {
 	u8  hd_reserved[2];
 } dev_cmd_start_rec;
 
+typedef struct dev_cmd_record_result_t {
+	u32 total_frame_number;
+	u32 error_frame_number;
+	u32 first_error_frame_counter;
+	u32  last_error_frame_counter;
+} dev_cmd_record_result;
+
+typedef struct dev_cmd_playback_result_t {
+	u32 total_frame_number;
+	u32 error_frame_number;
+	u32 first_error_frame_counter;
+	u32  last_error_frame_counter;
+} dev_cmd_playback_result;
+
 typedef struct dev_cmd_dv_fetch_t {
 	u16 cmd_name;	//The command for debug vector fetching
 	u16 ch_num;
@@ -294,6 +317,12 @@ struct fm1388_data_t {
 //	struct mutex	rec_cmd_lock;
 	struct task_struct *thread_id;
 	struct task_struct *playback_thread_id;
+	struct task_struct *save_data_thread_id;
+	struct task_struct *load_data_thread_id;
+	struct kfifo	*rec_kfifo;
+	spinlock_t		rec_lock;
+	struct kfifo	*play_kfifo;
+	spinlock_t		play_lock;
 };
 
 extern int fm1388_spi_read(u32 addr, u32 *val, size_t len);

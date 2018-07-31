@@ -21,9 +21,6 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-#define VOICE_DATA_FILE_NAME 	"voice.dat"
-#define DEFAULT_SDCARD_PATH 	"/sdcard/" //"/mnt/sdcard/"
-
 #define DSP_SPI_FRAMESIZE_ADDR	0x5FFDFF90
 #define DSP_SAMPLE_RATE_ADDR 	0x5FFDF72A
 
@@ -94,6 +91,20 @@ typedef struct dev_cmd_reg_rw_t {
 	unsigned char  	hd_reserved[6];
 } dev_cmd_reg_rw;
 
+typedef struct dev_cmd_record_result_t {
+	unsigned int total_frame_number;
+	unsigned int error_frame_number;
+	unsigned int first_error_frame_counter;
+	unsigned int  last_error_frame_counter;
+} dev_cmd_record_result;
+
+typedef struct dev_cmd_playback_result_t {
+	unsigned int total_frame_number;
+	unsigned int error_frame_number;
+	unsigned int first_error_frame_counter;
+	unsigned int  last_error_frame_counter;
+} dev_cmd_playback_result;
+
 enum DSP_MODE {
 	FM_SMVD_DSP_BYPASS,		//the bypass mode of the dsp. in this mode the DMIC input is bypassed to codec.
 	FM_SMVD_DSP_DETECTION,
@@ -142,6 +153,8 @@ int lib_open_device(void);
 bool lib_close_device(void);
 char* get_cfg_location(void);
 char* get_sdcard_path(void);
+bool get_output_log(void);
+
 int get_mode(void);
 int set_mode(int dsp_mode);
 int get_reg_value(int reg_addr);
@@ -149,27 +162,28 @@ int set_reg_value(int reg_addr, int value);
 int get_dsp_mem_value(unsigned int mem_addr);
 int set_dsp_mem_value(unsigned int mem_addr, int value);
 int get_dsp_mem_value_spi(unsigned int mem_addr);
+int set_dsp_mem_value_spi(unsigned int mem_addr, int value);
 int start_debug_record(unsigned int ch_num, unsigned char* ch_idx, char* filepath);
 /*Fuli 20160926 we will get sample rate from DSP instead of input by user. will hardcode bits_per_sample to 16
 int stop_debug_record(char* wav_file_name, 
 						unsigned int sample_rate, unsigned int bits_per_sample);
 */
-int stop_debug_record(const char* wav_file_name, const unsigned char* channels);
+int stop_debug_record(const char* wav_file_name, const unsigned char* channels, dev_cmd_record_result *rec_result);
 int stop_debug_record_force(void);
-int stop_debug_record_by_ADBTool(const char* wav_file_name, const unsigned char* channels, int channel_number);
+int stop_debug_record_by_ADBTool(const char* wav_file_name, const unsigned char* channels, int channel_number, dev_cmd_record_result *rec_result);
 
 int get_channel_number(char* file_path);
 bool check_channel_mapping(int channel_num, char* channel_mapping);
 int start_spi_playback(char* channel_mapping, char* filepath);
 int start_spi_playback_by_ADBTool(char* channel_mapping, char* filepath,
 									unsigned char cPlayMode, unsigned char cPlayOutput);
-int stop_spi_playback();
+int stop_spi_playback(dev_cmd_playback_result *playback_result);
 int start_spi_playback_rec(char* channel_mapping, char* filepath, char need_recording, 
 			unsigned int rec_ch_num, unsigned char* rec_ch_idx, char* rec_filepath);
 int start_spi_playback_rec_by_ADBTool(char* channel_mapping, char* filepath, char need_recording, 
 			unsigned int rec_ch_num, unsigned char* rec_ch_idx, char* rec_filepath,
 			unsigned char cPlayMode, unsigned char cPlayOutput);
-int stop_spi_playback_rec(const char* wav_file_name, const unsigned char* channels);
+int stop_spi_playback_rec(const char* wav_file_name, const unsigned char* channels, dev_cmd_playback_result *playback_result);
 int is_playing();
 int close_cdev(int fm_cdev_hdl);
 

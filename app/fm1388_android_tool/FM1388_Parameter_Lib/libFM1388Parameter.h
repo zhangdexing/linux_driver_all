@@ -6,6 +6,7 @@
 #define LOGD printf
 #define READ_BUF_SIZE			1024
 #define MAX_PARAMETER_NUMBER	1024
+#define MAX_CMDLINE_LEN			1024
 #define SMALL_BUFFER_SIZE 		64
 #define LARGE_BUFFER_SIZE 		128
 #define COMMENT_LENGTH 			64
@@ -17,7 +18,7 @@
 #define MAX_MAP_CH_NUM			6
 #define DSP_SPI_CH_NUM			10
 #define MAX_FILEPATH_LEN		64
-#define MAX_PARAMETER_LEN		256
+#define MAX_PARAMETER_LEN		64
 #define PLACEHOLDER				'*'
 #define SPIPLAY					'P'
 #define SPIRECORD				'R'
@@ -89,7 +90,7 @@ typedef struct {
 int generate_result(RequestPara* para_list, int para_size, char* para_string);
 int generate_result_file(const char* file_path, RequestPara* para_list, int para_size);
 int parse_para(char* para_string, RequestPara* para_list, char delimiter);
-int parse_para_ile(const char* file_path, RequestPara* para_list, char delimiter);
+int parse_para_file(const char* file_path, RequestPara* para_list, char delimiter);
 int parse_mode(char* mode_string, ModeInfo* para_list, char delimiter);
 int parse_mode_file(const char* file_path, ModeInfo* para_list, char delimiter);
 int get_parameter_number(const char* file_path);

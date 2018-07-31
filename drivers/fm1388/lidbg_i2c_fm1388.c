@@ -39,6 +39,9 @@
 #include <linux/rtc.h>
 #include <linux/kthread.h>
 #include "fm_wav.h"
+#include <linux/sched.h>
+#include <linux/sched/rt.h>
+
 
 #include "i2c-fm1388.h"
 #include "lidbg.h"
@@ -97,20 +100,34 @@ int fm1388_config_status = false;
 #define CRC_STATUS 0x5ffdffe8
 #endif
 
-char filepath[255] = "/flysystem/lib/out/fm1388/";
+char default_filepath[255] = "/flysystem/lib/out/fm1388/";
 
 char filepath_name[255];
 
 #define CDEV_COUNT 1
 #define FM1388_CDEV_NAME 		"fm1388_smp"
 
-#define VERSION "1.0.1"
+#define VERSION "1.0.2"
 
 #define FM1388_SPI
 //#define FM1388_SPI_ENABLE
 
 #define VOICE_DATA_FILE_NAME 	"voice.dat"
-#define SDCARD_PATH 			"/sdcard/"
+#define DEFAULT_SDCARD_PATH		"/sdcard/"
+
+#define MAX_KFIFO_BUFFER_SIZE	320000 //40960
+
+#define USER_DEFINED_PATH_FILE	"user_defined_path.cfg"
+#define USER_VEC_PATH			"VEC_PATH="
+#define USER_KERNEL_SDCARD_PATH	"K_SD_PATH="
+#define USER_USER_SDCARD_PATH	"U_SD_PATH="
+#define USER_OUTPUT_LOG			"OUTPUT_LOG="
+#define USER_KERNEL_LOG_PREFIX	"klog-"
+#define USER_LOG_FOLDER			"FMLog"
+bool	b_output_log				= false;
+char 	SDCARD_PATH[MAX_PATH_LEN];
+char 	filepath[CONFIG_LINE_LEN];
+
 
 #ifdef CUBIE_TRUCK
 #define SPI_BURST_READ_SPEED 	12000000
@@ -128,7 +145,6 @@ static bool fm1388_is_dsp_on = false;	// is dsp power on? dsp is off in init tim
 //static unsigned int fm1388_dsp_mode = FM_SMVD_CFG_BARGE_IN;
 static int fm1388_dsp_mode = -1;	// DSP working mode, user define mode in .cfg file
 static bool fm1388_dsp_working 	= false; //set it to true after check firmware frame count is varied
-static bool toggle_flag = 0;
 static int current_mode = 0;	// DSP working mode, user define mode in .cfg file
 static struct mutex fm1388_index_lock, fm1388_dsp_lock, fm1388_mode_change_lock;
 static struct mutex fm1388_init_lock;
@@ -145,15 +161,12 @@ static short resumeAfterReinitCount = 0;
 
 dev_cmd_dv_fetch 			fetch_param;
 mm_segment_t 				oldfs;
-static u8 voice_buffer[FM1388_BUFFER_LEN] 		= {0};
-static u8 voice_buffer_temp[FM1388_BUFFER_LEN] 	= {0};
 
 dev_cmd_dv_playback			playback_param;
-static bool 				play_toggle_flag 		= 0;
-static u8 voice_buffer_play[FM1388_BUFFER_LEN] 		= {0};
-static u8 voice_buffer_play_temp[FM1388_BUFFER_LEN] = {0};
-static u32 play_status 								= 0;
-static u32 play_status_counter 						= 0;
+static u8 voice_buffer_play[FM1388_BUFFER_LEN] 	= {0};
+static u32 play_status 							= 0;
+static u32 play_status_counter 					= 0;
+
 
 //
 // show DSP frame counter and CRC, for debugging
@@ -177,8 +190,234 @@ void postwork_set_mode(void);
 int load_fm1388_mode_cfg(char *file_src, unsigned int choosed_mode);
 int load_fm1388_vec(char *file_src);
 char *combine_path_name(char *s, char *append);
+static void set_vec_file_path(void);
+
 
 struct file *openFile(char *path, int flag, int mode);
+#define FRAME_NUM		2		//the frame number, each time get from fifo and write to file
+#define MAX_TEST_COUNT 	128
+#define MAX_READY_CHECK	20480
+//#define OUTPUT_READY_STATE_DATA
+#define OUTPUT_ESLAPSE_DATA
+u32			record_error_counter 				= 0L;
+u32  		record_total_counter 				= 0L;
+u32			first_record_error_frame_counter 	= 0L;
+u32			last_record_error_frame_counter 	= 0L;
+u32			playback_error_counter 				= 0L;
+u32  		playback_total_counter 				= 0L;
+u32			first_playback_error_frame_counter 	= 0L;
+u32			last_playback_error_frame_counter 	= 0L;
+static u8	record_spi_buffer[DSP_OUTPUT_BUFFER_SIZE] 	= {0};
+static u8	temp_buffer[DSP_OUTPUT_BUFFER_SIZE * FRAME_NUM]	= {0};
+static u8	source_file_channel_number			= 0;
+static u32	source_file_total_size				= 0L;
+static u8 	temp_buffer1[FM1388_BUFFER_LEN] 	= {0};
+static u8 	temp_buffer2[FM1388_BUFFER_LEN] 	= {0};
+
+#ifdef OUTPUT_READY_STATE_DATA
+typedef struct ready_check_t {
+	struct timespec time;
+	u8				local_index;
+	u8				dsp_index;
+	u16				state;
+	u16				ready_state;
+	bool			hit;
+	u32				err_counter;
+	u32				counter;
+} ready_check;
+u16 record_ready_check_counter = 0;
+ready_check st_record_ready_check[MAX_READY_CHECK];
+u16 playback_ready_check_counter = 0;
+ready_check st_playback_ready_check[MAX_READY_CHECK];
+#endif
+
+#ifdef OUTPUT_ESLAPSE_DATA
+typedef struct eslapse_check_t {
+	struct timespec time;
+	u32				eslapse;
+	u32				counter;
+} eslapse_check;
+u16 record_eslapse_check_counter = 0;
+eslapse_check st_record_eslapse_check[MAX_TEST_COUNT];
+u16 playback_eslapse_check_counter = 0;
+eslapse_check st_playback_eslapse_check[MAX_TEST_COUNT];
+#endif
+
+typedef struct error_check_t {
+	struct timespec time;
+	u32				counter;
+	u16				state;
+	u8				index;
+	u8				dsp_index;
+	u32				error_counter;
+} error_check;
+u16 record_error_check_counter = 0;
+error_check st_record_error_check[MAX_TEST_COUNT];
+u16 playback_error_check_counter = 0;
+error_check st_playback_error_check[MAX_TEST_COUNT];
+
+
+
+
+
+//routines for output debug to file, 
+//we save log file under sdcard, it can not output log to file from driver starting,
+//sdcard fs is not ready at that time.
+/* Can not create or check folder existence on sdcard in kernel mode in simple way.
+int check_create_log_folder(void) {
+	int  ret = ESUCCESS;
+	char str_log_folder_path[MAX_PATH_LEN];
+	mm_segment_t	org_fs;
+	struct file*	filp  = NULL;  
+	
+	if(b_output_log == false) return ret;
+	
+	snprintf(str_log_folder_path, MAX_PATH_LEN, "%s%s/", SDCARD_PATH, USER_LOG_FOLDER);
+
+	org_fs = get_fs();
+	set_fs(KERNEL_DS);
+	
+	filp = filp_open(str_log_folder_path, O_CREAT | O_RDWR | O_DIRECTORY, 0666);  
+	if (IS_ERR(filp)) {  
+		pr_err("Cannot open kernel log folder(%s).\n", str_log_folder_path);  
+		set_fs(org_fs);
+		//b_output_log = false;
+		return -EFAILOPEN;
+	} 
+	else {
+		filp_close(filp, NULL);
+	}
+
+	set_fs(org_fs);
+	return ret;
+}
+*/
+
+
+int generate_log_file_name(char* file_name) {
+	struct timex txc;
+	struct rtc_time tm;
+	char str_today[32];
+	
+	if(file_name == NULL) return -1;
+	
+	if(b_output_log == false) return ESUCCESS;
+	
+	//get today's date
+	do_gettimeofday(&(txc.time));
+	rtc_time_to_tm(txc.time.tv_sec, &tm);
+	snprintf(str_today, 32, "%04d%02d%02d", (tm.tm_year + 1900), (tm.tm_mon + 1), tm.tm_mday);	
+
+	//combine log file name
+	snprintf(file_name, MAX_PATH_LEN, "%s%s/%s%s.txt", 
+			SDCARD_PATH, USER_LOG_FOLDER, USER_KERNEL_LOG_PREFIX, str_today);
+			
+	return ESUCCESS;
+}
+
+int get_output_log_file_path(char* str_log_file_path) {
+	int  ret = ESUCCESS;
+
+	if(str_log_file_path == NULL) return -1;
+	
+	/*
+	ret = check_create_log_folder();
+	if(ret != ESUCCESS) return ret;
+	*/
+	/*
+	if ((k_obj = kobject_create_and_add("/sdcard/sss", NULL)) == NULL ) {
+		pr_err("sss sys node create error \n");
+	}	
+	if ((k_obj = kobject_create_and_add("sysfs_demo", NULL)) == NULL ) {
+		pr_err("sysfs_demo sys node create error \n");
+	}	
+	*/
+	
+	ret = generate_log_file_name(str_log_file_path);
+	if(ret != ESUCCESS) return ret;
+	
+	return ESUCCESS;
+}
+
+int output_debug_log(bool output_console, const char *fmt, ...) {  
+    va_list  		argp;  
+    int 			ret = ESUCCESS;
+    char 			str_log_file_path[MAX_PATH_LEN];
+	struct timex 	txc;
+	struct rtc_time tm;
+ 	mm_segment_t	org_fs;
+	struct file*	filp  = NULL;  
+	char 			strTemp[CONFIG_LINE_LEN + 1];
+	
+   
+    if(fmt == NULL) return -EPARAMINVAL;
+ 
+    //not allow to output log
+    if(b_output_log == false) {
+		if(output_console == true) {
+			va_start(argp,  fmt);  
+			
+			vsnprintf(strTemp, CONFIG_LINE_LEN, fmt, argp);  
+			pr_err("%s", strTemp);
+			
+			va_end(argp);  
+		}
+		return ESUCCESS;
+	}
+   
+    //get log file path
+    memset(str_log_file_path, 0, MAX_PATH_LEN);
+	ret = get_output_log_file_path(str_log_file_path);
+    if(ret != ESUCCESS) return ret;
+    
+	org_fs = get_fs();
+	set_fs(KERNEL_DS);
+
+    //open file
+	filp = filp_open(str_log_file_path, O_CREAT | O_RDWR | O_APPEND, 0666);  
+	if (IS_ERR(filp)) {  
+		pr_err("Cannot open kernel log file(%s).\n", str_log_file_path);  
+		set_fs(org_fs);
+
+		if(output_console == true) {
+			va_start(argp,  fmt);  
+			
+			vsnprintf(strTemp, CONFIG_LINE_LEN, fmt, argp);  
+			pr_err("%s", strTemp);
+			
+			va_end(argp);  
+		}
+		return -EFAILOPEN;
+	}  
+
+	//get today's date time
+	do_gettimeofday(&(txc.time));
+	rtc_time_to_tm(txc.time.tv_sec, &tm);
+    
+    snprintf(strTemp,  CONFIG_LINE_LEN, "[%04d-%02d-%02d %02d:%02d:%02d]:  ", 
+				(tm.tm_year + 1900), (1 + tm.tm_mon), tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);  
+
+	filp->f_op->write(filp, (u8*)(strTemp), sizeof(char) * strlen(strTemp), &filp->f_pos);
+
+    va_start(argp,  fmt);  
+    vsnprintf(strTemp, CONFIG_LINE_LEN, fmt, argp);  
+	filp->f_op->write(filp, (u8*)(strTemp), sizeof(char) * strlen(strTemp), &filp->f_pos);
+
+    if(output_console == true) {
+		pr_err("%s", strTemp);
+	}
+    va_end(argp);  
+   
+
+	if(!IS_ERR(filp)) {
+		filp_close(filp, NULL);
+	}
+	
+	set_fs(org_fs);
+    return ESUCCESS;
+} 
+//
+
 
 static bool isFrameCountRise(void);
 
@@ -722,7 +961,7 @@ void FM1388_Burst_Write(u8 *pfEEProm[4], u32 fEEPromLen[4])
 }
 //End
 
-//set SPI status 
+//set SPI status
 u8 set_spi_rec_status( u16 new_state )
 {
     u8  err;
@@ -730,14 +969,14 @@ u8 set_spi_rec_status( u16 new_state )
     
     err = fm1388_spi_read( DSP_CMD_ADDR, &state, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
         return err;
     }
     
     state |= new_state;
     err = fm1388_spi_write(DSP_CMD_ADDR, state, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_write(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_write(). err = %x\n", __func__, err);
         return err;
     }
  
@@ -752,14 +991,14 @@ u8 enable_spi_rec( void )
     
     err = fm1388_spi_read( DSP_CMD_ADDR, &state, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
         return err;
     }
     
     state |= RECORD_ENABLE;
     err = fm1388_spi_write(DSP_CMD_ADDR, state, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_write(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_write(). err = %x\n", __func__, err);
         return err;
     }
 
@@ -774,14 +1013,14 @@ u8 disable_spi_rec( void )
     
     err = fm1388_spi_read( DSP_CMD_ADDR, &state, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
         return err;
     }
     
     state &= RECORD_ENABLE_RESET;
     err = fm1388_spi_write(DSP_CMD_ADDR, state, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_write(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_write(). err = %x\n", __func__, err);
         return err;
     }
 
@@ -789,143 +1028,116 @@ u8 disable_spi_rec( void )
 }
 
 //send CMD to FM1388 for checking SPI record is ready or not 
-u8 is_spi_rec_ready( void )
+u8 is_spi_rec_buf_ready(u8 buf_index)
 {
     u8  err = ESUCCESS;
-    u32 state;
-    
-    err = fm1388_spi_read( DSP_CMD_ADDR, &state, 2);
+    u32 temp_counter;
+    u32 dsp_buf_index;
+    u32	ready_state1, ready_state2;
+    u32  ready_state_all = 0;
+	u32	buffer_ready_word_addr[BUFFER_NUMBER] = {
+		RECORD_SYNC_BUFFER0_ADDR,
+		RECORD_SYNC_BUFFER1_ADDR,
+		RECORD_SYNC_BUFFER2_ADDR,
+		RECORD_SYNC_BUFFER3_ADDR };
+    u8	buf_ready_pattern[BUFFER_NUMBER][BUFFER_NUMBER] = {	{0x1, 0x3, 0x7, 0xF},
+															{0x2, 0x6, 0xE, 0xF},
+															{0x4, 0xC, 0xD, 0xF},
+															{0x8, 0x9, 0xB, 0xF}
+														};
+	
+    err = fm1388_spi_read( RECORD_ERROR_COUNTER_ADDR, &temp_counter, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
         return err;
     }
     
-    if( RECORD_READY != (state & RECORD_READY)) {
-        err = 100;
+	//if address is continuous, we can read 4 bytes once and use 2 read can get 4 buffer's ready word.
+    //read 4 buffer ready word, then combine them together
+    err = fm1388_spi_read( buffer_ready_word_addr[0], &ready_state1, 4);
+    if( err != 0 ){ 
+		output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+        return err;
     }
-    if( RECORD_ERROR == (state & RECORD_ERROR)) {
-    //    err = 101;
+    
+    err = fm1388_spi_read( buffer_ready_word_addr[2], &ready_state2, 4);
+    if( err != 0 ){ 
+		output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+        return err;
     }
-   
-    return err;
+
+    ready_state_all = (u32)(ready_state_all | (ready_state1 & 0x0001) | ((ready_state1 & 0x00010000) >> 15) |
+						((ready_state2 & 0x0001) << 2) | ((ready_state2 & 0x00010000) >> 13));
+/*    
+	output_debug_log(true, "[%s]: buffer index = %#x, ready_state=%04x, ready_state1=%08x, \
+		ready_state2=%08x, ready_state_all=%04x, temp_counter=%d\n", 
+			__func__, buf_index, ready_state, ready_state1, ready_state2, ready_state_all, temp_counter);
+*/
+	if(record_error_counter != temp_counter) {
+		if(record_error_check_counter == 0) first_record_error_frame_counter = record_total_counter;
+		last_record_error_frame_counter = record_total_counter;
+		
+		record_error_counter = temp_counter;
+		if(record_error_check_counter < MAX_TEST_COUNT) {
+			fm1388_spi_read( DSP_RECORD_BUFFER_INDEX_ADDR, &dsp_buf_index, 2);
+			
+			st_record_error_check[record_error_check_counter].counter = record_total_counter;
+			st_record_error_check[record_error_check_counter].index = buf_index;
+			st_record_error_check[record_error_check_counter].dsp_index = dsp_buf_index;
+			st_record_error_check[record_error_check_counter].state = ready_state_all;
+			st_record_error_check[record_error_check_counter].error_counter = temp_counter;
+			do_posix_clock_monotonic_gettime(&(st_record_error_check[record_error_check_counter].time));  
+		}
+		record_error_check_counter++;
+	}
+	
+#ifdef OUTPUT_READY_STATE_DATA 
+	fm1388_spi_read( DSP_RECORD_BUFFER_INDEX_ADDR, &dsp_buf_index, 2);
+	if(record_ready_check_counter < MAX_READY_CHECK) {
+		st_record_ready_check[record_ready_check_counter].dsp_index = dsp_buf_index;
+		st_record_ready_check[record_ready_check_counter].local_index = buf_index;
+		st_record_ready_check[record_ready_check_counter].state = ready_state_all;
+		st_record_ready_check[record_ready_check_counter].err_counter = temp_counter;
+		st_record_ready_check[record_ready_check_counter].counter = record_total_counter;
+		do_posix_clock_monotonic_gettime(&(st_record_ready_check[record_ready_check_counter].time));  
+		record_ready_check_counter ++;
+	}
+#endif
+	
+	//output_debug_log(true, "[%s]: buffer index = %#x, ready_state=%04x, ready_state_all=%04x\n", 
+	//	__func__, buf_index, ready_state, ready_state_all);
+    if(buf_ready_pattern[buf_index][3] == (ready_state_all & buf_ready_pattern[buf_index][3])) return 4;
+    if(buf_ready_pattern[buf_index][2] == (ready_state_all & buf_ready_pattern[buf_index][2])) return 3;
+    if(buf_ready_pattern[buf_index][1] == (ready_state_all & buf_ready_pattern[buf_index][1])) return 2;
+    if(buf_ready_pattern[buf_index][0] == (ready_state_all & buf_ready_pattern[buf_index][0])) return 1;
+    else return 0;
 }
 
 //get FM1388 status, reset the record ready bit, 
 //then send new status to FM1388 to let it record data to another buffer. 
-u8 spi_record_finish( void )
+u8 spi_record_buf_finish(u8 buf_index)
 {
-    u8  err   = ESUCCESS;
-    u32 state = 0;
+    u8  err = ESUCCESS;
+    u32 ready_state;
+	u32	buffer_ready_word_addr[BUFFER_NUMBER] = {
+		RECORD_SYNC_BUFFER0_ADDR,
+		RECORD_SYNC_BUFFER1_ADDR,
+		RECORD_SYNC_BUFFER2_ADDR,
+		RECORD_SYNC_BUFFER3_ADDR };
     
-    err = fm1388_spi_read( DSP_CMD_ADDR, &state, 2);
+    err = fm1388_spi_read( buffer_ready_word_addr[buf_index], &ready_state, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
         return err;
     }
 
-    state =( state | RECORD_ENABLE) & RECORD_READY_RESET; //reset record ready
-
-    err = fm1388_spi_write(DSP_CMD_ADDR, state, 2);
+    ready_state = 0;
+    err = fm1388_spi_write(buffer_ready_word_addr[buf_index], ready_state, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_write(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_write(). err = %x\n", __func__, err);
         return err;
     }
     return err;
-}
-
-void transform2wavformat(u32 ch_num, u32 framesize) {
-    u32  sr_num, i, j;
-    u16* pShortDest;
-    u16* pShortSource;
-
-    pShortDest    = (u16*)&voice_buffer;
-    pShortSource  = (u16*)&voice_buffer_temp;
-    sr_num        = framesize >> 1;//bytes to word
-    
-    memset(voice_buffer, 0, sizeof(char) * FM1388_BUFFER_LEN);
-    for(i = 0; i < sr_num; i++ ) {      
-        for(j = 0; j < ch_num; j++ ){
-           *pShortDest++ = *(pShortSource + i + j * sr_num);     
-        }        
-    } 
-}
-
-//just get all channels data from SPI for once
-//the caller should deal with when will stop
-int fm1388_fetch_block_data(void)
-{
-    int  err = ESUCCESS;
-	u8*  start_addr;
-	u32  spi_base_addr;
-	u8   channel_idx 	= 0;
-	int  is_ready 		= 0;
-	u32  offset			= 0;
-
-	fetch_param.ch_num = 10;
-	
-	
-    while (1) {
-		is_ready = is_spi_rec_ready();
-		if(!is_ready) {
-			if(toggle_flag) {
-				spi_base_addr = fetch_param.addr_output1;
-			}
-			else {
-				spi_base_addr = fetch_param.addr_output0;
-			}
-			
-			memset(voice_buffer_temp, 0, fetch_param.framesize * fetch_param.ch_num * sizeof(u8));
-
-			start_addr = voice_buffer_temp;
-			for(channel_idx = 0; channel_idx < fetch_param.ch_num; channel_idx ++) {
-				offset = channel_idx * fetch_param.framesize;
-				err = fm1388_spi_burst_read(spi_base_addr + offset,  
-											start_addr + offset,  
-											fetch_param.framesize );
-				if( err != ESUCCESS ){ 
-					lidbg(TAG"%s: error return from fm1388_spi_burst_read() = %#x\n", __func__, err);
-					break;
-				}
-			}
-
-			if(err != ESUCCESS) break;
-			
-			transform2wavformat(fetch_param.ch_num, fetch_param.framesize);
-			
-			toggle_flag = !toggle_flag;
-			err = spi_record_finish();
-			if( err != ESUCCESS ){ 
-				lidbg(TAG"%s: error return from spi_record_finish() = %#x\n", __func__, err);
-				break;
-			}
-			
-			break;
-		}
-		else {
-			usleep_range(100, 200);
-		}
-    } 
-	
-    return err;
-}
-
-void write_data2file(const char* filename, u8* data, u32 len) {
-	struct file *fp 	= NULL;
-
-	fp = filp_open(filename, O_CREAT | O_RDWR, S_IRWXU | S_IRWXG | S_IRWXO);
-	if (IS_ERR(fp)) {
-		lidbg(TAG"%s: open data file failed.\n", __func__);
-		return;
-	}
-	else {
-		fp->f_op->write(fp, data, len, &fp->f_pos);
-	}
-	
-	if(fp) {
-		filp_close(fp, NULL);
-	}
-
-	return;
 }
 
 /********************************************************************************************************
@@ -933,7 +1145,7 @@ void write_data2file(const char* filename, u8* data, u32 len) {
 * Argument(s) :  
 * 				*pdata          is point to where the source from  
 *                data_length     is data length to revert in bytes, must be X 8   
-* Return(s)   :  error number.            
+* Return(s)   :  error number.           
 ********************************************************************************************************/
 int swap_spi_data(u8* pdata, u32 data_length )
 {
@@ -942,7 +1154,7 @@ int swap_spi_data(u8* pdata, u32 data_length )
 	u8  temp;
     
  	if ((pdata == NULL) || (data_length == 0)) {
-		lidbg(TAG"%s: please provide valid parameter. pdata=0x%#x, data_length =%#x\n", 
+		output_debug_log(true, "[%s]: please provide valid parameter. pdata=0x%#x, data_length =%#x\n", 
 						__func__, *pdata, data_length);
 		return -EPARAMINVAL;
 	}
@@ -969,210 +1181,394 @@ bool valid_channel(u32 ch_num, u8* ch_idx, u8 channel_idx) {
 	return true;
 }
 
-int fm1388_fetch_voice_data_continous(void *data)
-{
-    int  err = ESUCCESS;
-	int  status;
-	u32  spi_base_addr;
-	int  is_ready 		= 0;
-	struct file *fpdata = NULL;
-	char data_file_path[MAX_PATH_LEN] = { 0 };
-	
-	//fuli 20160827 added to change spi speed before burst read
-	err = fm1388_spi_change_maxspeed(SPI_BURST_READ_SPEED);
-	if(err) {
-		lidbg(TAG"%s: fm1388_spi_change_maxspeed return value = %d\n", __func__, err);
-		fm1388_data->thread_id = NULL;
-		return err;
-	}
-	//	
-
-	status = enable_spi_rec();
-	if (status) {
-		err = -ECANNOTENRECORD;
-		fm1388_data->thread_id = NULL;
-		return err;
-	}
-
-	oldfs = get_fs();
-	set_fs(KERNEL_DS);
-	
-	snprintf(data_file_path, MAX_PATH_LEN, "%s%s", SDCARD_PATH, VOICE_DATA_FILE_NAME);
-	fpdata 	= filp_open(data_file_path, O_CREAT | O_RDWR, 0666);
-	if (IS_ERR(fpdata)) {
-		lidbg(TAG"%s: the file or path does not exist. %s\n", __func__, data_file_path);
-		set_fs(oldfs);
-		err = -EFAILOPEN;
-		fm1388_data->thread_id = NULL;
-		return err;
-	}
-	
-    while (!kthread_should_stop()) {
-		is_ready = is_spi_rec_ready();
-		//lidbg(TAG"%s: is_spi_rec_ready return value = %#x\n", __func__, err);
-		if(!is_ready) {
-			if(toggle_flag) {
-				spi_base_addr = fetch_param.addr_output1;
-			}
-			else {
-				spi_base_addr = fetch_param.addr_output0;
-			}
-			
-			memset(voice_buffer_temp, 0, FM1388_BUFFER_LEN * sizeof(u8));
-			err = fm1388_spi_burst_read(spi_base_addr,  voice_buffer_temp,  
-										fetch_param.framesize * fetch_param.ch_num);
-			if( err != ESUCCESS ){ 
-				lidbg(TAG"%s: fm1388_spi_burst_read return error = %#x\n", __func__, err);
-				break;
-			}
-
-			if(err != ESUCCESS) break;
-			
-			if(fpdata != NULL) {
-				fpdata->f_op->write(fpdata, (u8*)(voice_buffer_temp), fetch_param.framesize * fetch_param.ch_num, &fpdata->f_pos);
-			}
-			else {
-				lidbg(TAG"%s: open data file failed.\n", __func__);
-			}
-
-			toggle_flag = !toggle_flag;
-			
-			err = spi_record_finish();
-		}
-		else {
-			usleep_range(100, 200);
-		}
-    } 
-	
-	//disable record in DSP
-	disable_spi_rec();
-	
-	//lidbg(TAG"%s: total got %d blocks.\n", __func__, testcounter);
-	if(fpdata != NULL) {
-		filp_close(fpdata, NULL);
-	}
-	set_fs(oldfs);
-
-    return err;
-}
-
-int fm1388_fetch_voice_data_by_channel(void *data)
-{
-    int  err = 0;
-	u8*  start_addr;
-	int  status;
-	u32  spi_base_addr;
+int fetch_one_frame_voice_data(u32 spi_base_addr, u8* local_buffer, char* channel_need_rec) {
+    int  err 			= 0;
 	u8   channel_idx 	= 0;
-	int  is_ready 		= 0;
 	u32  offset			= 0;
 	u32  valid_offset	= 0;
+
+	if((local_buffer == NULL) || (channel_need_rec == NULL)) return -EPARAMINVAL;
+	
+	offset = 0;
+	valid_offset = 0;
+	for(channel_idx = 0; channel_idx < fetch_param.ch_num; channel_idx ++) {
+		offset = channel_need_rec[channel_idx] * fetch_param.framesize;
+		err = fm1388_spi_burst_read(spi_base_addr + offset,  
+									local_buffer + valid_offset,  
+									fetch_param.framesize );
+		if( err != ESUCCESS ) { 
+			output_debug_log(true, "[%s]: fm1388_spi_burst_read return error = %#x\n", __func__, err);
+			break;
+		}
+		
+		valid_offset += fetch_param.framesize;
+	}
+	
+if((record_total_counter >= 10) && (record_total_counter < 15)){
+		for(offset = 0; offset < 320; offset+=16) {
+			output_debug_log(true, "%02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x, %02x\n\n", 
+				local_buffer[offset+0], local_buffer[offset+1], local_buffer[offset+2], local_buffer[offset+3], local_buffer[offset+4], local_buffer[offset+5], local_buffer[offset+6], local_buffer[offset+7], 
+				local_buffer[offset+8], local_buffer[offset+9], local_buffer[offset+10], local_buffer[offset+11], local_buffer[offset+12], local_buffer[offset+13], local_buffer[offset+14], local_buffer[offset+15]);				
+		}
+	}
+
+	return err;
+}
+
+void init_global_variables( void ) {
+	record_error_counter = 0;
+	record_total_counter = 0;
+	first_record_error_frame_counter = 0L;
+	last_record_error_frame_counter = 0L;
+	record_error_check_counter = 0;
+	memset(st_record_error_check, 0, sizeof(error_check) * MAX_TEST_COUNT);
+	
+#ifdef OUTPUT_READY_STATE_DATA	
+	record_ready_check_counter = 0;
+	memset(st_record_ready_check, 0, sizeof(ready_check) * MAX_READY_CHECK);
+#endif
+	
+#ifdef OUTPUT_ESLAPSE_DATA
+	record_eslapse_check_counter = 0;
+	memset(st_record_eslapse_check, 0, sizeof(eslapse_check) * MAX_TEST_COUNT);
+#endif
+
+
+	playback_error_counter = 0;
+	playback_total_counter = 0;
+	first_playback_error_frame_counter = 0L;
+	last_playback_error_frame_counter = 0L;
+	playback_error_check_counter = 0;
+	memset(st_playback_error_check, 0, sizeof(error_check) * MAX_TEST_COUNT);
+	
+#ifdef OUTPUT_READY_STATE_DATA	
+	playback_ready_check_counter = 0;
+	memset(st_playback_ready_check, 0, sizeof(ready_check) * MAX_READY_CHECK);
+#endif
+	
+#ifdef OUTPUT_ESLAPSE_DATA
+	playback_eslapse_check_counter = 0;
+	memset(st_playback_eslapse_check, 0, sizeof(eslapse_check) * MAX_TEST_COUNT);
+#endif
+
+	return;
+}
+
+void output_record_debug_info( void ) {
+	int i = 0;
+#ifdef OUTPUT_READY_STATE_DATA    
+	u32 eslapse = 0L;
+#endif
+	
+	if(record_error_check_counter > 0) {
+		output_debug_log(true, "[%s]: recording loss frame happend around below frame counter:%d\n", 
+							__func__, record_error_check_counter);
+		for(i = 0; i < MAX_TEST_COUNT; i++) {
+			if(i < record_error_check_counter) {
+				output_debug_log(true, "[%d]:%05d.%ld:\t%ld\t%ld\t%d\t%d\t%04x\n", i, 
+					st_record_error_check[i].time.tv_sec, 
+					st_record_error_check[i].time.tv_nsec, 
+					(i > 0) ? (st_record_error_check[i].counter + st_record_error_check[i - 1].error_counter) : st_record_error_check[i].counter,
+					st_record_error_check[i].error_counter,
+					st_record_error_check[i].index,
+					st_record_error_check[i].dsp_index,
+					st_record_error_check[i].state);
+			}
+		}	
+	}
+
+#ifdef OUTPUT_READY_STATE_DATA    
+	output_debug_log(false, "[%s]: recording ready check result:\n", __func__);
+	if(record_ready_check_counter > 0) {
+		for(i = 0; i < MAX_READY_CHECK; i++) {
+			if(i < record_ready_check_counter) {
+				eslapse = 0;
+				if(i >= 1) {
+					eslapse = (unsigned long)((long)(st_record_ready_check[i].time.tv_sec - st_record_ready_check[i - 1].time.tv_sec) * 1000000000L + 
+						((long)(st_record_ready_check[i].time.tv_nsec - st_record_ready_check[i - 1].time.tv_nsec)));
+				}
+				
+				output_debug_log(false, "[%d]:%05d.%ld:\t%09ld\t%02d\t%02d\t%04x\t%09d\t%09d\n", i, 
+					st_record_ready_check[i].time.tv_sec, 
+					st_record_ready_check[i].time.tv_nsec, 
+					eslapse, 
+					st_record_ready_check[i].local_index, 
+					st_record_ready_check[i].dsp_index, 
+					st_record_ready_check[i].state,
+					st_record_ready_check[i].err_counter,
+					st_record_ready_check[i].counter);
+			}
+		}	
+	}
+#endif
+	
+	return;
+}
+
+int fm1388_push_data_to_fifo(u8* data_buffer, u16 data_size) {
+	u32 fifo_avail = 0L;
+	unsigned long timeout = jiffies + msecs_to_jiffies(2);
+	u32 ret = 0L;
+
+	if(data_buffer == NULL) return ret;
+	
+	spin_lock(&fm1388_data->rec_lock);
+	fifo_avail = kfifo_avail(fm1388_data->rec_kfifo);
+	spin_unlock(&fm1388_data->rec_lock);
+	timeout = jiffies + msecs_to_jiffies(2);
+	while ((fifo_avail < data_size) && time_before(jiffies, timeout)) {
+		usleep_range(200, 300);		//reduce the sleep time causes time reduce from fetch end to next fetch
+		spin_lock(&fm1388_data->rec_lock);
+		fifo_avail = kfifo_avail(fm1388_data->rec_kfifo);
+		spin_unlock(&fm1388_data->rec_lock);
+	}
+	
+	if (fifo_avail < data_size) {
+		output_debug_log(true, "[%s]: will lost one frame data for no enough space in fifo.\n", __func__);
+	}
+	else {
+		ret = kfifo_in_spinlocked(fm1388_data->rec_kfifo, data_buffer, data_size, &fm1388_data->rec_lock);
+	}
+
+	return ret;
+}
+
+int fm1388_save_audio_data_to_file(void* data) {
+	unsigned long timeout = jiffies + msecs_to_jiffies(2);
 	struct file *fpdata = NULL;
 	char data_file_path[MAX_PATH_LEN] = { 0 };
+	int	 data_size 		= 0;
+	int  kfifo_data_len;
+	u16  ret = 0;
+	u32	 total_gotten = 0L;
+#ifdef OUTPUT_ESLAPSE_DATA    
+	struct timespec start_time, end_time;  
+	u32	 eslapse		= 0L;
+	u32  max_eslapse 	= 0L;
+#endif
 
-	struct timex    txc_start;
-	struct timex    txc_stop;
-	long eslapse = 0L;
-	int  over_time_counter = 0;
+	output_debug_log(true, "[%s]: start save data thread.\n", __func__);
+	oldfs = get_fs();
+	set_fs(KERNEL_DS);
+	
+	data_size = fetch_param.ch_num * fetch_param.framesize * FRAME_NUM;
+
+	//snprintf(data_file_path, MAX_PATH_LEN, "%s%s", SDCARD_PATH, VOICE_DATA_FILE_NAME);
+	snprintf(data_file_path, MAX_PATH_LEN, "%s%s", SDCARD_PATH, VOICE_DATA_FILE_NAME);
+	fpdata 	= filp_open(data_file_path, O_CREAT | O_RDWR, 0666);
+	if (IS_ERR(fpdata)) {
+		output_debug_log(true, "[%s]: the file or path does not exist. %s\n", __func__, data_file_path);
+		set_fs(oldfs);
+		return -EFAILOPEN;
+	}
+
+    while (!kthread_should_stop()) {
+#ifdef OUTPUT_ESLAPSE_DATA    
+		do_posix_clock_monotonic_gettime(&start_time);  
+#endif
+		spin_lock(&fm1388_data->rec_lock);
+		kfifo_data_len = kfifo_len(fm1388_data->rec_kfifo);
+		spin_unlock(&fm1388_data->rec_lock);
+		timeout = jiffies + msecs_to_jiffies(10);
+		while ((kfifo_data_len < data_size) && time_before(jiffies, timeout)) {
+			usleep_range(200, 300);
+			spin_lock(&fm1388_data->rec_lock);
+			kfifo_data_len = kfifo_len(fm1388_data->rec_kfifo);
+			spin_unlock(&fm1388_data->rec_lock);
+		}
+
+		if(kfifo_data_len < data_size) {
+			//output_debug_log(true, "[%s]: no enough data in fifo.\n", __func__);
+		}
+		else {
+			ret = kfifo_out_spinlocked(fm1388_data->rec_kfifo, temp_buffer, data_size, &fm1388_data->rec_lock);
+			total_gotten += ret;
+			if(!IS_ERR(fpdata)) {
+				fpdata->f_op->write(fpdata, (u8*)(temp_buffer), data_size, &fpdata->f_pos);
+#ifdef OUTPUT_ESLAPSE_DATA    
+				do_posix_clock_monotonic_gettime(&end_time);  
+				eslapse = (unsigned long)((long)(end_time.tv_sec - start_time.tv_sec) * 1000000000L + 
+						(long)(end_time.tv_nsec - start_time.tv_nsec));
+								
+				if(eslapse > max_eslapse) max_eslapse = eslapse;
+#endif
+			}
+			else {
+				output_debug_log(true, "[%s]: open data file failed.\n", __func__);
+			}
+		}
+
+		usleep_range(300, 400);
+	} 
+
+	if(!IS_ERR(fpdata)) {
+		filp_close(fpdata, NULL);
+	}
+	set_fs(oldfs);
+
+	fm1388_data->save_data_thread_id = NULL;
+
+	output_debug_log(true, "[%s]: totally got data %d.\n", __func__, total_gotten);
+#ifdef OUTPUT_ESLAPSE_DATA    
+	output_debug_log(true, "[%s]: max. eslapse:%d\n", __func__, max_eslapse);
+#endif
+	output_debug_log(true, "[%s]: exit save data thread.\n", __func__);
+	return ESUCCESS;
+}
+
+int fm1388_fetch_voice_data_by_channel_4buffers(void *data) {
+    int  err = 0;
+	u8*  start_addr;
+	u32  spi_base_addr;
+	u8   channel_idx 	= 0;
+	int  ready_num 		= 0;
+	u16	 cur_buffer		= 0;
+	u16	 i;
+	char channel_need_rec[DSP_SPI_REC_CH_NUM];
+	u16	 data_size 		= 0;
+#ifdef OUTPUT_ESLAPSE_DATA    
+	struct timespec start_time, end_time, init_time, end_time_1;  
+	u32	 eslapse		= 0L;
+	u32  max_eslapse 	= 0L;
+#endif
+	u32 total_put = 0L, ret = 0L;
+	
+		
+	output_debug_log(true, "[%s]: start SPI recording thread.\n", __func__);
 
 	//fuli 20160827 added to change spi speed before burst read
 	err = fm1388_spi_change_maxspeed(SPI_BURST_READ_SPEED);
 	if(err) {
-		lidbg(TAG"%s: fm1388_spi_change_maxspeed return value = %d\n", __func__, err);
+		output_debug_log(true, "[%s]: fm1388_spi_change_maxspeed return value = %d\n", __func__, err);
 		fm1388_data->thread_id = NULL;
 		return err;
 	}
 	//	
 
-	status = enable_spi_rec();
-	if (status) {
+	data_size = fetch_param.ch_num * fetch_param.framesize;
+	start_addr = record_spi_buffer;
+	init_global_variables();
+
+	i = 0;
+	memset(channel_need_rec, 0, sizeof(char) * DSP_SPI_REC_CH_NUM);
+	for(channel_idx = 0; (channel_idx < DSP_SPI_REC_CH_NUM); channel_idx ++) {
+		if(!valid_channel(fetch_param.ch_num, fetch_param.ch_idx, channel_idx)) {
+			continue;
+		}
+		channel_need_rec[i] = channel_idx;
+		i++;
+	}
+
+	err = enable_spi_rec();
+	if (err) {
 		err = -ECANNOTENRECORD;
+
 		fm1388_data->thread_id = NULL;
+		output_debug_log(true, "[%s]: Fail to enable SPI Recording.\n", __func__);
 		return err;
 	}
 
-	oldfs = get_fs();
-	set_fs(KERNEL_DS);
-	snprintf(data_file_path, MAX_PATH_LEN, "%s%s", SDCARD_PATH, VOICE_DATA_FILE_NAME);
-	fpdata 	= filp_open(data_file_path, O_CREAT | O_RDWR, 0666);
-	if (IS_ERR(fpdata)) {
-		lidbg(TAG"%s: the file or path does not exist. %s\n", __func__, data_file_path);
-		set_fs(oldfs);
-		err = -EFAILOPEN;
-		fm1388_data->thread_id = NULL;
-		return err;
-	}
-	
+#ifdef OUTPUT_ESLAPSE_DATA    
+	do_posix_clock_monotonic_gettime(&init_time);  
+#endif
     while (!kthread_should_stop()) {
-do_gettimeofday(&(txc_start.time));
-		is_ready = is_spi_rec_ready();
-		//lidbg(TAG"%s: is_spi_rec_ready return value = %#x\n", __func__, err);
-		if(!is_ready) {
-			if(toggle_flag) {
-				spi_base_addr = fetch_param.addr_output1;
-			}
-			else {
-				spi_base_addr = fetch_param.addr_output0;
-			}
-			
-			memset(voice_buffer_temp, 0, FM1388_BUFFER_LEN * sizeof(u8));
-
-			start_addr = voice_buffer_temp;
-			offset = 0;
-			valid_offset = 0;
-			for(channel_idx = 0; (channel_idx < DSP_SPI_REC_CH_NUM); channel_idx ++) {
-				if(!valid_channel(fetch_param.ch_num, fetch_param.ch_idx, channel_idx)) {
-					offset += fetch_param.framesize;
-					continue;
-				}
-
-				err = fm1388_spi_burst_read(spi_base_addr + offset,  
-											start_addr + valid_offset,  
-											fetch_param.framesize );
-				if( err != ESUCCESS ){ 
-					lidbg(TAG"%s: fm1388_spi_burst_read return error = %#x\n", __func__, err);
-					break;
-				}
+		ready_num = is_spi_rec_buf_ready(cur_buffer);
+		if((ready_num < 0) || (ready_num > 4))
+			output_debug_log(true, "[%s]: is_spi_rec_ready return value = %#x\n", __func__, ready_num);
+		if(ready_num > 0) {
+			do {
+#ifdef OUTPUT_ESLAPSE_DATA    
+				do_posix_clock_monotonic_gettime(&start_time);  
+#endif
+				spi_base_addr = fetch_param.addr_output0 + cur_buffer * DSP_OUTPUT_BUFFER_SIZE;//buffer_size;
 				
-				offset += fetch_param.framesize;
-				valid_offset += fetch_param.framesize;
-			}
+				err = fetch_one_frame_voice_data(spi_base_addr, start_addr, channel_need_rec);
+				if(err != ESUCCESS) break;
 
+				err = spi_record_buf_finish(cur_buffer);
+				record_total_counter++;
+
+#ifdef OUTPUT_ESLAPSE_DATA    
+								do_posix_clock_monotonic_gettime(&end_time_1);	
+#endif
+
+				ret = fm1388_push_data_to_fifo(start_addr, data_size);	
+				total_put += ret;
+				cur_buffer = (cur_buffer + 1) & 0x03;
+
+#ifdef OUTPUT_ESLAPSE_DATA    
+				do_posix_clock_monotonic_gettime(&end_time);  
+				eslapse = (unsigned long)((long)(end_time.tv_sec - start_time.tv_sec) * 1000000000L + 
+						(long)(end_time.tv_nsec - start_time.tv_nsec));
+								
+				if(eslapse > max_eslapse) max_eslapse = eslapse;
+				if(eslapse > 20000000L) {
+					if(record_eslapse_check_counter < (MAX_TEST_COUNT - 1)) {
+						st_record_eslapse_check[record_eslapse_check_counter].counter = record_total_counter;
+						st_record_eslapse_check[record_eslapse_check_counter].eslapse = eslapse;
+						do_posix_clock_monotonic_gettime(&(st_record_eslapse_check[record_eslapse_check_counter].time));  
+						record_eslapse_check_counter++;
+
+						eslapse = (unsigned long)((long)(end_time.tv_sec - end_time_1.tv_sec) * 1000000000L + 
+								(long)(end_time.tv_nsec - end_time_1.tv_nsec));
+						st_record_eslapse_check[record_eslapse_check_counter].counter = record_total_counter;
+						st_record_eslapse_check[record_eslapse_check_counter].eslapse = eslapse;
+						do_posix_clock_monotonic_gettime(&(st_record_eslapse_check[record_eslapse_check_counter].time));  
+						record_eslapse_check_counter++;
+					}
+				}
+
+#endif
+
+				ready_num --;
+			} while(ready_num > 0);
 			if(err != ESUCCESS) break;
-			
-			if(fpdata != NULL) {
-				fpdata->f_op->write(fpdata, (u8*)(voice_buffer_temp), fetch_param.framesize * fetch_param.ch_num, &fpdata->f_pos);
-			}
-			else {
-				lidbg(TAG"%s: open data file failed.\n", __func__);
-			}
-
-			toggle_flag = !toggle_flag;
-			
-			err = spi_record_finish();
 		}
 		else {
-			usleep_range(100, 200);
+			//usleep_range(100, 200);
 		}
-do_gettimeofday(&(txc_stop.time));
-eslapse = (unsigned long)((unsigned long)(txc_stop.time.tv_sec - txc_start.time.tv_sec) * 1000000L + 
-				(unsigned long)(txc_stop.time.tv_usec - txc_start.time.tv_usec));
-if(eslapse > 10000) over_time_counter++;
     } 
+    err = fm1388_spi_read( RECORD_ERROR_COUNTER_ADDR, &record_error_counter, 2);
 	
 	//disable record in DSP
 	disable_spi_rec();
-	
-lidbg(TAG"%s: play and record over time %d times\n", __func__, over_time_counter);
-	if(fpdata != NULL) {
-		filp_close(fpdata, NULL);
-	}
-	set_fs(oldfs);
+	fm1388_data->thread_id = NULL;
 
+	output_debug_log(true, "[%s]: totally put data %d.\n", __func__, total_put);
+	
+	output_record_debug_info();
+#ifdef OUTPUT_ESLAPSE_DATA    
+	output_debug_log(true, "[%s]: record %d frames. loss %d frames, max_eslapse=%ld, \
+	first_lost_happen_at=%ld, last_lost_happen_at=%ld\n", 
+			__func__, record_total_counter + record_error_counter, record_error_counter, max_eslapse, 
+			first_record_error_frame_counter, last_record_error_frame_counter);
+#else
+	output_debug_log(true, "[%s]: record %d frames. loss %d frames, first_lost_happen_at=%ld, last_lost_happen_at=%ld\n", 
+			__func__, record_total_counter + record_error_counter, record_error_counter, 
+			first_record_error_frame_counter, last_record_error_frame_counter);
+#endif
+
+#ifdef OUTPUT_ESLAPSE_DATA    
+	eslapse = (unsigned long)((long)(end_time.tv_sec - init_time.tv_sec) * 1000000L + 
+				((long)(end_time.tv_nsec - init_time.tv_nsec) / 1000));
+	output_debug_log(true, "[%s]: recording total consumed time=%ld\n", __func__, eslapse);
+
+	if(record_eslapse_check_counter > 0) {
+		output_debug_log(true, "[%s]: recording eslapse_check result:%d\n", __func__, record_eslapse_check_counter);
+		for(i = 0; i < MAX_TEST_COUNT; i++) {
+			if(i < record_eslapse_check_counter) {
+				output_debug_log(true, "[%d]:%05d.%ld:\t%ld\t%ld\n", i, 
+					st_record_eslapse_check[i].time.tv_sec, 
+					st_record_eslapse_check[i].time.tv_nsec, 
+					st_record_eslapse_check[i].counter, 
+					st_record_eslapse_check[i].eslapse);
+			}
+		}	
+	}
+#endif
+	output_debug_log(true, "[%s]: end up SPI recording thread.\n", __func__);
     return err;
 }
-
-
-
 
 //set SPI playback status
 u8 set_spi_play_status( u16 new_state )
@@ -1182,14 +1578,14 @@ u8 set_spi_play_status( u16 new_state )
     
     err = fm1388_spi_read( DSP_CMD_ADDR, &state, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
         return err;
     }
     
     state |= new_state;
     err = fm1388_spi_write(DSP_CMD_ADDR, state, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_write(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_write(). err = %x\n", __func__, err);
         return err;
     }
  
@@ -1203,20 +1599,19 @@ u8 enable_spi_play( void )
     u32 state;
     
     err = fm1388_spi_read( DSP_CMD_ADDR, &state, 2);
-	//lidbg(TAG"%s: spi playback status= %04x\n", __func__, state);
+	//output_debug_log(true, "[%s]: spi playback status= %04x\n", __func__, state);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
         return err;
     }
     
-    state |= PLAY_ENABLE;
-    state &= PLAY_READY_RESET;
+    state = state | PLAY_ENABLE | RECORD_ENABLE;
 
-	//lidbg(TAG"%s: spi playback new status= %04x\n", __func__, state);
+	//output_debug_log(true, "[%s]: spi playback new status= %04x\n", __func__, state);
     err = fm1388_spi_write(DSP_CMD_ADDR, state, 2);
-	//lidbg(TAG"%s: after calling SPI, err= %x\n", __func__, err);
+	//output_debug_log(true, "[%s]: after calling SPI, err= %x\n", __func__, err);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_write(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_write(). err = %x\n", __func__, err);
         return err;
     }
 
@@ -1230,81 +1625,146 @@ u8 disable_spi_play( void )
     u32 state;
     
     err = fm1388_spi_read( DSP_CMD_ADDR, &state, 2);
-	//lidbg(TAG"%s: spi playback status= %04x\n", __func__, state);
+	//output_debug_log(true, "[%s]: spi playback status= %04x\n", __func__, state);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
         return err;
     }
     
     state &= PLAY_ENABLE_RESET;
-    state &= PLAY_READY_RESET;
-    state &= RECORD_READY_RESET;
     state &= RECORD_ENABLE_RESET; //for we set Record enable in spi_playback_data_ready(), so reset it when finished playback.
 	
-	lidbg(TAG"%s: spi playback new status= %04x\n", __func__, state);
+	output_debug_log(true, "[%s]: spi playback new status= %04x\n", __func__, state);
     err = fm1388_spi_write(DSP_CMD_ADDR, state, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_write(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_write(). err = %x\n", __func__, err);
         return err;
     }
-	fm1388_fw_loaded(NULL); //zhl add 
+
     return err;
 }
 
 //send CMD to FM1388 for checking SPI playback buffer is ready or not 
-u8 is_spi_playback_buffer_ready( void )
+u8 is_spi_playback_buffer_ready( u8 buf_index, u8 is_recording )
 {
-    u8  err = ESUCCESS;
+    u8  err = ESUCCESS, i;
+    u32 temp_counter;
+#ifdef OUTPUT_READY_STATE_DATA 
     u32 state;
-    
-    err = fm1388_spi_read( DSP_CMD_ADDR, &state, 2);
-	//lidbg(TAG"%s: spi playback status= %04x\n", __func__, state);
+#endif
+    u32 dsp_buf_index;
+    u32	ready_state_array[BUFFER_NUMBER];
+    u32 ready_state_all = 0;
+	u32	buffer_ready_word_addr[BUFFER_NUMBER] = {
+		PLAYBACK_SYNC_BUFFER0_ADDR,
+		PLAYBACK_SYNC_BUFFER1_ADDR,
+		PLAYBACK_SYNC_BUFFER2_ADDR,
+		PLAYBACK_SYNC_BUFFER3_ADDR };
+
+    u8	buf_ready_pattern[BUFFER_NUMBER][BUFFER_NUMBER] = {	{0xE, 0xC, 0x8, 0x0},
+															{0xD, 0x9, 0x1, 0x0},
+															{0xB, 0x3, 0x2, 0x0},
+															{0x7, 0x6, 0x4, 0x0}
+														};
+
+	
+    err = fm1388_spi_read( PLAYBACK_ERROR_COUNTER_ADDR, &temp_counter, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
         return err;
     }
-    
-    //check the ready bit is zero or not, zero means the buffer is empty for writing
-    if( PLAY_READY == (state & PLAY_READY)) {
-        err = 100;
-    }
 
-    if( PLAY_ERROR == (state & PLAY_ERROR)) {
-		lidbg(TAG"%s: got playback error in sync word.\n", __func__);
-        err = 101;
-    }
-    
-    if( RECORD_ERROR == (state & RECORD_ERROR)) {
-		lidbg(TAG"%s: got record error in sync word.\n", __func__);
-		msleep(100);
-        err = 102;
-    }
-    
-    return err;
+	for(i = 0; i < BUFFER_NUMBER; i++) {
+		err = fm1388_spi_read( buffer_ready_word_addr[i], &(ready_state_array[i]), 2);
+		if( err != 0 ){ 
+			output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+			return err;
+		}
+	}
+	ready_state_all = (u32)((ready_state_array[0] & 0x0001) | ((ready_state_array[1] & 0x0001) << 1) |
+						((ready_state_array[2] & 0x0001) << 2) | ((ready_state_array[3] & 0x0001) << 3));
+
+		
+	if(playback_error_counter != temp_counter) {
+		if(playback_error_check_counter == 0) first_playback_error_frame_counter = playback_total_counter;
+		last_playback_error_frame_counter = playback_total_counter;
+		
+		playback_error_counter = temp_counter;
+		if(playback_error_check_counter < MAX_TEST_COUNT) {
+			fm1388_spi_read( DSP_PLAYBACK_BUFFER_INDEX_ADDR, &dsp_buf_index, 2);
+
+			st_playback_error_check[playback_error_check_counter].counter 	= playback_total_counter;
+			st_playback_error_check[playback_error_check_counter].index 	= buf_index;
+			st_playback_error_check[playback_error_check_counter].dsp_index = dsp_buf_index;
+			st_playback_error_check[playback_error_check_counter].state 	= ready_state_all;
+			st_playback_error_check[playback_error_check_counter].error_counter = temp_counter;
+			do_posix_clock_monotonic_gettime(&(st_playback_error_check[playback_error_check_counter].time));  
+		}
+		playback_error_check_counter++;
+	}
+	
+#ifdef OUTPUT_READY_STATE_DATA 
+	fm1388_spi_read( DSP_PLAYBACK_BUFFER_INDEX_ADDR, &dsp_buf_index, 2);
+	if(playback_ready_check_counter < MAX_READY_CHECK) {
+		err = fm1388_spi_read( DSP_CMD_ADDR, &state, 2);
+		if( err != 0 ){ 
+			output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+			return err;
+		}
+		
+		st_playback_ready_check[playback_ready_check_counter].dsp_index 	= dsp_buf_index;
+		st_playback_ready_check[playback_ready_check_counter].local_index 	= buf_index;
+		st_playback_ready_check[playback_ready_check_counter].state 		= state;
+		st_playback_ready_check[playback_ready_check_counter].ready_state 	= ready_state_all;
+		st_playback_ready_check[playback_ready_check_counter].err_counter 	= temp_counter;
+		st_playback_ready_check[playback_ready_check_counter].counter 		= playback_total_counter;
+		do_posix_clock_monotonic_gettime(&(st_playback_ready_check[playback_ready_check_counter].time));  
+		playback_ready_check_counter ++;
+	}
+#endif
+	//output_debug_log(true, "[%s]: buffer index = %#x, ready_state=%04x, ready_state_all=%04x\n", 
+	//	__func__, buf_index, ready_state, ready_state_all);
+
+	if(is_recording == 1) {
+		if(ready_state_array[buf_index] == 0) return 1;
+		else return 0;
+	}
+	else {
+		if(buf_ready_pattern[buf_index][3] == (ready_state_all | buf_ready_pattern[buf_index][3])) return 4;
+		if(buf_ready_pattern[buf_index][2] == (ready_state_all | buf_ready_pattern[buf_index][2])) return 3;
+		if(buf_ready_pattern[buf_index][1] == (ready_state_all | buf_ready_pattern[buf_index][1])) return 2;
+		if(buf_ready_pattern[buf_index][0] == (ready_state_all | buf_ready_pattern[buf_index][0])) return 1;
+		else return 0;
+	}
 }
 
 //get FM1388 status, reset the playback ready bit, 
-//then send new status to FM1388 to let it playback data to another buffer. 
-u8 spi_playback_data_ready( void )
+//then send new status to FM1388 to let it playback data. 
+u8 spi_playback_data_ready( u8 buf_index )
 {
     u8  err   = ESUCCESS;
-    u32 new_state, state = 0;
-    
-    err = fm1388_spi_read( DSP_CMD_ADDR, &state, 2);
+    //u32 ready_state = 0;
+	u32	buffer_ready_word_addr[BUFFER_NUMBER] = {
+		PLAYBACK_SYNC_BUFFER0_ADDR,
+		PLAYBACK_SYNC_BUFFER1_ADDR,
+		PLAYBACK_SYNC_BUFFER2_ADDR,
+		PLAYBACK_SYNC_BUFFER3_ADDR };
+    /*
+    err = fm1388_spi_read( buffer_ready_word_addr[buf_index], &ready_state, 2);
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_read(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_read(). err = %x\n", __func__, err);
         return err;
     }
 
-    new_state = (state | PLAY_ENABLE | PLAY_READY | RECORD_ENABLE); //set playback ready, if not set RECORD_ENABLE, it does not work.
-    //new_state = (state | PLAY_ENABLE | PLAY_READY | RECORD_ENABLE) & RECORD_READY_RESET; //set playback ready, if not set RECORD_ENABLE, it does not work.
-	
-	//lidbg(TAG"%s: spi playback status=%04x, new status= %04x\n", __func__, state, new_state);
-    err = fm1388_spi_write(DSP_CMD_ADDR, new_state, 2);
+    ready_state = 1;
+    */
+		err = fm1388_spi_write(buffer_ready_word_addr[buf_index], 1, 2);
+
     if( err != 0 ){ 
-		lidbg(TAG"%s: error return from fm1388_spi_write(). err = %x\n", __func__, err);
+		output_debug_log(true, "[%s]: error return from fm1388_spi_write(). err = %x\n", __func__, err);
         return err;
     }
+
     return err;
 }
 
@@ -1312,41 +1772,70 @@ int get_wav_header(struct file* fpdata, wav_header* header) {
 	int ret = ESUCCESS;
 	
 	if(fpdata == NULL) {
-		lidbg(TAG"%s: file pinter is invalid\n", __func__);
+		output_debug_log(true, "[%s]: file pinter is invalid\n", __func__);
 		return -EPARAMINVAL;
 	}
 	
 	if(header == NULL) {
-		lidbg(TAG"%s: parameter--header is null.\n", __func__);
+		output_debug_log(true, "[%s]: parameter--header is null.\n", __func__);
 		return -EPARAMINVAL;
 	}
 	
 	ret = fpdata->f_op->read(fpdata, (u8*)(header), sizeof(wav_header), &fpdata->f_pos);
 
 	if ((ret <= 0) || (ret != sizeof(wav_header))) {
-		lidbg(TAG"%s: Error occurs when read wav file header.\n", __func__);
+		output_debug_log(true, "[%s]: Error occurs when read wav file header.\n", __func__);
 		return -EFILECANNOTREAD;
 	}
 	
 	return ESUCCESS;
 }
 
+int fm1388_pull_data_from_fifo(u8* data_buffer, u16 data_size) {
+	u32 kfifo_data_len = 0L;
+	unsigned long timeout = jiffies + msecs_to_jiffies(2);
+	u32 ret = 0L;
+
+	if(data_buffer == NULL) return ret;
+	
+	spin_lock(&fm1388_data->play_lock);
+	kfifo_data_len = kfifo_len(fm1388_data->play_kfifo);
+	spin_unlock(&fm1388_data->play_lock);
+	timeout = jiffies + msecs_to_jiffies(5);
+	while ((kfifo_data_len < data_size) && time_before(jiffies, timeout)) {
+		usleep_range(100, 200);
+		spin_lock(&fm1388_data->play_lock);
+		kfifo_data_len = kfifo_len(fm1388_data->play_kfifo);
+		spin_unlock(&fm1388_data->play_lock);
+	}
+
+	if(kfifo_data_len < data_size) {
+		output_debug_log(true, "[%s]: no enough data in fifo, may cause frame loss.\n", __func__);
+	}
+	else {
+		ret = kfifo_out_spinlocked(fm1388_data->play_kfifo, data_buffer, data_size, &fm1388_data->play_lock);
+	}
+
+	return ret;
+}
+
+
 //collect sample data together for one channel
 //then move the channel data to target buffer location
 //at last, swap data per 8 bytes--it is required by SPI
-uint8_t get_channel_data(uint8_t* buffer, uint32_t frame_size, uint8_t channel_number, char* channel_mapping, uint8_t* channel_data) {
-	uint16_t *pDest, *pSource;
-	uint32_t sr_num;
-	uint32_t i, j;
-	uint8_t	 target_channel = 0;
+u8 get_channel_data(u8* buffer, u32 frame_size, u8 channel_number, char* channel_mapping, u8* channel_data) {
+	u16 *pDest, *pSource;
+	u32 sr_num;
+	u32 i, j;
+	u8	 target_channel = 0;
 		
-	pSource = (uint16_t *)buffer;
+	pSource = (u16 *)buffer;
 	sr_num = frame_size >> 1;//bytes to word
 	for (i = 0; i < channel_number; i++) {
 		if((channel_mapping[i] != 0) && (channel_mapping[i] != '-')) {
 			target_channel = channel_mapping[i] - '0';
-			pDest = (uint16_t *)(channel_data + target_channel * frame_size);
-			for (j = 0; j < sr_num; j++){
+			pDest = (u16 *)(channel_data + target_channel * frame_size);
+			for (j = 0; j < sr_num; j++) {
 				*pDest++ = *(pSource + i + j * (channel_number));
 			}
 
@@ -1362,291 +1851,478 @@ uint8_t get_channel_data(uint8_t* buffer, uint32_t frame_size, uint8_t channel_n
 //then collect sample data together for one channel
 //then move the channel data to target buffer location
 //at last, swap data per 8 bytes--it is required by SPI
-int get_one_data_block(struct file* fpdata, int channel_num, int frame_size, char* channel_mapping) {
-	uint32_t read_len = 0, total_len = 0;
-	uint32_t blocksize;
-	
-	if(fpdata == NULL) {
-		lidbg(TAG"%s: file pinter is invalid\n", __func__);
-		return -EPARAMINVAL;
-	}
-	
-	if(channel_mapping == NULL) {
-		lidbg(TAG"%s: channel_mapping is invalid\n", __func__);
-		return -EPARAMINVAL;
-	}
-	
+int get_one_data_block(int channel_num, int frame_size) {
+	u32 read_len = 0;
+	u32 blocksize;
+
 	if(channel_num <= 0) {
-		lidbg(TAG"%s: channel_num is invalid. channel_num=%d\n", __func__, channel_num);
+		output_debug_log(true, "[%s]: channel_num is invalid. channel_num=%d\n", __func__, channel_num);
 		return -EPARAMINVAL;
 	}
 	
 	if(frame_size <= 0) {
-		lidbg(TAG"%s: frame_size is invalid. frame_size=%x\n", __func__, frame_size);
+		output_debug_log(true, "[%s]: frame_size is invalid. frame_size=%x\n", __func__, frame_size);
 		return -EPARAMINVAL;
 	}
 	
 	blocksize = frame_size * channel_num;
-	
-	do {
-		read_len = fpdata->f_op->read(fpdata, (u8*)(voice_buffer_play + total_len), sizeof(uint8_t) * (blocksize - total_len), &fpdata->f_pos);
-		//lidbg(TAG"%s: read_len=%x\n", __func__, read_len);
-		if (read_len < 0) break;
-		total_len += read_len;
-	} while (total_len < blocksize);
-
-	if (total_len < blocksize) {
-		lidbg(TAG"%s: can not get enough data, total_len=%x, blocksize=%x\n", __func__, total_len, blocksize);
+	read_len = fm1388_pull_data_from_fifo(voice_buffer_play, blocksize);
+	if (read_len < blocksize) {
+		output_debug_log(true, "[%s]: can not get enough data, total_len=%x, blocksize=%x\n", __func__, read_len, blocksize);
 		return -ENOENOUGHDATA;
 	}
-	
-	//re-arrange data by channel
-	memset(voice_buffer_play_temp, 0, FM1388_BUFFER_LEN);
-	get_channel_data(voice_buffer_play, frame_size, channel_num, channel_mapping, voice_buffer_play_temp);
-	
+
 	return ESUCCESS;
 }
 
-int fm1388_trans_voice_data_by_channel(void *data)
-{
-	struct file *fpdata = NULL;
-	wav_header header;
-	u8*  start_addr;
-	//int  status;
-	u32  spi_base_addr;
-	u8   channel_idx 	= 0;
-	int  is_ready 		= 0;
-	u32  offset			= 0;
+int push_one_frame_to_dsp(u32 spi_base_addr) {
     int  err 			= 0;
-	u32	 total_len 		= 0L;
-	u32  block_size 	= 0;
-	u32	 counter		= 0;
-	u32	 total_counter	= 0;
-	u8 	 target_channel;
-
-	struct timex    txc_start;
-	struct timex    txc_stop;
-	long eslapse = 0L;
-	int  over_time_counter = 0;
+	u8*  start_addr		= NULL;
+	u32  offset			= 0;
+	u8   channel_idx 	= 0;
+	u8 	 target_channel = 0;
 	
-	//for recording
-	u8*  rec_start_addr;
-	u32  rec_spi_base_addr;
-	int  rec_is_ready 		= 0;
-	u32  rec_offset			= 0;
-	u32  rec_valid_offset	= 0;
-	struct file *rec_fpdata = NULL;
-	char rec_data_file_path[MAX_PATH_LEN] = { 0 };
+	memset(voice_buffer_play, 0, FM1388_BUFFER_LEN * sizeof(u8));
+	start_addr = voice_buffer_play;
+	offset = 0;
 
-	
-	err = fm1388_spi_change_maxspeed(SPI_BURST_READ_SPEED);
-	if(err) {
-		lidbg(TAG"%s: fm1388_spi_change_maxspeed return value = %d\n", __func__, err);
-		fm1388_data->playback_thread_id = NULL;
+	//get one block data from wav file and convert data by channel for playback
+	err = get_one_data_block(source_file_channel_number, playback_param.framesize);
+	if(err != ESUCCESS) {
+		output_debug_log(true, "[%s]: Error occurs when read data block for playback\n", __func__);
 		return err;
 	}
 
+	for(channel_idx = 0; channel_idx < source_file_channel_number; channel_idx ++) {
+		if((playback_param.channel_mapping[channel_idx] == 0) || (playback_param.channel_mapping[channel_idx] == '-')) {
+			continue;
+		}
+
+		target_channel = playback_param.channel_mapping[channel_idx] - '0';
+		offset = playback_param.framesize * target_channel;
+		err = fm1388_spi_burst_write(spi_base_addr + offset,  
+									start_addr + offset,  
+									playback_param.framesize );
+		if( err != ESUCCESS ) { 
+			output_debug_log(true, "[%s]: fm1388_spi_burst_read return error = %#x\n", __func__, err);
+			break;
+		}
+	}
+
+	return err;
+}
+
+void output_playback_debug_info( void ) {
+	int i = 0;
+#ifdef OUTPUT_READY_STATE_DATA    
+	u32 eslapse = 0L;
+#endif
+	if(st_playback_error_check[0].counter == 4) {
+		playback_error_counter -= st_playback_error_check[0].error_counter;
+		output_debug_log(true, "[%s]: playback is not sync at the beginning.\n", __func__);
+	}
+
+	if(playback_error_check_counter > 0) {
+		output_debug_log(true, "[%s]: playback loss frame happend around below frame counter:%d\n", 
+							__func__, playback_error_check_counter);
+		for(i = 0; i < MAX_TEST_COUNT; i++) {
+			if(i < playback_error_check_counter) {
+				output_debug_log(true, "[%d]:%05d.%ld:\t%ld\t%ld\t%d\t%d\t%04x\n", i, 
+					st_playback_error_check[i].time.tv_sec, 
+					st_playback_error_check[i].time.tv_nsec, 
+					(i > 0) ? (st_playback_error_check[i].counter + st_playback_error_check[i - 1].error_counter) : st_playback_error_check[i].counter,
+					st_playback_error_check[i].error_counter,
+					st_playback_error_check[i].index,
+					st_playback_error_check[i].dsp_index,
+					st_playback_error_check[i].state);
+			}
+		}	
+	}
+
+#ifdef OUTPUT_READY_STATE_DATA    
+	output_debug_log(false, "[%s]: playback ready check result:\n", __func__);
+	if(playback_ready_check_counter > 0) {
+		for(i = 0; i < MAX_READY_CHECK; i++) {
+			if(i < playback_ready_check_counter) {
+				eslapse = 0;
+				if(i >= 1) {
+					eslapse = (unsigned long)((long)(st_playback_ready_check[i].time.tv_sec - st_playback_ready_check[i - 1].time.tv_sec) * 1000000000L + 
+						((long)(st_playback_ready_check[i].time.tv_nsec - st_playback_ready_check[i - 1].time.tv_nsec)));
+				}
+				
+				output_debug_log(false, "[%d]:%05d.%ld:\t%09ld\t%02d\t%02d\t%04x\t%04x\t%09d\t%09d\n", i, 
+					st_playback_ready_check[i].time.tv_sec, 
+					st_playback_ready_check[i].time.tv_nsec, 
+					eslapse, 
+					st_playback_ready_check[i].local_index, 
+					st_playback_ready_check[i].dsp_index, 
+					st_playback_ready_check[i].state,
+					st_playback_ready_check[i].ready_state,
+					st_playback_ready_check[i].err_counter,
+					st_playback_ready_check[i].counter);
+			}
+		}	
+	}
+#endif
+}
+
+
+int fm1388_read_audio_data_from_file(void* data) {
+	unsigned long timeout = jiffies + msecs_to_jiffies(2);
+	struct file *fpdata = NULL;
+	wav_header header;
+	int	 data_size 		= 0;
+	int  fifo_avail		= 0;
+    int  err 			= 0;
+	u16  ret 			= 0;
+	u32	 total_gotten 	= 0L;
+	
+#ifdef OUTPUT_ESLAPSE_DATA    
+	struct timespec start_time, end_time;  
+	u32	 eslapse		= 0L;
+	u32  max_eslapse 	= 0L;
+#endif
+
+	output_debug_log(true, "[%s]: start get data thread.\n", __func__);
 	oldfs = get_fs();
 	set_fs(KERNEL_DS);
-	fpdata 	= filp_open(playback_param.file_path, O_CREAT | O_RDWR, 0666);
+	fpdata 	= filp_open(playback_param.file_path, O_RDONLY, 0);
 	if (IS_ERR(fpdata)) {
-		lidbg(TAG"%s: the file or path does not exist. %s\n", __func__, playback_param.file_path);
-		set_fs(oldfs);
+		output_debug_log(true, "[%s]: the file or path does not exist. %s\n", __func__, playback_param.file_path);
 		err = -EFAILOPEN;
-		fm1388_data->playback_thread_id = NULL;
-		return err;
+		goto READ_ERR;
 	}
 	
 	err = get_wav_header(fpdata, &header);
 	if(err != ESUCCESS) {
-		lidbg(TAG"%s: fail to read wav file header from %s\n", __func__, playback_param.file_path);
-		set_fs(oldfs);
+		output_debug_log(true, "[%s]: fail to read wav file header from %s\n", __func__, playback_param.file_path);
 		err = -EFILECANNOTREAD;
-		fm1388_data->playback_thread_id = NULL;
-		return err;
+		goto READ_ERR;
 	}
-
-
-/* Will be enabled when play data ready	
-	status = enable_spi_play(); //already enabled recording
-	if (status) {
-		err = -ECANNOTENPLAY;
-		lidbg(TAG"%s: fail to enable playback. ret=%d\n", __func__, status);
-		fm1388_data->playback_thread_id = NULL;
-		return err;
-	}
-*/
-
-	if(playback_param.need_recording == 1) {
-/* Will be enabled when play data ready
-		status = enable_spi_rec(); //already enabled recording
-		if (status) {
-			err = -ECANNOTENRECORD;
-			lidbg(TAG"%s: fail to enable recording. ret=%d\n", __func__, status);
-			fm1388_data->playback_thread_id = NULL;
-			return err;
-		}
-*/
-		snprintf(rec_data_file_path, MAX_PATH_LEN, "%s%s", SDCARD_PATH, VOICE_DATA_FILE_NAME);
-		rec_fpdata 	= filp_open(rec_data_file_path, O_CREAT | O_RDWR, 0666);
-		if (IS_ERR(rec_fpdata)) {
-			lidbg(TAG"%s: the rec file or path does not exist. %s\n", __func__, rec_data_file_path);
-			set_fs(oldfs);
-			err = -EFAILOPEN;
-			fm1388_data->thread_id = NULL;
-			return err;
-		}
-		toggle_flag = 0;
-	}
-
-	lidbg(TAG"%s: header.num_channels = %d, header.sample_rate=%d, header.data_sz:%#x\n", 
-		__func__, header.num_channels, header.sample_rate, header.data_sz);
-	do_gettimeofday(&(txc.time));
 	
-	play_toggle_flag = 0;
-	total_len = 0L;
-	block_size = header.num_channels * playback_param.framesize;
-	lidbg(TAG"%s: block_size:%#x will read %d times.\n", __func__, block_size, header.data_sz / block_size);
-	while (!kthread_should_stop() && ((total_len + block_size) <= header.data_sz)) {	
-//for over time checking
-do_gettimeofday(&(txc_start.time));
-//
-		if(playback_param.need_recording == 1) {
-			rec_is_ready = is_spi_rec_ready();
-			//lidbg(TAG"%s: is_spi_rec_ready return value = %#x\n", __func__, rec_is_ready);
-			if(!rec_is_ready) {
-				if(toggle_flag) {
-					rec_spi_base_addr = fetch_param.addr_output1;
-				}
-				else {
-					rec_spi_base_addr = fetch_param.addr_output0;
-				}
-				
-				memset(voice_buffer_temp, 0, FM1388_BUFFER_LEN * sizeof(u8));
+	output_debug_log(true, "[%s]: header.num_channels = %d, header.sample_rate=%d, header.data_sz:%#x\n", 
+		__func__, header.num_channels, header.sample_rate, header.data_sz);
+		
+	data_size = header.num_channels * playback_param.framesize;
+	
+	//global variables
+	source_file_channel_number = header.num_channels;
+	source_file_total_size = header.data_sz;
 
-				rec_start_addr = voice_buffer_temp;
-				rec_offset = 0;
-				rec_valid_offset = 0;
-				for(channel_idx = 0; (channel_idx < DSP_SPI_REC_CH_NUM); channel_idx ++) {
-					if(!valid_channel(fetch_param.ch_num, fetch_param.ch_idx, channel_idx)) {
-						rec_offset += fetch_param.framesize;
-						continue;
-					}
-
-					err = fm1388_spi_burst_read(rec_spi_base_addr + rec_offset,  
-												rec_start_addr + rec_valid_offset,  
-												fetch_param.framesize );
-					if( err != ESUCCESS ){ 
-						lidbg(TAG"%s: fm1388_spi_burst_read return error = %#x\n", __func__, err);
-						break;
-					}
-					
-					rec_offset += fetch_param.framesize;
-					rec_valid_offset += fetch_param.framesize;
-				}
-
-				if(err != ESUCCESS) break;
-				
-				if(rec_fpdata != NULL) {
-					rec_fpdata->f_op->write(rec_fpdata, (u8*)(voice_buffer_temp), fetch_param.framesize * fetch_param.ch_num, &rec_fpdata->f_pos);
-				}
-				else {
-					lidbg(TAG"%s: open data file failed.\n", __func__);
-				}
-
-				toggle_flag = !toggle_flag;
-				
-				err = spi_record_finish();
-			}
+	output_debug_log(true, "%s: header.num_channels=%d, playback_param.framesize=%d, channel_mapping=%s\n", 
+				__func__, header.num_channels, playback_param.framesize, playback_param.channel_mapping);
+	
+    while (!kthread_should_stop() && ((total_gotten + data_size) <= header.data_sz)) {
+#ifdef OUTPUT_ESLAPSE_DATA    
+		do_posix_clock_monotonic_gettime(&start_time);  
+#endif
+		spin_lock(&fm1388_data->play_lock);
+		fifo_avail = kfifo_avail(fm1388_data->play_kfifo);
+		spin_unlock(&fm1388_data->play_lock);
+		timeout = jiffies + msecs_to_jiffies(20);
+		while ((fifo_avail < data_size) && time_before(jiffies, timeout)) {
+			usleep_range(200, 300);		//reduce the sleep time causes time reduce from fetch end to next fetch
+			spin_lock(&fm1388_data->play_lock);
+			fifo_avail = kfifo_avail(fm1388_data->play_kfifo);
+			spin_unlock(&fm1388_data->play_lock);
 		}
+		
+		if (fifo_avail < data_size) {
+			usleep_range(300, 400);
+			//output_debug_log(true, "[%s]: will lost one frame data for no enough space in fifo.\n", __func__);
+		}
+		else {
+			if(!IS_ERR(fpdata)) {
+				fpdata->f_op->read(fpdata, (u8*)(temp_buffer1), data_size, &fpdata->f_pos);
+				
+				//re-arrange data by channel
+				memset(temp_buffer2, 0, FM1388_BUFFER_LEN);
+				get_channel_data(temp_buffer1, playback_param.framesize, header.num_channels, 
+									playback_param.channel_mapping, temp_buffer2);
+				
+				ret = kfifo_in_spinlocked(fm1388_data->play_kfifo, temp_buffer2, data_size, &fm1388_data->play_lock);
 
-		is_ready = is_spi_playback_buffer_ready();
-		//lidbg(TAG"%s: is_spi_playback_buffer_ready return value = %#x, read:%#x\n", __func__, is_ready, total_len);
-		if(is_ready == ESUCCESS) {
-			if(play_toggle_flag == 1) {
-				spi_base_addr = playback_param.addr_input1;
-				play_toggle_flag = 0;
+				if(ret != data_size) {
+					output_debug_log(true, "[%s]: got data is not enough, required:%d, gotten:%d.\n", __func__, data_size, ret);
+				}
+				
+				total_gotten += ret;
+				
+#ifdef OUTPUT_ESLAPSE_DATA    
+				do_posix_clock_monotonic_gettime(&end_time);  
+				eslapse = (unsigned long)((long)(end_time.tv_sec - start_time.tv_sec) * 1000000000L + 
+						(long)(end_time.tv_nsec - start_time.tv_nsec));
+								
+				if(eslapse > max_eslapse) max_eslapse = eslapse;
+#endif
 			}
 			else {
-				spi_base_addr = playback_param.addr_input0;
-				play_toggle_flag = 1;
+				output_debug_log(true, "[%s]: open data file failed.\n", __func__);
 			}
+		}
+		
+		usleep_range(100, 200);
+	} 
+
+READ_ERR:
+	if(!IS_ERR(fpdata)) {
+		filp_close(fpdata, NULL);
+	}
+	set_fs(oldfs);
+	fm1388_data->load_data_thread_id = NULL;
+
+	output_debug_log(true, "[%s]: totally read data %d.\n", __func__, total_gotten);
+#ifdef OUTPUT_ESLAPSE_DATA    
+	output_debug_log(true, "[%s]: max. eslapse:%d\n", __func__, max_eslapse);
+#endif
+	output_debug_log(true, "[%s]: exit get data thread.\n", __func__);
+	return ESUCCESS;
+}
+
+	
+int fm1388_trans_voice_data_by_channel_4buffers(void *data)
+{
+	u32  spi_base_addr;
+	u8   channel_idx 	= 0;
+	int  ready_num 		= 0;
+    int  err 			= 0;
+    int	 i				= 0;
+	u32	 total_len 		= 0L;
+	u32  block_size 	= 0L;
+	u16	 cur_play_buffer= 0;
+
+#ifdef OUTPUT_ESLAPSE_DATA    
+	struct timespec start_time, end_time, init_time;  
+	u32	 eslapse		= 0L;
+	u32  max_eslapse 	= 0L;
+#endif
+	
+	//for recording
+	u8*  rec_start_addr;
+	u32  rec_spi_base_addr;
+	u8   rec_ready_num	= 0;
+	u16	 rec_data_size 	= 0;
+	u16	 cur_rec_buffer	= 0;
+	u32  total_put 		= 0L, ret = 0L;
+	char channel_need_rec[DSP_SPI_REC_CH_NUM];
+
+
+
+	rec_data_size  = playback_param.rec_ch_num * playback_param.framesize;
+	rec_start_addr = record_spi_buffer;
+
+	init_global_variables();
+	
+	output_debug_log(true, "[%s]: start SPI playback thread.\n", __func__);
+	err = fm1388_spi_change_maxspeed(SPI_BURST_READ_SPEED);
+	if(err) {
+		output_debug_log(true, "[%s]: fm1388_spi_change_maxspeed return value = %d\n", __func__, err);
+		goto PLAY_ERR;
+	}
+
+	i = 0;
+		while((i < 5) && ((source_file_channel_number <= 0) || (source_file_total_size <= 0))) {
+			msleep(100);
+			i++;
+		}
+		if(i >= 5) {
+			output_debug_log(true, "[%s]: source file data is not prepared.\n", __func__);
+			goto PLAY_ERR;
+		}
+
+
+	if(playback_param.need_recording == 1) {
+		memset(channel_need_rec, 0, sizeof(char) * DSP_SPI_REC_CH_NUM);
+		for(channel_idx = 0; (channel_idx < DSP_SPI_REC_CH_NUM); channel_idx ++) {
+			if(!valid_channel(playback_param.rec_ch_num, playback_param.rec_ch_idx, channel_idx)) {
+				continue;
+			}
+			channel_need_rec[i] = channel_idx;
+			i++;
+		}
+	}
+
+	//output_debug_log(true, "[%s]: header.num_channels = %d, header.sample_rate=%d, header.data_sz:%#x\n", 
+	//	__func__, header.num_channels, header.sample_rate, header.data_sz);
+		
+	//pre-load 4 buffer data, thus Host has 4 frames' time ahead DSP
+	total_len = 0L;
+	block_size = source_file_channel_number * playback_param.framesize;
+		for(cur_play_buffer = 0; (cur_play_buffer < 4) && ((total_len + block_size) < source_file_total_size); cur_play_buffer++) {
+			spi_base_addr = playback_param.addr_input0 + cur_play_buffer * DSP_OUTPUT_BUFFER_SIZE;;
 			
-			memset(voice_buffer_play_temp, 0, FM1388_BUFFER_LEN * sizeof(u8));
-			start_addr = voice_buffer_play_temp;
-			offset = 0;
-
-			//get one block data from wav file and convert data by channel for playback
-			err = get_one_data_block(fpdata, header.num_channels, playback_param.framesize, playback_param.channel_mapping);
+			err = push_one_frame_to_dsp(spi_base_addr);
 			if(err != ESUCCESS) {
-				lidbg(TAG"%s: Error occurs when read data block for playback, data read:%#x, total:%#x\n", __func__, total_len, header.data_sz);
+				output_debug_log(true, "[%s]: Error occurs when read data block for playback at %d\n", __func__, total_len);
+
+			break;
+		}
+		
+		total_len += block_size;
+	}
+	
+	if(err != ESUCCESS) {
+		output_debug_log(true, "[%s]: fail to preload data. ret=%d\n", __func__, err);
+		goto PLAY_ERR;
+	}
+	
+	//enable spi playback
+	err = enable_spi_play(); 
+	if (err) {
+		output_debug_log(true, "[%s]: fail to enable playback. ret=%d\n", __func__, err);
+		err = -ECANNOTENPLAY;
+		goto PLAY_ERR;
+	}
+			
+	//set 4 buffer data ready
+	for(cur_play_buffer = 0; cur_play_buffer < 4; cur_play_buffer++) {
+		spi_playback_data_ready( cur_play_buffer );
+	}
+
+	cur_play_buffer = 0;
+	cur_rec_buffer = 0;
+	playback_total_counter = 4;
+			
+	output_debug_log(true, "[%s]: block_size:%#x will read %d times.\n", __func__, block_size, source_file_total_size / block_size);
+
+#ifdef OUTPUT_ESLAPSE_DATA    
+	do_posix_clock_monotonic_gettime(&init_time);  
+#endif
+	while (!kthread_should_stop() && ((total_len + block_size) <= source_file_total_size)) {	
+#ifdef OUTPUT_ESLAPSE_DATA    
+		do_posix_clock_monotonic_gettime(&start_time);  
+#endif
+		if(playback_param.need_recording == 1) {
+			rec_ready_num = is_spi_rec_buf_ready(cur_rec_buffer);
+			//output_debug_log(true, "[%s]: is_spi_rec_ready return value = %#x\n", __func__, rec_ready_num);
+			if(rec_ready_num > 0) {
+				rec_spi_base_addr = playback_param.addr_output0 + cur_rec_buffer * DSP_OUTPUT_BUFFER_SIZE;
+				
+				err = fetch_one_frame_voice_data(rec_spi_base_addr, rec_start_addr, channel_need_rec);
+				if(err != ESUCCESS) break;
+
+				err = spi_record_buf_finish(cur_rec_buffer);
+
+				ret = fm1388_push_data_to_fifo(rec_start_addr, rec_data_size);	
+				total_put += ret;
+		
+
+			
+				record_total_counter ++;
+				cur_rec_buffer = (cur_rec_buffer + 1) & 0x03;
 			}
-			total_len += block_size;
+		}
 
-			for(channel_idx = 0; channel_idx < header.num_channels; channel_idx ++) {
-				if((playback_param.channel_mapping[channel_idx] == 0) || (playback_param.channel_mapping[channel_idx] == '-')) {
-					continue;
-				}
-
-				target_channel = playback_param.channel_mapping[channel_idx] - '0';
-				offset = playback_param.framesize * target_channel;
-				err = fm1388_spi_burst_write(spi_base_addr + offset,  
-											start_addr + offset,  
-											playback_param.framesize );
-				if( err != ESUCCESS ) { 
-					lidbg(TAG"%s: fm1388_spi_burst_read return error = %#x\n", __func__, err);
+		ready_num = is_spi_playback_buffer_ready(cur_play_buffer, playback_param.need_recording);
+		//output_debug_log(true, "[%s]: is_spi_playback_buffer_ready return value = %#x, read:%#x\n", __func__, is_ready, total_len);
+		if(ready_num > 0) {
+			do {
+				spi_base_addr = playback_param.addr_input0 + cur_play_buffer * DSP_OUTPUT_BUFFER_SIZE;;
+				
+				err = push_one_frame_to_dsp(spi_base_addr);
+				if(err != ESUCCESS) {
+					output_debug_log(true, "[%s]: Error occurs when read data block for playback, data read:%#x, total:%#x\n", 
+						__func__, total_len, source_file_total_size);
 					break;
 				}
-			}
-			//if(((counter % 1000) == 0) || ((counter % 1000) == 1))
-			//	lidbg(TAG"%s: counter=%d, total_counter=%d, spi_base_addr = %#x\n", __func__, counter, total_counter, spi_base_addr);
 
-			if(err != ESUCCESS) break;
-			//play_toggle_flag = !play_toggle_flag;
-			err = spi_playback_data_ready();
+				
+				err = spi_playback_data_ready( cur_play_buffer );
+				
+				total_len += block_size;
+				playback_total_counter++;
+				cur_play_buffer = (cur_play_buffer + 1) & 0x3;
+				
+				ready_num --;
 			
-			counter++;
+			} while ((ready_num > 0) && ((total_len + block_size) <= source_file_total_size));
+			
+			if(err != ESUCCESS) break;
 		}
 		else {
 			usleep_range(100, 200);
 		}
-
-
-
-		total_counter++;
-//for checking whether one process over 10ms or not, if over 10ms, will cause data loss
-do_gettimeofday(&(txc_stop.time));
-eslapse = (unsigned long)((unsigned long)(txc_stop.time.tv_sec - txc_start.time.tv_sec) * 1000000L + 
-				(unsigned long)(txc_stop.time.tv_usec - txc_start.time.tv_usec));
-if(eslapse > 10000) over_time_counter++;
-//
-
+#ifdef OUTPUT_ESLAPSE_DATA    
+		do_posix_clock_monotonic_gettime(&end_time);  
+		eslapse = (unsigned long)((long)(end_time.tv_sec - start_time.tv_sec) * 1000000000L + 
+				(long)(end_time.tv_nsec - start_time.tv_nsec));
+						
+		if(eslapse > max_eslapse) max_eslapse = eslapse;
+		if(eslapse > 20000000L) {
+			if(playback_eslapse_check_counter < MAX_TEST_COUNT) {
+				st_playback_eslapse_check[playback_eslapse_check_counter].counter = playback_total_counter;
+				st_playback_eslapse_check[playback_eslapse_check_counter].eslapse = eslapse;
+				do_posix_clock_monotonic_gettime(&(st_playback_eslapse_check[playback_eslapse_check_counter].time));  
+				playback_eslapse_check_counter++;
+			}
+		}
+#endif
 	}
+	
+    err = fm1388_spi_read( PLAYBACK_ERROR_COUNTER_ADDR, &playback_error_counter, 2);
+    err = fm1388_spi_read( RECORD_ERROR_COUNTER_ADDR, &record_error_counter, 2);
 	
 	//disable playback in DSP
 	disable_spi_play(); //already disabled recording too
-	
-	do_gettimeofday(&(txc2.time));
-	lidbg(TAG"%s: play wav file used %ld us\n", __func__, 
-			(unsigned long)((unsigned long)(txc2.time.tv_sec - txc.time.tv_sec) * 1000000L + 
-							(unsigned long)(txc2.time.tv_usec - txc.time.tv_usec)));
 
-	lidbg(TAG"%s: counter=%d, total_counter=%d\n", __func__, counter, total_counter);
-	lidbg(TAG"%s: played=%#x, total data=%#x\n", __func__, total_len, header.data_sz);
-	lidbg(TAG"%s: play and record over time %d times\n", __func__, over_time_counter);
+PLAY_ERR:	
 	fm1388_data->playback_thread_id = NULL;
-	if(fpdata != NULL) {
-		filp_close(fpdata, NULL);
-	}
-	
-	if(rec_fpdata != NULL) {
-		filp_close(rec_fpdata, NULL);
+	if(err != ESUCCESS) {
+		output_debug_log(true, "[%s]: playback thread exit abnormally.\n", __func__);
+		return err;
 	}
 
-	set_fs(oldfs);
+
+	output_playback_debug_info();
+#ifdef OUTPUT_ESLAPSE_DATA    
+	output_debug_log(true, "[%s]: playback %d frames. loss %d frames, max_eslapse=%ld, eslapse_check_counter=%ld, \
+	first_lost_happen_at=%ld, last_lost_happen_at=%ld\n", 
+			__func__, playback_total_counter + playback_error_counter, playback_error_counter, max_eslapse, 
+			playback_eslapse_check_counter, first_playback_error_frame_counter, last_playback_error_frame_counter);
+#else
+	output_debug_log(true, "[%s]: playback %d frames. loss %d frames, first_lost_happen_at=%ld, last_lost_happen_at=%ld\n", 
+			__func__, playback_total_counter + playback_error_counter, playback_error_counter,  
+			first_playback_error_frame_counter, last_playback_error_frame_counter);
+#endif
+
+	if(playback_param.need_recording == 1) {
+		output_record_debug_info();
+#ifdef OUTPUT_ESLAPSE_DATA    
+		output_debug_log(true, "[%s]: record %d frames. loss %d frames, max_eslapse=%ld, eslapse_check_counter=%ld, \
+		first_lost_happen_at=%ld, last_lost_happen_at=%ld\n", 
+				__func__, record_total_counter, record_error_counter, max_eslapse, 
+				record_eslapse_check_counter, first_record_error_frame_counter, last_record_error_frame_counter);
+#else
+		output_debug_log(true, "[%s]: record %d frames. loss %d frames, first_lost_happen_at=%ld, last_lost_happen_at=%ld\n", 
+				__func__, record_total_counter, record_error_counter, 
+				first_record_error_frame_counter, last_record_error_frame_counter);
+#endif
+	}
+	
+#ifdef OUTPUT_ESLAPSE_DATA    
+	eslapse = (unsigned long)((long)(end_time.tv_sec - init_time.tv_sec) * 1000000L + 
+				((long)(end_time.tv_nsec - init_time.tv_nsec) / 1000));
+	output_debug_log(true, "[%s]: total consumed time=%ld\n", __func__, eslapse);
+	
+	if(playback_eslapse_check_counter > 0) {
+		output_debug_log(true, "[%s]: eslapse_check result:%d\n", __func__, playback_eslapse_check_counter);
+		for(i = 0; i < MAX_TEST_COUNT; i++) {
+			if(i < playback_eslapse_check_counter) {
+				output_debug_log(true, "[%d]:%05d.%ld:\t%ld\t%ld\n", i, 
+					st_playback_eslapse_check[i].time.tv_sec, 
+					st_playback_eslapse_check[i].time.tv_nsec, 
+					st_playback_eslapse_check[i].counter, 
+					st_playback_eslapse_check[i].eslapse);
+			}
+		}	
+	}
+#endif
+
+	output_debug_log(true, "[%s]: end up SPI playback thread.\n", __func__);
 
     return err;
 }
+
 
 
 static void fm1388_dsp_load_fw(void)
@@ -1957,13 +2633,102 @@ char *combine_path_name(char *s, char *append)
     return(save);
 }
 
+void strip_white_space(char* source_string, int offset, char* target_string, int len) {
+	int i = 0, j = 0;
+	
+	if((source_string == NULL) || (target_string == NULL) || (offset < 0) || (len <= 0)) return;
+	
+	i = offset;
+	while((source_string[i] != 0) && (i < CONFIG_LINE_LEN) && (j < len)){
+		if((source_string[i] != ' ') && (source_string[i] != '\t') && (source_string[i] != '\r') && (source_string[i] != '\n')) {
+			target_string[j++] = source_string[i];
+		}
+		
+		i++;
+	}
+	
+	target_string[j] = 0;
+	return;
+}
+
+// load user-defined path setting file, if file does not exist use default setting
+int load_user_setting(void)
+{
+    struct file*	fp;
+    int 			word_count = 0;
+    char 			s[CONFIG_LINE_LEN];	//assume each line of the opened file is below 255 characters
+	char			strTemp[MAX_PATH_LEN];
+
+	static int is_init = false;
+	if(is_init)
+		return 0;
+	is_init = true;
+	
+	//set default path to SDcard and VEC path, then parse config file to get user-defined path to replace these path
+	strncpy(SDCARD_PATH, DEFAULT_SDCARD_PATH, MAX_PATH_LEN);
+	//strncpy(filepath, default_filepath, CONFIG_LINE_LEN);
+	b_output_log = false;
+	
+    combine_path_name(filepath_name, USER_DEFINED_PATH_FILE);
+	pr_err("%s: load user-defined path file %s\n", __func__, filepath_name);
+	
+    initKernelEnv();
+    fp = openFile(filepath_name, O_RDONLY, 0);
+
+    if (fp == NULL) {
+       pr_err ("%s, File %s could not be opened or does not exist, will use default setting for sdcard and vec location.\n", __func__, filepath_name);
+       set_fs(oldfs);
+       return -EFAILOPEN;
+    }
+    else{
+       pr_err ("%s, File %s opened!...\n", __func__, filepath_name);
+	   while (fgets(s, CONFIG_LINE_LEN, fp, &word_count) != NULL) {
+			if(s[0] == '*' || s[0] == '#' || s[0] == '/' || s[0] == 0xD || s[0] == 0x0) {
+				continue;
+			} 
+			else {
+				if(strncasecmp(s, USER_VEC_PATH, strlen(USER_VEC_PATH)) == 0) {
+					strip_white_space(s, strlen(USER_VEC_PATH), filepath, CONFIG_LINE_LEN);
+					pr_err("%s: vec file path is %s\n", __func__, filepath);
+				}
+				else if(strncasecmp(s, USER_KERNEL_SDCARD_PATH, strlen(USER_KERNEL_SDCARD_PATH)) == 0) {
+					strip_white_space(s, strlen(USER_KERNEL_SDCARD_PATH), SDCARD_PATH, MAX_PATH_LEN);
+					pr_err("%s: sdcard path is %s\n", __func__, SDCARD_PATH);
+				}
+				else if(strncasecmp(s, USER_USER_SDCARD_PATH, strlen(USER_USER_SDCARD_PATH)) == 0) {
+					//not need parse user space sd card path
+				}
+				else if(strncasecmp(s, USER_OUTPUT_LOG, strlen(USER_OUTPUT_LOG)) == 0) {
+					strip_white_space(s, strlen(USER_OUTPUT_LOG), strTemp, MAX_PATH_LEN);
+					b_output_log = (strTemp[0] == 'y' || strTemp[0] == 'Y') ? true : false;
+					output_debug_log(false, "[%s]: output_log is %s\n", __func__, b_output_log ? "yes" : "no");
+				}
+				else {
+					continue;
+				}
+			}
+	   }
+
+       closeFile(fp);
+       set_fs(oldfs);
+    }
+    
+	output_debug_log(true, "Finally used path setting is:\n");
+	output_debug_log(true, "\tsdcard=%s\n", SDCARD_PATH);
+	output_debug_log(true, "\tcfg_path=%s\n", filepath);
+	output_debug_log(true, "\toutput_log=%d\n", b_output_log);
+	
+    return ESUCCESS;
+}
+
+
 
 // load codec init VEC, access HW register thru short address
 int load_fm1388_init_vec(char *file_src)
 {
     struct file *fp;
     int word_count = 0;
-    char s[255];	//assume each line of the opened file is below 255 characters
+    char s[CONFIG_LINE_LEN];	//assume each line of the opened file is below 255 characters
     dev_cmd payload;
 
     //	lidbg(TAG"%s: file %s\n", __func__, file_src);
@@ -1980,7 +2745,7 @@ int load_fm1388_init_vec(char *file_src)
     else
     {
         //       lidbg(TAG"File %s opened!...\n", file_src);"
-        while (fgets(s, 255, fp, &word_count) != NULL)
+        while (fgets(s, CONFIG_LINE_LEN, fp, &word_count) != NULL)
         {
             if(s[0] == '#' || s[0] == '/' || s[0] == 0xD || s[0] == 0x0)
             {
@@ -2012,7 +2777,7 @@ int load_fm1388_vec(char *file_src)
 {
     struct file *fp;
     int word_count = 0;
-    char s[255];	//assume each line of the opened file is below 255 characters
+    char s[CONFIG_LINE_LEN];	//assume each line of the opened file is below 255 characters
     dev_cmd payload;
 
     //	lidbg(TAG"%s: file %s\n", __func__, file_src);
@@ -2029,7 +2794,7 @@ int load_fm1388_vec(char *file_src)
     else
     {
         lidbg(TAG"File %s opened!...\n", file_src);
-        while (fgets(s, 255, fp, &word_count) != NULL)
+        while (fgets(s, CONFIG_LINE_LEN, fp, &word_count) != NULL)
         {
             if(s[0] == '#' || s[0] == '/' || s[0] == 0xD || s[0] == 0x0)
             {
@@ -2127,6 +2892,8 @@ static int fm1388_fw_loaded(void *data)
 
     mutex_lock(&fm1388_init_lock);
     isLock = true;
+
+	load_user_setting();
 	
 	while(1)
 	{
@@ -2369,7 +3136,7 @@ static ssize_t fm1388_reg_show(struct device *dev,
     unsigned int i, value;
     int ret;
 
-    lidbg(TAG"%s: fm1388_reg_show\n", __func__);
+    output_debug_log(false, "[%s]: fm1388_reg_show\n", __func__);
     for (i = 0x0; i <= 0xff; i++)
     {
         if (fm1388_readable_register(i))
@@ -2396,7 +3163,7 @@ static ssize_t fm1388_reg_store(struct device *dev,
     unsigned int val = 0, addr = 0;
     int i;
 
-    lidbg(TAG"%s: fm1388_reg_store\n", __func__);
+    output_debug_log(false, "[%s]: fm1388_reg_store\n", __func__);
     for (i = 0; i < count; i++)
     {
         if (*(buf + i) <= '9' && *(buf + i) >= '0')
@@ -2426,7 +3193,7 @@ static ssize_t fm1388_reg_store(struct device *dev,
 
     if (i == count)
     {
-        pr_info("%s: 0x%02x = 0x%04x\n", __func__, addr, val);
+        output_debug_log(true, "[%s]: 0x%02x = 0x%04x\n", __func__, addr, val);
         fm1388_read(addr, &val);
     }
     else
@@ -2443,7 +3210,7 @@ static ssize_t fm1388_index_show(struct device *dev,
     unsigned int val;
     int cnt = 0, i;
 
-    lidbg(TAG"%s: fm1388_index_show\n", __func__);
+    output_debug_log(false, "[%s]: fm1388_index_show\n", __func__);
     for (i = 0; i < 0xff; i++)
     {
         if (cnt + 10 >= PAGE_SIZE)
@@ -2467,7 +3234,7 @@ static ssize_t fm1388_index_store(struct device *dev,
     unsigned int val = 0, addr = 0;
     int i;
 
-    lidbg(TAG"%s: fm1388_index_store\n", __func__);
+    output_debug_log(false, "[%s]: fm1388_index_store\n", __func__);
     for (i = 0; i < count; i++)
     {
         if (*(buf + i) <= '9' && *(buf + i) >= '0')
@@ -2497,7 +3264,7 @@ static ssize_t fm1388_index_store(struct device *dev,
         return count;
 
     if (i == count)
-        pr_info("0x%02x = 0x%04x\n", addr,
+        output_debug_log(true, "[%s]: 0x%02x = 0x%04x\n", addr,
                 fm1388_index_read(addr));
     else
         fm1388_index_write(addr, val);
@@ -2648,6 +3415,7 @@ static ssize_t fm1388_device_read(struct file *file, char __user *buffer,
 
 	if(!fm1388_dsp_working) {
 		lidbg(TAG"%s: Sorry, DSP does not work normally now, please try to reboot your system or contact relative person.\n", __func__);
+		output_debug_log(true, "[%s]: Sorry, DSP does not work normally now, please try to reboot your system or contact relative person.\n", __func__);
 		return -EDSPNOTWORK;
 	}
 
@@ -2655,11 +3423,14 @@ static ssize_t fm1388_device_read(struct file *file, char __user *buffer,
     if (!local_buffer)
     {
         lidbg(TAG"%s: local_buffer allocation failure.\n", __func__);
+		output_debug_log(true, "[%s]: local_buffer allocation failure.\n", __func__);
         goto out;
     }
     if(copy_from_user(local_buffer, buffer, length))
     {
         printk("copy_from_user ERR\n");
+		output_debug_log(true, "[%s]: failed to copy data from user space.\n", __func__);
+		goto out;
     }
     //lidbg(TAG"local_buffer = %d:, length = %d\n", local_buffer[0], length);
 
@@ -2669,16 +3440,19 @@ static ssize_t fm1388_device_read(struct file *file, char __user *buffer,
         get_reg_ret_data = (dev_cmd_reg_rw *)local_buffer;
         fm1388_read(get_reg_ret_data->reg_addr, &get_reg_ret_data->reg_val);
         ret = sizeof(dev_cmd_reg_rw);
+		output_debug_log(true, "[%s]: read reg(%02x), return value(%x).\n", __func__, get_reg_ret_data->reg_addr, get_reg_ret_data->reg_val);
         //lidbg(TAG"get_reg_ret_data->reg_addr = %d:, get_reg_ret_data->reg_val = 0x%4x, ret=%d\n", get_reg_ret_data->reg_addr, get_reg_ret_data->reg_val, ret);
         break;
     case FM_SMVD_DSP_ADDR_READ:
         get_addr_ret_data = (dev_cmd_short *)local_buffer;
         fm1388_dsp_mode_i2c_read_addr_2(get_addr_ret_data->addr, &get_addr_ret_data->val);
         ret = sizeof(dev_cmd_short);
+		output_debug_log(true, "[%s]: read memory(%08x), return value(%x).\n", __func__, get_addr_ret_data->addr, get_addr_ret_data->val);
         //lidbg(TAG"get_addr_ret_data->addr = %d:, get_addr_ret_data->val = 0x%4x, ret=%d\n", get_addr_ret_data->addr, get_addr_ret_data->val, ret);
         break;
 	case FM_SMVD_DSP_ADDR_READ_SPI:
 		get_addr_ret_data = (dev_cmd_short*)local_buffer;
+		/*replace parameter read/write by I2C
 		if(get_addr_ret_data->addr % 4 == 0) {
 			fm1388_spi_read(get_addr_ret_data->addr, &get_addr_ret_data->val, 4);
 		}
@@ -2688,12 +3462,17 @@ static ssize_t fm1388_device_read(struct file *file, char __user *buffer,
 		else {
 			fm1388_spi_read(get_addr_ret_data->addr - 1, &get_addr_ret_data->val, 2);
 		}
+		output_debug_log(true, "[%s]: read memory(%08x), return value(%x) by SPI.\n", __func__, get_addr_ret_data->addr, get_addr_ret_data->val);
+		*/
+		fm1388_dsp_mode_i2c_read_addr_2(get_addr_ret_data->addr, &get_addr_ret_data->val);
+		output_debug_log(true, "[%s]: read memory(%08x), return value(%x) by I2C.\n", __func__, get_addr_ret_data->addr, get_addr_ret_data->val);
 		ret = sizeof(dev_cmd_short);
 		break;
     case FM_SMVD_MODE_GET:
         //        lidbg(TAG"local_buffer = %d:, length = %d, ret = %d\n", local_buffer[0], length, ret);
         get_mode_ret_data = (dev_cmd_mode_gs *)local_buffer;
         get_mode_ret_data->dsp_mode = (char)fm1388_dsp_mode;
+		output_debug_log(true, "[%s]: get mode return=%x.\n", __func__, get_mode_ret_data->dsp_mode);
         ret = sizeof(dev_cmd_mode_gs);
         //        lidbg(TAG"local_buffer = %d:, length = %d, ret = %d\n", local_buffer[0], length, ret);
         //        lidbg(TAG"local_buffer = %d:, length = %d, return_data->dsp_mode = %d\n", local_buffer[0], length, return_data->dsp_mode);
@@ -2715,7 +3494,7 @@ static ssize_t fm1388_device_read(struct file *file, char __user *buffer,
 		else play_status_counter++;
 	
 		if(play_status_counter % 10 == 0)
-			lidbg(TAG"%s: Check playing status. %d\n", __func__, get_addr_ret_data->val);
+			output_debug_log(true, "[%s]: Check playing status. %d\n", __func__, get_addr_ret_data->val);
 		ret = sizeof(dev_cmd_short);
 		break;
 
@@ -2805,14 +3584,20 @@ static ssize_t fm1388_device_mode_write(struct file *file,
 			isNotInspectFramecnt = true;
 		}
 	}
+	else if(!strncmp(mode, "setpath", 7))
+	{
+		set_vec_file_path();
+		if(strncmp(mode, "setpath0", 8))
+		{
+			strcat(filepath,mode+7);
+		}	
+	}
     else
         lidbg(TAG"%s: no this mode:%s.\n", __func__, mode);
 
     mutex_unlock(&fm1388_mode_change_lock);
 
 switch_mode_out:
-    if (mode)
-        kfree(mode);
     return length;
 }
 
@@ -2859,15 +3644,19 @@ static ssize_t  fm1388_status_read(struct file *filp, char __user *buffer, size_
 
 
 static ssize_t fm1388_device_write(struct file *file,
-                                   const char __user *buffer, size_t length, loff_t *offset)
+	char __user * buffer, size_t length, loff_t * offset)
 {
 	dev_cmd_short*		local_dev_cmd = NULL;
 	dev_cmd_start_rec*	local_start_cmd = NULL;
 	dev_cmd_spi_play*	local_playback_cmd = NULL;
+	dev_cmd_record_result* local_record_result = NULL;
+	dev_cmd_playback_result* local_playback_result = NULL;
 	u32 cmd_name, cmd_addr, cmd_val;
 	int dsp_mode;
 	int (*thread_fn)(void *data);
 	int (*playback_thread_fn)(void *data);
+	int (*save_data_thread_fn)(void *data);
+	int (*load_data_thread_fn)(void *data);
 	int i, address;
 	int ret_val = ESUCCESS;
 	unsigned int fm1388_rec_data_addr[5];
@@ -2879,67 +3668,76 @@ static ssize_t fm1388_device_write(struct file *file,
 		DSP_SPI_FRAMESIZE_ADDR 
 	};
 	unsigned char temp_channel_index[DSP_SPI_REC_CH_NUM + 1];
-
-	//lidbg(TAG"%s: entering...\n", __func__);
+	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
+    //int maxpri; 
+	
+	//pr_err("%s: entering...\n", __func__);
 	if(!fm1388_dsp_working) {
-		lidbg(TAG"%s: Sorry, DSP does not work normally now, please try to reboot your system or contact relative person.\n", __func__);
+		output_debug_log(true, "[%s]: Sorry, DSP does not work normally now, please try to reboot your system or contact relative person.\n", __func__);
 		return -EDSPNOTWORK;
 	}
+	
+	local_dev_cmd = (dev_cmd_short *)kmalloc(length, GFP_KERNEL);
+	if (!local_dev_cmd) {
+		output_debug_log(true, "[%s]: local_dev_cmd allocation failure.\n", __func__);
+		return -ENOMEMORY;
+	}
+	
+	if(copy_from_user(local_dev_cmd, buffer, length)) {
+		output_debug_log(true, "[%s]: failed to copy data from user space.\n", __func__);
+		if(local_dev_cmd) {
+			kfree(local_dev_cmd);
+		}
+		return -EMEMFAULT;
+	}
+	
+	cmd_name = local_dev_cmd->cmd_name;
 
-
-    //lidbg(TAG"%s: entering...\n", __func__);
-    local_dev_cmd = (dev_cmd_short *)kmalloc(length, GFP_KERNEL);
-    if (!local_dev_cmd)
-    {
-        lidbg(TAG"%s: local_dev_cmd allocation failure.\n", __func__);
-        goto out;
-    }
-    if(copy_from_user(local_dev_cmd, buffer, length))
-    {
-        printk("copy_from_user ERR\n");
-    }
-
-    lidbg(TAG"local_dev_cmd->cmd_name = %d, length = %d\n", local_dev_cmd->cmd_name, (int)length);
-    cmd_name = local_dev_cmd->cmd_name;
-
-    switch(cmd_name)
-    {
+	switch(cmd_name) {
 		//The short commands
 		case FM_SMVD_REG_WRITE:		//Command #1
 			cmd_addr = local_dev_cmd->addr;
 			cmd_val  = local_dev_cmd->val;
-			fm1388_dsp_mode_i2c_write(cmd_addr, cmd_val);
+			fm1388_dsp_mode_i2c_write( cmd_addr, cmd_val);
+			output_debug_log(true, "[%s]: write new value(%04x) to DSP register(%02x).\n", __func__, cmd_val, cmd_addr);
 			ret_val = sizeof(dev_cmd_short);
 			break;
 			
 		case FM_SMVD_DSP_ADDR_WRITE:	//Command #3
 			cmd_addr = local_dev_cmd->addr;
 			cmd_val  = local_dev_cmd->val;
-			fm1388_dsp_mode_i2c_write_addr(cmd_addr, cmd_val, FM1388_I2C_CMD_16_WRITE);
+			fm1388_dsp_mode_i2c_write_addr( cmd_addr, cmd_val, FM1388_I2C_CMD_16_WRITE);
+			output_debug_log(true, "[%s]: write new value(%04x) to DSP memory(%08x).\n", __func__, cmd_val, cmd_addr);
 			ret_val = sizeof(dev_cmd_short);
 			break;
 			
 		case FM_SMVD_DSP_ADDR_WRITE_SPI:	
 			cmd_addr = local_dev_cmd->addr;
 			cmd_val  = local_dev_cmd->val;
+/*replace parameter read/write by I2C
 			fm1388_spi_write(cmd_addr, cmd_val, 2);
+			output_debug_log(true, "[%s]: write new value(%04x) to DSP memory(%08x) by SPI.\n", __func__, cmd_val, cmd_addr);
+*/
+			fm1388_dsp_mode_i2c_write_addr( cmd_addr, cmd_val, FM1388_I2C_CMD_16_WRITE);
+			output_debug_log(true, "[%s]: write new value(%04x) to DSP memory(%08x) by I2C.\n", __func__, cmd_val, cmd_addr);
 			ret_val = sizeof(dev_cmd_short);
 			break;
 			
 		case FM_SMVD_MODE_SET:		//Command #4
 			ret_val = sizeof(dev_cmd_short);
 			dsp_mode = local_dev_cmd->addr;
+			output_debug_log(true, "[%s]: will set new mode(%x) to DSP.\n", __func__, dsp_mode);
 			if(dsp_mode != fm1388_dsp_mode) {
-				fm1388_dsp_mode_change(dsp_mode);
+				fm1388_dsp_mode_change( dsp_mode);
 				if(dsp_mode == fm1388_dsp_mode) {
 				}
 				else {
 					ret_val = -EFAILTOSETMODE;
-					lidbg(TAG"%s: fail to set new mode.\n", __func__);
+					output_debug_log(true, "[%s]: fail to set new mode.\n", __func__);
 				}
 			}
 			else {
-				lidbg(TAG"%s: the mode you want to set is the same as current mode.\n", __func__);
+				output_debug_log(true, "[%s]: the mode you want to set is the same as current mode.\n", __func__);
 			}
 			break;
 			
@@ -2954,18 +3752,48 @@ static ssize_t fm1388_device_write(struct file *file,
 			break;
 			
 		case FM_SMVD_DSP_PLAYBACK_START:
-			lidbg(TAG"%s: Start SPI Playback.\n", __func__);
-			play_status_counter = 0;
-			play_status = 0;
-
-			ret_val = sizeof(dev_cmd_spi_play);
+			output_debug_log(true, "[%s]: will start SPI Playback.\n", __func__);
 
 			if(fm1388_data->playback_thread_id) {
-				lidbg(TAG"%s, playback is in processing, please stop it first.\n", __func__);
-				ret_val = -EINPROCESSING;
+				output_debug_log(true, "[%s]: playback is in processing, please stop it first.\n", __func__);
+				kthread_stop(fm1388_data->playback_thread_id);
+						msleep(20);
+				fm1388_data->playback_thread_id = NULL;
+				//ret_val = -EINPROCESSING;
+				//break;
 			}
 			
+			if(fm1388_data->thread_id) {
+				output_debug_log(true, "[%s]: recording is in processing, please stop it first.\n", __func__);
+				kthread_stop(fm1388_data->thread_id);
+				msleep(20);
+				fm1388_data->thread_id = NULL;
+			}
+			
+			if(fm1388_data->load_data_thread_id) {
+				kthread_stop(fm1388_data->load_data_thread_id);
+				msleep(20);
+				fm1388_data->load_data_thread_id = NULL;
+			}
+			if(fm1388_data->save_data_thread_id) {
+				kthread_stop(fm1388_data->save_data_thread_id);
+				msleep(20);
+				fm1388_data->save_data_thread_id = NULL;
+			}
+
+			play_status_counter 		= 0;
+			play_status 				= 0;
+			source_file_channel_number 	= 0;
+			source_file_total_size		= 0L;
+			
+			ret_val = sizeof(dev_cmd_spi_play);
+
+				
 			for( i = 0; i < 5; i++ ) {
+				/*replace parameter read/write by I2C
+				fm1388_spi_read(channel_addr[i], &address, 4);
+				*/
+				//fm1388_dsp_mode_i2c_read_addr_2( channel_addr[i], &address);
 				fm1388_spi_read(channel_addr[i], &address, 4);
 				fm1388_rec_data_addr[i] = address;
 				if (i == 4)
@@ -2973,23 +3801,26 @@ static ssize_t fm1388_device_write(struct file *file,
 				
 				if(fm1388_rec_data_addr[i] == 0) {
 					ret_val = -EDATAINVAL;
-					lidbg(TAG"%s, got wrong channel address for the %i th.\n", __func__, i);
+					output_debug_log(true, "[%s]: got wrong channel address for the %i th. data.\n", __func__, i);
 					break;
 				}
 			}
 			
 			if(i != 5) {
 				ret_val = -EDATAINVAL;
+				output_debug_log(true, "[%s]: fail to start SPI playback.\n", __func__);
 				break;
 			}
 			
 			if(fm1388_rec_data_addr[4] > 0x1000) { //suppose frame size should not be too large
-				lidbg(TAG"%s, got wrong frame size, framesize=%x\n", __func__, fm1388_rec_data_addr[4]);
+				output_debug_log(true, "[%s]: got wrong frame size, framesize=%x\n", __func__, fm1388_rec_data_addr[4]);
+				output_debug_log(true, "[%s]: fail to start SPI playback.\n", __func__);
 				ret_val = -EDATAINVAL;
 				break;
 			}
 
-			playback_thread_fn 			= fm1388_trans_voice_data_by_channel;
+			playback_thread_fn 			= fm1388_trans_voice_data_by_channel_4buffers;
+			load_data_thread_fn 		= fm1388_read_audio_data_from_file;
 			local_playback_cmd 			= (dev_cmd_spi_play *) local_dev_cmd;
 			snprintf(playback_param.file_path, MAX_PATH_LEN, "%s%s", SDCARD_PATH, local_playback_cmd->file_path);
 			strncpy(playback_param.channel_mapping, local_playback_cmd->channel_mapping, DSP_SPI_REC_CH_NUM + 1);
@@ -3014,79 +3845,156 @@ static ssize_t fm1388_device_write(struct file *file,
 				fetch_param.addr_output1 	= fm1388_rec_data_addr[3];
 				fetch_param.framesize 		= fm1388_rec_data_addr[4];
 				//fm1388_data->thread_id = (struct task_struct *)kthread_run(thread_fn, NULL, "fm1388_fetch_voice_data");
-			}
-					
-			fm1388_data->playback_thread_id = (struct task_struct *)kthread_run(playback_thread_fn, NULL, "fm1388_playback_voice_data");
 
-			lidbg(TAG"%s: wav file path is: %s\n", __func__, playback_param.file_path);
-			lidbg(TAG"%s: channel mapping string is: %s\n", __func__, playback_param.channel_mapping);
-			lidbg(TAG"%s: need_recording is: %d\n", __func__, playback_param.need_recording);
+				kfifo_reset(fm1388_data->rec_kfifo);
+				save_data_thread_fn	= fm1388_save_audio_data_to_file;
+				fm1388_data->save_data_thread_id = (struct task_struct *)kthread_create(save_data_thread_fn, NULL, "fm1388_save_voice_data");
+				sched_setscheduler(fm1388_data->save_data_thread_id, SCHED_RR, &param);
+				output_debug_log(true, "[%s]: save data thread(SCHED_RR) -- prio=%d, static_prio=%d, normal_prio=%d\n", __func__, 
+						fm1388_data->save_data_thread_id->prio, fm1388_data->save_data_thread_id->static_prio, fm1388_data->save_data_thread_id->normal_prio);
+				wake_up_process(fm1388_data->save_data_thread_id);
+			}
+						kfifo_reset(fm1388_data->play_kfifo);
+			fm1388_data->load_data_thread_id = (struct task_struct *)kthread_create(load_data_thread_fn, NULL, "fm1388_load_voice_data");
+			sched_setscheduler(fm1388_data->load_data_thread_id, SCHED_RR, &param);
+			output_debug_log(true, "[%s]: playback thread(SCHED_RR) -- prio=%d, static_prio=%d, normal_prio=%d\n", __func__, 
+					fm1388_data->load_data_thread_id->prio, fm1388_data->load_data_thread_id->static_prio, fm1388_data->load_data_thread_id->normal_prio);
+			wake_up_process(fm1388_data->load_data_thread_id);
+			
+			//give some time to let load data thread get source file information
+			msleep(500);
+			
+//			fm1388_data->playback_thread_id = (struct task_struct *)kthread_run(playback_thread_fn, NULL, "fm1388_playback_voice_data");
+			fm1388_data->playback_thread_id = (struct task_struct *)kthread_create(playback_thread_fn, NULL, "fm1388_transfer_voice_data");
+			sched_setscheduler(fm1388_data->playback_thread_id, SCHED_FIFO, &param);
+			output_debug_log(true, "[%s]: playback thread(SCHED_FIFO) -- prio=%d, static_prio=%d, normal_prio=%d\n", __func__, 
+					fm1388_data->playback_thread_id->prio, fm1388_data->playback_thread_id->static_prio, fm1388_data->playback_thread_id->normal_prio);
+			wake_up_process(fm1388_data->playback_thread_id);
+
+			output_debug_log(true, "[%s]: start SPI Playback with:\n", __func__);
+			output_debug_log(true, "[%s]: \tplayback_param.channel_mapping=%s\n", __func__, playback_param.channel_mapping);
+			output_debug_log(true, "[%s]: \tplayback_param.file_path=%s\n", __func__, playback_param.file_path);
+			output_debug_log(true, "[%s]: \tplayback_param.addr_input0=%x\n", __func__, playback_param.addr_input0);
+			output_debug_log(true, "[%s]: \tplayback_param.addr_input1=%x\n", __func__, playback_param.addr_input1);
+			output_debug_log(true, "[%s]: \tplayback_param.addr_output0=%x\n", __func__, playback_param.addr_output0);
+			output_debug_log(true, "[%s]: \tplayback_param.addr_output1=%x\n", __func__, playback_param.addr_output1);
+			output_debug_log(true, "[%s]: \tplayback_param.framesize=%x\n", __func__, playback_param.framesize);
 			if(playback_param.need_recording == 1) {
-				lidbg(TAG"%s: rec_ch_num is: %d\n", __func__, playback_param.rec_ch_num);
 				for(i = 0; i < DSP_SPI_REC_CH_NUM; i++) {
-					if(playback_param.rec_ch_idx[i] == '1') {
-						temp_channel_index[i] = playback_param.rec_ch_idx[i];
+					if(playback_param.rec_ch_idx[i] == 0) {
+						temp_channel_index[i] = playback_param.rec_ch_idx[i] + '0';
 					}
 					else {
-						temp_channel_index[i] = playback_param.rec_ch_idx[i] + '0';
+						temp_channel_index[i] = playback_param.rec_ch_idx[i];
 					}
 				}
 				temp_channel_index[DSP_SPI_REC_CH_NUM] = 0;
-				lidbg(TAG"%s: rec_ch_idx is: %s\n", __func__, temp_channel_index);
+
+				output_debug_log(true, "[%s]: Also recording at the same time with:\n", __func__);
+				output_debug_log(true, "[%s]: \tfetch_param.ch_num=%d\n", __func__, fetch_param.ch_num);
+				output_debug_log(true, "[%s]: \tfetch_param.ch_idx=%s\n", __func__, temp_channel_index);
 			}
-			/*
-			lidbg(TAG"%s: input0 address is: %08x\n", __func__, playback_param.addr_input0);
-			lidbg(TAG"%s: input1 address is: %08x\n", __func__, playback_param.addr_input1);
-			lidbg(TAG"%s: output0 address is: %08x\n", __func__, playback_param.addr_output0);
-			lidbg(TAG"%s: output1 address is: %08x\n", __func__, playback_param.addr_output1);
-			lidbg(TAG"%s: frame size is: %08x\n", __func__, playback_param.framesize);
-			*/
+			
+			output_debug_log(false, "[%s]: SPI Playback started.\n", __func__);
 			break;
 
 		case FM_SMVD_DSP_PLAYBACK_STOP:
-			lidbg(TAG"%s: Stop SPI Playback.\n", __func__);
+			output_debug_log(true, "[%s]: will stop SPI Playback.\n", __func__);
 
-			ret_val = sizeof(dev_cmd_short);
+			ret_val = sizeof(dev_cmd_playback_result);
 			if(fm1388_data->playback_thread_id) {
 				kthread_stop(fm1388_data->playback_thread_id);
+				msleep(20);
 				fm1388_data->playback_thread_id = NULL;
 			}
-			fm1388_fw_loaded(NULL);
+			if(fm1388_data->load_data_thread_id) {
+				kthread_stop(fm1388_data->load_data_thread_id);
+				msleep(20);
+				fm1388_data->load_data_thread_id = NULL;
+			}
+
+			if(fm1388_data->save_data_thread_id) {
+				kthread_stop(fm1388_data->save_data_thread_id);
+				msleep(20);
+				fm1388_data->save_data_thread_id = NULL;
+			}
+
+			local_playback_result = (dev_cmd_playback_result *) local_dev_cmd;
+			local_playback_result->total_frame_number 			= (u32)playback_total_counter;
+			local_playback_result->error_frame_number			= (u32)playback_error_counter;
+			local_playback_result->first_error_frame_counter	= (u32)first_playback_error_frame_counter;
+			local_playback_result->last_error_frame_counter	= (u32)last_playback_error_frame_counter;
+			if(copy_to_user(buffer, local_playback_result, ret_val)) //bring back playback info
+				lidbg(TAG"copy_to_user(buffer, local_playback_result, ret_val) failed\n");
+
+			output_debug_log(true, "[%s]: SPI Playback stopped.\n", __func__);
 			break;
 
 		case FM_SMVD_DSP_FETCH_VDATA_START:
+			output_debug_log(true, "[%s]: will start SPI Recording.\n", __func__);
 			ret_val = sizeof(dev_cmd_start_rec);
+			
+			if(fm1388_data->playback_thread_id) {
+				output_debug_log(true, "[%s]: playback is in processing, please stop it first.\n", __func__);
+				kthread_stop(fm1388_data->playback_thread_id);
+				msleep(20);
+				fm1388_data->playback_thread_id = NULL;
+			}
 
+			if(fm1388_data->load_data_thread_id) {
+				kthread_stop(fm1388_data->load_data_thread_id);
+				msleep(20);
+				fm1388_data->load_data_thread_id = NULL;
+			}
+			if(fm1388_data->save_data_thread_id) {
+				kthread_stop(fm1388_data->save_data_thread_id);
+				msleep(20);
+				fm1388_data->save_data_thread_id = NULL;
+			}
 			if(fm1388_data->thread_id) {
-				lidbg(TAG"%s, recording is in processing, please stop it first.\n", __func__);
-				ret_val = -EINPROCESSING;
+				output_debug_log(true, "[%s]: recording is in processing, please stop it first.\n", __func__);
+				msleep(20);
+				kthread_stop(fm1388_data->thread_id);
+				fm1388_data->thread_id = NULL;
+				//ret_val = -EINPROCESSING;
+				//break;
 			}
 			
 			for( i = 0; i < 5; i++ ) {
+				/*replace parameter read/write by I2C
 				fm1388_spi_read(channel_addr[i], &address, 4);
+				*/
+				//fm1388_dsp_mode_i2c_read_addr_2( channel_addr[i], &address);
+				fm1388_spi_read(channel_addr[i], &address, 4);
+				lidbg(TAG"\n");
+				output_debug_log(true, "[%s]: \tfm1388_spi_read(channel_addr[i], &address, 4);addr %x,value: %x\n", __func__, address,channel_addr[i]);
+				
 				fm1388_rec_data_addr[i] = address;
 				if (i == 4)
 					fm1388_rec_data_addr[i] &= 0x0000FFFF;
 				
 				if(fm1388_rec_data_addr[i] == 0) {
 					ret_val = -EDATAINVAL;
-					lidbg(TAG"%s, got wrong channel address for the %i th.\n", __func__, i);
+					output_debug_log(true, "[%s]: got wrong channel address for the %i th. data.\n", __func__, i);
 					break;
 				}
 			}
 			
 			if(i != 5) {
 				ret_val = -EDATAINVAL;
+				output_debug_log(true, "[%s]: fail to start SPI recording.\n", __func__);
 				break;
 			}
 			
 			if(fm1388_rec_data_addr[4] > 0x1000) { //suppose frame size should not be too large
-				lidbg(TAG"%s, got wrong frame size, framesize=%x\n", __func__, fm1388_rec_data_addr[4]);
+				output_debug_log(true, "[%s]: got wrong frame size, framesize=%x\n", __func__, fm1388_rec_data_addr[4]);
+				output_debug_log(true, "[%s]: fail to start SPI recording.\n", __func__);
 				ret_val = -EDATAINVAL;
 				break;
 			}
 
-			thread_fn 				= fm1388_fetch_voice_data_by_channel;
+			kfifo_reset(fm1388_data->rec_kfifo);
+			thread_fn 				= fm1388_fetch_voice_data_by_channel_4buffers;//fm1388_fetch_voice_data_by_channel_in_timer;//fm1388_fetch_voice_data_by_channel;
 			local_start_cmd 		= (dev_cmd_start_rec *) local_dev_cmd;
 			fetch_param.ch_num 		= local_start_cmd->ch_num;
 			memcpy(fetch_param.ch_idx, local_start_cmd->ch_idx, DSP_SPI_REC_CH_NUM * sizeof(char));
@@ -3095,27 +4003,79 @@ static ssize_t fm1388_device_write(struct file *file,
 			fetch_param.addr_output0 = fm1388_rec_data_addr[2];
 			fetch_param.addr_output1 = fm1388_rec_data_addr[3];
 			fetch_param.framesize 	= fm1388_rec_data_addr[4];
-			
 
-			fm1388_data->thread_id = (struct task_struct *)kthread_run(thread_fn, NULL, "fm1388_fetch_voice_data");
+//			fm1388_data->thread_id = (struct task_struct *)kthread_run(thread_fn, NULL, "fm1388_fetch_voice_data");
+			fm1388_data->thread_id = (struct task_struct *)kthread_create(thread_fn, NULL, "fm1388_fetch_voice_data");
+			sched_setscheduler(fm1388_data->thread_id, SCHED_FIFO, &param);
+			output_debug_log(true, "[%s]: recording thread(SCHED_FIFO) -- prio=%d, static_prio=%d, normal_prio=%d\n", __func__, 
+					fm1388_data->thread_id->prio, fm1388_data->thread_id->static_prio, fm1388_data->thread_id->normal_prio);
+			wake_up_process(fm1388_data->thread_id);
+
+			save_data_thread_fn	= fm1388_save_audio_data_to_file;
+			fm1388_data->save_data_thread_id = (struct task_struct *)kthread_create(save_data_thread_fn, NULL, "fm1388_save_voice_data");
+			sched_setscheduler(fm1388_data->save_data_thread_id, SCHED_RR, &param);
+			output_debug_log(true, "[%s]: save data thread(SCHED_RR) -- prio=%d, static_prio=%d, normal_prio=%d\n", __func__, 
+					fm1388_data->save_data_thread_id->prio, fm1388_data->save_data_thread_id->static_prio, fm1388_data->save_data_thread_id->normal_prio);
+			wake_up_process(fm1388_data->save_data_thread_id);
+			
+			for(i = 0; i < DSP_SPI_REC_CH_NUM; i++) {
+				if(fetch_param.ch_idx[i] == 0) {
+					temp_channel_index[i] = fetch_param.ch_idx[i] + '0';
+				}
+				else { 	
+					temp_channel_index[i] = fetch_param.ch_idx[i];
+				}
+			}
+			temp_channel_index[DSP_SPI_REC_CH_NUM] = 0;
+			
+			output_debug_log(true, "[%s]: start SPI recording with:\n", __func__);
+			output_debug_log(true, "[%s]: \tfetch_param.ch_num=%d\n", __func__, fetch_param.ch_num);
+			output_debug_log(true, "[%s]: \tfetch_param.ch_idx=%s\n", __func__, temp_channel_index);
+			output_debug_log(true, "[%s]: \tfetch_param.addr_input0=%x\n", __func__, fetch_param.addr_input0);
+			output_debug_log(true, "[%s]: \tfetch_param.addr_input1=%x\n", __func__, fetch_param.addr_input1);
+			output_debug_log(true, "[%s]: \tfetch_param.addr_output0=%x\n", __func__, fetch_param.addr_output0);
+			output_debug_log(true, "[%s]: \tfetch_param.addr_output1=%x\n", __func__, fetch_param.addr_output1);
+			output_debug_log(true, "[%s]: \tfetch_param.framesize=%x\n", __func__, fetch_param.framesize);
+
+			output_debug_log(true, "[%s]: SPI Recording started.\n", __func__);
 			break;
 
 		case FM_SMVD_DSP_FETCH_VDATA_STOP:
-			ret_val = sizeof(dev_cmd_start_rec);
+			output_debug_log(true, "[%s]: will stop SPI Recording.\n", __func__);
+			ret_val = sizeof(dev_cmd_short);
+			
 			if(fm1388_data->thread_id) {
 				kthread_stop(fm1388_data->thread_id);
+				msleep(20);
 				fm1388_data->thread_id = NULL;
 			}
+			output_debug_log(true, "[%s]: sent stop recording thread message.\n", __func__);
+
+			local_record_result = (dev_cmd_record_result *) local_dev_cmd;
+			local_record_result->total_frame_number 		= (u32)(record_total_counter + record_error_counter);
+			local_record_result->error_frame_number			= (u32)record_error_counter;
+			local_record_result->first_error_frame_counter	= (u32)first_record_error_frame_counter;
+			local_record_result->last_error_frame_counter	= (u32)last_record_error_frame_counter;
+			if(copy_to_user(buffer, local_record_result, ret_val)) //bring back recording info
+				lidbg("copy_to_user(buffer, local_record_result, ret_val) failed\n");
+			
+			if(fm1388_data->save_data_thread_id) {
+				kthread_stop(fm1388_data->save_data_thread_id);
+				msleep(20);
+				fm1388_data->save_data_thread_id = NULL;
+			}
+			output_debug_log(true, "[%s]: sent stop save data thread message.\n", __func__);
+
+			output_debug_log(true, "[%s]: SPI Recording stopped.\n", __func__);
 			break;
 
 		default:
 			ret_val = -ECOMMANDINVAL;
 			break;
+	}
 
-    }
-out:
-    if (local_dev_cmd) kfree(local_dev_cmd);
-    return length;
+	if (local_dev_cmd) kfree(local_dev_cmd);
+	return ret_val;
 }
 
 static void dsp_start_vr_work(struct work_struct *work)
@@ -3526,6 +4486,40 @@ static int fm1388_probe(struct platform_device *pdev)
 
 	fm1388_data->thread_id = NULL;
 	fm1388_data->playback_thread_id = NULL;
+	
+	fm1388_data->save_data_thread_id = NULL;
+	spin_lock_init(&fm1388_data->rec_lock);
+	fm1388_data->rec_kfifo = NULL;
+	fm1388_data->rec_kfifo = (struct kfifo *)kmalloc(sizeof(struct kfifo), GFP_KERNEL);
+	if (fm1388_data->rec_kfifo == NULL) {
+		pr_err("%s: no fifo for rec_kfifo\n", __func__);
+		return -ENOMEM;
+	}
+	pr_err("%s: rec_kfifo alloc ok...\n", __func__);
+
+	ret = kfifo_alloc(fm1388_data->rec_kfifo, MAX_KFIFO_BUFFER_SIZE, GFP_KERNEL);
+	if (ret) {
+		pr_err("%s: no kfifo memory\n", __func__);
+		return ret;
+	}
+	pr_err("%s: rec_kfifo buffer alloc ok...\n", __func__);
+
+	fm1388_data->load_data_thread_id = NULL;
+	spin_lock_init(&fm1388_data->play_lock);
+	fm1388_data->play_kfifo = NULL;
+	fm1388_data->play_kfifo = (struct kfifo *)kmalloc(sizeof(struct kfifo), GFP_KERNEL);
+	if (fm1388_data->play_kfifo == NULL) {
+		pr_err("%s: no fifo for play_kfifo\n", __func__);
+		return -ENOMEM;
+	}
+	pr_err("%s: play_kfifo alloc ok...\n", __func__);
+
+	ret = kfifo_alloc(fm1388_data->play_kfifo, MAX_KFIFO_BUFFER_SIZE, GFP_KERNEL);
+	if (ret) {
+		pr_err("%s: no play_kfifo memory\n", __func__);
+		return ret;
+	}
+	pr_err("%s: play_kfifo buffer alloc ok...\n", __func__);
 
     return 0;
 }

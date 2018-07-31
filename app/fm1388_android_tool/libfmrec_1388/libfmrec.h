@@ -54,6 +54,9 @@ extern "C"{
 #else
 #define DEFAULT_MODE_CFG_LOCATION	"/system/lib/firmware/"
 #endif
+#define VOICE_DATA_FILE_NAME 	"voice.dat"
+#define DEFAULT_SDCARD_PATH 	"/sdcard/" //"/mnt/sdcard/"
+
 #define MAX_PATH_LEN		128
 #define MAX_MAPPING_STR_LEN	DSP_SPI_REC_CH_NUM * 3
 #define MAX_MAP_CH_NUM		6
@@ -64,9 +67,17 @@ extern "C"{
 #define USER_VEC_PATH			"VEC_PATH="
 #define USER_KERNEL_SDCARD_PATH	"K_SD_PATH="
 #define USER_USER_SDCARD_PATH	"U_SD_PATH="
-char 	SDCARD_PATH[MAX_PATH_LEN];
-char 	MODE_CFG_LOCATION[CONFIG_LINE_LEN];
+#define USER_OUTPUT_LOG			"OUTPUT_LOG="
+#define USER_USER_LOG_PREFIX	"ulog-"
+#define USER_KERNEL_LOG_PREFIX	"klog-"
+#define USER_LOG_FOLDER			"FMLog"
 
+typedef struct user_defined_path_t {
+	char 	sdcard_path[MAX_PATH_LEN];
+	char 	mode_cfg_path[CONFIG_LINE_LEN];
+	char	output_log[MAX_PATH_LEN];
+	bool	b_output_log;
+} user_defined_path;
 
 static const char valid_channels[MAX_MAP_CH_NUM][3] = {"M0", "M1", "M2", "M3", "RL", "RR"};
 static const unsigned int 	sample_rate_list[] 		= {8000, 16000, 24000, 48000};
@@ -114,6 +125,11 @@ int convert_data(const char* data_file_name, const char* wav_file_name,
 				unsigned int sample_rate, unsigned int bits_per_sample, 
 				int channel_number, const unsigned char* channels, int frame_size);
 int get_dsp_sample_rate(int index);
+int load_user_setting(void);
+char* get_cfg_path(void);
+char* get_sdcard_root(void);
+bool is_output_log(void);
+int output_debug_log(bool output_console, const char *fmt, ...); 
 
 #ifdef __cplusplus
 #if __cplusplus
