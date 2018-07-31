@@ -590,6 +590,7 @@ void parse_cmd(char *pt)
             lidbg_shell_cmd("chmod 777 /data");
             lidbg_shell_cmd("chmod 777 /data/lidbg");
             lidbg_shell_cmd("chmod 777 /data/lidbg/*");
+            fs_mem_log("*158#997--install rec apk\n");
             fs_mem_log("*158#998--install third apk\n");
             fs_mem_log("*158#999--install debug apk\n");
             fs_mem_log("*158#001--LOG_LOGCAT\n");
@@ -744,7 +745,15 @@ void parse_cmd(char *pt)
             show_password_list();
             lidbg_domineering_ack();
         }
-        if (!strcmp(argv[1], "*158#998"))
+
+        if (!strcmp(argv[1], "*158#997"))
+        {
+        	char buff[50] = {0};
+ 			lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "RecForge.apk")));
+			lidbg_shell_cmd("am start -n dje073.android.audiorecorder/dje073.android.audiorecorder.ActivitySplash &");
+            lidbg_domineering_ack();       
+        }
+		if (!strcmp(argv[1], "*158#998"))
         {
             char buff[50] = {0};
             lidbg_shell_cmd(format_string(false, "pm install -r %s ",get_lidbg_file_path(buff, "ES.ko")));
