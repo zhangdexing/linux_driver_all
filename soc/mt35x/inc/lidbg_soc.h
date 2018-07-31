@@ -184,7 +184,7 @@ struct gpiomux_setting {
 #define SOC_KO  "lidbg_ad_mt35x.ko","lidbg_soc_mt35x.ko"
 #define INTERFACE_KO  "lidbg_interface.ko"
 #define RECOVERY_USB_MOUNT_POINT "/usb"
-#define USB_HUB_SUPPORT
+//#define USB_HUB_SUPPORT
 
 
 #define TRACE_MSG_FROM_KMSG
