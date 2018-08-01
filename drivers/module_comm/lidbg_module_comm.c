@@ -28,13 +28,13 @@ typedef struct module_fifo_list
 
 static DEFINE_MUTEX(list_mutex);
 
-static struct class *new_cdev_class = NULL;
+//static struct class *new_cdev_class = NULL;
 int init_thread_kfifo(struct kfifo *pkfifo, int size);
 
-static loff_t node_default_lseek(struct file *file, loff_t offset, int origin)
-{
-	return 0;
-}
+//static loff_t node_default_lseek(struct file *file, loff_t offset, int origin)
+//{
+//	return 0;
+//}
 #if 0
 int new_cdev_node(struct file_operations *cdev_fops, char *nodename)
 {
@@ -169,7 +169,7 @@ int init_thread_kfifo(struct kfifo *pkfifo, int size)
 	return ret;
 }
 
-int put_buf_fifo(struct kfifo *pkfifo , char *buf, int bufLen, spinlock_t *fifo_lock)
+int put_buf_fifo(struct kfifo *pkfifo , const char *buf, int bufLen, spinlock_t *fifo_lock)
 {
 	int len, ret;
 	int data_len;
@@ -256,7 +256,7 @@ static ssize_t module_comm_write(struct file *filp, const char __user *buf,
 	return 0;
 }
 
-static int listWrite(module_threads_list *p, char *buf, int len)
+static int listWrite(module_threads_list *p, const char *buf, int len)
 {
 	int ret = 0;
 	spin_lock(&p->rw_lock);
@@ -296,9 +296,9 @@ static int send_all_fifo(struct list_head *hlist, const void  *buf, int size)
 static long module_comm_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 	module_threads_list *tmp_list = NULL;
-	int ret;
-	char type;
-	char ID;
+	int ret = -1;
+	char type = -1;
+	char ID = -1;
 	char direction;
 	int data_size;
 	char argv[1024];
@@ -309,14 +309,14 @@ static long module_comm_ioctl(struct file *filp, unsigned int cmd, unsigned long
 	{
 		if (copy_from_user(argv, (char *)arg, data_size) > 0)
 		{
-			lidbg( "copy_from_user ERR type : 0x%x ID : 0x%x size : %d direction : %d\n", type , ID, data_size, direction);
+			lidbg( "copy_from_user ERR size : %d direction : %d\n", data_size, direction);
 			return 0;
 		}
 	}else if (direction == _IOCOM_READ)				//如果是读只需要把前面四个字节拷贝到内核空间
 	{
 		if (copy_from_user(argv, (char *)arg, 4) > 0)
 		{
-			lidbg( "copy_from_user ERR type : 0x%x ID : 0x%x size : %d direction : %d\n", type , ID, data_size, direction);
+			lidbg( "copy_from_user ERR size : %d direction : %d\n", data_size, direction);
 			return 0;
 		}
 	}else 
