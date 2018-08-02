@@ -735,8 +735,8 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#149X--fm1388 X:[0 vr mode][1 bt mode][3 mic0 mode][4 mic1 mode][5 mic01 bypass][8 check][9 not check] \n");
 			fs_mem_log("*158#150X--RecForge X:[0 install][1 start] \n");
 			fs_mem_log("*158#151--fm1388 cp spi record tool \n");
-			fs_mem_log("*158#152X--fm1388 spi record X:[0 start 017][1 stop  017][2 start 01457][3 stop 01457][other cp file to udisk]\n");
-			fs_mem_log("*158#153--fm1388 set vec path\n");
+			fs_mem_log("*158#152X--fm1388 spi record X:[0 start 017][1 stop  017][00 start 01457][11 stop 01457][2 start fileManage][other cp file to sdcard/wav]\n");
+			fs_mem_log("*158#153X--fm1388 set vec path X[0 default][1-9 default/1-9]\n");
             fs_mem_log("*158#154--pre_wakeup_quick\n");
             fs_mem_log("*158#155--test N day shutdown :6 mins later\n");
 
@@ -1885,6 +1885,9 @@ void parse_cmd(char *pt)
 				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/fm_fm1388_ /system/bin/fm_fm1388");
 				lidbg_shell_cmd("chmod 777 /system/bin/FM1388_ADB_Tool");
 				lidbg_shell_cmd("chmod 777 /system/bin/fm_fm1388");
+				lidbg_shell_cmd("chmod 666 /system/lib/libFM1388Parameter.so");
+				lidbg_shell_cmd("chmod 666 /system/lib/libfm1388.so");
+				lidbg_shell_cmd("chmod 666 /system/lib/libfmrec_1388.so");
 				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/libFM1388Parameter.so /system/lib/libFM1388Parameter.so");
 				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/libfm1388.so /system/lib/libfm1388.so");
 				lidbg_shell_cmd("cp /flysystem/lib/out/fm1388/tool/libfmrec_1388.so /system/lib/libfmrec_1388.so");
@@ -1897,18 +1900,29 @@ void parse_cmd(char *pt)
 		 {
 				lidbg("*158#152X--fm1388 spi record X:[0 start 017][1 stop  017][2 start 01457][3 stop 01457][other cp file to udisk]\n");
  				if(!strncmp(argv[1], "*158#1520", strlen("*158#1520")))
-					lidbg_shell_cmd("FM1388_ADB_Tool /sdcard/ /system/etc/firmware/ RS1100000100spi_record.wav***************************************************");
+ 				{
+ 					if(strlen(argv[1])==9)
+						lidbg_shell_cmd("FM1388_ADB_Tool /sdcard/ /system/etc/firmware/ RS1100000100spi_record.wav***************************************************");
+					else
+						lidbg_shell_cmd("FM1388_ADB_Tool /sdcard/ /system/etc/firmware/ RS1100110100spi_record.wav***************************************************");
+ 				}
 				else if(!strncmp(argv[1], "*158#1521", strlen("*158#1521")))
-					lidbg_shell_cmd("FM1388_ADB_Tool /sdcard/ /system/etc/firmware/ RT1100000100spi_record.wav***************************************************");
-				else if(!strncmp(argv[1], "*158#1522", strlen("*158#1522")))
-					lidbg_shell_cmd("FM1388_ADB_Tool /sdcard/ /system/etc/firmware/ RS1100110100spi_record.wav***************************************************");
-				else if(!strncmp(argv[1], "*158#1523", strlen("*158#1523")))
-					lidbg_shell_cmd("FM1388_ADB_Tool /sdcard/ /system/etc/firmware/ RT1100110100spi_record.wav***************************************************");
+				{
+					if(strlen(argv[1])==9)
+						lidbg_shell_cmd("FM1388_ADB_Tool /sdcard/ /system/etc/firmware/ RT1100000100spi_record.wav***************************************************");
+					else
+						lidbg_shell_cmd("FM1388_ADB_Tool /sdcard/ /system/etc/firmware/ RT1100110100spi_record.wav***************************************************");
+				}
 				else
 				{
-					lidbg("enter 158152\n");
-					lidbg_shell_cmd("chmod 777 /storage/udisk/ && cp -rf /sdcard/spi_record.wav /storage/udisk/spi_record.wav && sync");
-					//lidbg_shell_cmd("echo appcmd *158#082 > /dev/lidbg_drivers_dbg0");
+					char buf[100]={0};
+					lidbg_shell_cmd("mkdir /sdcard/wav");
+					sprintf(buf,"cp /sdcard/spi_record.wav /sdcard/wav/%s-spi_record.wav",get_current_time());
+					lidbg_shell_cmd(buf);
+					if(!strncmp(argv[1], "*158#1522", strlen("*158#1522")))
+					{
+						 lidbg_shell_cmd("am start -n com.ghisler.android.TotalCommander/.TotalCommander");
+					}
 				}
 				
 				lidbg_domineering_ack();
@@ -1918,8 +1932,7 @@ void parse_cmd(char *pt)
 				lidbg("*158#153--fm1388 set vec path\n");
  				if(strlen(argv[1])>8)
  				{
-					lidbg_shell_cmd(format_string(false, "echo setpath%c > /dev/fm1388_switch_mode",argv[8]));
-					lidbg_shell_cmd("cat /sys/devices/platform/fm1388.0/fm1388_reinit");
+					lidbg_shell_cmd(format_string(false, "echo setpath%c > /dev/fm1388_switch_mode",argv[1][8]));
  				}
 
 				lidbg_domineering_ack();

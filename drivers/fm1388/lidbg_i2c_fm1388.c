@@ -127,6 +127,7 @@ char filepath_name[255];
 bool	b_output_log				= false;
 char 	SDCARD_PATH[MAX_PATH_LEN];
 char 	filepath[CONFIG_LINE_LEN];
+char 	filepath_save[CONFIG_LINE_LEN];
 
 
 #ifdef CUBIE_TRUCK
@@ -3586,11 +3587,18 @@ static ssize_t fm1388_device_mode_write(struct file *file,
 	}
 	else if(!strncmp(mode, "setpath", 7))
 	{
-		set_vec_file_path();
+		char buf[10]={0};
+		strcpy(filepath,filepath_save);
 		if(strncmp(mode, "setpath0", 8))
 		{
-			strcat(filepath,mode+7);
-		}	
+			if(length>=8)
+			{
+				sprintf(buf,"%c/",mode[7]);
+				strcat(filepath,buf);
+			}
+		}
+		lidbg_shell_cmd(format_string(false, "echo mode %d,path %s > /sdcard/fm1388.txt",current_mode,filepath));
+		fm1388_fw_loaded(NULL);
 	}
     else
         lidbg(TAG"%s: no this mode:%s.\n", __func__, mode);
@@ -4377,6 +4385,7 @@ static void set_vec_file_path(void)
 				strcat(filepath,"ruijie/");
 				break;
 		}
+		strcpy(filepath_save,filepath);
 		lidbg(TAG"car_type=%u,vec file path=%s\n", car_type, filepath);
 	}
 	
