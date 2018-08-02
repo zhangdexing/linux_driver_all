@@ -733,12 +733,14 @@ void parse_cmd(char *pt)
             fs_mem_log("*158#147--set android all voice stream min \n");
             fs_mem_log("*158#148--reinit fm1388 \n");
             fs_mem_log("*158#149X--fm1388 X:[0 vr mode][1 bt mode][3 mic0 mode][4 mic1 mode][5 mic01 bypass][8 check][9 not check] \n");
-			fs_mem_log("*158#150X--RecForge X:[0 install][1 start] \n");
-			fs_mem_log("*158#151--fm1388 cp spi record tool \n");
-			fs_mem_log("*158#152X--fm1388 spi record X:[0 start 017][1 stop  017][00 start 01457][11 stop 01457][2 start fileManage][other cp file to sdcard/wav]\n");
-			fs_mem_log("*158#153X--fm1388 set vec path X[0 default][1-9 default/1-9]\n");
+	    fs_mem_log("*158#150X--RecForge X:[0 install][1 start] \n");
+	    fs_mem_log("*158#151--fm1388 cp spi record tool \n");
+	    fs_mem_log("*158#152X--fm1388 spi record X:[0 start 017][1 stop  017][00 start 01457][11 stop 01457][2 start fileManage][other cp file to sdcard/wav]\n");
+	    fs_mem_log("*158#153X--fm1388 set vec path X[0 default][1-9 default/1-9]\n");
             fs_mem_log("*158#154--pre_wakeup_quick\n");
             fs_mem_log("*158#155--test N day shutdown :6 mins later\n");
+	    fs_mem_log("*158#156--enable logd logcat fitle,need to reboot\n");
+	    fs_mem_log("*158#157--disable logd logcat fitle,need to reboot\n");
 
 
             lidbg_shell_cmd("chmod 777 /data/lidbg/ -R");
@@ -1947,6 +1949,20 @@ void parse_cmd(char *pt)
 		 {
 				 lidbg("*158#155--test N day shutdown :6 mins later\n");
 				 lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 29 &");
+				 lidbg_domineering_ack();
+		 }
+		else if (!strcmp(argv[1], "*158#156"))
+		 {
+				 lidbg("*158#156--enable logd logcat fitle,need to reboot\n");
+				 lidbg_shell_cmd("mount -o remount /system");
+				 lidbg_shell_cmd("echo 5 > /flysystem/lib/out/newLogcatPrio.conf");
+				 lidbg_domineering_ack();
+		 }
+		else if (!strcmp(argv[1], "*158#157"))
+		 {
+				 lidbg("*158#157--disable logd logcat fitle,need to reboot\n");
+				 lidbg_shell_cmd("mount -o remount /system");
+				 lidbg_shell_cmd("echo 0 > /flysystem/lib/out/newLogcatPrio.conf");
 				 lidbg_domineering_ack();
 		 }
     }
