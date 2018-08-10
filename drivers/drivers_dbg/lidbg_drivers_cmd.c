@@ -1863,10 +1863,12 @@ void parse_cmd(char *pt)
 					else if(argv[1][8]=='9')
 				 		lidbg_shell_cmd("echo notcheck > /dev/fm1388_switch_mode");
 				 }
+				 else
+				 	lidbg_shell_cmd("echo showvecdate > /dev/fm1388_switch_mode");
 				 
 				 lidbg_domineering_ack();
 		 }
-		else if (!strncmp(argv[1], "*158#150", strlen("*158#150")))
+		else if (!strncmp(argv[1], "*158#150", strlen("*158#150"))) 
 		 {
 			    char buff[50] = {0};
 				lidbg("*158#150X--RecForge X:[0 install][1 start] \n");

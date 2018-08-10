@@ -3601,6 +3601,15 @@ static ssize_t fm1388_device_mode_write(struct file *file,
 		lidbg_shell_cmd(format_string(false, "echo mode %d,path %s > /sdcard/fm1388.txt",current_mode,filepath));
 		fm1388_fw_loaded(NULL);
 	}
+	else if(!strncmp(mode,"showvecdate",strlen("showvecdate")))
+	{
+		char buf[100];
+		int v1,v2;
+		fm1388_dsp_mode_i2c_read_addr_2(0x5ffdfdfe, &v1);
+		fm1388_dsp_mode_i2c_read_addr_2(0x5ffdfdfc, &v2);
+		sprintf(buf,"echo ws toast FM1388_Version:%x-%x  1 > /dev/lidbg_pm0",v1,v2);
+		lidbg_shell_cmd(buf);
+	}
     else
         lidbg(TAG"%s: no this mode:%s.\n", __func__, mode);
 
