@@ -132,12 +132,12 @@
 #define USB_POWER_UDISK_ENABLE do{\
 			lidbg("gpio_usb_udisk_en\n");\
 			check_gpio(g_hw.gpio_usb_udisk_en);\
-			SOC_IO_Output(0, g_hw.gpio_usb_udisk_en, 1);\
+			SOC_IO_Output(0, g_hw.gpio_usb_udisk_en, 0);\
 	}while(0)
 
 #define USB_POWER_UDISK_DISABLE do{\
 			check_gpio(g_hw.gpio_usb_udisk_en);\
-			SOC_IO_Output(0, g_hw.gpio_usb_udisk_en, 0);\
+			SOC_IO_Output(0, g_hw.gpio_usb_udisk_en, 1);\
 	}while(0)
 
 #define USB_WORK_ENABLE do{\
