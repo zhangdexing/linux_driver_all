@@ -9,6 +9,30 @@ static int loop_warning_en = 0;
 
 #define TAG "lidbg_misc: "
 
+
+static inline void iptable_1_sim2_normal(void);
+static inline void iptable_2_sim2_invailed(void);
+static inline void iptable_3_sim1_wifi(void);
+static inline void iptable_4_sim2_ap(void);
+
+static void checkout_iptable_regulation(void);
+static void init_network_status(void);
+static void set_network_status(char *);
+
+
+
+struct network_status
+{
+	char wifi_status;
+	char ap_status;
+	char sim1_status;
+	char sim2_status;
+	char sim2_validaty_status;
+	char last_mode;
+};
+static struct network_status net_status;
+
+
 char *white_udisk[] =
 {
     "/storage/udisk-2E8D-9DD3",
@@ -29,6 +53,203 @@ bool is_white_udisk(char *path)
     }
     return false;
 }
+
+
+static void init_network_status(void)
+{
+	net_status.ap_status=-1;
+	net_status.sim1_status=-1;
+	net_status.sim2_status=-1;
+	net_status.sim2_validaty_status=-1;
+	net_status.wifi_status=-1;
+	net_status.last_mode=-1;
+};
+
+static void set_network_status(char *status)
+{
+	if(!strcmp("wifi_0",status))
+		net_status.wifi_status=0;
+	else if(!strcmp("wifi_1",status))
+		net_status.wifi_status=1;
+	else if(!strcmp("wifi_2",status))
+		net_status.wifi_status=-1;
+	else if(!strcmp("ap_0",status))
+		net_status.ap_status=0;
+	else if(!strcmp("ap_1",status))
+		net_status.ap_status=1;
+	else if(!strcmp("ap_2",status))
+		net_status.ap_status=-1;
+	else if(!strcmp("ccmni1_0",status))
+		net_status.sim1_status=0;
+	else if(!strcmp("ccmni1_1",status))
+		net_status.sim1_status=1;
+	else if(!strcmp("ccmni1_2",status))
+		net_status.sim2_status=-1;
+	else if(!strcmp("ccmni2_0",status))
+		net_status.sim2_status=0;
+	else if(!strcmp("ccmni2_1",status))
+		net_status.sim2_status=1;
+	else if(!strcmp("ccmni2_2",status))
+		net_status.wifi_status=-1;
+	else if(!strcmp("cycle_0",status))
+		net_status.sim2_validaty_status=0;
+	else if(!strcmp("cycle_1",status))
+		net_status.sim2_validaty_status=1;
+	else if(!strcmp("cycle_2",status))
+		net_status.sim2_validaty_status=2;
+	else
+		lidbg(TAG"set_network_status:status:%s invailed\n",status);
+	
+}
+
+static void checkout_iptable_regulation(void)
+{
+	if(net_status.wifi_status==1 )
+	{
+		iptable_3_sim1_wifi();
+	}
+	else if(net_status.wifi_status!=1)
+	{
+		if(net_status.sim2_status==1)
+		{
+			if(net_status.sim2_validaty_status==1)
+			{
+				iptable_1_sim2_normal();
+			}else
+			{
+				iptable_2_sim2_invailed();
+			}
+
+			if(net_status.ap_status)
+			{
+				iptable_4_sim2_ap();
+			}
+			
+		}else
+			iptable_3_sim1_wifi();
+	}
+}
+
+static inline void iptable_1_sim2_normal(void)
+{
+	if(net_status.last_mode==1)
+	{
+		lidbg(TAG"=========iptable1,but return\n");
+		return;
+	}
+	else
+		net_status.last_mode=1;
+
+	lidbg_shell_cmd("iptables -t filter -N WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -t filter -F WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -D INPUT -j WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -D FORWARD -j WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -D OUTPUT -j WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -I INPUT -j WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -I FORWARD -j WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -I OUTPUT -j WEBWHITELIST");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST  -m string  --string Host --algo bm -j MARK --set-mark 1");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string app.api.ai.flyaudio.cn --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string app.oss.ai.flyaudio.cn --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string appmarket.ff255.cn --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string oss.ff255.cn --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string flyaudio.cn --algo bm -j ACCEPT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string ff255.cn --algo bm -j ACCEPT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string mqtt.aliyuncs.com --algo bm -j ACCEPT ");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string mp.weixin.qq.com --algo bm -j ACCEPT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string api.weixin.qq.com --algo bm -j ACCEPT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string amap.com --algo bm -j ACCEPT ");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string a.autonavi.com --algo bm -j ACCEPT ");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string xiaomor.com --algo bm -j ACCEPT ");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string aispeech.com --algo bm -j ACCEPT ");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string amap-api.cn-hangzhou.oss-pub.aliyun-inc.com --algo bm -j ACCEPT ");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string bugly.qq.com --algo bm -j ACCEPT ");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string hivoice.cn --algo bm -j ACCEPT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string txzing.com --algo bm -j ACCEPT ");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string vectormap0.bdimg.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string offmap1.baidu.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string bdns.baidu.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string privatefm.baidu.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string automap.cdn.bcebos.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string api.codriver.baidu.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string baidu.com --algo bm -j ACCEPT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string ss0.bdstatic.com --algo bm -j ACCEPT ");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string passport.bdimg.com --algo bm -j ACCEPT ");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string 14.215.177.69 --algo bm -j ACCEPT ");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string qingting --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string moji --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string qiyi --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string music --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string fm --algo bm -j REJECT  ");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -j REJECT");
+	lidbg(TAG"=========iptable1\n");
+}
+
+static inline void iptable_2_sim2_invailed(void)
+{
+	if(net_status.last_mode==2)
+	{
+		lidbg(TAG"=========iptable2,but return\n");
+		return;
+	}
+	else
+		net_status.last_mode=2;
+
+	lidbg_shell_cmd("iptables -t filter -N WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -t filter -F WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -D INPUT -j WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -D FORWARD -j WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -D OUTPUT -j WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -I INPUT -j WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -I FORWARD -j WEBWHITELIST ");
+	lidbg_shell_cmd("iptables -I OUTPUT -j WEBWHITELIST");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m string  --string Host: --algo bm -j MARK --set-mark 1");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string iot.api.ai.flyaudio.cn --algo bm -j ACCEPT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string wechat.api.ai.flyaudio.cn --algo bm -j ACCEPT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string baidu.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string bdimg.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string bcebos.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string shifen.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string vectormap0.bdimg.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string offmap1.baidu.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string bdns.baidu.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string privatefm.baidu.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string automap.cdn.bcebos.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string api.codriver.baidu.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string boscdn.baidu.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string offnavi.map.baidu.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string offlinedata.alicdn.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string mapdownload.autonavi.com --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string qingting --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string moji --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string qiyi --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string music --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string fm --algo bm -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -j REJECT");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -d post-cn-mp908d6u604.mqtt.aliyuncs.com -j REJECT");
+	lidbg(TAG"=========iptable2\n");
+}
+
+static inline void iptable_3_sim1_wifi(void)
+{
+	if(net_status.last_mode==3)
+	{
+		lidbg(TAG"=========iptable3,but return\n");
+		return;
+	}
+	else
+		net_status.last_mode=3;
+
+	lidbg_shell_cmd("iptables -t filter -F WEBWHITELIST");
+	lidbg(TAG"=========iptable3\n");
+}
+
+static inline void iptable_4_sim2_ap(void)
+{
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -o ap+ -j REJECT");
+	lidbg(TAG"=========iptable4\n");
+}
+
 
 void unhandled_monitor(char *key_word, void *data)
 {
@@ -287,10 +508,16 @@ ssize_t misc_write (struct file *filp, const char __user *buf, size_t size, loff
 	        lidbg(TAG"conf_check.skip\n");
 	    }
     }
+	else if(argc >= 2 && argv[1] != NULL && (!strcmp(argv[0], "iptables")))
+	{
+		set_network_status(argv[1]);
+		checkout_iptable_regulation();
+	}
     else
         LIDBG_ERR(TAG"%d\n", argc);
     return size;
 }
+
 
 static  struct file_operations misc_nod_fops =
 {
@@ -404,6 +631,7 @@ int misc_init(void *data)
     //lidbg_trace_msg_cb_register("unhandled",NULL,unhandled_monitor);
    // lidbg_trace_msg_cb_register("lidbgerr", NULL, lidbgerr_monitor);
 
+	init_network_status();
     lidbg_new_cdev(&misc_nod_fops, "lidbg_misc0");
 
     while(0 == g_var.android_boot_completed)
