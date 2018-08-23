@@ -104,9 +104,22 @@ static void set_network_status(char *status)
 
 static void checkout_iptable_regulation(void)
 {
+
+	lidbg("========sim1:%d,sim2:%d,sim2_?:%d,wifi:%d,ap:%d\n",
+			net_status.sim1_status,net_status.sim2_status,net_status.sim2_validaty_status,net_status.wifi_status,net_status.ap_status);
+
 	if(net_status.wifi_status==1 )
 	{
-		iptable_3_sim1_wifi();
+		if(net_status.last_mode==3)
+		{
+			lidbg("=========iptable3,but return\n");
+		}
+		else
+		{
+			net_status.last_mode=3;
+			iptable_3_sim1_wifi();
+			iptable_3_sim1_wifi();
+		}
 	}
 	else if(net_status.wifi_status!=1)
 	{
@@ -114,32 +127,52 @@ static void checkout_iptable_regulation(void)
 		{
 			if(net_status.sim2_validaty_status==1)
 			{
-				iptable_1_sim2_normal();
+				if(net_status.last_mode==1)
+				{
+					lidbg("=========iptable1,but return\n");
+				}
+				else
+				{
+					net_status.last_mode=1;
+					iptable_1_sim2_normal();
+					iptable_1_sim2_normal();
+				}
 			}else
 			{
-				iptable_2_sim2_invailed();
+				if(net_status.last_mode==2)
+				{
+					lidbg("=========iptable2,but return\n");
+				}
+				else
+				{
+					net_status.last_mode=2;
+					iptable_2_sim2_invailed();
+					iptable_2_sim2_invailed();
+
+				}
 			}
 
-			if(net_status.ap_status)
-			{
-				iptable_4_sim2_ap();
-			}
-			
+			iptable_4_sim2_ap();
+			iptable_4_sim2_ap();
+
 		}else
-			iptable_3_sim1_wifi();
+		{
+			if(net_status.last_mode==3)
+			{
+				lidbg("=========iptable3,but return\n");
+			}
+			else
+			{
+				net_status.last_mode=3;
+				iptable_3_sim1_wifi();
+				iptable_3_sim1_wifi();
+			}
+		}
 	}
 }
 
 static inline void iptable_1_sim2_normal(void)
 {
-	if(net_status.last_mode==1)
-	{
-		lidbg(TAG"=========iptable1,but return\n");
-		return;
-	}
-	else
-		net_status.last_mode=1;
-
 	lidbg_shell_cmd("iptables -t filter -N WEBWHITELIST ");
 	lidbg_shell_cmd("iptables -t filter -F WEBWHITELIST ");
 	lidbg_shell_cmd("iptables -D INPUT -j WEBWHITELIST ");
@@ -187,13 +220,6 @@ static inline void iptable_1_sim2_normal(void)
 
 static inline void iptable_2_sim2_invailed(void)
 {
-	if(net_status.last_mode==2)
-	{
-		lidbg(TAG"=========iptable2,but return\n");
-		return;
-	}
-	else
-		net_status.last_mode=2;
 
 	lidbg_shell_cmd("iptables -t filter -N WEBWHITELIST ");
 	lidbg_shell_cmd("iptables -t filter -F WEBWHITELIST ");
@@ -232,14 +258,6 @@ static inline void iptable_2_sim2_invailed(void)
 
 static inline void iptable_3_sim1_wifi(void)
 {
-	if(net_status.last_mode==3)
-	{
-		lidbg(TAG"=========iptable3,but return\n");
-		return;
-	}
-	else
-		net_status.last_mode=3;
-
 	lidbg_shell_cmd("iptables -t filter -F WEBWHITELIST");
 	lidbg(TAG"=========iptable3\n");
 }
