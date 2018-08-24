@@ -151,9 +151,12 @@ static void checkout_iptable_regulation(void)
 
 				}
 			}
-
-			iptable_4_sim2_ap();
-			iptable_4_sim2_ap();
+			
+			if(net_status.ap_status==1)
+			{
+				iptable_4_sim2_ap();
+				iptable_4_sim2_ap();
+			}
 
 		}else
 		{
