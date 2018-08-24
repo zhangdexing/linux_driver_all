@@ -19,6 +19,7 @@ static void checkout_iptable_regulation(void);
 static void init_network_status(void);
 static void set_network_status(char *);
 
+static struct mutex lock;
 
 
 struct network_status
@@ -27,8 +28,10 @@ struct network_status
 	char ap_status;
 	char sim1_status;
 	char sim2_status;
+	char sim_status;
 	char sim2_validaty_status;
 	char last_mode;
+	char ap_by_reset;
 };
 static struct network_status net_status;
 
@@ -60,9 +63,11 @@ static void init_network_status(void)
 	net_status.ap_status=-1;
 	net_status.sim1_status=-1;
 	net_status.sim2_status=-1;
+	net_status.sim_status=-1;
 	net_status.sim2_validaty_status=-1;
 	net_status.wifi_status=-1;
 	net_status.last_mode=-1;
+	net_status.ap_by_reset=-1;
 };
 
 static void set_network_status(char *status)
@@ -97,6 +102,14 @@ static void set_network_status(char *status)
 		net_status.sim2_validaty_status=1;
 	else if(!strcmp("cycle_2",status))
 		net_status.sim2_validaty_status=2;
+	else if(!strcmp("cycle_3",status))
+		net_status.sim2_validaty_status=-1;
+	else if(!strcmp("mobile_0",status))
+		net_status.sim_status=0;
+	else if(!strcmp("mobile_1",status))
+		net_status.sim_status=1;
+	else if(!strcmp("mobile_2",status))
+		net_status.sim_status=-1;
 	else
 		lidbg(TAG"set_network_status:status:%s invailed\n",status);
 	
@@ -117,58 +130,72 @@ static void checkout_iptable_regulation(void)
 		else
 		{
 			net_status.last_mode=3;
+			net_status.ap_by_reset=1;
 			iptable_3_sim1_wifi();
 			iptable_3_sim1_wifi();
 		}
 	}
-	else if(net_status.wifi_status!=1)
+	else if(net_status.sim_status==1)
 	{
 		if(net_status.sim2_status==1)
 		{
-			if(net_status.sim2_validaty_status==1)
+			if(net_status.sim1_status!=1)
 			{
-				if(net_status.last_mode==1)
+				if(net_status.sim2_validaty_status==1)
 				{
-					lidbg("=========iptable1,but return\n");
-				}
-				else
+					if(net_status.last_mode==1)
+					{
+						lidbg("=========iptable1,but return\n");
+					}
+					else
+					{
+						net_status.last_mode=1;
+						net_status.ap_by_reset=1;
+						iptable_1_sim2_normal();
+						iptable_1_sim2_normal();
+					}
+				}else
 				{
-					net_status.last_mode=1;
-					iptable_1_sim2_normal();
-					iptable_1_sim2_normal();
+					if(net_status.last_mode==2)
+					{
+						lidbg("=========iptable2,but return\n");
+					}
+					else
+					{
+						net_status.last_mode=2;
+						net_status.ap_by_reset=1;
+						iptable_2_sim2_invailed();
+						iptable_2_sim2_invailed();
+					}
 				}
-			}else
-			{
-				if(net_status.last_mode==2)
+				
+				if(net_status.ap_status==1)
 				{
-					lidbg("=========iptable2,but return\n");
+					if(net_status.ap_by_reset==0)
+					{
+						lidbg("=========iptable4,but return\n");
+					}
+					else
+					{
+						net_status.ap_by_reset=0;
+						iptable_4_sim2_ap();
+						iptable_4_sim2_ap();
+					}
 				}
-				else
-				{
-					net_status.last_mode=2;
-					iptable_2_sim2_invailed();
-					iptable_2_sim2_invailed();
-
-				}
-			}
-			
-			if(net_status.ap_status==1)
-			{
-				iptable_4_sim2_ap();
-				iptable_4_sim2_ap();
-			}
-
-		}else
-		{
-			if(net_status.last_mode==3)
-			{
-				lidbg("=========iptable3,but return\n");
 			}
 			else
 			{
-				net_status.last_mode=3;
-				iptable_3_sim1_wifi();
-				iptable_3_sim1_wifi();
+				if(net_status.last_mode==3)
+				{
+					lidbg("=========iptable3,but return\n");
+				}
+				else
+				{
+					net_status.ap_by_reset=1;
+					net_status.last_mode=3;
+					iptable_3_sim1_wifi();
+					iptable_3_sim1_wifi();
+				}
 			}
 		}
 	}
@@ -185,6 +212,7 @@ static inline void iptable_1_sim2_normal(void)
 	lidbg_shell_cmd("iptables -I FORWARD -j WEBWHITELIST ");
 	lidbg_shell_cmd("iptables -I OUTPUT -j WEBWHITELIST");
 	lidbg_shell_cmd("iptables -A WEBWHITELIST  -m string  --string Host --algo bm -j MARK --set-mark 1");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string app.api.ai.flyaudio.cn --algo bm -j REJECT");
 	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string app.api.ai.flyaudio.cn --algo bm -j REJECT");
 	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string app.oss.ai.flyaudio.cn --algo bm -j REJECT");
 	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string appmarket.ff255.cn --algo bm -j REJECT");
@@ -233,6 +261,7 @@ static inline void iptable_2_sim2_invailed(void)
 	lidbg_shell_cmd("iptables -I FORWARD -j WEBWHITELIST ");
 	lidbg_shell_cmd("iptables -I OUTPUT -j WEBWHITELIST");
 	lidbg_shell_cmd("iptables -A WEBWHITELIST -m string  --string Host: --algo bm -j MARK --set-mark 1");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string iot.api.ai.flyaudio.cn --algo bm -j ACCEPT");
 	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string iot.api.ai.flyaudio.cn --algo bm -j ACCEPT");
 	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string wechat.api.ai.flyaudio.cn --algo bm -j ACCEPT");
 	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string baidu.com --algo bm -j REJECT");
@@ -531,8 +560,10 @@ ssize_t misc_write (struct file *filp, const char __user *buf, size_t size, loff
     }
 	else if(argc >= 2 && argv[1] != NULL && (!strcmp(argv[0], "iptables")))
 	{
+		mutex_lock(&lock);
 		set_network_status(argv[1]);
 		checkout_iptable_regulation();
+		mutex_unlock(&lock);
 	}
     else
         LIDBG_ERR(TAG"%d\n", argc);
@@ -653,6 +684,7 @@ int misc_init(void *data)
    // lidbg_trace_msg_cb_register("lidbgerr", NULL, lidbgerr_monitor);
 
 	init_network_status();
+	mutex_init(&lock);
     lidbg_new_cdev(&misc_nod_fops, "lidbg_misc0");
 
     while(0 == g_var.android_boot_completed)
