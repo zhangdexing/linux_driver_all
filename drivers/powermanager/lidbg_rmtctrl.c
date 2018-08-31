@@ -363,6 +363,9 @@ ssize_t rmtctrl_write (struct file *filp, const char __user *buf, size_t size, l
     if(!strcmp(cmd[0], "pre_wakeup"))
     {
         //lidbg_shell_cmd("am broadcast -a com.lidbg.flybootserver.action --ei action 28 &");
+	#ifdef SOC_mt35x
+		MSM_DSI83_POWER_ON;	//修复预启动白屏
+	#endif
         send_app_status(FLY_PRE_WAKEUP);
         AUTO_SLEEP_JIFF = PRE_WAKEUP_TIMEOUT_DEFAULT_JIFF;
         if(pre_wakeup_quick == 1)
