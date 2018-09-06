@@ -73,6 +73,11 @@
         SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
 				}while(0)
 
+#define LPC_CMD_SYSTEM_RESET   do{\
+		u8 buff[] = {0x00,0x03,0x01,0X00};\
+        SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\
+				}while(0)
+
 #define LPC_CMD_RADIORST_L  do{\
 		u8 buff[] = {0x02, 0x0a, 0x00};\
         SOC_LPC_Send(buff, SIZE_OF_ARRAY(buff));\

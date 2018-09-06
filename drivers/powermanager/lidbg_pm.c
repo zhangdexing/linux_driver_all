@@ -903,6 +903,14 @@ ssize_t pm_state_write (struct file *filp, const char __user *buf, size_t size, 
     //flyaudio logic
     if(!strcmp(cmd[0], "flyaudio"))
     {
+    	if(!strcmp(cmd[1],"android_boot"))
+    	{
+                if((ktime_to_ms(ktime_get_boottime())>60000*30) && (g_var.acc_flag == FLY_ACC_OFF))
+                {
+                        lidbg("[pm]soc will be reset\n");
+                        LPC_CMD_SYSTEM_RESET;
+                }
+    	}
     }
 
     return size;
@@ -1139,6 +1147,16 @@ static int thread_observer(void *data)
         case 66:
         lidbg("dump meminfo \n");
         lidbg_shell_cmd("dumpsys meminfo > /sdcard/meminfo_warn.txt");
+        break;
+
+        case 60*30:
+                lidbg("[pm]soc power down\n");
+                LPC_CMD_DISABLE_SOC_POWER;
+        break;
+
+        case 60*3:
+                lidbg("[pm]send broadcast sleep timeout\n");
+                lidbg_shell_cmd("am broadcast -a com.fly.flybootservice.SLEEP_TIMEOUT");
         break;
 
                 }

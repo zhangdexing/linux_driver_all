@@ -178,6 +178,7 @@ public class FlyBootService extends Service {
         super.onCreate();
 	mFlyBootService = this;
         LIDBG_PRINT("onCreate-->start LidbgCommenLogic.2016-12-29 20:12:23\n");
+        writeToFile("/dev/lidbg_pm_states0", "flyaudio android_boot");
         Intent mIntent = new Intent();
         mIntent.setComponent(new ComponentName("com.fly.lidbg.LidbgCommenLogic","com.fly.lidbg.LidbgCommenLogic.LidbgCommenLogicService"));
         this.startService(mIntent);
