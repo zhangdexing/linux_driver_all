@@ -335,6 +335,7 @@ static void iptable_2_sim2_invailed(void)
 	lidbg_shell_cmd("iptables -I FORWARD -j WEBWHITELIST ");
 	lidbg_shell_cmd("iptables -I OUTPUT -j WEBWHITELIST");
 	lidbg_shell_cmd("iptables -A WEBWHITELIST -m string  --string Host: --algo bm -j MARK --set-mark 1");
+	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string test.api.ai.flyaudio.cn --algo bm -j ACCEPT");
 	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string iot.api.ai.flyaudio.cn --algo bm -j ACCEPT");
 	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string iot.api.ai.flyaudio.cn --algo bm -j ACCEPT");
 	lidbg_shell_cmd("iptables -A WEBWHITELIST -m mark --mark 1 -m string  --string wechat.api.ai.flyaudio.cn --algo bm -j ACCEPT");
