@@ -212,6 +212,8 @@ static void checkout_iptable_regulation(void)
 		{
 			iptable_5_sim2_disable_ap();
 			iptable_5_sim2_disable_ap();
+			iptable_5_sim2_disable_ap();
+			iptable_5_sim2_disable_ap();
 		}
 		
 		net_status.last_ap_rule = net_status.current_ap_rule;
