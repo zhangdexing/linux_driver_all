@@ -74,6 +74,7 @@ char *lmk_protect_list[] =
 	"m.aispeech.aios",
     "ch.aios.adapter",
 	".morservice.app",
+	"flyaudio.simnet",
 
 	
 	NULL,
