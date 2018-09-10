@@ -772,6 +772,8 @@ int misc_init(void *data)
 
 	init_network_status();
 	mutex_init(&lock);
+			iptable_2_sim2_invailed();
+			iptable_2_sim2_invailed();
     lidbg_new_cdev(&misc_nod_fops, "lidbg_misc0");
 
     while(0 == g_var.android_boot_completed)
