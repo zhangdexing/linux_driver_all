@@ -82,6 +82,7 @@ void dbg_msg_set_test(const char *Resolution)
 	char *kernel_cmd = cmdline_get();
 	sprintf(kernel_cmd, "%s %s", kernel_cmd, Resolution);
 	kernel_cmd = NULL;
+	dprintf(INFO, "HDJ: dbg_msg_set_test.Resolution = %s\n", Resolution);
 	return ;
 }
 
@@ -433,7 +434,10 @@ bool Fly_Get_Resolution(int *x, int *y, int *bit)
 	}else if(fly_display < 1){
 	        *x = 1024;
 	        *y = 600;
-		dbg_msg_set_test("display=1024_600");
+		if(fly_manufacturer == 4)
+			dbg_msg_set_test("display=1024_600_6bit");
+		else
+			dbg_msg_set_test("display=1024_600");
 	        return true;
 	}else if(fly_display == 2){
 	        *x = 1280;
