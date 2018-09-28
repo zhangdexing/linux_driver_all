@@ -1,5 +1,5 @@
 LOCATE_PATH=`pwd`
-echo $LOCATE_PATH
+echo LOCATE_PATH=$LOCATE_PATH
 source ../../dbg_cfg.sh
 cd ../../build && source env_entry.sh && ./build_cfg.sh $DBG_SOC $BOARD_VERSION $DBG_PLATFORM $DBG_VENDOR
 
@@ -10,9 +10,10 @@ cd $DBG_SYSTEM_DIR/&&source ./build/envsetup.sh&&lunch rkpx3-$SYSTEM_BUILD_TYPE
 elif [ $DBG_SOC = mt35x ];then
 cd $DBG_SYSTEM_DIR/&&source build/envsetup.sh&&choosecombo release full_$DBG_PLATFORM $SYSTEM_BUILD_TYPE
 else
-cd $DBG_SYSTEM_DIR/&&source build/envsetup.sh&&choosecombo release $DBG_PLATFORM $SYSTEM_BUILD_TYPE
+cd $DBG_SYSTEM_DIR/mydroid&&source build/envsetup.sh&&lunch full_jacinto6evm-userdebug
 fi
-mmm $LOCATE_PATH -B
+#mmm $LOCATE_PATH 
+mmm $DBG_SYSTEM_DIR/mydroid/system/lidbg_load
 while :;do		
 	echo
 	echo -e "\033[41;20m 任意键继续，ctrl+c退出 \033[0m"

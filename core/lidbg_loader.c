@@ -28,7 +28,7 @@ char *insmod_list[] =
     "lidbg_msg.ko",
     "lidbg_servicer.ko",
     "lidbg_touch.ko",
-    //   "lidbg_spi.ko",
+    "lidbg_spi.ko",
     "lidbg_key.ko",
     "lidbg_i2c.ko",
     "lidbg_io.ko",

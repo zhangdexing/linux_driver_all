@@ -97,6 +97,8 @@
 #include "lidbg_soc.h"
 #include "lidbg_bare_para.h"
 
+#define f_dentry f_path.dentry
+
 #ifdef PLATFORM_msm8909
 #include "lidbg_soc_msm8909.h"
 #elif defined(PLATFORM_msm8996)

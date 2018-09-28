@@ -8,7 +8,7 @@ cd $DBG_SYSTEM_DIR/&&source ./selfenv&&lunch 5  && mmm $DBG_HAL_PATH -B
 elif [ $DBG_SOC = mt35x ];then
 cd $DBG_SYSTEM_DIR/&&source build/envsetup.sh&&choosecombo release full_$DBG_PLATFORM $SYSTEM_BUILD_TYPE && mmm $DBG_HAL_PATH -B
 else
-cd $DBG_SYSTEM_DIR/&&source build/envsetup.sh&&choosecombo release $DBG_PLATFORM $SYSTEM_BUILD_TYPE && mmm $DBG_HAL_PATH -B
+cd $DBG_SYSTEM_DIR/mydroid&&source build/envsetup.sh&&lunch 38 && mmm $DBG_HAL_PATH 
 if [ $? = 0 ]; then
 	echo
 else

@@ -444,6 +444,8 @@ case "$USERS_ID" in
                 export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/msm8909_6_0
 		export BP_SOURCE_PATH=$DBG_PLATFORM_PATH/8974-6.0/bp
                 export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/../8909-release;;
+		24)
+                export DBG_SYSTEM_DIR=/home/jixiaohong/source/J6-Android-8.1.0;;
 	esac;;
 	8)
 	export DBG_PLATFORM_PATH=/home/ctb/cks
@@ -603,6 +605,13 @@ case "$USERS_ID" in
 		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/mt3561
 		export RELEASE_REPOSITORY=$DBG_PLATFORM_PATH/mt3561-release;;
 	esac;;
+	12)
+	export DBG_PLATFORM_PATH=/home/jixiaohong
+	case "$DBG_PLATFORM_ID" in
+		24)
+		export DBG_SYSTEM_DIR=$DBG_PLATFORM_PATH/source/J6-Android-8.1.0;;
+	esac;;
+	
 esac
 
 

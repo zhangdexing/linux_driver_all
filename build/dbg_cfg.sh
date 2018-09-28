@@ -23,7 +23,7 @@
 # 21--mt3561 Android_6.0.1 V2 new code ct
 # 22--msm8996 Android_7.1.1
 # 23--msm8909 Android_6.0.1
-
+# 24--J6 Android_8.0
 ## USERS_ID ###
 # 0--root@192.168.9.222
 # 1--futengfei.Notebook.huasuo
@@ -31,5 +31,5 @@
 #10 jiangdepeng-dingyafeng server jiangdepeng flyaudio
 
 
-export DBG_PLATFORM_ID=13
-export USERS_ID=7
+export DBG_PLATFORM_ID=19
+export USERS_ID=0

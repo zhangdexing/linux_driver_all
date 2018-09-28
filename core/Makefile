@@ -1,6 +1,7 @@
 include $(DBG_ROOT_PATH)/build/build.mk
 include $(DBG_CORE_PATH)/core.mk
 
+#obj-m   += lidbg_ad.o
 obj-m	+= lidbg_immediate.o
 obj-m	+= lidbg_io.o
 obj-m	+= lidbg_uevent.o

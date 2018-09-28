@@ -187,8 +187,7 @@ case "$DBG_PLATFORM_ID" in
 	export UPDATA_BASESYSTEM_DIR=$RELEASE_REPOSITORY/basesystem
 	export DBG_PASSWORD=gitac8317
 	export DBG_REPO_PASSWORD=gitac8317
-	export DBG_VENDOR=VENDOR_MTK
-	export DBG_SOC=mt3360
+	export DBG_VENDOR=VENDOR_MTK export DBG_SOC=mt3360
 	export REPOSITORY_WORK_BRANCH=master
 	export SYSTEM_WORK_BRANCH=master
         export MAKE_PAKG_NUM=1;;
@@ -833,6 +832,27 @@ case "$DBG_PLATFORM_ID" in
 	export RPM_BUILD_CMD='./rpm_proc/build/build_8909.sh -j1'
 	export TZ_BUILD_CMD='./build.sh CHIPSET=msm8909 tz sampleapp tzbsp_no_xpu playready widevine keymaster commonlib -j1'
 	export UPDATE_BUILD_CMD='python update_common_info.py';;
+
+    24)
+        export DBG_PLATFORM=jacinto6evm
+        export SOC_ARCH=arm
+        export BOARD_VERSION=V1
+        export ANDROID_VERSION=801
+        export DBG_CROSS_COMPILE=$DBG_SYSTEM_DIR/mydroid/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-
+        export SYSTEM_BUILD_TYPE=userdebug
+        export DBG_BOOTLOADER_DIR=$DBG_SYSTEM_DIR/u-boot
+        export DBG_BOOTLOADER_TYPE=UBOOT
+        export DBG_BOOTLOADER_IMG=u-boot.img
+        export DBG_BOOTLOADER_PARTITION_NAME=u-boot
+        export DBG_KERNEL_SRC_DIR=$DBG_SYSTEM_DIR/kernel
+        export DBG_KERNEL_OBJ_DIR=$DBG_SYSTEM_DIR/kernel
+        export UPDATA_BIN_PLATFORM_DIR=$RELEASE_REPOSITORY
+        export UPDATA_BIN_DIR=$UPDATA_BIN_PLATFORM_DIR/driver
+        export UPDATA_BASESYSTEM_DIR=$UPDATA_BIN_PLATFORM_DIR/basesystem
+        export DBG_VENDOR=VENDOR_J6
+        export DBG_SOC=J6
+        export MAKE_PAKG_NUM=19
+#        export NON_HLOS_FILE_PATH=$BP_SOURCE_PATH/common/build/bin/asic
 
 
 esac 
