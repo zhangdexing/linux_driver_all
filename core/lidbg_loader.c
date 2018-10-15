@@ -28,7 +28,7 @@ char *insmod_list[] =
     "lidbg_msg.ko",
     "lidbg_servicer.ko",
     "lidbg_touch.ko",
-    "lidbg_spi.ko",
+
     "lidbg_key.ko",
     "lidbg_i2c.ko",
     "lidbg_io.ko",
@@ -58,6 +58,7 @@ void lidbg_insmod( char argv1[])
 {
     char shell_cmd[256];
     sprintf(shell_cmd, "insmod %s", argv1 == NULL ? " " : argv1);
+	msleep(1000);
     lidbg_uevent_shell(shell_cmd);
 }
 

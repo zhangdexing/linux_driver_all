@@ -165,11 +165,11 @@ bool iSOC_ADC_Get (u32 channel , u32 *value)
     }
 
     *value = 0xffffffff;
-#ifdef SOC_mt3360
+/*#ifdef SOC_mt3360
     *value = soc_ad_read(channel);
 #else
     *value = soc_ad_read(channel) / 1000;
-#endif
+#endif*/
 #if 0
     lidbg("iSOC_ADC_Get=%d\n", *value);
 #endif

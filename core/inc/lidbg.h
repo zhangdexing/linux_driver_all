@@ -99,6 +99,8 @@
 
 #define f_dentry f_path.dentry
 
+//u32  soc_ad_read(u32 ch);
+
 #ifdef PLATFORM_msm8909
 #include "lidbg_soc_msm8909.h"
 #elif defined(PLATFORM_msm8996)

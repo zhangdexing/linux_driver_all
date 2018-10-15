@@ -237,13 +237,17 @@ static int __init lidbg_wakelock_stat_init(void)
 {
     char buff[50] = {0};
     DUMP_BUILD_TIME;
-
-    if(fs_fill_list(get_lidbg_file_path(buff, "wakelock_detail_list.conf"), FS_CMD_FILE_LISTMODE, &waklelock_detail_list) < 0)
-        lidbg("<fail:lidbg_wakelock_stat_init:wakelock_detail_list.conf>\n");
+	printk(">>>>>>>>>%d<<<<<<<<<<<\n", __LINE__);
+//    if(fs_fill_list(get_lidbg_file_path(buff, "wakelock_detail_list.conf"), FS_CMD_FILE_LISTMODE, &waklelock_detail_list) < 0)
+//        lidbg("<fail:lidbg_wakelock_stat_init:wakelock_detail_list.conf>\n");
+	printk(">>>>>>>>>%d<<<<<<<<<<<\n", __LINE__);
 
     spin_lock_init(&new_item_lock);
-    FS_REGISTER_INT(g_wakelock_dbg, "wakelock_dbg", 0, cb_kv_show_list);
-    FS_REGISTER_INT(g_wakelock_dbg_item, "wakelock_dbg_item", 0, NULL);
+	printk(">>>>>>>>>%d<<<<<<<<<<<\n", __LINE__);
+	FS_REGISTER_INT(g_wakelock_dbg, "wakelock_dbg", 0, cb_kv_show_list);
+	printk(">>>>>>>>>%d<<<<<<<<<<<\n", __LINE__);
+	FS_REGISTER_INT(g_wakelock_dbg_item, "wakelock_dbg_item", 0, NULL);
+	printk(">>>>>>>>>%d<<<<<<<<<<<\n", __LINE__);
 
     LIDBG_MODULE_LOG;
 

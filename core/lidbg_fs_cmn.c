@@ -79,9 +79,13 @@ bool clear_file(char *filename)
     struct file *filep;
     filep = filp_open(filename, O_CREAT | O_RDWR | O_TRUNC , 0777);
     if(IS_ERR(filep))
+    {
+		printk("clear_file false\n");
         return false;
-    else
+    	}
+	else
         filp_close(filep, 0);
+	printk("clear_file true\n");
     return true;
 }
 bool get_file_mftime(const char *filename, struct rtc_time *ptm)
@@ -170,6 +174,7 @@ bool copy_file(char *from, char *to, bool encode)
     struct file *pfileto;
     struct inode *inodefrom = NULL;
     mm_segment_t old_fs;
+	printk("copy file from = %s, to = %s\n", from, to);
 
     if(!fs_is_file_exist(from))
     {
@@ -208,10 +213,10 @@ bool copy_file(char *from, char *to, bool encode)
     }
 
     pfilefrom->f_op->llseek(pfilefrom, 0, 0);
+	FS_ALWAYS("pfilefrom->f_pos = %s, &pfilefrom->f_pos = %x\n", pfilefrom->f_pos, &pfilefrom->f_pos);
     pfilefrom->f_op->read(pfilefrom, string, file_len, &pfilefrom->f_pos);
     set_fs(old_fs);
     filp_close(pfilefrom, 0);
-
     if(encode)
         mem_encode(string, file_len, 1);
 
@@ -243,12 +248,16 @@ bool fs_is_file_updated(char *filename, char *infofile)
     memset(news, '\0', sizeof(news));
 
     get_file_tmstring(filename, news);
+	printk("filename = %s, infofile = %s\n", filename, infofile);
 
     if(fs_get_file_size(infofile) > 0)
     {
-
+		printk("fs_get_file_size(infofile) > 0\n");
         if ( (fs_file_read(infofile, pres, 0 , sizeof(pres)) > 0) && (!strcmp(news, pres)))
+        {
+        	printk("fs_file_read false \n");
             return false;
+        }
     }
     fs_clear_file(infofile);
     bfs_file_amend(infofile, news, 0);

@@ -28,20 +28,24 @@ int bfs_file_amend(char *file2amend, char *str_append, int file_limit_M)
         file_limit = file_limit_M;
 
 again:
+	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
     filep = filp_open(file2amend, flags , 0777);
     if(IS_ERR(filep))
     {
         lidbg("[futengfei]err.open:<%s>\n", file2amend);
         return -1;
     }
-
+	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
     old_fs = get_fs();
+	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
     set_fs(get_ds());
-
+	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
     inode = filep->f_dentry->d_inode;
+	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
     file_len = inode->i_size;
+	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
     file_len = file_len + 1;
-
+	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
 
     if(file_len > file_limit * MEM_SIZE_1_MB)
     {
@@ -52,15 +56,19 @@ again:
         filp_close(filep, 0);
         goto again;
     }
+	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
     filep->f_op->llseek(filep, 0, SEEK_END);//note:to the end to append;
     if(1 == is_file_cleard)
     {
         char *str_warn = "============have_cleard=============\n\n";
         is_file_cleard = 0;
+		printk("2>>>>>>>%d<<<<<<<\n", __LINE__);
         filep->f_op->write(filep, str_warn, strlen(str_warn), &filep->f_pos);
     }
+	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
     filep->f_op->write(filep, str_append, strlen(str_append), &filep->f_pos);
-    set_fs(old_fs);
+	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
+	set_fs(old_fs);
     filp_close(filep, 0);
     return 1;
 }

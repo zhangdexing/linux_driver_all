@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     system( "/flysystem/bin/decodeFlyconfig" );
 
     module_insmod("/system/lib/modules/out/lidbg_immediate.ko");
-    module_insmod("/flysystem/lib/out/lidbg_immediate.ko");
+   // module_insmod("/flysystem/lib/out/lidbg_immediate.ko");
 #if 0
     //wait flysystem mount
     while(is_file_exist("/flysystem/lib") == 0)

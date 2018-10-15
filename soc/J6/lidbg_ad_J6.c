@@ -6,6 +6,6 @@ unsigned int  soc_ad_read(unsigned int channel)  //temp-alarm channel is 8  ,nam
 	return -1;
 }
 
-EXPORT_SYMBOL(soc_ad_read);
+//EXPORT_SYMBOL(soc_ad_read);
 
 

@@ -63,8 +63,10 @@ void lidbg_fileserver_main(int argc, char **argv)
 void copy_all_conf_file(void)
 {
     char buff[50] = {0};
+	printk(">>>>>>>%d<<<<<<<<<\n", __LINE__);
     fs_copy_file(get_lidbg_file_path(buff, "build_time.conf"), LIDBG_LOG_DIR"build_time.txt");
-    fs_copy_file(get_lidbg_file_path(buff, "core.conf"), PATH_CORE_CONF);
+	printk(">>>>>>>%d<<<<<<<<<\n", __LINE__);
+	fs_copy_file(get_lidbg_file_path(buff, "core.conf"), PATH_CORE_CONF);
     fs_copy_file(get_lidbg_file_path(buff, "drivers.conf"), PATH_DRIVERS_CONF) ;
     fs_copy_file(get_lidbg_file_path(buff, "state.conf"), PATH_STATE_CONF);
     fs_copy_file(get_lidbg_file_path(buff, "cmd.conf"), PATH_CMD_CONF);
@@ -74,9 +76,11 @@ void check_conf_file(void)
 {
     int size[10];
     char buff[50] = {0};
+	printk(">>>>>>>%d<<<<<<<<<\n", __LINE__);
 
     size[0] = fs_is_file_updated(get_lidbg_file_path(buff, "build_time.conf"), PATH_PRE_CONF_INFO_FILE);
-    size[1] = fs_get_file_size(PATH_DRIVERS_CONF);
+printk(">>>>>>>%d<<<<<<<<<\n", __LINE__);
+	size[1] = fs_get_file_size(PATH_DRIVERS_CONF);
     size[2] = fs_get_file_size(PATH_CORE_CONF);
     size[3] = fs_get_file_size(PATH_STATE_CONF);
     size[4] = fs_get_file_size(PATH_PRE_CONF_INFO_FILE);
@@ -90,7 +94,9 @@ void check_conf_file(void)
         FS_ALWAYS( "<overwrite:push,update?>\n");
         fs_mem_log( "<overwrite:push,update?>\n");
         is_out_updated = true;
-        copy_all_conf_file();
+		printk(">>>>>>>%d<<<<<<<<<\n", __LINE__);
+
+		copy_all_conf_file();
         lidbg_shell_cmd("rm -rf /data/kmsg.txt");
         lidbg_shell_cmd("rm -rf "LIDBG_KMSG_FILE_PATH);
         lidbg_shell_cmd("rm -rf "LIDBG_LOG_DIR"lidbg_mem_log.txt");
@@ -113,17 +119,20 @@ void lidbg_fileserver_main_prepare(void)
 
     lidbg_shell_cmd("mkdir "LIDBG_LOG_DIR);
     lidbg_shell_cmd("mkdir "LIDBG_OSD_DIR);
+	printk(">>>>>>>%d<<<<<<<<<\n", __LINE__);
 
     check_conf_file();
+	printk(">>>>>>>%d<<<<<<<<<\n", __LINE__);
 
-    set_machine_id();
+    //set_machine_id();
     FS_ALWAYS("machine_id:%d\n", get_machine_id());
 
     fs_fill_list(PATH_CORE_CONF, FS_CMD_FILE_CONFIGMODE, &lidbg_core_list);
     fs_fill_list(PATH_DRIVERS_CONF, FS_CMD_FILE_CONFIGMODE, &lidbg_drivers_list);
     fs_fill_list(PATH_MACHINE_INFO_FILE, FS_CMD_FILE_CONFIGMODE, &lidbg_machine_info_list);
+	printk(">>>>>>>%d<<<<<<<<<\n", __LINE__);
 
-    fs_copy_file(get_lidbg_file_path(buff, "build_time.conf"), LIDBG_MEM_DIR"build_time.txt");
+    //fs_copy_file(get_lidbg_file_path(buff, "build_time.conf"), LIDBG_MEM_DIR"build_time.txt");
     if(fs_slient_level != 4)
         fs_get_intvalue(&lidbg_core_list, "fs_slient_level", &fs_slient_level, NULL);
     fs_get_intvalue(&lidbg_core_list, "fs_save_msg_fifo", NULL, fs_msg_fifo_to_file);

@@ -33,7 +33,9 @@ void lidbg_shell_cmd(char *shell_cmd)
 char *get_lidbg_file_path(char *buff, char *filename)
 {
     char *path;
-    path = (gboot_mode == MD_FLYSYSTEM) ? "/flysystem/lib/out/" : "/system/lib/modules/out/";
+//    path = (gboot_mode == MD_FLYSYSTEM) ? "/flysystem/lib/out/" : "/system/lib/modules/out/";
+	path = "/system/lib/modules/out/";
+	printk("<<<<<<<<<path = %s>>>>>>>\n", path);
     if(gboot_mode == MD_DEBUG)
 		path = "/data/out/";
     sprintf(buff, "%s%s", path, filename);
