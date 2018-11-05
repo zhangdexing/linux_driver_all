@@ -243,8 +243,8 @@ int lidbg_write_file(const char *filename, const char *wbuf, size_t length)
         ret = -ENOENT;
         return ret;
     }
-
-    ret = filp->f_op->write(filp, wbuf, length, &filp->f_pos);
+	
+	ret = vfs_write(filp, wbuf, length, &filp->f_pos);
     if (ret < 0)
     {
         lidbg("kernel_write_file:write Error\n");

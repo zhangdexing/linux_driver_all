@@ -283,8 +283,8 @@ static s32 gtp_bak_ref_proc(struct goodix_ts_data *ts, u8 mode)
             GTP_ERROR("failed to read bak_ref info, sending default back-reference");
             goto bak_ref_default;
         }
-        ref_filp->f_op->llseek(ref_filp, 0, SEEK_SET);
-        ref_filp->f_op->write(ref_filp, (char *)p_bak_ref, ts->bak_ref_len, &ref_filp->f_pos);
+        vfs_llseek(ref_filp, 0, SEEK_SET);
+        vfs_write(ref_filp, (char *)p_bak_ref, ts->bak_ref_len, &ref_filp->f_pos);
         break;
 
     default:
@@ -301,8 +301,8 @@ bak_ref_default:
     if (!IS_ERR(ref_filp))
     {
         GTP_INFO("write backup-reference data into %s", GTP_BAK_REF_PATH);
-        ref_filp->f_op->llseek(ref_filp, 0, SEEK_SET);
-        ref_filp->f_op->write(ref_filp, (char *)p_bak_ref, ts->bak_ref_len, &ref_filp->f_pos);
+        vfs_llseek(ref_filp, 0, SEEK_SET);
+        vfs_write(ref_filp, (char *)p_bak_ref, ts->bak_ref_len, &ref_filp->f_pos);
         filp_close(ref_filp, NULL);
     }
     if (ret == FAIL)
@@ -378,8 +378,8 @@ static s32 gtp_main_clk_proc(struct goodix_ts_data *ts)
     }
     else
     {
-        clk_filp->f_op->llseek(clk_filp, 0, SEEK_SET);
-        clk_filp->f_op->read(clk_filp, (char *)p_main_clk, 6, &clk_filp->f_pos);
+        vfs_llseek(clk_filp, 0, SEEK_SET);
+        vfs_read(clk_filp, (char *)p_main_clk, 6, &clk_filp->f_pos);
 
         ret = gtp_verify_main_clk(p_main_clk);
         if (FAIL == ret)
@@ -423,8 +423,8 @@ static s32 gtp_main_clk_proc(struct goodix_ts_data *ts)
     if (!IS_ERR(clk_filp))
     {
         GTP_DEBUG("write main clock data into %s", GTP_MAIN_CLK_PATH);
-        clk_filp->f_op->llseek(clk_filp, 0, SEEK_SET);
-        clk_filp->f_op->write(clk_filp, (char *)p_main_clk, 6, &clk_filp->f_pos);
+        vfs_llseek(clk_filp, 0, SEEK_SET);
+        vfs_write(clk_filp, (char *)p_main_clk, 6, &clk_filp->f_pos);
         filp_close(clk_filp, NULL);
     }
 

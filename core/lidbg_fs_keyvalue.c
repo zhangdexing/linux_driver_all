@@ -161,7 +161,7 @@ int bfs_fill_list(char *filename, enum string_dev_cmd cmd, struct list_head *cli
     char *token, *file_ptr = NULL, *file_ptmp;
     int all_purpose;
     unsigned int file_len;
-
+	printk(">>>>>>>%d<<<<<<<<<\n", __LINE__);
     filep = filp_open(filename,  O_RDONLY, 0);//O_RDWR
     if(IS_ERR(filep))
     {
@@ -169,7 +169,7 @@ int bfs_fill_list(char *filename, enum string_dev_cmd cmd, struct list_head *cli
         return -1;
     }
     FS_SUC("open:<%s>\n", filename);
-
+	printk(">>>>>>>%d<<<<<<<<<\n", __LINE__);
     old_fs = get_fs();
     set_fs(get_ds());
 
@@ -185,9 +185,10 @@ int bfs_fill_list(char *filename, enum string_dev_cmd cmd, struct list_head *cli
         filp_close(filep, 0);
         return -1;
     }
-
-    filep->f_op->llseek(filep, 0, 0);
-    all_purpose = filep->f_op->read(filep, file_ptr, file_len, &filep->f_pos);
+	printk(">>>>>>>%d<<<<<<<<<\n", __LINE__);
+    vfs_llseek(filep, 0, 0);
+    
+	all_purpose = vfs_read(filep, file_ptr, file_len, &filep->f_pos);
     if(all_purpose <= 0)
     {
         FS_ERR( "f_op->read:<read file data failed>\n");
@@ -197,7 +198,7 @@ int bfs_fill_list(char *filename, enum string_dev_cmd cmd, struct list_head *cli
     }
     set_fs(old_fs);
     filp_close(filep, 0);
-
+	printk(">>>>>>>%d<<<<<<<<<\n", __LINE__);
     file_ptr[all_purpose] = '\0';
     if(g_kvbug_on)
         FS_WARN("%s\n", file_ptr);
@@ -235,19 +236,20 @@ void save_list_to_file(struct list_head *client_list, char *filename)
     {
         old_fs = get_fs();
         set_fs(get_ds());
-        if(filep->f_op->write)
+
+        list_for_each_entry(pos, client_list, tmp_list)
         {
-            list_for_each_entry(pos, client_list, tmp_list)
-            {
-                memset(buff, '\0', sizeof(buff));
-                if(pos->yourkey && pos->int_value)
-                    sprintf(buff, "%s=%d\n", pos->yourkey, *(pos->int_value));
-                else if(pos->yourkey && pos->yourvalue)
-                    sprintf(buff, "%s=%s\n", pos->yourkey, pos->yourvalue);
-                filep->f_op->write(filep, buff, strlen(buff), &filep->f_pos);
-                filep->f_op->llseek(filep, 0, SEEK_END);
-            }
+            memset(buff, '\0', sizeof(buff));
+            if(pos->yourkey && pos->int_value)
+                sprintf(buff, "%s=%d\n", pos->yourkey, *(pos->int_value));
+            else if(pos->yourkey && pos->yourvalue)
+                sprintf(buff, "%s=%s\n", pos->yourkey, pos->yourvalue);
+            
+            vfs_write(filep, buff, strlen(buff), &filep->f_pos);
+
+            vfs_llseek(filep, 0, SEEK_END);
         }
+        
         set_fs(old_fs);
         filp_close(filep, 0);
     }
@@ -288,8 +290,8 @@ int update_list(const char *filename, struct list_head *client_list)
         return -1;
     }
 
-    filep->f_op->llseek(filep, 0, 0);
-    all_purpose = filep->f_op->read(filep, file_ptr, file_len + 1, &filep->f_pos);
+    vfs_llseek(filep, 0, 0);
+    all_purpose = vfs_read(filep, file_ptr, file_len + 1, &filep->f_pos);
     if(all_purpose <= 0)
     {
         FS_ERR( "f_op->read:<read file data failed>\n");
@@ -387,6 +389,7 @@ int fs_show_list(struct list_head *client_list)
 }
 int fs_fill_list(char *filename, enum string_dev_cmd cmd, struct list_head *client_list)
 {
+printk(">>>>>>>%d filename %s <<<<<<<<<\n", __LINE__, filename);
     int ret = -1;
     if(list_empty(client_list))
         ret = bfs_fill_list(filename, cmd, client_list);

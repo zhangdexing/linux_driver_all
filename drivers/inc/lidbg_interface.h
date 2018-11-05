@@ -113,7 +113,7 @@ static inline int write_node(char *filename, char *wbuff)
     set_fs(get_ds());
 
     if(wbuff)
-        filep->f_op->write(filep, wbuff, strlen(wbuff), &filep->f_pos);
+        vfs_write(filep, wbuff, strlen(wbuff), &filep->f_pos);
     set_fs(old_fs);
     filp_close(filep, 0);
     return file_len;
@@ -430,7 +430,10 @@ struct lidbg_interface
 	    else break;\
 	 }\
 	 BEGIN_KMEM;\
-	 fd->f_op->read(fd, (void*)&plidbg_dev, sizeof(void *) ,&fd->f_pos);\
+	 old_fs = get_fs();\
+     set_fs(get_ds());\
+	 vfs_read(fd, (void*)&plidbg_dev, sizeof(void *) ,&fd->f_pos);\
+	 set_fs(old_fs);\
 	 END_KMEM;\
 	filp_close(fd,0);\
 	if(plidbg_dev == NULL)\

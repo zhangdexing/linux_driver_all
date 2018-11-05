@@ -398,12 +398,11 @@ int output_debug_log(bool output_console, const char *fmt, ...) {
     
     snprintf(strTemp,  CONFIG_LINE_LEN, "[%04d-%02d-%02d %02d:%02d:%02d]:  ", 
 				(tm.tm_year + 1900), (1 + tm.tm_mon), tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);  
-
-	filp->f_op->write(filp, (u8*)(strTemp), sizeof(char) * strlen(strTemp), &filp->f_pos);
+	vfs_write(filp, (u8*)(strTemp), sizeof(char) * strlen(strTemp), &filp->f_pos);
 
     va_start(argp,  fmt);  
     vsnprintf(strTemp, CONFIG_LINE_LEN, fmt, argp);  
-	filp->f_op->write(filp, (u8*)(strTemp), sizeof(char) * strlen(strTemp), &filp->f_pos);
+    vfs_write(filp, (u8*)(strTemp), sizeof(char) * strlen(strTemp), &filp->f_pos);
 
     if(output_console == true) {
 		pr_err("%s", strTemp);
@@ -1386,7 +1385,7 @@ int fm1388_save_audio_data_to_file(void* data) {
 			ret = kfifo_out_spinlocked(fm1388_data->rec_kfifo, temp_buffer, data_size, &fm1388_data->rec_lock);
 			total_gotten += ret;
 			if(!IS_ERR(fpdata)) {
-				fpdata->f_op->write(fpdata, (u8*)(temp_buffer), data_size, &fpdata->f_pos);
+				vfs_write(fpdata, (u8*)(temp_buffer), data_size, &fpdata->f_pos);
 #ifdef OUTPUT_ESLAPSE_DATA    
 				do_posix_clock_monotonic_gettime(&end_time);  
 				eslapse = (unsigned long)((long)(end_time.tv_sec - start_time.tv_sec) * 1000000000L + 
@@ -1783,7 +1782,7 @@ int get_wav_header(struct file* fpdata, wav_header* header) {
 		return -EPARAMINVAL;
 	}
 	
-	ret = fpdata->f_op->read(fpdata, (u8*)(header), sizeof(wav_header), &fpdata->f_pos);
+	ret = vfs_read(fpdata, (u8*)(header), sizeof(wav_header), &fpdata->f_pos);
 
 	if ((ret <= 0) || (ret != sizeof(wav_header))) {
 		output_debug_log(true, "[%s]: Error occurs when read wav file header.\n", __func__);
@@ -2035,7 +2034,7 @@ int fm1388_read_audio_data_from_file(void* data) {
 		}
 		else {
 			if(!IS_ERR(fpdata)) {
-				fpdata->f_op->read(fpdata, (u8*)(temp_buffer1), data_size, &fpdata->f_pos);
+				vfs_read(fpdata, (u8*)(temp_buffer1), data_size, &fpdata->f_pos);
 				
 				//re-arrange data by channel
 				memset(temp_buffer2, 0, FM1388_BUFFER_LEN);
@@ -2445,10 +2444,8 @@ struct file *openFile(char *path, int flag, int mode)
 
 int readFile(struct file *fp, char *buf, int readlen)
 {
-    if (fp->f_op && fp->f_op->read)
-        return fp->f_op->read(fp, buf, readlen, &fp->f_pos);
-    else
-        return -1;
+    return vfs_read(fp, buf, readlen, &fp->f_pos);
+
 }
 
 int closeFile(struct file *fp)

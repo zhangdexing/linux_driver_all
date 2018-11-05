@@ -57,16 +57,18 @@ again:
         goto again;
     }
 	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
-    filep->f_op->llseek(filep, 0, SEEK_END);//note:to the end to append;
+    vfs_llseek(filep, 0, SEEK_END);//note:to the end to append;
     if(1 == is_file_cleard)
     {
         char *str_warn = "============have_cleard=============\n\n";
         is_file_cleard = 0;
 		printk("2>>>>>>>%d<<<<<<<\n", __LINE__);
-        filep->f_op->write(filep, str_warn, strlen(str_warn), &filep->f_pos);
+		vfs_write(filep, str_warn, strlen(str_warn), &filep->f_pos);
     }
-	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
-    filep->f_op->write(filep, str_append, strlen(str_append), &filep->f_pos);
+	printk("1>>>>>>>%d %s<<<<<<<\n", __LINE__, str_append);
+	vfs_write(filep, str_append, strlen(str_append), &filep->f_pos);
+
+
 	printk("1>>>>>>>%d<<<<<<<\n", __LINE__);
 	set_fs(old_fs);
     filp_close(filep, 0);

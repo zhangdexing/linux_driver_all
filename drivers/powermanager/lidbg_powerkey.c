@@ -36,8 +36,10 @@ FLY_ACC_STATUS lpc_acc_state = FLY_ACC_ON;
 
 void powerkey_fifo_in(void)
 {
+	int i;
 	down(&powerkey_sem);
-	kfifo_in(&powerkey_state_fifo, (const void *)atomic_read(&status), 4);
+	i = atomic_read(&status);
+	kfifo_in(&powerkey_state_fifo, (const void *)(&i), 4);
 	up(&powerkey_sem);
 }
 

@@ -78,8 +78,10 @@ static long long ktime_get_ms(void)
 
 void rmtctrl_fifo_in(void)
 {
+	int i;
 	down(&rmtctrl_sem);
-	kfifo_in(&rmtctrl_state_fifo, (const void *)atomic_read(&status), 4);
+	i = atomic_read(&status);
+	kfifo_in(&rmtctrl_state_fifo, (const void *)(&i), 4);
 	is_kfifo_empty = 0;
 	up(&rmtctrl_sem);
 }

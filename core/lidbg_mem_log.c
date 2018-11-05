@@ -37,9 +37,8 @@ static int fifo_to_file(char *file2amend, char *str_append)
     file_len = inode->i_size;
     file_len = file_len + 1;
 
-    filep->f_op->llseek(filep, 0, SEEK_END);//note:to the end to append;
-
-    filep->f_op->write(filep, str_append, strlen(str_append), &filep->f_pos);
+    vfs_llseek(filep, 0, SEEK_END);//note:to the end to append;
+	vfs_write(filep, str_append, strlen(str_append), &filep->f_pos);
     set_fs(old_fs);
     filp_close(filep, 0);
     return 1;

@@ -52,7 +52,7 @@ struct hw_version_specific g_hw_version_specific[] =
             {0, 0, 0, "0"}, //end flag
         },
 
-        .fly_parameter_node = "/dev/block/mmcblk3p13",
+        .fly_parameter_node = "/dev/block/platform/44000000.ocp/480b4000.mmc/by-name/flyparameter",
         .ad_key =
         {
             {

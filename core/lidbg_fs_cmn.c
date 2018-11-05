@@ -20,9 +20,9 @@ int fs_file_write2(char *filename, char *wbuff)
     old_fs = get_fs();
     set_fs(get_ds());
 
-    filep->f_op->llseek(filep, 0, SEEK_END);
+    vfs_llseek(filep, 0, SEEK_END);
     if(wbuff)
-        filep->f_op->write(filep, wbuff, strlen(wbuff), &filep->f_pos);
+        vfs_write(filep, wbuff, strlen(wbuff), &filep->f_pos);
     set_fs(old_fs);
     filp_close(filep, 0);
     return file_len;
@@ -45,11 +45,11 @@ int fs_file_write(char *filename, bool creat, void *wbuff, loff_t offset, int le
     old_fs = get_fs();
     set_fs(get_ds());
 
-    if(filep && filep->f_op->llseek)
-        filep->f_op->llseek(filep, offset, SEEK_SET);
+    vfs_llseek(filep, offset, SEEK_SET);
 
     if(wbuff)
-        filep->f_op->write(filep, wbuff, len, &filep->f_pos);
+        vfs_write(filep, wbuff, len, &filep->f_pos);
+	    
     set_fs(old_fs);
     filp_close(filep, 0);
     return file_len;
@@ -66,8 +66,9 @@ int fs_file_read(const char *filename, char *rbuff, loff_t offset, int readlen)
     old_fs = get_fs();
     set_fs(get_ds());
 
-    filep->f_op->llseek(filep, offset, SEEK_SET);
-    read_len = filep->f_op->read(filep, rbuff, readlen, &filep->f_pos);
+    vfs_llseek(filep, offset, SEEK_SET);
+    
+    read_len = vfs_read(filep, rbuff, readlen, &filep->f_pos);
 
     set_fs(old_fs);
     filp_close(filep, 0);
@@ -212,9 +213,9 @@ bool copy_file(char *from, char *to, bool encode)
         return false;
     }
 
-    pfilefrom->f_op->llseek(pfilefrom, 0, 0);
+    vfs_llseek(pfilefrom, 0, 0);
 	FS_ALWAYS("pfilefrom->f_pos = %s, &pfilefrom->f_pos = %x\n", pfilefrom->f_pos, &pfilefrom->f_pos);
-    pfilefrom->f_op->read(pfilefrom, string, file_len, &pfilefrom->f_pos);
+	vfs_read(pfilefrom, string, file_len, &pfilefrom->f_pos);
     set_fs(old_fs);
     filp_close(pfilefrom, 0);
     if(encode)
@@ -222,8 +223,9 @@ bool copy_file(char *from, char *to, bool encode)
 
     old_fs = get_fs();
     set_fs(get_ds());
-    pfileto->f_op->llseek(pfileto, 0, 0);
-    pfileto->f_op->write(pfileto, string, file_len, &pfileto->f_pos);
+    vfs_llseek(pfileto, 0, 0);
+    vfs_write(pfileto, string, file_len, &pfileto->f_pos);
+    	
     set_fs(old_fs);
     filp_close(pfileto, 0);
 
@@ -246,9 +248,9 @@ bool fs_is_file_updated(char *filename, char *infofile)
     char pres[64], news[64];
     memset(pres, '\0', sizeof(pres));
     memset(news, '\0', sizeof(news));
-
+	
     get_file_tmstring(filename, news);
-	printk("filename = %s, infofile = %s\n", filename, infofile);
+	printk("filename = %s, infofile = %s news = %s\n", filename, infofile, news);
 
     if(fs_get_file_size(infofile) > 0)
     {
