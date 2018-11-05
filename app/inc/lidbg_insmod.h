@@ -1,5 +1,6 @@
 #ifndef _LIGDBG_INSMOD__
 #define _LIGDBG_INSMOD__
+#include <sys/syscall.h>
 inline void *read_file( char *filename, ssize_t *_size)
 {
     int ret, fd;
@@ -38,6 +39,24 @@ bail:
 int init_module(void *module_image, unsigned long len,
                 const char *param_values);
 int module_insmod(char *file);
+
+inline int module_insmod(char *file)
+{
+	int fd = open(file, O_RDONLY | O_NOFOLLOW | O_CLOEXEC);
+	if (fd == -1) {
+		lidbg("insmod: open(\"%s\") failed: %s", file, strerror(errno));
+		return -1;
+	}
+	int rc = syscall(__NR_finit_module, fd, "", 0);
+	if (rc == -1) {
+		lidbg("finit_module for \"%s\" failed: %s", file, strerror(errno));
+	}
+	close(fd);
+	return rc;
+
+}
+
+#if 0
 inline int module_insmod(char *file)
 {
     void *module = NULL;
@@ -73,4 +92,5 @@ inline int module_insmod(char *file)
         }
     }
 }
+#endif
 #endif
