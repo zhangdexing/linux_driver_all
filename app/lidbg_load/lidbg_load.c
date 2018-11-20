@@ -24,14 +24,16 @@ static void *thread_check_boot_complete(void *data)
     {
         char value[PROPERTY_VALUE_MAX];
         property_get("sys.boot_completed", value, "0");
-        if (value[0] == '1')
+        if (value[0] == '1' && is_file_exist("/dev/lidbg_interface"))
         {
             lidbg( TAG" send message  :boot_completed = %c,delay 2S \n", value[0]);
             sleep(2);
+            
             LIDBG_WRITE("/dev/lidbg_interface", "BOOT_COMPLETED");
             boot_completed = 1;
             break;
         }
+        lidbg( TAG" send message  :boot_completed = %c,delay 2S \n", value[0]);
         sleep(1);
     }
     return ((void *) 0);
@@ -49,7 +51,7 @@ int main(int argc, char **argv)
 
     lidbg(TAG"20171129.selinux.bootcom.\n");
 
-    system("setenforce 0");
+    //system("setenforce 0");
     system("chmod 777 /dev/dbg_msg");
     system("logcat -b main -G 10M");
     system("logcat -b crash -G 1M");
@@ -71,23 +73,23 @@ int main(int argc, char **argv)
 
     DUMP_BUILD_TIME_FILE;
     lidbg(TAG"Build Time:iserver start\n");
-    system("mkdir /dev/log");
-    system("chmod 777 /dev/log");
+//    system("mkdir /dev/log");
+//    system("chmod 777 /dev/log");
     if(is_file_exist("/dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/flyparameter"))
         system("cat /dev/block/platform/mtk-msdc.0/11230000.msdc0/by-name/flyparameter > /dev/flyparameter");
     else if(is_file_exist("/dev/block/bootdevice/by-name/flyparameter"))
         system("cat /dev/block/bootdevice/by-name/flyparameter > /dev/flyparameter");
     else
-        system("cat /dev/block/mmcblk3p13 > /dev/flyparameter");
+        system("cat /flysystem/lib/out/flyparameter > /dev/flyparameter");
 
     system("chmod 444 /dev/flyparameter");
 
-    system( "mount -o rw,remount rootfs /" );
-    system( "chmod 777 /flyconfig" );
-    system( "/flysystem/bin/decodeFlyconfig" );
+//    system( "mount -o rw,remount rootfs /" );
+//    system( "chmod 777 /flyconfig" );
+//    system( "/flysystem/bin/decodeFlyconfig" );
 
     module_insmod("/system/lib/modules/out/lidbg_immediate.ko");
-   // module_insmod("/flysystem/lib/out/lidbg_immediate.ko");
+    module_insmod("/flysystem/lib/out/lidbg_immediate.ko");
 #if 0
     //wait flysystem mount
     while(is_file_exist("/flysystem/lib") == 0)
@@ -140,10 +142,10 @@ int main(int argc, char **argv)
         recovery_mode = 0;
     }
 
-    system("mkdir /data/lidbg");
-    system("mkdir /data/lidbg/lidbg_osd");
-    system("chmod 777 /data/lidbg");
-    system("chmod 777 /data/lidbg/lidbg_osd");
+//    system("mkdir /data/lidbg");
+//    system("mkdir /data/lidbg/lidbg_osd");
+//    system("chmod 777 /data/lidbg");
+//    system("chmod 777 /data/lidbg/lidbg_osd");
 
     if(checkout == 1)
     {
@@ -190,6 +192,8 @@ int main(int argc, char **argv)
 
         module_insmod("/flysystem/lib/out/lidbg_uevent.ko");
         module_insmod("/flysystem/lib/out/lidbg_loader.ko");
+        //module_insmod("/flysystem/lib/out/lidbg_hal_comm.ko");
+        //module_insmod("/flysystem/lib/out/lidbg_module_comm.ko");
         //system("insmod /flysystem/lib/out/lidbg_uevent.ko");
         //system("insmod /flysystem/lib/out/lidbg_loader.ko");
         while(1)
