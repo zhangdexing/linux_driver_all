@@ -49,6 +49,7 @@
 
 #include <linux/input/mt.h>
 #include "touch.h"
+#include <linux/string.h>
 touch_t touch = {0, 0, 0};
 LIDBG_DEFINE;
 
@@ -552,6 +553,7 @@ static void goodix_ts_work_func(struct work_struct *work)
 #endif
 
     ret = gtp_i2c_read(ts->client, point_data, 12);
+
     if (ret < 0)
     {
         dev_err(&ts->client->dev,
@@ -585,6 +587,7 @@ static void goodix_ts_work_func(struct work_struct *work)
     }
 
 #if GTP_HAVE_TOUCH_KEY
+
     key_value = point_data[3 + 8 * touch_num];
 
     if (key_value || pre_key)
@@ -708,7 +711,9 @@ static void goodix_ts_work_func(struct work_struct *work)
                         touch.x = point_data[6] | (point_data[7] << 8);
                         touch.y = point_data[4] | (point_data[5] << 8);
                         if (1 == ts_should_revert)
+                        {
                             GTP_REVERT(touch.x, touch.y);
+                        }
                         touch.pressed = 1;
                         set_touch_pos(&touch);
                         //lidbg("[%d,%d]==========%d\n", touch.x, touch.y, touch.pressed);
@@ -1884,7 +1889,6 @@ static int goodix_ts_probe(struct platform_device *pdev)
     u16 version_info;
     int ret = 0;
     char ic_type[3];
-
     client = (struct i2c_client *)kzalloc( sizeof(struct i2c_client), GFP_KERNEL);
     if (!client)
     {
@@ -2588,12 +2592,12 @@ ssize_t ts_nod_write (struct file *filp, const char __user *buf, size_t count, l
     data_rec[count] =  '\0';
     lidbg("gt910-ts_nod_write:==%zd====[%s]\n", count, data_rec);
     // processing data
-    if(!(strnicmp(data_rec, "TSMODE_XYREVERT", count - 1)))
+    if((strstr(data_rec, "TSMODE_XYREVERT")))
     {
         xy_revert_en = 1;
         lidbg("[gt910]ts_nod_write:==========TSMODE_XYREVERT\n");
     }
-    else if(!(strnicmp(data_rec, "TSMODE_NORMAL", count - 1)))
+    else if((strstr(data_rec, "TSMODE_NORMAL")))
     {
         xy_revert_en = 0;
         lidbg("[gt910]ts_nod_write:==========TSMODE_NORMAL\n");
@@ -2670,7 +2674,6 @@ static struct platform_device goodix_ts_devices =
 static int goodix_ts_init(void)
 {
     int ret;
-
     LIDBG_GET;
     is_ts_load = 1;
     GTP_DEBUG_FUNC();

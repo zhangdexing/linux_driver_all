@@ -360,7 +360,7 @@ int lidbg_flyparameter_init(void)
         sprintf(cmd, "chmod 777 %s", FLYPARAMETER_NODE);
         lidbg_shell_cmd(cmd);
     }
-    while((fs_is_file_exist(p_flyparameter_node) == 0) && (cnt < 50))
+    while((fs_is_file_exist(p_flyparameter_node) == 0) && (cnt < 5))
     {
         lidbg(PATA_TAG"wait for FLYPARAMETER_NODE !!\n");
         {
@@ -378,7 +378,7 @@ int lidbg_flyparameter_init(void)
 
     lidbg(PATA_TAG"p_flyparameter_node.in:EXTRA_FLYPARA_MIRROR:%d %s\n", fs_is_file_exist(EXTRA_FLYPARA_MIRROR), p_flyparameter_node);
     cnt = 0;
-    while((fs_is_file_exist(p_flyparameter_node) == 0) && (cnt < 200))
+    while((fs_is_file_exist(p_flyparameter_node) == 0) && (cnt < 2))
     {
         lidbg(PATA_TAG"p_flyparameter_node:exist:%d %s\n", fs_is_file_exist(p_flyparameter_node), p_flyparameter_node);
         msleep(200);

@@ -61,7 +61,6 @@ int lidbg_init_input(struct lidbg_ts_data *pinput)
 
 void lidbg_touch_handle(touch_type t, int id, int x, int y, int w)
 {
-
     if(t == TOUCH_DOWN)
     {
         input_mt_slot(ts_data->input_dev, id);

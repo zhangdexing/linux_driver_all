@@ -30,13 +30,13 @@ struct hw_version_specific g_hw_version_specific[] =
         .gpio_mcu_app = 8,	// ap_state1
 	.gpio_request_fastboot= 106,	// ap_state3 ok
 
-        .gpio_ts_int = 60,
-        .gpio_ts_rst = 61,
+        .gpio_ts_int = 105,//4_9
+        .gpio_ts_rst = 63,//2_31
 
 
         //.i2c_bus_dsi83 = 0,
         .i2c_bus_bx5b3a = 0,
-        .i2c_bus_ts = 0,
+        .i2c_bus_ts = 1,
         .i2c_bus_gps = 0,
         //.i2c_bus_saf7741 = 0,
         .i2c_bus_tef6638 = 0,

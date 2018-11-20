@@ -378,6 +378,7 @@ void ts_probe_prepare(void)
 void ts_data_report(touch_type t, int id, int x, int y, int w)
 {
     u8 fifo_out, bytes;
+#if 0
     GTP_SWAP(x, y);
     if (1 == ts_should_revert)
         GTP_REVERT(x, y);
@@ -389,7 +390,18 @@ void ts_data_report(touch_type t, int id, int x, int y, int w)
 	GTP_TOP_SCOPE_Y(y, screen_touch_scope_y);
     if (screen_touch_scope_x)
 	GTP_TOP_SCOPE_X(x, screen_touch_scope_x);
-    pr_debug("%s:%d,%d[%d,%d,%d]\n", __FUNCTION__, t, id, x, y, w);
+#else
+    GTP_SWAP(x, y);
+    //GTP_REVERT_Y(y);
+    x = 1920-x;
+    x = x*640/1920;
+    y = y*480/1080;
+    //GTP_TOP_SCOPE_Y(y, screen_touch_scope_y);
+    //GTP_TOP_SCOPE_X(x, screen_touch_scope_x);
+#endif
+
+
+    //lidbg("%s:%d,%d[%d,%d,%d]\n", __FUNCTION__, t, id, x, y, w);
     if(g_var.hw_info.virtual_key > 0)
     {
         if( ((g_ts_devices.lcd_origin_x < x) && (x < 1024 + g_ts_devices.lcd_origin_x) && (g_ts_devices.lcd_origin_y < y) && (y < g_ts_devices.lcd_origin_y + 600)) || (t == TOUCH_SYNC) || (t == TOUCH_UP))

@@ -26,14 +26,14 @@ static void *thread_check_boot_complete(void *data)
         property_get("sys.boot_completed", value, "0");
         if (value[0] == '1' && is_file_exist("/dev/lidbg_interface"))
         {
-            lidbg( TAG" send message  :boot_completed = %c,delay 2S \n", value[0]);
+            //lidbg( TAG" send message  :boot_completed = %c,delay 2S \n", value[0]);
             sleep(2);
             
             LIDBG_WRITE("/dev/lidbg_interface", "BOOT_COMPLETED");
             boot_completed = 1;
             break;
         }
-        lidbg( TAG" send message  :boot_completed = %c,delay 2S \n", value[0]);
+        //lidbg( TAG" send message  :boot_completed = %c,delay 2S \n", value[0]);
         sleep(1);
     }
     return ((void *) 0);
