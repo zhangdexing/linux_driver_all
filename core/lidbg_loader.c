@@ -58,7 +58,7 @@ void lidbg_insmod( char argv1[])
 {
     char shell_cmd[256];
     sprintf(shell_cmd, "insmod %s", argv1 == NULL ? " " : argv1);
-	msleep(1000);
+	//msleep(1000);
     lidbg_uevent_shell(shell_cmd);
 }
 
