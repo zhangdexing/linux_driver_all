@@ -84,7 +84,7 @@ int thread_set_screen_active_area(void *data)
 int __init immediate_init(void)
 {
     LIDBG_WARN("in");
-    kthread_run(thread_set_screen_active_area, NULL, "ftf_set_screen");
+    //kthread_run(thread_set_screen_active_area, NULL, "ftf_set_screen");
     return 0;
 }
 
