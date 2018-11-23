@@ -142,7 +142,7 @@ static int __init spi_api_init(void)
     {
         .modalias	= "SPI-API",
         .mode = 0x01,
-        .bus_num	= 0,
+        .bus_num	= 3,
         .chip_select = 0,
         .max_speed_hz = 19200000,
     };
@@ -154,7 +154,7 @@ static int __init spi_api_init(void)
     if (status < 0)
         return status;
 
-    master = spi_busnum_to_master(0);
+    master = spi_busnum_to_master(3);
     if (!master)
     {
         status = -ENODEV;
