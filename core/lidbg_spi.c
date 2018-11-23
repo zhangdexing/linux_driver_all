@@ -86,10 +86,45 @@ int spi_api_do_set(int bus_id,
 
 int spi_api_do_write(int bus_id, const u8 *buf, size_t len)
 {
+#if 1
     struct spi_api *spi_api = get_spi_api(bus_id);
     if (!spi_api)
         return -ENODEV;
     return spi_write(spi_api->spi, buf, len);
+#else
+    struct spi_api *spi_api = get_spi_api(bus_id);
+    int status;
+    u8 *local_buf;
+    struct spi_message message;
+    struct spi_transfer x;
+    int len;
+
+    if (!spi_api)
+	    return -ENODEV;
+    if((n_rx<0) || (n_tx<0))
+	    return -EINVAL;
+
+    spi_message_init(&message);
+
+    len = n_tx > n_rx ? n_tx : n_rx;
+    local_buf = kmalloc(n_tx + n_rx, GFP_KERNEL | GFP_DMA);
+    if (!local_buf)
+	    return -ENOMEM;
+
+    memcpy(local_buf, txbuf, n_tx);
+
+    memset(&x, 0, sizeof(x));
+    x.len = len;
+    x.tx_buf = local_buf;
+    x.rx_buf = local_buf+n_tx;
+    spi_message_add_tail(&x, &message);
+
+    status = spi_sync(spi_api->spi, &message);
+    if (status == 0)
+	    memcpy(rxbuf, x.rx_buf, n_rx);
+    kfree(local_buf);
+    return status;
+#endif
 }
 
 int spi_api_do_read(int bus_id, u8 *buf, size_t len)
