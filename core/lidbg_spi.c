@@ -76,7 +76,7 @@ int spi_api_do_set(int bus_id,
     //spi->mode &= ~SPI_MODE_MASK;
     //spi->mode &= SPI_MODE_MASK;
 
-    tmp |= spi->mode & ~SPI_MODE_MASK;
+    tmp |= (spi->mode & ~SPI_MODE_MASK);
     spi->mode = (u8)tmp;
     //spi->mode |= mode;
     spi->bits_per_word = bits_per_word;
@@ -88,6 +88,7 @@ int spi_api_do_write(int bus_id, const u8 *buf, size_t len)
 {
 #if 1
     struct spi_api *spi_api = get_spi_api(bus_id);
+ //   lidbg(KERN_INFO "  spi->master->bus_num = %d  bus_id=%d\n", spi->master->bus_num,bus_id);
     if (!spi_api)
         return -ENODEV;
     return spi_write(spi_api->spi, buf, len);
@@ -177,7 +178,7 @@ static int __init spi_api_init(void)
     {
         .modalias	= "SPI-API",
         .mode = 0x01,
-        .bus_num	= 3,
+        .bus_num	= 2,
         .chip_select = 0,
         .max_speed_hz = 19200000,
     };
@@ -189,7 +190,7 @@ static int __init spi_api_init(void)
     if (status < 0)
         return status;
 
-    master = spi_busnum_to_master(3);
+    master = spi_busnum_to_master(2);
     if (!master)
     {
         status = -ENODEV;
